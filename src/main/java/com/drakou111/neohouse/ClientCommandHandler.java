@@ -1,7 +1,8 @@
 package com.drakou111.neohouse;
 
+import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.ActionFactory;
-import com.drakou111.neohouse.actions.ActionSequence;
+import com.drakou111.neohouse.actions.actiontypes.GroupAction;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -26,15 +27,9 @@ public class ClientCommandHandler {
                 Commands.literal("example").executes(ctx -> {
                     LocalPlayer player = Minecraft.getInstance().player;
                     if (player != null) {
-                        ActionSequence sequence = new ActionSequence(
-                            List.of(
-                                ActionFactory.openMenuFromCommand(),
-                                ActionFactory.waitForOpenContainer(),
-                                ActionFactory.closeAllMenu()
-                            )
-                        );
-
-                        SequenceManager.startSequence(sequence);
+                        Action cond = ActionFactory.group_addActionConditional(true, null, null, null);
+                        Action start = new GroupAction(List.of(ActionFactory.goto_function("vvv", false), cond));
+                        SequenceManager.startAction(start);
                     }
                     return 1; // success
                 })

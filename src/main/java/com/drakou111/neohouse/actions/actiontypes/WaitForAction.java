@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.State;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.ActionResult;
 import com.drakou111.neohouse.actions.ScreenEvents;
@@ -13,19 +12,18 @@ public class WaitForAction extends Action {
     private boolean done = false;
     private boolean registered = false;
 
-    public WaitForAction(Class<? extends Screen> screenClass, boolean waitForOpen, State startingState, State endingState) {
-        super(startingState, endingState);
+    public WaitForAction(Class<? extends Screen> screenClass, boolean waitForOpen) {
         this.screenClass = screenClass;
         this.waitForOpen = waitForOpen;
     }
 
     @Override
-    public ActionResult run(Minecraft mc, State current) {
+    public ActionResult run(Minecraft mc) {
         if (!registered) {
             ScreenEvents.watch(this);
             registered = true;
         }
-        return new ActionResult(endingState != null ? endingState : current, done);
+        return new ActionResult(done);
     }
 
     public boolean matchesScreen(Screen screen, boolean isOpening) {
