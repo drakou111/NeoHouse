@@ -74,9 +74,6 @@ public class ActionFactory {
         return new GroupAction(list);
     }
 
-    /* FUNCTIONS */
-    /* ADD ACTION */
-    /* CONDITIONAL */
     public static Action group_addActionConditional(boolean matchAny, List<Action> conditions, List<Action> ifs, List<Action> elses) {
         List<Action> list = new ArrayList<>();
         list.add(function_addAction());
