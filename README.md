@@ -1,25 +1,36 @@
+# Neo House
+## Introduction
 
-Installation information
-=======
+Hello! Neo House is a project that acts as a replacement over Housing Editor. The issues with Housing Editor is that it isn't quite up to date anymore.
+It also depends on other mods like chattriggers, and relies on an external website to be used properly. I liked the scratch-like UI it had, but I would
+rather have something closer to code. HTSL is a good program to use Housing Editor with a coding language, however I felt like it missed a couple things
+that it could have added.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+I therefore decided to code my own version of Housing Editor as its standalone mod, along with (probably) a syntax highlighter on Visual Studio Code!
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+## Dependencies
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+This version currently only supports NeoForge 1.21.4, but is planned to work for fabric too, and maybe some older/newer versions.
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+## Installation
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+(NONE YET)
+
+## Utilisation
+
+(NONE YET)
+
+## TODO List
+- [ ] Make navigation system
+    - [x] Make the navigation logic
+    - [ ] Map all housing slots into constants
+      - [x] Actions
+      - [ ] Conditions
+- [ ] Make intermediate coding language (.nh) (closer to housing)
+  - [ ] Create syntax
+  - [ ] Create rules
+  - [ ] Create compîler
+- [ ] Make coding language (.nhc) (closer to code)
+  - [ ] Create syntax
+  - [ ] Create rules
+  - [ ] Create compîler
