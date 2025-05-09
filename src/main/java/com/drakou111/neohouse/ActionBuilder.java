@@ -115,6 +115,10 @@ public class ActionBuilder {
         return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(action.getPage(restriction), action.getSlotID(restriction));
     }
 
+    public ActionBuilder addCondition(AddCondition action, RestrictionCondition restriction) {
+        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(action.getPage(restriction), action.getSlotID(restriction));
+    }
+
     public ActionBuilder clickAndSelectSlot(int page, int slot) {
         return this.flipH6(page).clickSlotAndWait(slot);
     }

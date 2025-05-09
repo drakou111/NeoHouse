@@ -1,10 +1,5 @@
 package com.drakou111.neohouse.constants;
 
-import com.drakou111.neohouse.PageSlot;
-
-import java.util.EnumMap;
-import java.util.Map;
-
 public class Slots {
     /******************\
     *   HOUSING MENU   *
@@ -184,7 +179,7 @@ public class Slots {
     // VARIABLE
     public static final int CONDITION_VARIABLE_INVERT = 10;
     public static final int CONDITION_VARIABLE_HOLDER = 11;
-    public static final int CONDITION_VARIABLE_VAL = 12;
+    public static final int CONDITION_VARIABLE_VAR = 12;
     public static final int CONDITION_VARIABLE_COMPARATOR = 13;
     public static final int CONDITION_VARIABLE_VALUE = 14;
     public static final int CONDITION_VARIABLE_FALLBACK_VALUE = 15;
@@ -238,7 +233,7 @@ public class Slots {
 
     // PLACEHOLDER
     public static final int CONDITION_PLACEHOLDER_INVERT = 10;
-    public static final int CONDITION_PLACEHOLDER_VAL = 11;
+    public static final int CONDITION_PLACEHOLDER_VAR = 11;
     public static final int CONDITION_PLACEHOLDER_COMPARATOR = 12;
     public static final int CONDITION_PLACEHOLDER_VALUE = 13;
 

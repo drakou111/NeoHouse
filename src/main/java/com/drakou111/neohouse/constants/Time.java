@@ -7,7 +7,7 @@ public enum Time {
     SUNRISE(new PageSlot(0, 11)),
     NOON(new PageSlot(0, 12)),
     SUNSET(new PageSlot(0, 13)),
-    MIDNIGHT(new PageSlot(0, 12)),
+    MIDNIGHT(new PageSlot(0, 14)),
     CUSTOM(new PageSlot(0, 48));
 
     public final PageSlot pageSlot;

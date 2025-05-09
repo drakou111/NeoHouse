@@ -115,10 +115,10 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionMaxHealth(RestrictionAction state, double maxHealth, RestrictedOperator operator, boolean healOnChange, String note) {
+    public static Action addActionMaxHealth(RestrictionAction state, String maxHealth, RestrictedOperator operator, boolean healOnChange, String note) {
         return new ActionBuilder()
                 .addAction(AddAction.MAX_HEALTH, state)
-                .onlyIf(maxHealth != 20D, new ActionBuilder()
+                .onlyIf(maxHealth != null && !maxHealth.equals("20"), new ActionBuilder()
                         .anvilInput(String.valueOf(maxHealth), Slots.ACTION_MAX_HEALTH_VAL)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, new ActionBuilder()
@@ -383,11 +383,11 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionChangeHealth(RestrictionAction state, double health, RestrictedOperator operator, String note) {
+    public static Action addActionChangeHealth(RestrictionAction state, String health, RestrictedOperator operator, String note) {
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_HEALTH, state)
-                .onlyIf(health != 20D, new ActionBuilder()
-                        .anvilInput(String.valueOf(health), Slots.ACTION_HEALTH_VAL)
+                .onlyIf(!health.equals("20"), new ActionBuilder()
+                        .anvilInput(health, Slots.ACTION_HEALTH_VAL)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, new ActionBuilder()
                         .clickSlotAndWait(Slots.ACTION_HEALTH_OPERATION)
@@ -400,11 +400,11 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionChangeHunger(RestrictionAction state, double hunger, RestrictedOperator operator, String note) {
+    public static Action addActionChangeHunger(RestrictionAction state, String hunger, RestrictedOperator operator, String note) {
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_HUNGER, state)
-                .onlyIf(hunger != 20D, new ActionBuilder()
-                        .anvilInput(String.valueOf(hunger), Slots.ACTION_HUNGER_VAL)
+                .onlyIf(!hunger.equals("20"), new ActionBuilder()
+                        .anvilInput(hunger, Slots.ACTION_HUNGER_VAL)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, new ActionBuilder()
                         .clickSlotAndWait(Slots.ACTION_HUNGER_OPERATION)
