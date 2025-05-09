@@ -37,7 +37,7 @@ public class AnvilAction extends Action {
             throw new InteruptActionException(e.getMessage());
         }
 
-        if (edit == null || edit.getValue() == null || edit.getValue().trim().isEmpty()) return false;
+        if (edit == null || edit.getValue() == null || edit.getValue().isEmpty()) return false;
 
         edit.setValue(name);
         anvil.getMenu().setItemName(name);
