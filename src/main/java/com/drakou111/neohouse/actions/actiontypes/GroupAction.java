@@ -37,4 +37,8 @@ public class GroupAction extends Action {
         boolean finished = (current == null);
         return new ActionResult(finished);
     }
+
+    public boolean isEmpty() {
+        return it.hasNext();
+    }
 }
