@@ -4,5 +4,5 @@ import net.minecraft.client.Minecraft;
 
 public abstract class Action {
 
-    public abstract ActionResult run(Minecraft mc);
+    public abstract boolean run(Minecraft mc);
 }

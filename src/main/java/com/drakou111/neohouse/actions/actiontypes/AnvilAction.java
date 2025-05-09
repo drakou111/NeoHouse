@@ -1,7 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.actions.ActionResult;
+import com.drakou111.neohouse.exceptions.InteruptActionException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
@@ -14,29 +14,34 @@ import java.lang.reflect.Field;
  */
 public class AnvilAction extends Action {
     private final String name;
+    private Field nameField;
 
     public AnvilAction(String name) {
         this.name = name;
+        try {
+            nameField = AnvilScreen.class.getDeclaredField("name");
+            nameField.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public ActionResult run(Minecraft mc) {
-        if (mc.screen instanceof AnvilScreen anvil && mc.player != null && mc.gameMode != null) {
-            try {
-                Field nameField = AnvilScreen.class.getDeclaredField("name");
-                nameField.setAccessible(true);
-                EditBox edit = (EditBox) nameField.get(anvil);
-                edit.setValue(name);
-                anvil.getMenu().setItemName(name);
-                mc.gameMode.handleInventoryMouseClick(anvil.getMenu().containerId, 2, 0, ClickType.PICKUP, mc.player);
+    public boolean run(Minecraft mc) {
+        if (!(mc.screen instanceof AnvilScreen anvil)) throw new InteruptActionException("Not in anvil screen.");
 
-                return new ActionResult(true);
-            }
-            catch (NoSuchFieldException | IllegalAccessException e) {
-                return new ActionResult(true, "Reflection failure: " + e.getMessage(), false);
-            }
+        EditBox edit;
+        try {
+            edit = (EditBox) nameField.get(anvil);
+        } catch (IllegalAccessException e) {
+            throw new InteruptActionException(e.getMessage());
         }
 
-        return new ActionResult(true, "Expected to be in an anvil menu.", false);
+        if (edit == null || edit.getValue() == null || edit.getValue().trim().isEmpty()) return false;
+
+        edit.setValue(name);
+        anvil.getMenu().setItemName(name);
+        mc.gameMode.handleInventoryMouseClick(anvil.getMenu().containerId, 2, 0, ClickType.PICKUP, mc.player);
+        return true;
     }
 }

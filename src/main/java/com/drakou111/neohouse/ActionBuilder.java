@@ -10,6 +10,7 @@ import net.minecraft.world.item.Item;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ActionBuilder {
     private final List<Action> actions = new ArrayList<>();
@@ -77,12 +78,12 @@ public class ActionBuilder {
     }
 
     public ActionBuilder search(String text, Item itemType) {
-        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6, ContainerScreen.class, true));
+        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6));
         return this;
     }
 
     public ActionBuilder searchAndWait(String text, Item itemType) {
-        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6, ContainerScreen.class, true));
+        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6));
         actions.add(new WaitForAction(ContainerScreen.class, true));
         return this;
     }
@@ -94,37 +95,54 @@ public class ActionBuilder {
         }
         actions.add(new ChatAction(Commands.FUNCTIONS));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, name, null, Slots.GENERAL_NEXT_H6, ContainerScreen.class, true));
+        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, name, null, Slots.GENERAL_NEXT_H6));
         actions.add(new WaitForAction(ContainerScreen.class, true));
         return this;
     }
 
-    public ActionBuilder onlyIf(boolean condition, ActionBuilder ifInside) {
-        if (condition) this.actions.addAll(ifInside.actions);
+    public ActionBuilder onlyIf(boolean condition, Supplier<ActionBuilder> ifInside) {
+        if (condition) {
+            ActionBuilder branch = ifInside.get();
+            this.actions.addAll(branch.actions);
+        }
         return this;
     }
 
-    public ActionBuilder onlyIfElse(boolean condition, ActionBuilder ifInside, ActionBuilder elseInside) {
-        if (condition) this.actions.addAll(ifInside.actions);
-        else this.actions.addAll(elseInside.actions);
+    public ActionBuilder onlyIfElse(boolean condition, Supplier<ActionBuilder> ifInside, Supplier<ActionBuilder> elseInside) {
+        ActionBuilder branch;
+
+        if (condition) branch = ifInside.get();
+        else branch = elseInside.get();
+
+        this.actions.addAll(branch.actions);
 
         return this;
     }
 
     public ActionBuilder addAction(AddAction action, RestrictionAction restriction) {
-        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(action.getPage(restriction), action.getSlotID(restriction));
+        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(restriction.pageSlotFor(action).page, restriction.pageSlotFor(action).slotID);
     }
 
     public ActionBuilder addCondition(AddCondition action, RestrictionCondition restriction) {
-        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(action.getPage(restriction), action.getSlotID(restriction));
+        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(restriction.pageSlotFor(action).page, restriction.pageSlotFor(action).slotID);
     }
 
     public ActionBuilder clickAndSelectSlot(int page, int slot) {
         return this.flipH6(page).clickSlotAndWait(slot);
     }
 
+    public ActionBuilder closeAll() {
+        actions.add(new CloseScreenAction());
+        return this;
+    }
+
     public ActionBuilder append(Action action) {
         this.actions.add(action);
+        return this;
+    }
+
+    public ActionBuilder deleteAllAndWait() {
+        this.actions.add(new DeleteAllAction(Slots.GENERAL_LIST_H6[0]));
         return this;
     }
 

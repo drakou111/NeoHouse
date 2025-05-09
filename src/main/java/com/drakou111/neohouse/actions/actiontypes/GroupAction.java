@@ -1,8 +1,6 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.MessageUtils;
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.actions.ActionResult;
 import net.minecraft.client.Minecraft;
 
 import java.util.Iterator;
@@ -22,23 +20,12 @@ public class GroupAction extends Action {
      * @return an ActionResult whose `finished` flag is true when the entire sequence is done.
      */
     @Override
-    public ActionResult run(Minecraft mc) {
-        if (current == null) return new ActionResult(true);
-        ActionResult result = current.run(mc);
+    public boolean run(Minecraft mc) {
+        if (current == null) return true;
+        boolean finished = current.run(mc);
 
-        if (result.hasError()) {
-            if (!result.hasAbort())
-                MessageUtils.errorToChat(result.error);
-            return new ActionResult(true, result.error, true);
-        }
+        if (finished) this.current = it.hasNext() ? it.next() : null;
 
-        if (result.finished) this.current = it.hasNext() ? it.next() : null;
-
-        boolean finished = (current == null);
-        return new ActionResult(finished);
-    }
-
-    public boolean isEmpty() {
-        return it.hasNext();
+        return (current == null);
     }
 }

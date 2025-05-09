@@ -1,7 +1,7 @@
 package com.drakou111.neohouse;
 
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.actions.ActionResult;
+import com.drakou111.neohouse.exceptions.InteruptActionException;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -22,10 +22,18 @@ public class SequenceManager {
         if (currentAction == null) return;
 
         Minecraft mc = Minecraft.getInstance();
-        ActionResult result = currentAction.run(mc);
 
-        if (result.finished) {
-            MessageUtils.debugToChat("Sequence complete");
+        boolean finished;
+        try {
+            finished = currentAction.run(mc);
+        }
+        catch (InteruptActionException e) {
+            MessageUtils.errorToChat(e.getMessage());
+            finished = true;
+        }
+
+        if (finished) {
+            MessageUtils.debugToChat("Done!");
             currentAction = null;
         }
     }

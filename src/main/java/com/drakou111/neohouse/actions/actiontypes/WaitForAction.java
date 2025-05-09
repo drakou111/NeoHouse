@@ -1,7 +1,6 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.actions.ActionResult;
 import com.drakou111.neohouse.actions.ScreenEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -18,12 +17,12 @@ public class WaitForAction extends Action {
     }
 
     @Override
-    public ActionResult run(Minecraft mc) {
+    public boolean run(Minecraft mc) {
         if (!registered) {
             ScreenEvents.watch(this);
             registered = true;
         }
-        return new ActionResult(done);
+        return done;
     }
 
     public boolean matchesScreen(Screen screen, boolean isOpening) {
@@ -32,5 +31,9 @@ public class WaitForAction extends Action {
 
     public void markDone() {
         this.done = true;
+    }
+
+    public void reset() {
+        this.done = false;
     }
 }
