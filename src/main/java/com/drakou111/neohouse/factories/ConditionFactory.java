@@ -15,6 +15,7 @@ public class ConditionFactory {
                         .clickSlotAndWait(Slots.CONDITION_GROUP_INVERT)
                 )
                 .onlyIf(group != null, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_GROUP_TYPE)
                         .searchAndWait(group, null)
                 )
                 .onlyIf(includeHigherGroups, () -> new ActionBuilder()
@@ -103,7 +104,7 @@ public class ConditionFactory {
         return new ActionBuilder()
                 .addCondition(AddCondition.HAS_ITEM, state)
                 .onlyIf(invert, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.CONDITION_FLYING_INVERT)
+                        .clickSlotAndWait(Slots.CONDITION_ITEM_INVERT)
                 )
                 .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
                         .clickSlotAndWait(Slots.CONDITION_ITEM_ITEM)
@@ -267,7 +268,7 @@ public class ConditionFactory {
                         .clickSlotAndWait(Slots.CONDITION_GAME_MODE_INVERT)
                 )
                 .onlyIf(gamemode != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GAME_MODE_TYPE)
+                        .clickSlotAndWait(Slots.CONDITION_GAME_MODE_TYPE)
                         .clickAndSelectSlot(gamemode.getPage(), gamemode.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
@@ -313,6 +314,134 @@ public class ConditionFactory {
                 .onlyIf(team != null && !team.equals("None") && !team.trim().isEmpty(), () -> new ActionBuilder()
                         .clickSlotAndWait(Slots.CONDITION_TEAM_TYPE)
                         .search(team, null)
+                )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .get();
+    }
+
+    public static Action addConditionPortalType(RestrictionCondition state, boolean invert, PortalType portalType, String note) {
+        if (state.pageSlotFor(AddCondition.PORTAL_TYPE) == null) throw new InteruptActionException("Cannot add condition 'Portal Type' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.PORTAL_TYPE, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_PORTAL_TYPE_INVERT)
+                )
+                .onlyIf(portalType != null && portalType != PortalType.NETHER_PORTAL, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_PORTAL_TYPE_TYPE)
+                        .clickAndSelectSlot(portalType.getPage(), portalType.getSlotID())
+                )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .get();
+    }
+
+    public static Action addConditionPVPEnabled(RestrictionCondition state, boolean invert, String note) {
+        if (state.pageSlotFor(AddCondition.PVP_ENABLED) == null) throw new InteruptActionException("Cannot add condition 'PVP Enabled' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.PVP_ENABLED, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_PVP_ENABLED_INVERT)
+                )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .get();
+    }
+
+    public static Action addConditionDamageCause(RestrictionCondition state, boolean invert, DamageCause damageCause, String note) {
+        if (state.pageSlotFor(AddCondition.DAMAGE_CAUSE) == null) throw new InteruptActionException("Cannot add condition 'Damage Cause' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.DAMAGE_CAUSE, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_DAMAGE_CAUSE_INVERT)
+                )
+                .onlyIf(damageCause != null, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_DAMAGE_CAUSE_TYPE)
+                        .clickAndSelectSlot(damageCause.getPage(), damageCause.getSlotID())
+                )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .get();
+    }
+
+    public static Action addConditionDamageAmount(RestrictionCondition state, boolean invert, Comparator comparator, String value, String note) {
+        if (state.pageSlotFor(AddCondition.DAMAGE_AMOUNT) == null) throw new InteruptActionException("Cannot add condition 'Damage Amount' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.DAMAGE_AMOUNT, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_DAMAGE_AMOUNT_INVERT)
+                )
+                .onlyIf(comparator != null && comparator != Comparator.EQUAL, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_DAMAGE_AMOUNT_COMPARATOR)
+                        .clickAndSelectSlot(comparator.getPage(), comparator.getSlotID())
+                )
+                .onlyIf(value != null, () -> new ActionBuilder()
+                        .anvilInput(value, Slots.CONDITION_DAMAGE_AMOUNT_VALUE)
+                )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .get();
+    }
+
+    public static Action addConditionBlockType(RestrictionCondition state, boolean invert, Integer inventoryItemSlotID, boolean matchTypeOnly, String note) {
+        if (state.pageSlotFor(AddCondition.BLOCK_TYPE) == null) throw new InteruptActionException("Cannot add condition 'Block Type' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.BLOCK_TYPE, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_BLOCK_TYPE_INVERT)
+                )
+                .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_BLOCK_TYPE_ITEM)
+                        .clickSlotAndWait(inventoryItemSlotID)
+                )
+                .onlyIf(matchTypeOnly, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_BLOCK_TYPE_MATCH_TYPE_ONLY)
+                )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .get();
+    }
+
+    public static Action addConditionIsItem(RestrictionCondition state, boolean invert, Integer inventoryItemSlotID, WhatCheck whatCheck, WhereCheck whereCheck, AmountCheck amountCheck, String note) {
+        if (state.pageSlotFor(AddCondition.IS_ITEM) == null) throw new InteruptActionException("Cannot add condition 'Is Item' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.IS_ITEM, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_IS_ITEM_INVERT)
+                )
+                .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_IS_ITEM_ITEM)
+                        .clickSlotAndWait(inventoryItemSlotID)
+                )
+                .onlyIf(whatCheck != null && whatCheck != WhatCheck.METADATA, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_IS_ITEM_WHAT_CHECK)
+                        .clickAndSelectSlot(whatCheck.getPage(), whatCheck.getSlotID())
+                )
+                .onlyIf(whereCheck != null && whereCheck != WhereCheck.ANYWHERE, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_IS_ITEM_WHERE_CHECK)
+                        .clickAndSelectSlot(whereCheck.getPage(), whereCheck.getSlotID())
+                )
+                .onlyIf(amountCheck != null && amountCheck != AmountCheck.ANY, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_IS_ITEM_AMOUNT)
+                        .clickAndSelectSlot(amountCheck.getPage(), amountCheck.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)

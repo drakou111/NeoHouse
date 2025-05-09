@@ -6,30 +6,6 @@ public class Slots {
     \******************/
     public static final int HOUSING_MENU_SYSTEMS = 31;
 
-    /*******************\
-    *   ADD_CONDITION   *
-    \*******************/
-
-    // No restrictions
-    public static final int ADD_CONDITION_GROUP = 10;
-    public static final int ADD_CONDITION_VARIABLE = 11;
-    public static final int ADD_CONDITION_PERMISSION = 12;
-    public static final int ADD_CONDITION_REGION = 13;
-    public static final int ADD_CONDITION_ITEM = 14;
-    public static final int ADD_CONDITION_DOING_PARKOUR = 15;
-    public static final int ADD_CONDITION_POTION = 16;
-    public static final int ADD_CONDITION_SNEAKING = 19;
-    public static final int ADD_CONDITION_FLYING = 20;
-    public static final int ADD_CONDITION_HEALTH = 21;
-    public static final int ADD_CONDITION_MAX_HEALTH = 22;
-    public static final int ADD_CONDITION_HUNGER = 23;
-    public static final int ADD_CONDITION_GAME_MODE = 24;
-    public static final int ADD_CONDITION_PLACEHOLDER = 25;
-    public static final int ADD_CONDITION_TEAM = 28;
-
-
-    // ...
-
     /*************\
     *   ACTIONS   *
     \*************/
@@ -240,6 +216,35 @@ public class Slots {
     // TEAM
     public static final int CONDITION_TEAM_INVERT = 10;
     public static final int CONDITION_TEAM_TYPE = 11;
+
+    //PORTAL_TYPE
+    public static final int CONDITION_PORTAL_TYPE_INVERT = 10;
+    public static final int CONDITION_PORTAL_TYPE_TYPE = 11;
+
+    //PVP_ENABLED
+    public static final int CONDITION_PVP_ENABLED_INVERT = 10;
+
+    // DAMAGE_CAUSE
+    public static final int CONDITION_DAMAGE_CAUSE_INVERT = 10;
+    public static final int CONDITION_DAMAGE_CAUSE_TYPE = 11;
+
+    // DAMAGE_AMOUNT
+    public static final int CONDITION_DAMAGE_AMOUNT_INVERT = 10;
+    public static final int CONDITION_DAMAGE_AMOUNT_COMPARATOR = 11;
+    public static final int CONDITION_DAMAGE_AMOUNT_VALUE = 12;
+
+    // BLOCK_TYPE
+    public static final int CONDITION_BLOCK_TYPE_INVERT = 10;
+    public static final int CONDITION_BLOCK_TYPE_ITEM = 11;
+    public static final int CONDITION_BLOCK_TYPE_MATCH_TYPE_ONLY = 12;
+
+    // IS_ITEM
+    public static final int CONDITION_IS_ITEM_INVERT = 10;
+    public static final int CONDITION_IS_ITEM_ITEM = 11;
+    public static final int CONDITION_IS_ITEM_WHAT_CHECK = 12;
+    public static final int CONDITION_IS_ITEM_WHERE_CHECK = 13;
+    public static final int CONDITION_IS_ITEM_AMOUNT = 14;
+
 
     /*************\
     *   GENERAL   *

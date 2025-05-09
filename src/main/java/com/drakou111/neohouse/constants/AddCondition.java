@@ -1,14 +1,18 @@
 package com.drakou111.neohouse.constants;
 
-import com.drakou111.neohouse.PageSlot;
-
-import java.util.EnumMap;
-
 /****************\
  *   ADD ACTION   *
  \****************/
 
 public enum AddCondition {
+    PORTAL_TYPE,
+    PVP_ENABLED,
+    DAMAGE_CAUSE,
+    DAMAGE_AMOUNT,
+    BLOCK_TYPE,
+    IS_ITEM,
+
+    FISHING_ENVIRONMENT,
     GROUP,
     VARIABLE,
     PERMISSION,
