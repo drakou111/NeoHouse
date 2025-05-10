@@ -6,6 +6,16 @@ public class Slots {
     \******************/
     public static final int HOUSING_MENU_SYSTEMS = 31;
 
+    public static final int SYSTEMS_FUNCTIONS = 14;
+
+    /***************\
+    *   FUNCTIONS   *
+    \***************/
+    public static final int FUNCTION_DESCRIPTION = 13;
+    public static final int FUNCTION_ICON = 15;
+    public static final int FUNCTION_DELETE = 30;
+    public static final int FUNCTION_AUTOMATIC_EXECUTION = 32;
+
     /*************\
     *   ACTIONS   *
     \*************/
@@ -250,23 +260,6 @@ public class Slots {
     *   GENERAL   *
     \*************/
 
-    // Has item, what to check
-    public static final int HAS_ITEM_WHAT_TO_CHECK_TYPE = 10;
-    public static final int HAS_ITEM_WHAT_TO_CHECK_METADATA = 11;
-
-    // Has item, where to check
-    public static final int HAS_ITEM_WHERE_TO_CHECK_HAND = 10;
-    public static final int HAS_ITEM_WHERE_TO_CHECK_ARMOR = 11;
-    public static final int HAS_ITEM_WHERE_TO_CHECK_HOTBAR = 12;
-    public static final int HAS_ITEM_WHERE_TO_CHECK_CURSOR = 13;
-    public static final int HAS_ITEM_WHERE_TO_CHECK_CRAFTING_GRID = 14;
-    public static final int HAS_ITEM_WHERE_TO_CHECK_ANYWHERE = 15;
-
-    // Has item, amount
-    public static final int HAS_ITEM_AMOUNT_ANY = 10;
-    public static final int HAS_ITEM_AMOUNT_GREATER_OR_EQUAL = 11;
-
-
     // Assuming height of 6 (most things)
     public static final int GENERAL_GO_BACK_H6 = 49;
     public static final int GENERAL_ADD_H6 = 50;
@@ -278,5 +271,6 @@ public class Slots {
     public static final int GENERAL_ADD_H4 = 32;
     public static final int GENERAL_NOTE_H4 = 32;
     public static final int GENERAL_NEXT_H4 = 35;
+    public static final int GENERAL_CONFIRM = 11;
 
 }

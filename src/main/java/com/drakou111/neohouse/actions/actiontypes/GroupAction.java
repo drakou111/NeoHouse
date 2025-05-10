@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
+import com.drakou111.neohouse.MessageUtils;
 import com.drakou111.neohouse.actions.Action;
 import net.minecraft.client.Minecraft;
 
@@ -22,6 +23,7 @@ public class GroupAction extends Action {
     @Override
     public boolean run(Minecraft mc) {
         if (current == null) return true;
+
         boolean finished = current.run(mc);
 
         if (finished) this.current = it.hasNext() ? it.next() : null;

@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
+import com.drakou111.neohouse.MessageUtils;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.exceptions.InteruptActionException;
 import net.minecraft.client.Minecraft;
@@ -9,75 +10,95 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 
-/**
- * Search primary slots for itemName; if missing, click backupSlot,
- * wait for UI change, then re‑search primary slots one more time.
- */
 public class SearchAction extends Action {
     private final int[] primarySlots;
     private final String targetName;
     private final Item itemType;
     private final int backupSlot;
-    private final WaitForAction waitFor;
-    private final WaitTicksAction waitTicks;
+    private final boolean leftClick;
+    private final Action onFound;
+    private final Action onNotFound;
 
-    private int step = 0;
+    private final WaitForAction waitForUI = new WaitForAction(ContainerScreen.class, true);
+    private final WaitTicksAction waitTick  = new WaitTicksAction(1);
 
-    public SearchAction(int[] primarySlots, String targetName, Item itemType, int backupSlot) {
+    private enum Step {
+        STEP_SEARCH,
+        STEP_CLICK_BACKUP,
+        STEP_WAIT_UI,
+        STEP_WAIT_FOUND,
+        STEP_FOUND,
+        STEP_NOT_FOUND,
+        STEP_DONE
+    }
+
+    private Step step = Step.STEP_SEARCH;
+
+    public SearchAction(int[] primarySlots, String targetName, Item itemType, int backupSlot, boolean leftClick, Action onFound, Action onNotFound) {
         this.primarySlots = primarySlots;
         this.targetName = targetName;
         this.itemType = itemType;
         this.backupSlot = backupSlot;
-        this.waitFor = new WaitForAction(ContainerScreen.class, true);
-        this.waitTicks = new WaitTicksAction(1);
+        this.leftClick = leftClick;
+        this.onFound = onFound;
+        this.onNotFound  = onNotFound;
     }
 
     @Override
     public boolean run(Minecraft mc) {
+        MessageUtils.debugToChat("Searching " + targetName + " step: " + step.name());
+
         if (mc.player == null) return true;
         AbstractContainerMenu menu = mc.player.containerMenu;
         if (menu == null) return true;
 
-        // STEP 0 & 2: search primary slots
-        if (step == 0) {
-            for (int slotIndex : primarySlots) {
-                Slot slot = menu.getSlot(slotIndex);
-                if (slot.hasItem() && slot.getItem().getHoverName().getString().equals(targetName) && (itemType == null || slot.getItem().getItem() == itemType) && mc.gameMode != null) {
-                    mc.gameMode.handleInventoryMouseClick(
-                            menu.containerId, slotIndex, 0, ClickType.PICKUP, mc.player
-                    );
-                    return true;
+        if (step == Step.STEP_SEARCH) {
+            boolean found = false;
+            for (int idx : primarySlots) {
+                Slot s = menu.getSlot(idx);
+                if (s.hasItem() && s.getItem().getHoverName().getString().equals(targetName) && (itemType == null || s.getItem().getItem() == itemType) && mc.gameMode != null) {
+                    mc.gameMode.handleInventoryMouseClick(menu.containerId, idx, leftClick ? 0 : 1, ClickType.PICKUP, mc.player);
+                    step = Step.STEP_WAIT_FOUND;
+                    found = true;
+                    break;
                 }
             }
-            step = 1;
+            if (!found)
+                step = Step.STEP_CLICK_BACKUP;
         }
-
-        // STEP 1: click backup arrow
-        if (step == 1) {
-            Slot back = menu.getSlot(backupSlot);
-            if (back.hasItem() && mc.gameMode != null) {
-                mc.gameMode.handleInventoryMouseClick(
-                        menu.containerId, backupSlot, 0, ClickType.PICKUP, mc.player
-                );
-                // now wait for UI update
-                step = 3;
-                return false;
+        else if (step == Step.STEP_CLICK_BACKUP) {
+            Slot arrow = menu.getSlot(backupSlot);
+            if (arrow.hasItem() && mc.gameMode != null) {
+                mc.gameMode.handleInventoryMouseClick(menu.containerId, backupSlot, 0, ClickType.PICKUP, mc.player);
+                step = Step.STEP_WAIT_UI;
             } else {
-                // no arrow to click → was not found
-                throw new InteruptActionException("Couldn't find the item named '" + targetName + "'.");
+                step = Step.STEP_NOT_FOUND;
             }
         }
-
-        // STEP 3: wait for screen change
-        if (step == 3) {
-            if (waitFor.run(mc) && waitTicks.run(mc)) {
-                step = 0;
-                waitFor.reset();
-                waitTicks.reset();
+        else if (step == Step.STEP_WAIT_UI) {
+            if (waitForUI.run(mc) && waitTick.run(mc)) {
+                step = Step.STEP_SEARCH;
+                waitForUI.reset();
+                waitTick.reset();
             }
-            return false;
         }
-
-        throw new InteruptActionException("Couldn't find the item named '" + targetName + "'.");
+        else if (step == Step.STEP_WAIT_FOUND) {
+            if (waitForUI.run(mc) && waitTick.run(mc)) {
+                step = Step.STEP_FOUND;
+                waitForUI.reset();
+                waitTick.reset();
+            }
+        }
+        else if (step == Step.STEP_FOUND) {
+            if (onFound == null || onFound.run(mc)) step = Step.STEP_DONE;
+        }
+        else if (step == Step.STEP_NOT_FOUND) {
+            if (onNotFound == null || onNotFound.run(mc)) step = Step.STEP_DONE;
+            if (onNotFound == null) throw new InteruptActionException("Could not find item called '" + targetName + "'.");
+        }
+        else {
+            return true;
+        }
+        return false;
     }
 }

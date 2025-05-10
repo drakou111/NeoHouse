@@ -15,13 +15,13 @@ import java.util.function.Supplier;
 public class ActionBuilder {
     private final List<Action> actions = new ArrayList<>();
 
-    public ActionBuilder clickSlot(int s) {
-        actions.add(new SlotAction(s));
+    public ActionBuilder clickSlot(int s, boolean leftCLick) {
+        actions.add(new SlotAction(s, leftCLick));
         return this;
     }
 
-    public ActionBuilder clickSlotAndWait(int s) {
-        actions.add(new SlotAction(s));
+    public ActionBuilder clickSlotAndWait(int s, boolean leftCLick) {
+        actions.add(new SlotAction(s, leftCLick));
         actions.add(new WaitForAction(ContainerScreen.class, true));
         return this;
     }
@@ -49,7 +49,7 @@ public class ActionBuilder {
 
     public ActionBuilder flipH6(int pages) {
         for (int i = 0; i < pages; i++) {
-            actions.add(new SlotAction(Slots.GENERAL_NEXT_H6));
+            actions.add(new SlotAction(Slots.GENERAL_NEXT_H6, true));
             actions.add(new WaitForAction(ContainerScreen.class, true));
         }
         return this;
@@ -59,7 +59,7 @@ public class ActionBuilder {
 
         String capped = string.length() > StringLimits.CHAT_TEXT ? string.substring(0, StringLimits.CHAT_TEXT) : string;
 
-        actions.add(new SlotAction(slot));
+        actions.add(new SlotAction(slot, true));
         actions.add(new WaitForAction(ContainerScreen.class, false));
         actions.add(new ChatAction(capped));
         actions.add(new WaitForAction(ContainerScreen.class, true));
@@ -70,33 +70,26 @@ public class ActionBuilder {
 
         String capped = string.length() > StringLimits.ANVIL_TEXT ? string.substring(0, StringLimits.ANVIL_TEXT) : string;
 
-        actions.add(new SlotAction(slot));
+        actions.add(new SlotAction(slot, true));
         actions.add(new WaitForAction(AnvilScreen.class, true));
         actions.add(new AnvilAction(capped));
         actions.add(new WaitForAction(ContainerScreen.class, true));
         return this;
     }
 
-    public ActionBuilder search(String text, Item itemType) {
-        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6));
+    public ActionBuilder search(String text, Item itemType, boolean leftClick, ActionBuilder onFound, ActionBuilder onNotFound) {
+        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6, leftClick, onFound != null ? onFound.get() : null, onNotFound != null ? onNotFound.get() : null));
         return this;
     }
 
-    public ActionBuilder searchAndWait(String text, Item itemType) {
-        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6));
-        actions.add(new WaitForAction(ContainerScreen.class, true));
-        return this;
-    }
-
-    public ActionBuilder gotoFunction(boolean hasUIOpened, String name) {
+    public ActionBuilder gotoFunction(boolean hasUIOpened, String name, boolean leftClick) {
         if (hasUIOpened) {
             actions.add(new CloseScreenAction());
-            actions.add(new WaitForAction(ContainerScreen.class, false));
+            actions.add(new WaitTicksAction(1));
         }
         actions.add(new ChatAction(Commands.FUNCTIONS));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, name, null, Slots.GENERAL_NEXT_H6));
-        actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new SearchAction(Slots.GENERAL_LIST_H6, name, null, Slots.GENERAL_NEXT_H6, leftClick, null, null));
         return this;
     }
 
@@ -120,15 +113,15 @@ public class ActionBuilder {
     }
 
     public ActionBuilder addAction(AddAction action, RestrictionAction restriction) {
-        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(restriction.pageSlotFor(action).page, restriction.pageSlotFor(action).slotID);
+        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6, true).clickAndSelectSlot(restriction.pageSlotFor(action).page, restriction.pageSlotFor(action).slotID);
     }
 
     public ActionBuilder addCondition(AddCondition action, RestrictionCondition restriction) {
-        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6).clickAndSelectSlot(restriction.pageSlotFor(action).page, restriction.pageSlotFor(action).slotID);
+        return this.clickSlotAndWait(Slots.GENERAL_ADD_H6, true).clickAndSelectSlot(restriction.pageSlotFor(action).page, restriction.pageSlotFor(action).slotID);
     }
 
     public ActionBuilder clickAndSelectSlot(int page, int slot) {
-        return this.flipH6(page).clickSlotAndWait(slot);
+        return this.flipH6(page).clickSlotAndWait(slot, true);
     }
 
     public ActionBuilder closeAll() {
@@ -143,6 +136,18 @@ public class ActionBuilder {
 
     public ActionBuilder deleteAllAndWait() {
         this.actions.add(new DeleteAllAction(Slots.GENERAL_LIST_H6[0]));
+        return this;
+    }
+
+    public ActionBuilder removeFunctionIfPresent(String name) {
+        return this.search(name, null, false,
+                    new ActionBuilder().clickSlotAndWait(Slots.FUNCTION_DELETE, true).clickSlotAndWait(Slots.GENERAL_CONFIRM, true),
+                    new ActionBuilder().empty() // Do nothing
+                );
+    }
+
+    public ActionBuilder empty() {
+        this.actions.add(new EmptyAction());
         return this;
     }
 

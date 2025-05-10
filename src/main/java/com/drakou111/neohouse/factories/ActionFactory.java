@@ -13,27 +13,27 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.CONDITIONAL, state)
                 .onlyIf(matchAny, () ->  new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_MATCH_ANY)
+                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_MATCH_ANY, true)
                 )
                 .onlyIf(conditions != null, () ->  new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_CONDITIONALS)
+                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_CONDITIONALS, true)
                         .append(conditions)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6)
+                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(ifs != null, () ->  new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_IF)
+                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_IF, true)
                         .append(ifs)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6)
+                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(elses != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_ELSE)
+                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_ELSE, true)
                         .append(elses)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6)
+                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -43,16 +43,16 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_GROUP, state)
                 .onlyIf(groupName != null && !groupName.trim().isEmpty(), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAYER_GROUP_VAL)
-                        .searchAndWait(groupName, null)
+                        .clickSlotAndWait(Slots.ACTION_PLAYER_GROUP_VAL, true)
+                        .search(groupName, null, true, null, null)
                 )
                 .onlyIf(!demotionProtection, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAYER_GROUP_DEMOTION_PROTECTION)
+                        .clickSlotAndWait(Slots.ACTION_PLAYER_GROUP_DEMOTION_PROTECTION, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
 
     }
@@ -104,7 +104,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -123,7 +123,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -144,16 +144,16 @@ public class ActionFactory {
                         .anvilInput(String.valueOf(maxHealth), Slots.ACTION_MAX_HEALTH_VAL)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_MAX_HEALTH_OPERATION)
+                        .clickSlotAndWait(Slots.ACTION_MAX_HEALTH_OPERATION, true)
                         .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
                 )
                 .onlyIf(!healOnChange, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_MAX_HEALTH_HEAL_ON_CHANGE)
+                        .clickSlotAndWait(Slots.ACTION_MAX_HEALTH_HEAL_ON_CHANGE, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -171,27 +171,27 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.GIVE_ITEM, state)
                 .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_ITEM)
-                        .clickSlotAndWait(inventoryItemSlotID)
+                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_ITEM, true)
+                        .clickSlotAndWait(inventoryItemSlotID, true)
                 )
                 .onlyIf(allowMultiple, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_ALLOW_MULTIPLE)
+                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_ALLOW_MULTIPLE, true)
                 )
                 .onlyIf(inventorySlot != InventorySlots.FIRST_AVAILABLE_SLOT && inventorySlot != InventorySlots.MANUAL_INPUT, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_SLOT)
+                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_SLOT, true)
                         .clickAndSelectSlot(inventorySlot.getPage(), inventorySlot.getSlotID())
                 )
                 .onlyIf(inventorySlot == InventorySlots.MANUAL_INPUT, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_SLOT)
+                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_SLOT, true)
                         .anvilInput(String.valueOf(manualInputIndex), InventorySlots.MANUAL_INPUT.getSlotID())
                 )
                 .onlyIf(replaceExistingItem, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_REPLACE_EXISTING)
+                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_REPLACE_EXISTING, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -201,13 +201,13 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.REMOVE_ITEM, state)
                 .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_REMOVE_ITEM_ITEM)
-                        .clickSlotAndWait(inventoryItemSlotID)
+                        .clickSlotAndWait(Slots.ACTION_REMOVE_ITEM_ITEM, true)
+                        .clickSlotAndWait(inventoryItemSlotID, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -226,7 +226,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -236,7 +236,7 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.APPLY_POTION, state)
                 .onlyIf(potion != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_EFFECT)
+                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_EFFECT, true)
                         .clickAndSelectSlot(potion.getPage(), potion.getSlotID())
                 )
                 .onlyIf(duration != 60, () -> new ActionBuilder()
@@ -246,15 +246,15 @@ public class ActionFactory {
                         .anvilInput(String.valueOf(level), Slots.ACTION_APPLY_POTION_LEVEL)
                 )
                 .onlyIf(override, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_OVERRIDE)
+                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_OVERRIDE, true)
                 )
                 .onlyIf(!showIcon, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_SHOW_ICON)
+                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_SHOW_ICON, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -277,7 +277,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -287,13 +287,13 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.SEND_LOBBY, state)
                 .onlyIf(lobby != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SEND_LOBBY_LOBBY)
+                        .clickSlotAndWait(Slots.ACTION_SEND_LOBBY_LOBBY, true)
                         .clickAndSelectSlot(lobby.getPage(), lobby.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -303,26 +303,26 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.VARIABLE, state)
                 .onlyIf(holder != Holder.PLAYER, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_HOLDER)
+                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_HOLDER, true)
                         .clickAndSelectSlot(holder.getPage(), holder.getSlotID())
                 )
                 .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
                         .chatInput(variable, Slots.ACTION_SET_VARIABLE_VAR)
                 )
                 .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_OPERATION)
+                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_OPERATION, true)
                         .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
                 )
                 .onlyIf(!value.equals("1"), () -> new ActionBuilder()
                         .chatInput(value, Slots.ACTION_SET_VARIABLE_VALUE)
                 )
                 .onlyIf(automaticUnset, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_AUTOMATIC_UNSET)
+                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_AUTOMATIC_UNSET, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -332,20 +332,20 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.TELEPORT, state)
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TELEPORT_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_TELEPORT_LOCATION, true)
                         .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TELEPORT_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_TELEPORT_LOCATION, true)
                         .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
                 )
                 .onlyIf(preventInsideBlocks, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TELEPORT_PREVENT_INSIDE_BLOCK)
+                        .clickSlotAndWait(Slots.ACTION_TELEPORT_PREVENT_INSIDE_BLOCK, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -364,7 +364,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -375,7 +375,7 @@ public class ActionFactory {
                 .addAction(AddAction.PLAY_SOUND, state)
 
                 .onlyIf(sound != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_TYPE)
+                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_TYPE, true)
                         .clickAndSelectSlot(sound.getPage(), sound.getSlotID())
                 )
                 .onlyIf(volume != 0.7D, () -> new ActionBuilder()
@@ -385,17 +385,17 @@ public class ActionFactory {
                         .anvilInput(String.valueOf(pitch), Slots.ACTION_PLAY_SOUND_PITCH)
                 )
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_LOCATION, true)
                         .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_LOCATION, true)
                         .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -405,17 +405,17 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.COMPASS_TARGET, state)
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_COMPASS_TARGET_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_COMPASS_TARGET_LOCATION, true)
                         .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_COMPASS_TARGET_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_COMPASS_TARGET_LOCATION, true)
                         .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -425,13 +425,13 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.SET_GAME_MODE, state)
                 .onlyIf(gamemode != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GAME_MODE_TYPE)
+                        .clickSlotAndWait(Slots.ACTION_GAME_MODE_TYPE, true)
                         .clickAndSelectSlot(gamemode.getPage(), gamemode.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -444,13 +444,13 @@ public class ActionFactory {
                         .anvilInput(health, Slots.ACTION_HEALTH_VAL)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_HEALTH_OPERATION)
+                        .clickSlotAndWait(Slots.ACTION_HEALTH_OPERATION, true)
                         .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -463,13 +463,13 @@ public class ActionFactory {
                         .anvilInput(hunger, Slots.ACTION_HUNGER_VAL)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_HUNGER_OPERATION)
+                        .clickSlotAndWait(Slots.ACTION_HUNGER_OPERATION, true)
                         .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -479,14 +479,14 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.RANDOM, state)
                 .onlyIf(randoms != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_RANDOM_ACTIONS)
+                        .clickSlotAndWait(Slots.ACTION_RANDOM_ACTIONS, true)
                         .append(randoms)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6)
+                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -496,16 +496,16 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.TRIGGER_FUNCTION, state)
                 .onlyIf(name != null && !name.trim().isEmpty(), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TRIGGER_FUNCTION_TYPE)
-                        .searchAndWait(name, null)
+                        .clickSlotAndWait(Slots.ACTION_TRIGGER_FUNCTION_TYPE, true)
+                        .search(name, null, true, null, null)
                 )
                 .onlyIf(forAll, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TRIGGER_FUNCTION_ALL)
+                        .clickSlotAndWait(Slots.ACTION_TRIGGER_FUNCTION_ALL, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -515,13 +515,13 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.APPLY_LAYOUT, state)
                 .onlyIf(name != null && !name.trim().isEmpty(), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_LAYOUT_TYPE)
-                        .searchAndWait(name, null)
+                        .clickSlotAndWait(Slots.ACTION_LAYOUT_TYPE, true)
+                        .search(name, null, true, null, null)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -547,7 +547,7 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.ENCHANT_HELD_ITEM, state)
                 .onlyIf(enchant != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_ENCHANT_HELD_ENCHANT)
+                        .clickSlotAndWait(Slots.ACTION_ENCHANT_HELD_ENCHANT, true)
                         .clickAndSelectSlot(enchant.getPage(), enchant.getSlotID())
                 )
                 .onlyIf(level != 1, () -> new ActionBuilder()
@@ -556,7 +556,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -571,7 +571,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -581,13 +581,13 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.SET_TEAM, state)
                 .onlyIf(team != null && !team.equals("None"), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TEAM_TYPE)
-                        .searchAndWait(team, null)
+                        .clickSlotAndWait(Slots.ACTION_TEAM_TYPE, true)
+                        .search(team, null, true, null, null)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -597,13 +597,13 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.DISPLAY_MENU, state)
                 .onlyIf(menu != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DISPLAY_MENU_TYPE)
-                        .searchAndWait(menu, null)
+                        .clickSlotAndWait(Slots.ACTION_DISPLAY_MENU_TYPE, true)
+                        .search(menu, null, true, null, null)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -613,33 +613,33 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.DROP_ITEM, state)
                 .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_ITEM)
-                        .clickSlotAndWait(inventoryItemSlotID)
+                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_ITEM, true)
+                        .clickSlotAndWait(inventoryItemSlotID, true)
                 )
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_LOCATION, true)
                         .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_LOCATION, true)
                         .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
                 )
                 .onlyIf(!dropNaturally, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_DROP_NATURALLY)
+                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_DROP_NATURALLY, true)
                 )
                 .onlyIf(disableItemMerging, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_DISABLE_MERGE)
+                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_DISABLE_MERGE, true)
                 )
                 .onlyIf(prioritizePlayer, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_PRIORITIZE_PLAYER)
+                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_PRIORITIZE_PLAYER, true)
                 )
                 .onlyIf(fallbackToInventory, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_FALLBACK_INVENTORY)
+                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_FALLBACK_INVENTORY, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -660,7 +660,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -670,11 +670,11 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.LAUNCH_TO_TARGET, state)
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_LAUNCH_TARGET_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_LAUNCH_TARGET_LOCATION, true)
                         .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_LAUNCH_TARGET_LOCATION)
+                        .clickSlotAndWait(Slots.ACTION_LAUNCH_TARGET_LOCATION, true)
                         .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
                 )
                 .onlyIf(strength != null && !strength.equals("2"), () -> new ActionBuilder()
@@ -683,7 +683,7 @@ public class ActionFactory {
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -693,13 +693,13 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.SET_WEATHER, state)
                 .onlyIf(weather != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_WEATHER_WEATHER)
+                        .clickSlotAndWait(Slots.ACTION_SET_WEATHER_WEATHER, true)
                         .clickAndSelectSlot(weather.getPage(), weather.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -709,17 +709,17 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.SET_TIME, state)
                 .onlyIf(time != null && time != Time.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_TIME_TIME)
+                        .clickSlotAndWait(Slots.ACTION_SET_TIME_TIME, true)
                         .clickAndSelectSlot(time.getPage(), time.getSlotID())
                 )
                 .onlyIf(time == Time.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_TIME_TIME)
+                        .clickSlotAndWait(Slots.ACTION_SET_TIME_TIME, true)
                         .anvilInput(customTime, time.getSlotID())
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
@@ -729,12 +729,12 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.NAME_TAG_DISPLAY, state)
                 .onlyIf(!displayNametag, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_NAME_TAG_TOGGLE)
+                        .clickSlotAndWait(Slots.ACTION_NAME_TAG_TOGGLE, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 

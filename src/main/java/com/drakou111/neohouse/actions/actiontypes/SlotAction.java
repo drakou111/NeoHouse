@@ -7,9 +7,11 @@ import net.minecraft.world.inventory.ClickType;
 
 public class SlotAction extends Action {
     private final int slotIndex;
+    private final boolean leftClick;
 
-    public SlotAction(int slotIndex) {
+    public SlotAction(int slotIndex, boolean leftClick) {
         this.slotIndex = slotIndex;
+        this.leftClick = leftClick;
     }
 
     @Override
@@ -17,7 +19,7 @@ public class SlotAction extends Action {
         if (mc.player != null && mc.player.containerMenu != null && Minecraft.getInstance().gameMode != null) {
             if (mc.player.containerMenu.slots.size() <= slotIndex) throw new InteruptActionException("Tried clicking a slot that doesn't exist.");
             
-            Minecraft.getInstance().gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slotIndex, 0, ClickType.PICKUP, mc.player);
+            Minecraft.getInstance().gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slotIndex, leftClick ? 0 : 1, ClickType.PICKUP, mc.player);
             return true;
         }
 
