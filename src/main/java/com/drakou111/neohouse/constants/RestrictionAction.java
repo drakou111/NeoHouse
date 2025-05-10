@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.constants;
 
 import com.drakou111.neohouse.PageSlot;
+
 import java.util.List;
 
 public enum RestrictionAction {

@@ -533,6 +533,14 @@ public class ActionFactory {
                 .get();
     }
 
+    public static Action addActionCancelEvent(RestrictionAction state) {
+        if (state.pageSlotFor(AddAction.CANCEL_EVENT) == null) throw new InteruptActionException("Cannot add action 'Cancel Event' here.");
+
+        return new ActionBuilder()
+                .addAction(AddAction.CANCEL_EVENT, state)
+                .get();
+    }
+
     public static Action addActionEnchantHeldItem(RestrictionAction state, Enchant enchant, int level, String note) {
         if (state.pageSlotFor(AddAction.ENCHANT_HELD_ITEM) == null) throw new InteruptActionException("Cannot add action 'Enchant Held Item' here.");
 
@@ -729,4 +737,5 @@ public class ActionFactory {
                 .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4)
                 .get();
     }
+
 }
