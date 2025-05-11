@@ -9,4 +9,7 @@ public class DummyNHCompiler implements Compiler {
     public Action compile(String source) throws CompileException {
         return new ChatAction("Executing NH script:\n" + source);
     }
+
+
+
 }

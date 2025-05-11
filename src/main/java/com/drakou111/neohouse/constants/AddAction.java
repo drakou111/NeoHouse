@@ -43,5 +43,5 @@ public enum AddAction {
     LAUNCH_TO_TARGET,
     SET_WEATHER,
     SET_TIME,
-    NAME_TAG_DISPLAY
+    NAME_TAG_DISPLAY,
 }
