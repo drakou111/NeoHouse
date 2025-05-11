@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.MessageUtils;
 import com.drakou111.neohouse.actions.Action;
 import net.minecraft.client.Minecraft;
 
@@ -16,10 +15,6 @@ public class GroupAction extends Action {
         this.current = it.hasNext() ? it.next() : null;
     }
 
-    /**
-     * Drives the sequence one step.
-     * @return an ActionResult whose `finished` flag is true when the entire sequence is done.
-     */
     @Override
     public boolean run(Minecraft mc) {
         if (current == null) return true;

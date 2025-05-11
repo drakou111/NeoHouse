@@ -1,8 +1,8 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.MessageUtils;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;

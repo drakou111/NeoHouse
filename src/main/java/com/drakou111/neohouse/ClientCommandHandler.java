@@ -2,8 +2,16 @@ package com.drakou111.neohouse;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
+import com.drakou111.neohouse.compilers.DummyNHCCompiler;
+import com.drakou111.neohouse.compilers.DummyNHCompiler;
+import com.drakou111.neohouse.compilers.ScriptRunner;
+import com.drakou111.neohouse.exceptions.CompileException;
 import com.drakou111.neohouse.factories.MovementFactory;
+import com.drakou111.neohouse.utils.ActionBuilder;
+import com.drakou111.neohouse.utils.MessageUtils;
+import com.drakou111.neohouse.utils.SequenceManager;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.CommandSourceStack;
@@ -13,11 +21,16 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 @EventBusSubscriber(modid = NeoHouse.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public class ClientCommandHandler {
+
+    private static final ScriptRunner NH_SCRIPT_RUNNER = new ScriptRunner(new DummyNHCompiler());
+    private static final ScriptRunner NHC_SCRIPT_RUNNER = new ScriptRunner(new DummyNHCCompiler());
 
     @SubscribeEvent
     public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
@@ -37,6 +50,49 @@ public class ClientCommandHandler {
                     }
                     return 1; // success
                 })
+            )
+            .then(Commands.literal("run")
+            .then(Commands.argument("path", StringArgumentType.greedyString())
+                    .executes(ctx -> {
+                        String rawPath = StringArgumentType.getString(ctx, "path");
+                        LocalPlayer player = Minecraft.getInstance().player;
+                        if (player == null) {
+                            MessageUtils.errorToChat("No player context!");
+                            return 0;
+                        }
+
+                        // strip quotes if present
+                        String cleaned = rawPath;
+                        if ((cleaned.startsWith("\"") && cleaned.endsWith("\"")) ||
+                                (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+                            cleaned = cleaned.substring(1, cleaned.length() - 1);
+                        }
+
+                        Path scriptFile = Paths.get(cleaned);
+                        String fileName = scriptFile.getFileName().toString().toLowerCase();
+                        if (!(fileName.endsWith(".nh") || fileName.endsWith(".nhc"))) {
+                            MessageUtils.errorToChat("Unsupported extension for file: " + fileName + " (must be .nh or .nhc)");
+                            return 0;
+                        }
+
+                        try {
+                            if (fileName.endsWith(".nh")) {
+                                NH_SCRIPT_RUNNER.runScript(scriptFile);
+                                MessageUtils.debugToChat("Running script: " + scriptFile);
+                                return 1;
+                            }
+                            else if (fileName.endsWith(".nhc")) {
+                                NHC_SCRIPT_RUNNER.runScript(scriptFile);
+                                MessageUtils.debugToChat("Running script: " + scriptFile);
+                                return 1;
+                            }
+                            return 0;
+                        } catch (CompileException e) {
+                            MessageUtils.errorToChat("Script compile/run error: " + e.getMessage());
+                            return 0;
+                        }
+                    })
+                )
             )
         );
     }

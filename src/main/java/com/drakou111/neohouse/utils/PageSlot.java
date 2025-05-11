@@ -1,4 +1,4 @@
-package com.drakou111.neohouse;
+package com.drakou111.neohouse.utils;
 
 public class PageSlot {
     public int page;

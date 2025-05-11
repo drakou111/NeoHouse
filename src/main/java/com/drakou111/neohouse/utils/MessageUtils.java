@@ -1,4 +1,4 @@
-package com.drakou111.neohouse;
+package com.drakou111.neohouse.utils;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;

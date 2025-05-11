@@ -9,9 +9,6 @@ import net.minecraft.world.inventory.ClickType;
 
 import java.lang.reflect.Field;
 
-/**
- * Types `name` into the anvil textbox, then clicks the output slot.
- */
 public class AnvilAction extends Action {
     private final String name;
     private Field nameField;

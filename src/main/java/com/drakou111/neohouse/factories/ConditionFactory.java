@@ -1,9 +1,9 @@
 package com.drakou111.neohouse.factories;
 
-import com.drakou111.neohouse.ActionBuilder;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.utils.ActionBuilder;
 
 public class ConditionFactory {
     public static Action addConditionGroup(RestrictionCondition state, boolean invert, String group, boolean includeHigherGroups, String note) {

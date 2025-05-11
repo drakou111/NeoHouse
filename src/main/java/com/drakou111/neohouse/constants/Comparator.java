@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.constants;
 
-import com.drakou111.neohouse.PageSlot;
+import com.drakou111.neohouse.utils.PageSlot;
 
 public enum Comparator {
     LESS_THAN(new PageSlot(0, 10)),

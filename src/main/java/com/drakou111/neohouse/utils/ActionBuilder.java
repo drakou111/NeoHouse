@@ -1,4 +1,4 @@
-package com.drakou111.neohouse;
+package com.drakou111.neohouse.utils;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.*;

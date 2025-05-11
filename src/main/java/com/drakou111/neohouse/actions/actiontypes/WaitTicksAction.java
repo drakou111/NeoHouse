@@ -7,9 +7,6 @@ public class WaitTicksAction extends Action {
     private int ticks;
     private int ticksRemaining;
 
-    /**
-     * @param ticks how many client‑ticks to wait before finishing
-     */
     public WaitTicksAction(int ticks) {
         this.ticks = ticks;
         this.ticksRemaining = ticks;

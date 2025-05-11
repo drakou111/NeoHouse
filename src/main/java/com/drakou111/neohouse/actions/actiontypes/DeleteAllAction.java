@@ -7,10 +7,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 
-/**
- * Search primary slots for itemName; if missing, click backupSlot,
- * wait for UI change, then re‑search primary slots one more time.
- */
 public class DeleteAllAction extends Action {
     private final int slotIndex;
     private boolean waiting = false;

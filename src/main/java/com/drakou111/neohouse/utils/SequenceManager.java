@@ -1,5 +1,6 @@
-package com.drakou111.neohouse;
+package com.drakou111.neohouse.utils;
 
+import com.drakou111.neohouse.NeoHouse;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.exceptions.InteruptActionException;
 import net.minecraft.client.Minecraft;
