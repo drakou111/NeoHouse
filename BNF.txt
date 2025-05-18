@@ -1,0 +1,221 @@
+(expression)
+e ::= const
+    | var
+    | pvar
+    | ph
+    | func_call
+    | e1+e2
+    | e1-e2
+    | e1*e2
+    | e1/e2
+    | e1++
+    | e1--
+    | -e1
+(extras)
+e ::= |e1|
+    | e1 % e2
+    | sin(e1)
+    | asin(e1)
+    | cos(e1)
+    | acos(e1)
+    | tan(e1)
+    | atan(e1)
+    | sqrt(e1)
+    | nroot(e1, e2)
+    | pow(e1, e2)
+
+(declarations)
+def ::= type var;
+
+(assignation)
+asgn ::= v=e;
+       | v+=e;
+       | v-=e;
+       | v*=e;
+       | v/=e;
+(extras)
+asgn ::= v%=e;
+
+(boolean operation)
+b ::= e1<e2
+    | e1>e2
+    | e1<=e2
+    | e1>=e2
+    | e1==e2
+    | e1!=e2
+    | !b
+    | b||b
+    | b&&b
+    | bool_const
+
+(constants)
+const ::= num_const | dec_const | string_const | bool_const
+num_const ::= [0-9]+
+dec_const ::= [0-9]+ "." [0-9]+ ("d" | "D" | "") | [0-9]+ ("d" | "D")
+string_const ::= "\"" char_seq "\""
+char_seq ::= char | char char_seq
+char ::= any character except "
+bool_const ::= true | True | false | False
+
+(condition)
+cond ::= if (b) { stmt_list }
+       | if (b) { stmt_list } else { stmt_list }
+
+(statement list)
+stmt_list ::= ε
+            | stmt
+            | stmt stmt_list
+
+(main)
+main ::= func_def
+       | event_def
+
+(statement)
+stmt ::= cond
+       | asgn
+       | def
+       | cmt
+
+cmt ::= "//" ... "\n" | "/*" ... "*/"
+
+(function definition)
+func_def ::= desc function type name (param_list) { stmt_list }
+           | desc function name (param_list) { stmt_list }
+
+(function call)
+func_call ::= name(var_list)
+
+(repeat)
+repeat ::= repeat(num_const) { stmt_list }
+
+(event definition)
+event_def ::= event ename { stmt_list }
+
+(description)
+desc ::= ε
+       | "///" ... \n
+
+(name)
+name ::= letter name_rest
+
+(name rest)
+name_rest ::= ε
+            | letter name_rest
+
+(letter)
+letter ::= "a" | "b" | ... | "z"
+         | "A" | "B" | ... | "Z"
+         | "_"
+
+(event name)
+ename ::= PlayerJoin
+        | PLayerQuit
+        | PlayerDeath
+        | PlayerKill
+        | PlayerRespawn
+        | GroupChange
+        | PvpStateChange
+        | FishCaught
+        | PlayerEnterPortal
+        | PlayerDamage
+        | PlayerBlockBreak
+        | StartParkour
+        | CompleteParkour
+        | PlayerDropItem
+        | PlayerPickUpItem
+        | PlayerChangeHeldItem
+        | PlayerToggleSneak
+        | PlayerToggleFlight
+
+(parameter list)
+param_list ::= ε
+             | param
+             | param, param_list
+
+(variable list)
+var_list ::= ε
+            | var
+            | var, var_list
+
+(param)
+param ::= type var
+
+(function call)
+e ::= fname (arg_list)
+
+(argument list)
+arg_list ::= ε
+           | e
+           | e , arg_list
+
+(holder)
+h ::= p | g | t
+
+(placeholders)
+ph ::= ph.phname
+
+(placeholder names)
+phname ::= server.name
+         | server.shortname
+         | player.name
+         | player.ping
+         | player.health
+         | player.maxhealth
+         | player.hunger
+         | player.experience
+         | player.level
+         | player.version
+         | player.protocol
+         | player.gamemode
+         | player.region.name
+         | player.location.x
+         | player.location.y
+         | player.location.z
+         | player.location.pitch
+         | player.location.yaw
+         | player.pos.x
+         | player.pos.y
+         | player.pos.z
+         | player.group.name
+         | player.group.tag
+         | player.group.priority
+         | player.group.color
+         | player.team.name
+         | player.team.tag
+         | player.team.color
+         | player.team.players(name)
+         | player.parkour.ticks
+         | player.parkour.formatted
+         | house.name
+         | house.guests
+         | house.cookies
+         | house.visitingrules
+         | house.players
+         | date.day(name)
+         | date.month(name)
+         | date.year(name)
+         | date.hour(name)
+         | date.minute(name)
+         | date.seconds(name)
+         | date.unix
+         | date.unix.ms
+         | random.whole(num_const, num_const)
+         | random.decimal(dec_const, dec_const)
+         | var.player(name, const)
+         | var.global(name, const)
+         | var.team(name, name, const)
+
+(variable)
+var ::= h.name
+
+(parameter variables)
+pvar :: name
+
+(type)
+type ::= long | double | string | var
+
+
+
+
+
+
