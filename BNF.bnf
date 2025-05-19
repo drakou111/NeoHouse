@@ -1,0 +1,125 @@
+// Basic building blocks
+letter       ::= [a-z] | [A-Z] | '_'
+char         ::= any character except '"' or '\n'
+any_char     ::= any printable character other than '\n'
+text         ::= any_char text | ε
+
+// Constants
+const        ::= long_const | double_const | string_const | bool_const | array_literal
+long_const   ::= '[0-9]+'
+double_const ::= '[0-9]+' '.' '[0-9]+' ( 'd' | 'D' | '' ) | '[0-9]+' ( 'd' | 'D' )
+string_const ::= '"' char_seq '"'
+char_seq     ::= char | char char_seq
+bool_const   ::= 'true' | 'True' | 'false' | 'False'
+array_literal ::= '[' const_list ']'
+const_list   ::= const | const ',' const_list
+
+// Names and identifiers
+name         ::= letter name_rest
+name_rest    ::= ε | letter name_rest
+
+// Variable, parameter, and placeholder
+holder       ::= 'p' | 'g' | 't'
+var          ::= holder '.' name
+
+phname       ::= 'server.name' | 'server.shortname' | 'player.name' | 'player.ping' | 'player.health' |
+                 'player.maxhealth' | 'player.hunger' | 'player.experience' | 'player.level' | 'player.version' |
+                 'player.protocol' | 'player.gamemode' | 'player.region.name' | 'player.location.x' |
+                 'player.location.y' | 'player.location.z' | 'player.location.pitch' | 'player.location.yaw' |
+                 'player.pos.x' | 'player.pos.y' | 'player.pos.z' | 'player.group.name' | 'player.group.tag' |
+                 'player.group.priority' | 'player.group.color' | 'player.team.name' | 'player.team.tag' |
+                 'player.team.color' | 'player.team.players' '(' name ')' | 'player.parkour.ticks' |
+                 'player.parkour.formatted' | 'house.name' | 'house.guests' | 'house.cookies' |
+                 'house.visitingrules' | 'house.players' | 'date.day' '(' name ')' | 'date.month' '(' name ')' |
+                 'date.year' '(' name ')' | 'date.hour' '(' name ')' | 'date.minute' '(' name ')' |
+                 'date.seconds' '(' name ')' | 'date.unix' | 'date.unix.ms' | 'random.whole' '(' long_const ',' long_const ')' |
+                 'random.decimal' '(' double_const ',' double_const ')' | 'var.player' '(' name ',' const ')' |
+                 'var.global' '(' name ',' const ')' | 'var.team' '(' name ',' name ',' const ')'
+placeholder  ::= 'ph' '.' phname
+
+// Types
+base_type    ::= 'long' | 'double' | 'string' | 'var'
+type         ::= base_type | base_type '[' long_const ']'
+
+// Expressions
+expr         ::= const
+              | var
+              | array_operation
+              | placeholder
+              | func_call
+              | expr '+' expr
+              | expr '-' expr
+              | expr '*' expr
+              | expr '/' expr
+              | expr '++'
+              | expr '--'
+              | '-' expr
+              | '|' expr '|'
+              | expr '%' expr
+              | 'sin' '(' expr ')'
+              | 'asin' '(' expr ')'
+              | 'cos' '(' expr ')'
+              | 'acos' '(' expr ')'
+              | 'tan' '(' expr ')'
+              | 'atan' '(' expr ')'
+              | 'sqrt' '(' expr ')'
+              | 'nroot' '(' expr ',' expr ')'
+              | 'pow' '(' expr ',' expr ')'
+
+array_operation ::= var '[' long_const ']' | var '.' 'length'
+
+// Boolean operations
+b            ::= expr comp_op expr
+              | '!' b
+              | b log_op b
+              | bool_const
+comp_op      ::= '<' | '>' | '<=' | '>=' | '==' | '!='
+log_op       ::= '||' | '&&'
+
+// Statements
+cond         ::= note 'if' '(' b ')' '{' stmt_list '}'
+              | note 'if' '(' b ')' '{' stmt_list '}' 'else' '{' stmt_list '}'
+
+stmt_list    ::= ε | stmt | stmt stmt_list
+stmt         ::= cond | asgn | def | cmt
+
+// Actions
+// TODO
+
+// Assignments and definitions
+asgn         ::= note var '=' expr ';'
+              | note var '+=' expr ';'
+              | note var '-=' expr ';'
+              | note var '*=' expr ';'
+              | note var '/=' expr ';'
+              | note var '%=' expr ';'
+
+def          ::= type var ';'
+
+define       ::= 'define' name '=' const
+
+// Comments
+cmt          ::= '//' text '\n' | '/*' text '*/'
+
+// Function related
+func_def     ::= note 'function' type name '(' param_list ')' '{' stmt_list '}'
+              | note 'function' name '(' param_list ')' '{' stmt_list '}'
+func_call    ::= name '(' arg_list ')'
+
+param_list   ::= ε | param | param ',' param_list
+param        ::= type var
+arg_list     ::= ε | expr | expr ',' arg_list
+
+// Repeats and events
+repeat       ::= 'repeat' '(' long_const ')' '{' stmt_list '}'
+event_def    ::= 'event' event_name '{' stmt_list '}'
+
+// Descriptions and metadata
+note         ::= ε | '///' text '\n'
+event_name        ::= 'PlayerJoin' | 'PLayerQuit' | 'PlayerDeath' | 'PlayerKill' | 'PlayerRespawn'
+              | 'GroupChange' | 'PvpStateChange' | 'FishCaught' | 'PlayerEnterPortal' | 'PlayerDamage'
+              | 'PlayerBlockBreak' | 'StartParkour' | 'CompleteParkour' | 'PlayerDropItem'
+              | 'PlayerPickUpItem' | 'PlayerChangeHeldItem' | 'PlayerToggleSneak' | 'PlayerToggleFlight'
+
+// Program entry
+main         ::= func_def | event_def
