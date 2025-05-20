@@ -32,71 +32,182 @@ phname       ::= 'server.name' | 'server.shortname' | 'player.name' | 'player.pi
                  'player.parkour.formatted' | 'house.name' | 'house.guests' | 'house.cookies' |
                  'house.visitingrules' | 'house.players' | 'date.day' '(' name ')' | 'date.month' '(' name ')' |
                  'date.year' '(' name ')' | 'date.hour' '(' name ')' | 'date.minute' '(' name ')' |
-                 'date.seconds' '(' name ')' | 'date.unix' | 'date.unix.ms' | 'random.whole' '(' long_const ',' long_const ')' |
-                 'random.decimal' '(' double_const ',' double_const ')' | 'var.player' '(' name ',' const ')' |
-                 'var.global' '(' name ',' const ')' | 'var.team' '(' name ',' name ',' const ')'
+                 'date.seconds' '(' name ')' | 'date.unix' | 'date.unix.ms' | 'random.whole' '(' long_arg ',' long_arg ')' |
+                 'random.decimal' '(' double_arg ',' double_arg ')' | 'var.player' '(' name ',' const_expr ')' |
+                 'var.global' '(' name ',' const_expr ')' | 'var.team' '(' name ',' name ',' const_expr ')'
 placeholder  ::= 'ph' '.' phname
 
 // Types
 base_type    ::= 'long' | 'double' | 'string' | 'var'
-type         ::= base_type | base_type '[' long_const ']'
+type         ::= base_type | base_type '[' long_arg ']'
 
-// Expressions
-expr         ::= const
-              | var
+// Expressions (can involve variables, functions, etc.)
+expr         ::= var
               | array_operation
               | placeholder
               | func_call
-              | expr '+' expr
-              | expr '-' expr
-              | expr '*' expr
-              | expr '/' expr
-              | expr '++'
-              | expr '--'
-              | '-' expr
-              | '|' expr '|'
-              | expr '%' expr
-              | 'sin' '(' expr ')'
-              | 'asin' '(' expr ')'
-              | 'cos' '(' expr ')'
-              | 'acos' '(' expr ')'
-              | 'tan' '(' expr ')'
-              | 'atan' '(' expr ')'
-              | 'sqrt' '(' expr ')'
-              | 'nroot' '(' expr ',' expr ')'
-              | 'pow' '(' expr ',' expr ')'
+              | general_math_expr
 
-array_operation ::= var '[' long_const ']' | var '.' 'length'
+// Strict constant-only expressions
+const_expr   ::= const
+              | identifier
+              | '(' const_expr ')'
+              | const_expr '+' const_expr
+              | const_expr '-' const_expr
+              | const_expr '*' const_expr
+              | const_expr '/' const_expr
+              | const_expr '++'
+              | const_expr '--'
+              | '-' const_expr
+              | '|' const_expr '|'
+              | const_expr '%' const_expr
+              | 'sin' '(' const_expr ')'
+              | 'asin' '(' const_expr ')'
+              | 'cos' '(' const_expr ')'
+              | 'acos' '(' const_expr ')'
+              | 'tan' '(' const_expr ')'
+              | 'atan' '(' const_expr ')'
+              | 'sqrt' '(' const_expr ')'
+              | 'nroot' '(' const_expr ',' const_expr ')'
+              | 'pow' '(' const_expr ',' const_expr ')'
+
+// General math (can include variables or anything else from expr)
+general_math_expr ::= expr '+' expr
+                    | expr '-' expr
+                    | expr '*' expr
+                    | expr '/' expr
+                    | expr '++'
+                    | expr '--'
+                    | '-' expr
+                    | '|' expr '|'
+                    | expr '%' expr
+                    | 'sin' '(' expr ')'
+                    | 'asin' '(' expr ')'
+                    | 'cos' '(' expr ')'
+                    | 'acos' '(' expr ')'
+                    | 'tan' '(' expr ')'
+                    | 'atan' '(' expr ')'
+                    | 'sqrt' '(' expr ')'
+                    | 'nroot' '(' expr ',' expr ')'
+                    | 'pow' '(' expr ',' expr ')'
+                    | '(' expr ')'
+                    | expr comp_op expr
+                    | '!' expr
+                    | bool_expr log_op bool_expr
+
+
+identifier ::= 'PI' | 'E' | 'HALF_PI' | 'TWO_PI'
+
+array_operation ::= var '[' long_arg ']' | var '.' 'length'
 
 // Boolean operations
-b            ::= expr comp_op expr
-              | '!' b
-              | b log_op b
-              | bool_const
+bool_expr    ::= expr comp_op expr
+              | '!' bool_expr
+              | bool_expr log_op bool_expr
+              | h_cond
+              | bool_arg
+
 comp_op      ::= '<' | '>' | '<=' | '>=' | '==' | '!='
 log_op       ::= '||' | '&&'
 
 // Statements
-cond         ::= note 'if' '(' b ')' '{' stmt_list '}'
-              | note 'if' '(' b ')' '{' stmt_list '}' 'else' '{' stmt_list '}'
+cond         ::= note 'if' '(' bool_expr ')' '{' stmt_list '}'
+              | note 'if' '(' bool_expr ')' '{' stmt_list '}' 'else' '{' stmt_list '}'
 
 stmt_list    ::= ε | stmt | stmt stmt_list
-stmt         ::= cond | asgn | def | cmt
+stmt         ::= asgn ';' | def ';' | define ';' | h_action ';' | func_call ';' | broadcast_func_call ';' | return ';'
+              | cond | cmt
 
 // Actions
-// TODO
+h_action     ::= note 'setGroup' '(' string_arg ',' bool_arg ')'
+              | note 'kill' '(' ')'
+              | note 'heal' '(' ')'
+              | note 'title' '(' expr ',' expr ',' long_arg ',' long_arg ',' long_arg ')'
+              | note 'actionBar' '(' expr ')'
+              | note 'clear' '(' ')'
+              | note 'maxHealth' '(' expr ',' operation ',' bool_arg')'
+              | note 'checkpoint' '(' ')'
+              | note 'give' '(' item ',' bool_arg ',' slot ',' bool_arg ')'
+              | note 'remove' '(' item ')'
+              | note 'send' '(' expr ')'
+              | note 'effect' '(' potion ',' long_arg ',' long_arg ',' bool_arg  ',' bool_arg ')'
+              | note 'clearEffect' '(' ')'
+              | note 'xp' '(' long_arg ')'
+              | note 'lobby' '(' lobby ')'
+              | note 'tp' '(' location ',' bool_arg ')'
+              | note 'fail' '(' string_arg ')'
+              | note 'sound' '(' sound ',' double_arg ',' double_arg ',' location ')'
+              | note 'compass' '(' location ')'
+              | note 'gamemode' '(' gamemode ')'
+              | note 'health' '(' expr ',' operation ')'
+              | note 'hunger' '(' expr ',' operation ')'
+              | note 'layout' '(' string_arg ')'
+              | note 'enchant' '(' long_arg ')'
+              | note 'sleep' '(' long_arg ')'
+              | note 'team' '(' string_arg ')'
+              | note 'menu' '(' string_arg ')'
+              | note 'drop' '(' item ',' location ',' bool_arg ',' bool_arg ',' bool_arg ',' bool_arg ')'
+              | note 'velocity' '(' expr ',' expr ',' expr ')'
+              | note 'launch' '(' location ',' expr ')'
+              | note 'weather' '(' weather ')'
+              | note 'time' '(' time ')'
+              | note 'nametag' '(' bool_arg ')'
+
+h_cond       ::= note 'hasGroup' '(' string_arg ',' bool_arg ')'
+              | note 'hasPermission' '(' permission ')'
+              | note 'withinRegion' '(' string_arg ')'
+              | note 'hasItem' '(' item ',' what_check ',' where_check ',' amount ')'
+              | note 'doingParkour' '(' ')'
+              | note 'hasEffect' '(' potion ')'
+              | note 'isSneaking' '(' ')'
+              | note 'isFlying' '(' ')'
+              | note 'condHealth' '(' comparator ',' expr ')'
+              | note 'condMaxHealth' '(' comparator ',' expr ')'
+              | note 'condHunger' '(' comparator ',' expr ')'
+              | note 'hasGamemode' '(' gamemode ')'
+              | note 'hasTeam' '(' string_arg ')'
+
+
+// return
+return ::= 'return' expr | 'return'
+
+string_arg   ::= const_expr
+long_arg     ::= const_expr
+bool_arg     ::= const_expr
+double_arg   ::= const_expr
+
+
+operation    ::= 'set' | 'inc' | 'dec' | 'mult' | 'div'
+comparator   ::= 'l' | 'le' | 'e' | 'ge' | 'g'
+
+item         ::= //TODO
+slot         ::= //TODO
+potion       ::= //TODO
+lobby        ::= //TODO
+location     ::= //TODO
+sound        ::= //TODO
+gamemode     ::= //TODO
+enchant      ::= //TODO
+weather      ::= //TODO
+time         ::= //TODO
+
+permission   ::= //TODO
+what_check   ::= //TODO
+where_check  ::= //TODO
+amount       ::= //TODO
 
 // Assignments and definitions
-asgn         ::= note var '=' expr ';'
-              | note var '+=' expr ';'
-              | note var '-=' expr ';'
-              | note var '*=' expr ';'
-              | note var '/=' expr ';'
-              | note var '%=' expr ';'
+asgn         ::= note var '=' expr
+              | note var '+=' expr
+              | note var '-=' expr
+              | note var '*=' expr
+              | note var '/=' expr
+              | note var '%=' expr
+              | note var '~='
 
-def          ::= type var ';'
+def          ::= type var
 
-define       ::= 'define' name '=' const
+define       ::= 'define' name '=' const_expr
 
 // Comments
 cmt          ::= '//' text '\n' | '/*' text '*/'
@@ -104,19 +215,22 @@ cmt          ::= '//' text '\n' | '/*' text '*/'
 // Function related
 func_def     ::= note 'function' type name '(' param_list ')' '{' stmt_list '}'
               | note 'function' name '(' param_list ')' '{' stmt_list '}'
-func_call    ::= name '(' arg_list ')'
+
+func_call    ::= note name '(' arg_list ')'
+broadcast_func_call ::= note 'broadcast' name '(' arg_list ')'
 
 param_list   ::= ε | param | param ',' param_list
 param        ::= type var
 arg_list     ::= ε | expr | expr ',' arg_list
 
-// Repeats and events
-repeat       ::= 'repeat' '(' long_const ')' '{' stmt_list '}'
+// Repeats, events, random
+repeat       ::= 'repeat' '(' long_arg ')' '{' stmt_list '}'
 event_def    ::= 'event' event_name '{' stmt_list '}'
+random       ::= 'random' '{' stmt_list '}'
 
 // Descriptions and metadata
 note         ::= ε | '///' text '\n'
-event_name        ::= 'PlayerJoin' | 'PLayerQuit' | 'PlayerDeath' | 'PlayerKill' | 'PlayerRespawn'
+event_name   ::= 'PlayerJoin' | 'PLayerQuit' | 'PlayerDeath' | 'PlayerKill' | 'PlayerRespawn'
               | 'GroupChange' | 'PvpStateChange' | 'FishCaught' | 'PlayerEnterPortal' | 'PlayerDamage'
               | 'PlayerBlockBreak' | 'StartParkour' | 'CompleteParkour' | 'PlayerDropItem'
               | 'PlayerPickUpItem' | 'PlayerChangeHeldItem' | 'PlayerToggleSneak' | 'PlayerToggleFlight'
