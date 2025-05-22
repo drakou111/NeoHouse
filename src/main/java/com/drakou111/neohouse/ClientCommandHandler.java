@@ -2,7 +2,6 @@ package com.drakou111.neohouse;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
-import com.drakou111.neohouse.compilers.DummyNHCCompiler;
 import com.drakou111.neohouse.compilers.DummyNHCompiler;
 import com.drakou111.neohouse.compilers.ScriptRunner;
 import com.drakou111.neohouse.exceptions.CompileException;
@@ -33,7 +32,6 @@ import java.util.List;
 public class ClientCommandHandler {
 
     private static final ScriptRunner NH_SCRIPT_RUNNER = new ScriptRunner(new DummyNHCompiler());
-    private static final ScriptRunner NHC_SCRIPT_RUNNER = new ScriptRunner(new DummyNHCCompiler());
 
     @SubscribeEvent
     public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
@@ -81,11 +79,6 @@ public class ClientCommandHandler {
                         try {
                             if (fileName.endsWith(".nh")) {
                                 NH_SCRIPT_RUNNER.runScript(scriptFile);
-                                MessageUtils.debugToChat("Running script: " + scriptFile);
-                                return 1;
-                            }
-                            else if (fileName.endsWith(".nhc")) {
-                                NHC_SCRIPT_RUNNER.runScript(scriptFile);
                                 MessageUtils.debugToChat("Running script: " + scriptFile);
                                 return 1;
                             }
