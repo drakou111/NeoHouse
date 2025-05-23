@@ -4,9 +4,9 @@ import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 
 public class ConstantArrayNode extends ExpressionNode {
-    ConstantArray value;
+    public final ConstantArray value;
 
-    public ConstantArrayNode(ConstantArray value) {
+    public ConstantArrayNode(final ConstantArray value) {
         this.value = value;
     }
 

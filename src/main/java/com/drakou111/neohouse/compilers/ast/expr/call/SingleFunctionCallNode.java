@@ -1,17 +1,14 @@
 package com.drakou111.neohouse.compilers.ast.expr.call;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.drakou111.neohouse.compilers.ast.main.ArgumentListNode;
 
 public class SingleFunctionCallNode extends FunctionCallNode {
-    public final List<ExpressionNode> arguments;
+    public final ArgumentListNode arguments;
 
-    public SingleFunctionCallNode(String functionName, List<ExpressionNode> arguments) {
+    public SingleFunctionCallNode(final String functionName, final ArgumentListNode arguments) {
         super(functionName);
-        this.arguments = new ArrayList<>(arguments);
+        this.arguments = arguments;
     }
 
     @Override

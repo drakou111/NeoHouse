@@ -1,13 +1,9 @@
 package com.drakou111.neohouse.compilers.ast.expr.call;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GlobalFunctionCallNode extends FunctionCallNode {
-    public GlobalFunctionCallNode(String functionName) {
+    public GlobalFunctionCallNode(final String functionName) {
         super(functionName);
     }
 

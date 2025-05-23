@@ -2,26 +2,23 @@ package com.drakou111.neohouse.compilers.ast.function;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.enums.FunctionType;
-import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
-import com.drakou111.neohouse.compilers.ast.statement.MainStatementNode;
-import com.drakou111.neohouse.compilers.ast.statement.StatementNode;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
+import com.drakou111.neohouse.compilers.ast.main.ParameterListNode;
+import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
 
 public class FunctionNode extends MainStatementNode {
     public final String name;
     public final String description;
     public final FunctionType returnType;
-    public final List<VariableNode> parameters;
-    public final List<StatementNode> statements;
+    public final ParameterListNode parameters;
+    public final StatementListNode statements;
 
-    public FunctionNode(String name, String description, FunctionType returnType, List<VariableNode> parameters, List<StatementNode> statements) {
+    public FunctionNode(final String name, final String description, final FunctionType returnType, ParameterListNode parameters, final StatementListNode statements) {
         this.name = name;
         this.description = description;
         this.returnType = returnType;
-        this.parameters = new ArrayList<>(parameters);
-        this.statements = new ArrayList<>(statements);
+        this.parameters = parameters;
+        this.statements = statements;
     }
 
     @Override

@@ -4,6 +4,6 @@ import java.util.List;
 
 public final class DoubleArrayValue implements ConstantArray {
     public final List<Double> value;
-    public DoubleArrayValue(List<Double> value) { this.value = List.copyOf(value); }
+    public DoubleArrayValue(final List<Double> value) { this.value = List.copyOf(value); }
     public Object getValue() { return value; }
 }

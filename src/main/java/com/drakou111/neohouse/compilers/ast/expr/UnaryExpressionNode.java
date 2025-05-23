@@ -7,7 +7,7 @@ public class UnaryExpressionNode extends ExpressionNode {
     public final MonoOperator operator;
     public final ExpressionNode operand;
 
-    public UnaryExpressionNode(MonoOperator operator, ExpressionNode operand) {
+    public UnaryExpressionNode(final MonoOperator operator, final ExpressionNode operand) {
         this.operator = operator;
         this.operand = operand;
     }

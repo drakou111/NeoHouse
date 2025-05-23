@@ -1,4 +1,4 @@
-package com.drakou111.neohouse.compilers.ast.statement;
+package com.drakou111.neohouse.compilers.ast.main;
 
 import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
@@ -9,7 +9,7 @@ import java.util.List;
 public class MainNode extends ASTNode {
     public final List<MainStatementNode> statements;
 
-    public MainNode(List<MainStatementNode> statements) {
+    public MainNode(final List<MainStatementNode> statements) {
         this.statements = new ArrayList<>(statements);
     }
 

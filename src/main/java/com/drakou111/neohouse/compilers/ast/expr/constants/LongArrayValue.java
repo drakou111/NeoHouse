@@ -4,6 +4,6 @@ import java.util.List;
 
 public final class LongArrayValue implements ConstantArray {
     public final List<Long> value;
-    public LongArrayValue(List<Long> value) { this.value = List.copyOf(value); }
+    public LongArrayValue(final List<Long> value) { this.value = List.copyOf(value); }
     public Object getValue() { return value; }
 }

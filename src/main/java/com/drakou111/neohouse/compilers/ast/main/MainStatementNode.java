@@ -1,4 +1,4 @@
-package com.drakou111.neohouse.compilers.ast.statement;
+package com.drakou111.neohouse.compilers.ast.main;
 
 import com.drakou111.neohouse.compilers.ast.ASTNode;
 

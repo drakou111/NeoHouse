@@ -10,7 +10,7 @@ public class VariableNode extends ExpressionNode {
     public final Holder holder;
     public final String name;
 
-    public VariableNode(VariableType type, Holder holder, String name) {
+    public VariableNode(final VariableType type, final Holder holder, final String name) {
         this.type = type;
         this.holder = holder;
         this.name = name;

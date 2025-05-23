@@ -8,7 +8,7 @@ public class BinaryExpressionNode extends ExpressionNode {
     public final ExpressionNode left;
     public final ExpressionNode right;
 
-    public BinaryExpressionNode(ExpressionNode left, ExpressionNode right, Operator operator) {
+    public BinaryExpressionNode(final ExpressionNode left, final ExpressionNode right, final Operator operator) {
         this.left = left;
         this.right = right;
         this.operator = operator;

@@ -4,9 +4,9 @@ import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 
 public class ConstantPrimitiveNode extends ExpressionNode {
-    ConstantPrimitive value;
+    public final ConstantPrimitive value;
 
-    public ConstantPrimitiveNode(ConstantPrimitive value) {
+    public ConstantPrimitiveNode(final ConstantPrimitive value) {
         this.value = value;
     }
 
