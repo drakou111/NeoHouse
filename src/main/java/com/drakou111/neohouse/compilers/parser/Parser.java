@@ -1,9 +1,9 @@
 package com.drakou111.neohouse.compilers.parser;
+
 import com.drakou111.neohouse.compilers.lexer.Token;
 import com.drakou111.neohouse.compilers.lexer.TokenType;
 import com.drakou111.neohouse.exceptions.ParseException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {

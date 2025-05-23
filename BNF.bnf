@@ -59,9 +59,8 @@ const_expr   ::= const
               | const_expr '++'
               | const_expr '--'
               | '-' const_expr
-              | '|' const_expr '|'
               | const_expr '%' const_expr
-              | 'sin' '(' const_expr ')'
+       /*       | 'sin' '(' const_expr ')'
               | 'asin' '(' const_expr ')'
               | 'cos' '(' const_expr ')'
               | 'acos' '(' const_expr ')'
@@ -70,6 +69,7 @@ const_expr   ::= const
               | 'sqrt' '(' const_expr ')'
               | 'nroot' '(' const_expr ',' const_expr ')'
               | 'pow' '(' const_expr ',' const_expr ')'
+              | '|' const_expr '|'*/
 
 // General math (can include variables or anything else from expr)
 general_math_expr ::= expr '+' expr

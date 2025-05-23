@@ -1,0 +1,17 @@
+package com.drakou111.neohouse.compilers.ast.expr.constants;
+
+import com.drakou111.neohouse.compilers.ast.ASTVisitor;
+import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
+
+public class ConstantNode extends ExpressionNode {
+    ConstantValue value;
+
+    public ConstantNode(ConstantValue value) {
+        this.value = value;
+    }
+
+    @Override
+    public <T> T accept(ASTVisitor<T> visitor) {
+        return visitor.visitConstant(this);
+    }
+}
