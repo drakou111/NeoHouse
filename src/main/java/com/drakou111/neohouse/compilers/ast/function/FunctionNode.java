@@ -1,7 +1,7 @@
 package com.drakou111.neohouse.compilers.ast.function;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
-import com.drakou111.neohouse.compilers.ast.enums.FunctionType;
+import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compilers.ast.main.ParameterListNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
@@ -9,11 +9,11 @@ import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
 public class FunctionNode extends MainStatementNode {
     public final String name;
     public final String description;
-    public final FunctionType returnType;
+    public final VariableType returnType;
     public final ParameterListNode parameters;
     public final StatementListNode statements;
 
-    public FunctionNode(final String name, final String description, final FunctionType returnType, ParameterListNode parameters, final StatementListNode statements) {
+    public FunctionNode(final String name, final String description, final VariableType returnType, ParameterListNode parameters, final StatementListNode statements) {
         this.name = name;
         this.description = description;
         this.returnType = returnType;

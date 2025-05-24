@@ -13,9 +13,7 @@ import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.function.AutomaticFunctionNode;
 import com.drakou111.neohouse.compilers.ast.function.FunctionNode;
 import com.drakou111.neohouse.compilers.ast.main.*;
-import com.drakou111.neohouse.compilers.ast.statement.CancelNode;
-import com.drakou111.neohouse.compilers.ast.statement.ConditionalNode;
-import com.drakou111.neohouse.compilers.ast.statement.ReturnNode;
+import com.drakou111.neohouse.compilers.ast.statement.*;
 
 public interface ASTVisitor<T> {
     // Expressions (Constants, Variables, Placeholder, Sub expressions, Function calls)
@@ -37,7 +35,13 @@ public interface ASTVisitor<T> {
     // Statements
     T visitReturn(ReturnNode returnNode);
     T visitCancel(CancelNode cancelNode);
-    T visitConditional(ConditionalNode conditionalNode);
+    T visitConditional(ConditionalNode conditional);
+    T visitDefinition(DefinitionNode definition);
+    T visitDeclaration(DeclarationNode declaration);
+    T visitAssignation(AssignationNode assignation);
+    T visitVoidFunctionCallStatement(VoidFunctionCallNode function);
+    T visitRandom(RandomNode random);
+    T visitRepeat(RepeatNode random);
 
     // Lists
     T visitMain(MainNode main);
