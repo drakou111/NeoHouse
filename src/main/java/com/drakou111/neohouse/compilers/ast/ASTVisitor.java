@@ -31,6 +31,7 @@ public interface ASTVisitor<T> {
     T visitFunction(FunctionNode function);
     T visitAutomaticFunction(AutomaticFunctionNode function);
     T visitEvent(EventNode event);
+    T visitGlobalDeclaration(GlobalDeclarationNode declaration);
 
     // Statements
     T visitReturn(ReturnNode returnNode);

@@ -21,4 +21,14 @@ public class AssignationNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitAssignation(this);
     }
+
+    @Override
+    public String toString() {
+        return "AssignationNode [variable=" + variable + ", operator=" + operator + ", value=" + value + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Agn[var=" + variable.toShortString() + ", op=" + operator + ", v=" + value.toShortString() + "]";
+    }
 }

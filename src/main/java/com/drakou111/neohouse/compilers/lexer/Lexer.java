@@ -46,7 +46,7 @@ public class Lexer {
                     break;
                 }
 
-                tokens.add(new Token(tt, lexeme));
+                tokens.add(new Token(tt, lexeme, line, column));
                 break;
             }
 
@@ -54,6 +54,7 @@ public class Lexer {
                 throw errorWithPointer();
             }
         }
+        tokens.add(new Token(TokenType.EOF, null, line, column));
         return tokens;
     }
 

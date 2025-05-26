@@ -8,4 +8,14 @@ public class CancelNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitCancel(this);
     }
+
+    @Override
+    public String toString() {
+        return "CancelNode";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Cancel";
+    }
 }

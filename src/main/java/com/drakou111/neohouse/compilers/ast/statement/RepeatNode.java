@@ -17,4 +17,13 @@ public class RepeatNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitRepeat(this);
     }
+
+    @Override
+    public String toString() {
+        return "RepeatNode [count=" + count + ", statements=" + statements + "]";
+    }
+    @Override
+    public String toShortString() {
+        return "Repeat[c=" + count + ", stmts=" + statements.toShortString() + "]";
+    }
 }

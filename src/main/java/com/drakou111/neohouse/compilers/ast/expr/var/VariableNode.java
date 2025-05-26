@@ -20,4 +20,14 @@ public class VariableNode extends ExpressionNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitVariable(this);
     }
+
+    @Override
+    public String toString() {
+        return "VariableNode [type=" + type + ", holder=" + holder + ", name=" + name + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Var[type=" + type + ", hold=" + holder + ", name=" + name + "]";
+    }
 }

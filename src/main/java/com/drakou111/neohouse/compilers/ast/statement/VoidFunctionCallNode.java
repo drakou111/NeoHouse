@@ -16,4 +16,14 @@ public class VoidFunctionCallNode extends ExpressionNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitVoidFunctionCallStatement(this);
     }
+
+    @Override
+    public String toString() {
+        return "VoidFunctionCallNode [functionName=" + functionName + ", global=" + global + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "VoidFunCall[name=" + functionName + ", global=" + global + "]";
+    }
 }

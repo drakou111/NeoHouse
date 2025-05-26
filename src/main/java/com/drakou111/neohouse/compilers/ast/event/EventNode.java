@@ -17,4 +17,14 @@ public class EventNode extends MainStatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitEvent(this);
     }
+
+    @Override
+    public String toString() {
+        return "EventNode [name=" + name + ", statements=" + statements + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Event[name=" + name + ", stmts=" + statements.toShortString() + "]";
+    }
 }

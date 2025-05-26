@@ -25,4 +25,14 @@ public class FunctionNode extends MainStatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitFunction(this);
     }
+
+    @Override
+    public String toString() {
+        return "FunctionNode [name=" + name + ", description=" + description + ", returnType=" + returnType + ", parameters=" + parameters + ", statements=" + statements + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Fun[name=" + name + ", desc=" + description + ", return=" + returnType + ", params=" + parameters.toShortString() + ", stmts=" + statements.toShortString() + "]";
+    }
 }

@@ -15,4 +15,14 @@ public class ReturnNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitReturn(this);
     }
+
+    @Override
+    public String toString() {
+        return "ReturnNode [expression=" + expression + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Ret[expr=" + expression.toShortString() + "]";
+    }
 }

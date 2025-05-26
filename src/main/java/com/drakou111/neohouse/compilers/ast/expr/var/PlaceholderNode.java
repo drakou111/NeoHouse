@@ -18,4 +18,14 @@ public class PlaceholderNode extends ExpressionNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitPlaceholder(this);
     }
+
+    @Override
+    public String toString() {
+        return "PlaceholderNode [placeholder=" + placeholder + ", constants=" + constants + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "PH [ph=" + placeholder + ", consts=" + constants.toShortString() + "]";
+    }
 }

@@ -17,4 +17,14 @@ public class AutomaticFunctionNode extends FunctionNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitAutomaticFunction(this);
     }
+
+    @Override
+    public String toString() {
+        return "AutomaticFunctionNode [name=" + name + ", description=" + description + ", returnType=" + returnType + ", parameters=" + parameters + ", statements=" + statements + ", tickDelay=" + tickDelay + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "AutoFun[name=" + name + ", desc=" + description + ", return=" + returnType + ", params=" + parameters.toShortString() + ", stmts=" + statements.toShortString() + ", delay=" + tickDelay + "]";
+    }
 }

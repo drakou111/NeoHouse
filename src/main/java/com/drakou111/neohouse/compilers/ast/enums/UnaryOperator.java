@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.compilers.ast.enums;
 
-public enum MonoOperator {
+public enum UnaryOperator {
     NEGATE,                 // -int [or] -double
     NOT,                    // !bool
     INC,                    // int++ [or] double++

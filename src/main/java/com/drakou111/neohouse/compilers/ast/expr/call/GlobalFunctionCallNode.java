@@ -11,4 +11,14 @@ public class GlobalFunctionCallNode extends FunctionCallNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitGlobalFunctionCall(this);
     }
+
+    @Override
+    public String toString() {
+        return "GlobalFunctionCallNode [functionName=" + functionName + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "GFunCall[name=" + functionName + "]";
+    }
 }

@@ -15,4 +15,14 @@ public class DeclarationNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitDeclaration(this);
     }
+
+    @Override
+    public String toString() {
+        return "DeclarationNode [variable=" + variable + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Decl[var=" + variable.toShortString() + "]";
+    }
 }

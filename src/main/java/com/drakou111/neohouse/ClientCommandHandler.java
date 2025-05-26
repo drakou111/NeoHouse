@@ -2,7 +2,7 @@ package com.drakou111.neohouse;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
-import com.drakou111.neohouse.compilers.DummyNHCompiler;
+import com.drakou111.neohouse.compilers.NHCompiler;
 import com.drakou111.neohouse.compilers.ScriptRunner;
 import com.drakou111.neohouse.exceptions.CompileException;
 import com.drakou111.neohouse.factories.MovementFactory;
@@ -28,7 +28,7 @@ import java.util.List;
 @EventBusSubscriber(modid = NeoHouse.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public class ClientCommandHandler {
 
-    private static final ScriptRunner NH_SCRIPT_RUNNER = new ScriptRunner(new DummyNHCompiler());
+    private static final ScriptRunner NH_SCRIPT_RUNNER = new ScriptRunner(new NHCompiler());
 
     @SubscribeEvent
     public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {

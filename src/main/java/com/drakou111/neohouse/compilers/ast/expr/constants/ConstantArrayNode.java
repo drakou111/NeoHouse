@@ -14,4 +14,14 @@ public class ConstantArrayNode extends ExpressionNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitConstantArray(this);
     }
+
+    @Override
+    public String toString() {
+        return "ConstantArrayNode [value=" + value + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "ConstArr[v=" + value.toShortString() + "]";
+    }
 }

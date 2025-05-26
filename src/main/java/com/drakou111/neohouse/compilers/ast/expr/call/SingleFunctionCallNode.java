@@ -15,4 +15,14 @@ public class SingleFunctionCallNode extends FunctionCallNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitSingleFunctionCall(this);
     }
+
+    @Override
+    public String toString() {
+        return "SingleFunctionCallNode [functionName=" + functionName + ", arguments=" + arguments + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "FunCall[name=" + functionName + ", args=" + arguments.toShortString() + "]";
+    }
 }

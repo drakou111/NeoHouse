@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.compilers.ast.enums;
 
-public enum Operator {
+public enum BinaryOperator {
     ADD,                    // int + int [or] double + double [or] string + string
     SUBTRACT,               // int - int [or] double - double
     MULTIPLY,               // int * int [or] double * double

@@ -20,4 +20,14 @@ public class ConditionalNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitConditional(this);
     }
+
+    @Override
+    public String toString() {
+        return "ConditionalNode [condition=" + condition + ", thenBlock=" + thenBlock + ", elseBlock=" + elseBlock + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Cond[cond=" + condition.toShortString() + ", then=" + thenBlock.toShortString() + ", else=" + elseBlock.toShortString() + "]";
+    }
 }

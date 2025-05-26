@@ -16,4 +16,14 @@ public class DefinitionNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitDefinition(this);
     }
+
+    @Override
+    public String toString() {
+         return "DefinitionNode [name=" + name + ", definition=" + definition + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Def[name=" + name + ", def=" + definition + "]";
+    }
 }

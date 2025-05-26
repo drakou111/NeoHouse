@@ -14,4 +14,14 @@ public class ConstantNode extends ExpressionNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitConstant(this);
     }
+
+    @Override
+    public String toString() {
+        return "ConstantNode [value=" + value + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "Const[v=" + value.toShortString() + "]";
+    }
 }

@@ -7,7 +7,7 @@ public enum TokenType {
     NOTE("///[^\\n]*"),
     COMMENT_LINE("//[^\\n]*"),
 
-    FUNCTION("function"), BROADCAST("broadcast"), RETURN("return"), CANCEL("cancel"), GLOBAL("global"),
+    FUNCTION("function"), RETURN("return"), CANCEL("cancel"), GLOBAL("global"),
     IF("if"), ELSE("else"), REPEAT("repeat"), EVENT("event"),
     DEFINE("define"), RANDOM("random"),
     TRUE("true"), FALSE("false"),
@@ -27,14 +27,20 @@ public enum TokenType {
 
     LPAREN("\\("), RPAREN("\\)"), LBRACE("\\{"), RBRACE("\\}"),
     LBRACK("\\["), RBRACK("\\]"),
-    COMMA(","), SEMI(";"), DOT("\\."), BAR("\\|"),
+    COMMA(","), SEMI(";"), DOT("\\."), BAR("\\|"), BANG("\\!"),
     WHITESPACE("[ \\t\\r\\n]+"),
 
-    CONST_IDENT("PI|E|HALF_PI|TWO_PI"),
-    IDENT("[a-zA-Z_][a-zA-Z0-9_]*");
+    CONST_IDENT("PI|E|HALF_PI|TWO_PI|SQRT_TWO|SQRT_THREE|SQRT_FIVE|PHI"),
+    IDENT("[a-zA-Z_][a-zA-Z0-9_]*"),
+
+    EOF(null);
 
     public final Pattern pattern;
     TokenType(String regex) {
+        if (regex == null) {
+            this.pattern = null;
+            return;
+        }
         this.pattern = Pattern.compile("^" + regex);
     }
 }

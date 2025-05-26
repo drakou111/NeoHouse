@@ -14,4 +14,14 @@ public class ConstantPrimitiveNode extends ExpressionNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitConstantPrimitive(this);
     }
+
+    @Override
+    public String toString() {
+        return "ConstantPrimitiveNode [value=" + value + "]";
+    }
+
+    @Override
+    public String toShortString() {
+        return "ConstPrim[v=" + value.toShortString() + "]";
+    }
 }
