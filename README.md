@@ -6,7 +6,7 @@ It also depends on other mods like chattriggers, and relies on an external websi
 rather have something closer to code. HTSL is a good program to use Housing Editor with a coding language, however I felt like it missed a couple things
 that it could have added.
 
-I therefore decided to code my own version of Housing Editor as its standalone mod, along with (probably) a syntax highlighter on Visual Studio Code!
+I therefore decided to code my own version of Housing Editor as its standalone mod, along with a coding language and (probably) a syntax highlighter on Visual Studio Code!
 
 ## Dependencies
 
@@ -21,16 +21,15 @@ This version currently only supports NeoForge 1.21.4, but is planned to work for
 (NONE YET)
 
 ## TODO List
-- [ ] Make navigation system
-    - [x] Make the navigation logic
-    - [ ] Map all housing slots into constants
-      - [x] Actions
-      - [ ] Conditions
-- [ ] Make intermediate coding language (.nh) (closer to housing)
-  - [ ] Create syntax
-  - [ ] Create rules
-  - [ ] Create compîler
-- [ ] Make coding language (.nhc) (closer to code)
-  - [ ] Create syntax
-  - [ ] Create rules
-  - [ ] Create compîler
+- ✅ Make navigation system
+    - ✅ Make the navigation logic
+    - ✅ Map all housing slots into constants
+      - ✅ Actions
+      - ✅ Conditions
+- 🚧 Make coding language (.nh)
+  - ✅ Create syntax
+  - ✅ Create AST Tree
+  - ✅ Create tokenizer (Raw text -> Tokens)
+  - 🚧 Create parser (Tokens -> AST Tree)
+  - ❌ Create AST optimizations (AST Tree -> Optimized AST Tree)
+  - ❌ Create code translation (Optimized AST Tree -> Output)
