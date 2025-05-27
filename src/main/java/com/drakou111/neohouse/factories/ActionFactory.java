@@ -2,13 +2,13 @@ package com.drakou111.neohouse.factories;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.constants.*;
-import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.ActionBuilder;
 
 public class ActionFactory {
 
     public static Action addActionConditional(RestrictionAction state, boolean matchAny, Action conditions, Action ifs, Action elses, String note) {
-        if (state.pageSlotFor(AddAction.CONDITIONAL) == null) throw new InteruptActionException("Cannot add action 'Conditional' here.");
+        if (state.pageSlotFor(AddAction.CONDITIONAL) == null) throw new InterruptActionException("Cannot add action 'Conditional' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CONDITIONAL, state)
@@ -38,7 +38,7 @@ public class ActionFactory {
     }
 
     public static Action addActionChangeGroup(RestrictionAction state, String groupName, boolean demotionProtection, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_GROUP) == null) throw new InteruptActionException("Cannot add action 'Change Group' here.");
+        if (state.pageSlotFor(AddAction.CHANGE_GROUP) == null) throw new InterruptActionException("Cannot add action 'Change Group' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_GROUP, state)
@@ -58,7 +58,7 @@ public class ActionFactory {
     }
 
     public static Action addActionKillPlayer(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.KILL) == null) throw new InteruptActionException("Cannot add action 'Kill' here.");
+        if (state.pageSlotFor(AddAction.KILL) == null) throw new InterruptActionException("Cannot add action 'Kill' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.KILL, state)
@@ -66,7 +66,7 @@ public class ActionFactory {
     }
 
     public static Action addActionFullHeal(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.FULL_HEAL) == null) throw new InteruptActionException("Cannot add action 'Full Heal' here.");
+        if (state.pageSlotFor(AddAction.FULL_HEAL) == null) throw new InterruptActionException("Cannot add action 'Full Heal' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.FULL_HEAL, state)
@@ -74,7 +74,7 @@ public class ActionFactory {
     }
 
     public static Action addActionTitle(RestrictionAction state, String title, String subtitle, int fadeIn, int stay, int fadeOut, String note) {
-        if (state.pageSlotFor(AddAction.TITLE) == null) throw new InteruptActionException("Cannot add action 'Title' here.");
+        if (state.pageSlotFor(AddAction.TITLE) == null) throw new InterruptActionException("Cannot add action 'Title' here.");
 
         String finalTitle;
         if (title == null || title.trim().isEmpty()) finalTitle = "&l";
@@ -109,7 +109,7 @@ public class ActionFactory {
     }
 
     public static Action addActionActionBar(RestrictionAction state, String text, String note) {
-        if (state.pageSlotFor(AddAction.ACTION_BAR) == null) throw new InteruptActionException("Cannot add action 'Action Bar' here.");
+        if (state.pageSlotFor(AddAction.ACTION_BAR) == null) throw new InterruptActionException("Cannot add action 'Action Bar' here.");
 
         String finalText;
         if (text == null || text.trim().isEmpty()) finalText = "&l";
@@ -128,7 +128,7 @@ public class ActionFactory {
     }
 
     public static Action addActionResetInventory(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.CLEAR_INVENTORY) == null) throw new InteruptActionException("Cannot add action 'Clear Inventory' here.");
+        if (state.pageSlotFor(AddAction.CLEAR_INVENTORY) == null) throw new InterruptActionException("Cannot add action 'Clear Inventory' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CLEAR_INVENTORY, state)
@@ -136,7 +136,7 @@ public class ActionFactory {
     }
 
     public static Action addActionMaxHealth(RestrictionAction state, String maxHealth, RestrictedOperator operator, boolean healOnChange, String note) {
-        if (state.pageSlotFor(AddAction.MAX_HEALTH) == null) throw new InteruptActionException("Cannot add action 'Max Health' here.");
+        if (state.pageSlotFor(AddAction.MAX_HEALTH) == null) throw new InterruptActionException("Cannot add action 'Max Health' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.MAX_HEALTH, state)
@@ -158,7 +158,7 @@ public class ActionFactory {
     }
 
     public static Action addActionParkourCheckpoint(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.PARKOUR_CHECKPOINT) == null) throw new InteruptActionException("Cannot add action 'Parkour Checkpoint' here.");
+        if (state.pageSlotFor(AddAction.PARKOUR_CHECKPOINT) == null) throw new InterruptActionException("Cannot add action 'Parkour Checkpoint' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.PARKOUR_CHECKPOINT, state)
@@ -166,7 +166,7 @@ public class ActionFactory {
     }
 
     public static Action addActionGiveItem(RestrictionAction state, Integer inventoryItemSlotID, boolean allowMultiple, InventorySlots inventorySlot, boolean replaceExistingItem, int manualInputIndex, String note) {
-        if (state.pageSlotFor(AddAction.GIVE_ITEM) == null) throw new InteruptActionException("Cannot add action 'Give Item' here.");
+        if (state.pageSlotFor(AddAction.GIVE_ITEM) == null) throw new InterruptActionException("Cannot add action 'Give Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.GIVE_ITEM, state)
@@ -196,7 +196,7 @@ public class ActionFactory {
     }
 
     public static Action addActionRemoveItem(RestrictionAction state, Integer inventoryItemSlotID, String note) {
-        if (state.pageSlotFor(AddAction.REMOVE_ITEM) == null) throw new InteruptActionException("Cannot add action 'Remove Item' here.");
+        if (state.pageSlotFor(AddAction.REMOVE_ITEM) == null) throw new InterruptActionException("Cannot add action 'Remove Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.REMOVE_ITEM, state)
@@ -212,7 +212,7 @@ public class ActionFactory {
     }
 
     public static Action addActionSendMessage(RestrictionAction state, String text, String note) {
-        if (state.pageSlotFor(AddAction.CHAT_MESSAGE) == null) throw new InteruptActionException("Cannot add action 'Send Chat Message' here.");
+        if (state.pageSlotFor(AddAction.CHAT_MESSAGE) == null) throw new InterruptActionException("Cannot add action 'Send Chat Message' here.");
 
         String finalText;
         if (text == null || text.trim().isEmpty()) finalText = "&l";
@@ -231,7 +231,7 @@ public class ActionFactory {
     }
 
     public static Action addActionApplyPotion(RestrictionAction state, Potion potion, int duration, int level, boolean override, boolean showIcon, String note) {
-        if (state.pageSlotFor(AddAction.APPLY_POTION) == null) throw new InteruptActionException("Cannot add action 'Apply Potion' here.");
+        if (state.pageSlotFor(AddAction.APPLY_POTION) == null) throw new InterruptActionException("Cannot add action 'Apply Potion' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.APPLY_POTION, state)
@@ -259,7 +259,7 @@ public class ActionFactory {
     }
 
     public static Action addActionClearPotion(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.CLEAR_POTION) == null) throw new InteruptActionException("Cannot add action 'Clear Potion' here.");
+        if (state.pageSlotFor(AddAction.CLEAR_POTION) == null) throw new InterruptActionException("Cannot add action 'Clear Potion' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CLEAR_POTION, state)
@@ -267,7 +267,7 @@ public class ActionFactory {
     }
 
     public static Action addActionGiveXP(RestrictionAction state, int xp, String note) {
-        if (state.pageSlotFor(AddAction.GIVE_XP) == null) throw new InteruptActionException("Cannot add action 'Give XP' here.");
+        if (state.pageSlotFor(AddAction.GIVE_XP) == null) throw new InterruptActionException("Cannot add action 'Give XP' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.GIVE_XP, state)
@@ -282,7 +282,7 @@ public class ActionFactory {
     }
 
     public static Action addActionSendLobby(RestrictionAction state, Lobby lobby, String note) {
-        if (state.pageSlotFor(AddAction.SEND_LOBBY) == null) throw new InteruptActionException("Cannot add action 'Send to Lobby' here.");
+        if (state.pageSlotFor(AddAction.SEND_LOBBY) == null) throw new InterruptActionException("Cannot add action 'Send to Lobby' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SEND_LOBBY, state)
@@ -298,7 +298,7 @@ public class ActionFactory {
     }
 
     public static Action addActionVariable(RestrictionAction state, Holder holder, String variable, Operator operator, String value, boolean automaticUnset, String note) {
-        if (state.pageSlotFor(AddAction.VARIABLE) == null) throw new InteruptActionException("Cannot add action 'Variable' here.");
+        if (state.pageSlotFor(AddAction.VARIABLE) == null) throw new InterruptActionException("Cannot add action 'Variable' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.VARIABLE, state)
@@ -327,7 +327,7 @@ public class ActionFactory {
     }
 
     public static Action addActionTeleport(RestrictionAction state, Teleport teleport, String customLocation, boolean preventInsideBlocks, String note) {
-        if (state.pageSlotFor(AddAction.TELEPORT) == null) throw new InteruptActionException("Cannot add action 'Teleport' here.");
+        if (state.pageSlotFor(AddAction.TELEPORT) == null) throw new InterruptActionException("Cannot add action 'Teleport' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.TELEPORT, state)
@@ -350,7 +350,7 @@ public class ActionFactory {
     }
 
     public static Action addActionFailParkour(RestrictionAction state, String text, String note) {
-        if (state.pageSlotFor(AddAction.FAIL_PARKOUR) == null) throw new InteruptActionException("Cannot add action 'Fail Parkour' here.");
+        if (state.pageSlotFor(AddAction.FAIL_PARKOUR) == null) throw new InterruptActionException("Cannot add action 'Fail Parkour' here.");
 
         String finalText;
         if (text == null || text.trim().isEmpty()) finalText = "&l";
@@ -369,7 +369,7 @@ public class ActionFactory {
     }
 
     public static Action addActionPlaySound(RestrictionAction state, Sound sound, double volume, double pitch, Teleport teleport, String customLocation, String note) {
-        if (state.pageSlotFor(AddAction.PLAY_SOUND) == null) throw new InteruptActionException("Cannot add action 'Play Sound' here.");
+        if (state.pageSlotFor(AddAction.PLAY_SOUND) == null) throw new InterruptActionException("Cannot add action 'Play Sound' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.PLAY_SOUND, state)
@@ -400,7 +400,7 @@ public class ActionFactory {
     }
 
     public static Action addActionCompassTarget(RestrictionAction state, Teleport teleport, String customLocation, String note) {
-        if (state.pageSlotFor(AddAction.COMPASS_TARGET) == null) throw new InteruptActionException("Cannot add action 'Set Compass Target' here.");
+        if (state.pageSlotFor(AddAction.COMPASS_TARGET) == null) throw new InterruptActionException("Cannot add action 'Set Compass Target' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.COMPASS_TARGET, state)
@@ -420,7 +420,7 @@ public class ActionFactory {
     }
 
     public static Action addActionGamemode(RestrictionAction state, Gamemode gamemode, String note) {
-        if (state.pageSlotFor(AddAction.SET_GAME_MODE) == null) throw new InteruptActionException("Cannot add action 'Set Game Mode' here.");
+        if (state.pageSlotFor(AddAction.SET_GAME_MODE) == null) throw new InterruptActionException("Cannot add action 'Set Game Mode' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_GAME_MODE, state)
@@ -436,7 +436,7 @@ public class ActionFactory {
     }
 
     public static Action addActionChangeHealth(RestrictionAction state, String health, RestrictedOperator operator, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_HEALTH) == null) throw new InteruptActionException("Cannot add action 'Change Health' here.");
+        if (state.pageSlotFor(AddAction.CHANGE_HEALTH) == null) throw new InterruptActionException("Cannot add action 'Change Health' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_HEALTH, state)
@@ -455,7 +455,7 @@ public class ActionFactory {
     }
 
     public static Action addActionChangeHunger(RestrictionAction state, String hunger, RestrictedOperator operator, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_HUNGER) == null) throw new InteruptActionException("Cannot add action 'Change Hunger' here.");
+        if (state.pageSlotFor(AddAction.CHANGE_HUNGER) == null) throw new InterruptActionException("Cannot add action 'Change Hunger' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_HUNGER, state)
@@ -474,7 +474,7 @@ public class ActionFactory {
     }
 
     public static Action addActionRandom(RestrictionAction state, Action randoms, String note) {
-        if (state.pageSlotFor(AddAction.RANDOM) == null) throw new InteruptActionException("Cannot add action 'Random' here.");
+        if (state.pageSlotFor(AddAction.RANDOM) == null) throw new InterruptActionException("Cannot add action 'Random' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.RANDOM, state)
@@ -491,7 +491,7 @@ public class ActionFactory {
     }
 
     public static Action addActionTriggerFunction(RestrictionAction state, String name, boolean forAll, String note) {
-        if (state.pageSlotFor(AddAction.TRIGGER_FUNCTION) == null) throw new InteruptActionException("Cannot add action 'Trigger Function' here.");
+        if (state.pageSlotFor(AddAction.TRIGGER_FUNCTION) == null) throw new InterruptActionException("Cannot add action 'Trigger Function' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.TRIGGER_FUNCTION, state)
@@ -510,7 +510,7 @@ public class ActionFactory {
     }
 
     public static Action addActionApplyLayout(RestrictionAction state, String name, String note) {
-        if (state.pageSlotFor(AddAction.APPLY_LAYOUT) == null) throw new InteruptActionException("Cannot add action 'Apply Layout' here.");
+        if (state.pageSlotFor(AddAction.APPLY_LAYOUT) == null) throw new InterruptActionException("Cannot add action 'Apply Layout' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.APPLY_LAYOUT, state)
@@ -526,7 +526,7 @@ public class ActionFactory {
     }
 
     public static Action addActionExit(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.EXIT) == null) throw new InteruptActionException("Cannot add action 'Exit' here.");
+        if (state.pageSlotFor(AddAction.EXIT) == null) throw new InterruptActionException("Cannot add action 'Exit' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.EXIT, state)
@@ -534,7 +534,7 @@ public class ActionFactory {
     }
 
     public static Action addActionCancelEvent(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.CANCEL_EVENT) == null) throw new InteruptActionException("Cannot add action 'Cancel Event' here.");
+        if (state.pageSlotFor(AddAction.CANCEL_EVENT) == null) throw new InterruptActionException("Cannot add action 'Cancel Event' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CANCEL_EVENT, state)
@@ -542,7 +542,7 @@ public class ActionFactory {
     }
 
     public static Action addActionEnchantHeldItem(RestrictionAction state, Enchant enchant, int level, String note) {
-        if (state.pageSlotFor(AddAction.ENCHANT_HELD_ITEM) == null) throw new InteruptActionException("Cannot add action 'Enchant Held Item' here.");
+        if (state.pageSlotFor(AddAction.ENCHANT_HELD_ITEM) == null) throw new InterruptActionException("Cannot add action 'Enchant Held Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.ENCHANT_HELD_ITEM, state)
@@ -561,7 +561,7 @@ public class ActionFactory {
     }
 
     public static Action addActionPause(RestrictionAction state, int timeToWait, String note) {
-        if (state.pageSlotFor(AddAction.PAUSE) == null) throw new InteruptActionException("Cannot add action 'Pause' here.");
+        if (state.pageSlotFor(AddAction.PAUSE) == null) throw new InterruptActionException("Cannot add action 'Pause' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.PAUSE, state)
@@ -576,7 +576,7 @@ public class ActionFactory {
     }
 
     public static Action addActionTeam(RestrictionAction state, String team, String note) {
-        if (state.pageSlotFor(AddAction.SET_TEAM) == null) throw new InteruptActionException("Cannot add action 'Set Team' here.");
+        if (state.pageSlotFor(AddAction.SET_TEAM) == null) throw new InterruptActionException("Cannot add action 'Set Team' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_TEAM, state)
@@ -592,7 +592,7 @@ public class ActionFactory {
     }
 
     public static Action addActionDisplayMenu(RestrictionAction state, String menu, String note) {
-        if (state.pageSlotFor(AddAction.DISPLAY_MENU) == null) throw new InteruptActionException("Cannot add action 'Display Menu' here.");
+        if (state.pageSlotFor(AddAction.DISPLAY_MENU) == null) throw new InterruptActionException("Cannot add action 'Display Menu' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.DISPLAY_MENU, state)
@@ -608,7 +608,7 @@ public class ActionFactory {
     }
 
     public static Action addActionDropItem(RestrictionAction state, Integer inventoryItemSlotID, Teleport teleport, String customLocation, boolean dropNaturally, boolean disableItemMerging, boolean prioritizePlayer, boolean fallbackToInventory, String note) {
-        if (state.pageSlotFor(AddAction.DROP_ITEM) == null) throw new InteruptActionException("Cannot add action 'Drop Item' here.");
+        if (state.pageSlotFor(AddAction.DROP_ITEM) == null) throw new InterruptActionException("Cannot add action 'Drop Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.DROP_ITEM, state)
@@ -644,7 +644,7 @@ public class ActionFactory {
     }
 
     public static Action addActionChangeVelocity(RestrictionAction state, String velocityX, String velocityY, String velocityZ, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_VELOCITY) == null) throw new InteruptActionException("Cannot add action 'Change Velocity' here.");
+        if (state.pageSlotFor(AddAction.CHANGE_VELOCITY) == null) throw new InterruptActionException("Cannot add action 'Change Velocity' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_VELOCITY, state)
@@ -665,7 +665,7 @@ public class ActionFactory {
     }
 
     public static Action addActionLaunchTarget(RestrictionAction state, Teleport teleport, String customLocation, String strength, String note) {
-        if (state.pageSlotFor(AddAction.LAUNCH_TO_TARGET) == null) throw new InteruptActionException("Cannot add action 'Launch to Target' here.");
+        if (state.pageSlotFor(AddAction.LAUNCH_TO_TARGET) == null) throw new InterruptActionException("Cannot add action 'Launch to Target' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.LAUNCH_TO_TARGET, state)
@@ -688,7 +688,7 @@ public class ActionFactory {
     }
 
     public static Action addActionWeather(RestrictionAction state, Weather weather, String note) {
-        if (state.pageSlotFor(AddAction.SET_WEATHER) == null) throw new InteruptActionException("Cannot add action 'Set Weather' here.");
+        if (state.pageSlotFor(AddAction.SET_WEATHER) == null) throw new InterruptActionException("Cannot add action 'Set Weather' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_WEATHER, state)
@@ -704,7 +704,7 @@ public class ActionFactory {
     }
 
     public static Action addActionTime(RestrictionAction state, Time time, String customTime, String note) {
-        if (state.pageSlotFor(AddAction.SET_TIME) == null) throw new InteruptActionException("Cannot add action 'Set Time' here.");
+        if (state.pageSlotFor(AddAction.SET_TIME) == null) throw new InterruptActionException("Cannot add action 'Set Time' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_TIME, state)
@@ -724,7 +724,7 @@ public class ActionFactory {
     }
 
     public static Action addActionNametag(RestrictionAction state, boolean displayNametag, String note) {
-        if (state.pageSlotFor(AddAction.NAME_TAG_DISPLAY) == null) throw new InteruptActionException("Cannot add action 'Nametag Display' here.");
+        if (state.pageSlotFor(AddAction.NAME_TAG_DISPLAY) == null) throw new InterruptActionException("Cannot add action 'Nametag Display' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.NAME_TAG_DISPLAY, state)

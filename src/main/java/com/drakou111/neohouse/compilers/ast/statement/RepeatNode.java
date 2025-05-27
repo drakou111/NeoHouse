@@ -3,14 +3,16 @@ package com.drakou111.neohouse.compilers.ast.statement;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementNode;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class RepeatNode extends StatementNode {
-    public final int count;
+    public final long count;
     public final StatementListNode statements;
 
-    public RepeatNode(final int count, final StatementListNode statements) {
+    public RepeatNode(final long count, final StatementListNode statements, final Token token) {
         this.count = count;
         this.statements = statements;
+        this.token = token;
     }
 
     @Override

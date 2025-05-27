@@ -7,7 +7,7 @@ public enum TokenType {
     NOTE("///[^\\n]*"),
     COMMENT_LINE("//[^\\n]*"),
 
-    FUNCTION("function"), RETURN("return"), CANCEL("cancel"), GLOBAL("global"),
+    FUNCTION("function"), RETURN("return"), CANCEL("cancel"), LOOP("loop"),
     IF("if"), ELSE("else"), REPEAT("repeat"), EVENT("event"),
     DEFINE("define"), RANDOM("random"),
     TRUE("true"), FALSE("false"),

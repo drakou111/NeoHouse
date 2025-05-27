@@ -1,10 +1,12 @@
 package com.drakou111.neohouse.compilers.ast.expr.call;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class GlobalFunctionCallNode extends FunctionCallNode {
-    public GlobalFunctionCallNode(final String functionName) {
-        super(functionName);
+
+    public GlobalFunctionCallNode(final String functionName, final Token token) {
+        super(functionName, token);
     }
 
     @Override

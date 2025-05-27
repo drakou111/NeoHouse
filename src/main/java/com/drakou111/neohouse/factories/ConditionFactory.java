@@ -2,12 +2,12 @@ package com.drakou111.neohouse.factories;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.constants.*;
-import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.ActionBuilder;
 
 public class ConditionFactory {
     public static Action addConditionGroup(RestrictionCondition state, boolean invert, String group, boolean includeHigherGroups, String note) {
-        if (state.pageSlotFor(AddCondition.GROUP) == null) throw new InteruptActionException("Cannot add condition 'Group' here.");
+        if (state.pageSlotFor(AddCondition.GROUP) == null) throw new InterruptActionException("Cannot add condition 'Group' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.GROUP, state)
@@ -29,7 +29,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionVariable(RestrictionCondition state, boolean invert, Holder holder, String variable, Comparator comparator, String value, String fallback, String note) {
-        if (state.pageSlotFor(AddCondition.VARIABLE) == null) throw new InteruptActionException("Cannot add condition 'Variable' here.");
+        if (state.pageSlotFor(AddCondition.VARIABLE) == null) throw new InterruptActionException("Cannot add condition 'Variable' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.VARIABLE, state)
@@ -61,7 +61,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionPermission(RestrictionCondition state, boolean invert, Permission permission, String note) {
-        if (state.pageSlotFor(AddCondition.PERMISSION) == null) throw new InteruptActionException("Cannot add condition 'Permission' here.");
+        if (state.pageSlotFor(AddCondition.PERMISSION) == null) throw new InterruptActionException("Cannot add condition 'Permission' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.PERMISSION, state)
@@ -80,7 +80,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionRegion(RestrictionCondition state, boolean invert, String region, String note) {
-        if (state.pageSlotFor(AddCondition.REGION) == null) throw new InteruptActionException("Cannot add condition 'Region' here.");
+        if (state.pageSlotFor(AddCondition.REGION) == null) throw new InterruptActionException("Cannot add condition 'Region' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.REGION, state)
@@ -99,7 +99,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionHasItem(RestrictionCondition state, boolean invert, Integer inventoryItemSlotID, WhatCheck whatCheck, WhereCheck whereCheck, AmountCheck amountCheck, String note) {
-        if (state.pageSlotFor(AddCondition.HAS_ITEM) == null) throw new InteruptActionException("Cannot add condition 'Has Item' here.");
+        if (state.pageSlotFor(AddCondition.HAS_ITEM) == null) throw new InterruptActionException("Cannot add condition 'Has Item' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.HAS_ITEM, state)
@@ -130,7 +130,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionDoingParkour(RestrictionCondition state, boolean invert, String note) {
-        if (state.pageSlotFor(AddCondition.DOING_PARKOUR) == null) throw new InteruptActionException("Cannot add condition 'Doing Parkour' here.");
+        if (state.pageSlotFor(AddCondition.DOING_PARKOUR) == null) throw new InterruptActionException("Cannot add condition 'Doing Parkour' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.DOING_PARKOUR, state)
@@ -145,7 +145,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionPotion(RestrictionCondition state, boolean invert, Potion potion, String note) {
-        if (state.pageSlotFor(AddCondition.POTION) == null) throw new InteruptActionException("Cannot add condition 'Potion' here.");
+        if (state.pageSlotFor(AddCondition.POTION) == null) throw new InterruptActionException("Cannot add condition 'Potion' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.POTION, state)
@@ -164,7 +164,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionSneaking(RestrictionCondition state, boolean invert, String note) {
-        if (state.pageSlotFor(AddCondition.SNEAKING) == null) throw new InteruptActionException("Cannot add condition 'Sneaking' here.");
+        if (state.pageSlotFor(AddCondition.SNEAKING) == null) throw new InterruptActionException("Cannot add condition 'Sneaking' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.SNEAKING, state)
@@ -179,7 +179,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionFlying(RestrictionCondition state, boolean invert, String note) {
-        if (state.pageSlotFor(AddCondition.FLYING) == null) throw new InteruptActionException("Cannot add condition 'Flying' here.");
+        if (state.pageSlotFor(AddCondition.FLYING) == null) throw new InterruptActionException("Cannot add condition 'Flying' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.FLYING, state)
@@ -194,7 +194,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionHealth(RestrictionCondition state, boolean invert, Comparator comparator, String value, String note) {
-        if (state.pageSlotFor(AddCondition.HEALTH) == null) throw new InteruptActionException("Cannot add condition 'Health' here.");
+        if (state.pageSlotFor(AddCondition.HEALTH) == null) throw new InterruptActionException("Cannot add condition 'Health' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.HEALTH, state)
@@ -216,7 +216,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionMaxHealth(RestrictionCondition state, boolean invert, Comparator comparator, String value, String note) {
-        if (state.pageSlotFor(AddCondition.MAX_HEALTH) == null) throw new InteruptActionException("Cannot add condition 'Max Health' here.");
+        if (state.pageSlotFor(AddCondition.MAX_HEALTH) == null) throw new InterruptActionException("Cannot add condition 'Max Health' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.MAX_HEALTH, state)
@@ -238,7 +238,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionHunger(RestrictionCondition state, boolean invert, Comparator comparator, String value, String note) {
-        if (state.pageSlotFor(AddCondition.HUNGER) == null) throw new InteruptActionException("Cannot add condition 'Hunger' here.");
+        if (state.pageSlotFor(AddCondition.HUNGER) == null) throw new InterruptActionException("Cannot add condition 'Hunger' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.HUNGER, state)
@@ -260,7 +260,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionGamemode(RestrictionCondition state, boolean invert, Gamemode gamemode, String note) {
-        if (state.pageSlotFor(AddCondition.GAME_MODE) == null) throw new InteruptActionException("Cannot add condition 'Game Mode' here.");
+        if (state.pageSlotFor(AddCondition.GAME_MODE) == null) throw new InterruptActionException("Cannot add condition 'Game Mode' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.GAME_MODE, state)
@@ -279,7 +279,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionPlaceholder(RestrictionCondition state, boolean invert, String placeholder, Comparator comparator, String value, String note) {
-        if (state.pageSlotFor(AddCondition.PLACEHOLDER) == null) throw new InteruptActionException("Cannot add condition 'Placeholder' here.");
+        if (state.pageSlotFor(AddCondition.PLACEHOLDER) == null) throw new InterruptActionException("Cannot add condition 'Placeholder' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.PLACEHOLDER, state)
@@ -304,7 +304,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionTeam(RestrictionCondition state, boolean invert, String team, String note) {
-        if (state.pageSlotFor(AddCondition.TEAM) == null) throw new InteruptActionException("Cannot add condition 'Team' here.");
+        if (state.pageSlotFor(AddCondition.TEAM) == null) throw new InterruptActionException("Cannot add condition 'Team' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.TEAM, state)
@@ -323,7 +323,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionPortalType(RestrictionCondition state, boolean invert, PortalType portalType, String note) {
-        if (state.pageSlotFor(AddCondition.PORTAL_TYPE) == null) throw new InteruptActionException("Cannot add condition 'Portal Type' here.");
+        if (state.pageSlotFor(AddCondition.PORTAL_TYPE) == null) throw new InterruptActionException("Cannot add condition 'Portal Type' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.PORTAL_TYPE, state)
@@ -342,7 +342,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionPVPEnabled(RestrictionCondition state, boolean invert, String note) {
-        if (state.pageSlotFor(AddCondition.PVP_ENABLED) == null) throw new InteruptActionException("Cannot add condition 'PVP Enabled' here.");
+        if (state.pageSlotFor(AddCondition.PVP_ENABLED) == null) throw new InterruptActionException("Cannot add condition 'PVP Enabled' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.PVP_ENABLED, state)
@@ -357,7 +357,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionDamageCause(RestrictionCondition state, boolean invert, DamageCause damageCause, String note) {
-        if (state.pageSlotFor(AddCondition.DAMAGE_CAUSE) == null) throw new InteruptActionException("Cannot add condition 'Damage Cause' here.");
+        if (state.pageSlotFor(AddCondition.DAMAGE_CAUSE) == null) throw new InterruptActionException("Cannot add condition 'Damage Cause' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.DAMAGE_CAUSE, state)
@@ -376,7 +376,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionDamageAmount(RestrictionCondition state, boolean invert, Comparator comparator, String value, String note) {
-        if (state.pageSlotFor(AddCondition.DAMAGE_AMOUNT) == null) throw new InteruptActionException("Cannot add condition 'Damage Amount' here.");
+        if (state.pageSlotFor(AddCondition.DAMAGE_AMOUNT) == null) throw new InterruptActionException("Cannot add condition 'Damage Amount' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.DAMAGE_AMOUNT, state)
@@ -398,7 +398,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionBlockType(RestrictionCondition state, boolean invert, Integer inventoryItemSlotID, boolean matchTypeOnly, String note) {
-        if (state.pageSlotFor(AddCondition.BLOCK_TYPE) == null) throw new InteruptActionException("Cannot add condition 'Block Type' here.");
+        if (state.pageSlotFor(AddCondition.BLOCK_TYPE) == null) throw new InterruptActionException("Cannot add condition 'Block Type' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.BLOCK_TYPE, state)
@@ -420,7 +420,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionIsItem(RestrictionCondition state, boolean invert, Integer inventoryItemSlotID, WhatCheck whatCheck, WhereCheck whereCheck, AmountCheck amountCheck, String note) {
-        if (state.pageSlotFor(AddCondition.IS_ITEM) == null) throw new InteruptActionException("Cannot add condition 'Is Item' here.");
+        if (state.pageSlotFor(AddCondition.IS_ITEM) == null) throw new InterruptActionException("Cannot add condition 'Is Item' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.IS_ITEM, state)

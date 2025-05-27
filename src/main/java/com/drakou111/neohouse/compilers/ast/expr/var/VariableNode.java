@@ -4,16 +4,18 @@ import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.enums.Holder;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class VariableNode extends ExpressionNode {
     public final VariableType type;
     public final Holder holder;
     public final String name;
 
-    public VariableNode(final VariableType type, final Holder holder, final String name) {
+    public VariableNode(final VariableType type, final Holder holder, final String name, final Token token) {
         this.type = type;
         this.holder = holder;
         this.name = name;
+        this.token = token;
     }
 
     @Override

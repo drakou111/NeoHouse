@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.compilers.ast;
 
-import com.drakou111.neohouse.compilers.ast.event.EventNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
 import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.call.GlobalFunctionCallNode;
@@ -10,8 +10,9 @@ import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
-import com.drakou111.neohouse.compilers.ast.function.AutomaticFunctionNode;
-import com.drakou111.neohouse.compilers.ast.function.FunctionNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
 import com.drakou111.neohouse.compilers.ast.main.*;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 
@@ -29,7 +30,7 @@ public interface ASTVisitor<T> {
 
     // Main Statements
     T visitFunction(FunctionNode function);
-    T visitAutomaticFunction(AutomaticFunctionNode function);
+    T visitAutomaticFunction(LoopNode function);
     T visitEvent(EventNode event);
     T visitGlobalDeclaration(GlobalDeclarationNode declaration);
 

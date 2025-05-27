@@ -3,12 +3,14 @@ package com.drakou111.neohouse.compilers.ast.statement;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementNode;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class DeclarationNode extends StatementNode {
     public VariableNode variable;
 
-    public DeclarationNode(VariableNode variable) {
+    public DeclarationNode(final VariableNode variable, final Token token) {
         this.variable = variable;
+        this.token = token;
     }
 
     @Override

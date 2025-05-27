@@ -2,7 +2,7 @@ package com.drakou111.neohouse.utils;
 
 import com.drakou111.neohouse.NeoHouse;
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -28,7 +28,7 @@ public class SequenceManager {
         try {
             finished = currentAction.run(mc);
         }
-        catch (InteruptActionException e) {
+        catch (InterruptActionException e) {
             MessageUtils.errorToChat(e.getMessage());
             finished = true;
         }

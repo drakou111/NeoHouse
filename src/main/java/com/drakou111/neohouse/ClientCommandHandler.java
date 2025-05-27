@@ -4,7 +4,7 @@ import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
 import com.drakou111.neohouse.compilers.NHCompiler;
 import com.drakou111.neohouse.compilers.ScriptRunner;
-import com.drakou111.neohouse.exceptions.CompileException;
+import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.factories.MovementFactory;
 import com.drakou111.neohouse.utils.ActionBuilder;
 import com.drakou111.neohouse.utils.MessageUtils;
@@ -80,7 +80,7 @@ public class ClientCommandHandler {
                                 return 1;
                             }
                             return 0;
-                        } catch (CompileException e) {
+                        } catch (CompilingException e) {
                             MessageUtils.errorToChat("Script compile/run error: " + e.getMessage());
                             return 0;
                         }

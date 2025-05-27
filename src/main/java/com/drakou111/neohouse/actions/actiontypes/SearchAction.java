@@ -1,7 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
@@ -94,7 +94,7 @@ public class SearchAction extends Action {
         }
         else if (step == Step.STEP_NOT_FOUND) {
             if (onNotFound == null || onNotFound.run(mc)) step = Step.STEP_DONE;
-            if (onNotFound == null) throw new InteruptActionException("Could not find item called '" + targetName + "'.");
+            if (onNotFound == null) throw new InterruptActionException("Could not find item called '" + targetName + "'.");
         }
         else {
             return true;

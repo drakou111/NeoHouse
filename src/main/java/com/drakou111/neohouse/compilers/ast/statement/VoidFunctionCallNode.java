@@ -2,14 +2,16 @@ package com.drakou111.neohouse.compilers.ast.statement;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class VoidFunctionCallNode extends ExpressionNode {
     public final String functionName;
     public final boolean global;
 
-    public VoidFunctionCallNode(final String functionName, final boolean global) {
+    public VoidFunctionCallNode(final String functionName, final boolean global, final Token token) {
         this.functionName = functionName;
         this.global = global;
+        this.token = token;
     }
 
     @Override

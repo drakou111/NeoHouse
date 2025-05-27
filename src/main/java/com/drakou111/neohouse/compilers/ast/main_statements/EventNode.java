@@ -1,16 +1,19 @@
-package com.drakou111.neohouse.compilers.ast.event;
+package com.drakou111.neohouse.compilers.ast.main_statements;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
+import com.drakou111.neohouse.compilers.ast.enums.Event;
 import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class EventNode extends MainStatementNode {
-    public final String name;
+    public final Event event;
     public final StatementListNode statements;
 
-    public EventNode(final String name, final StatementListNode statements) {
-        this.name = name;
+    public EventNode(final Event event, final StatementListNode statements, Token token) {
+        this.event = event;
         this.statements = statements;
+        this.token = token;
     }
 
     @Override
@@ -20,11 +23,11 @@ public class EventNode extends MainStatementNode {
 
     @Override
     public String toString() {
-        return "EventNode [name=" + name + ", statements=" + statements + "]";
+        return "EventNode [event=" + event + ", statements=" + statements + "]";
     }
 
     @Override
     public String toShortString() {
-        return "Event[name=" + name + ", stmts=" + statements.toShortString() + "]";
+        return "Event[e=" + event + ", stmts=" + statements.toShortString() + "]";
     }
 }

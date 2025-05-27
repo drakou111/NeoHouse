@@ -2,12 +2,14 @@ package com.drakou111.neohouse.compilers.ast.expr.constants;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class ConstantPrimitiveNode extends ExpressionNode {
     public final ConstantPrimitive value;
 
-    public ConstantPrimitiveNode(final ConstantPrimitive value) {
+    public ConstantPrimitiveNode(final ConstantPrimitive value, final Token token) {
         this.value = value;
+        this.token = token;
     }
 
     @Override

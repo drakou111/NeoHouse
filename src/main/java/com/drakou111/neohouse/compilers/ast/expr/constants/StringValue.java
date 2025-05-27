@@ -7,7 +7,7 @@ public final class StringValue implements ConstantPrimitive {
 
     @Override
     public String toString() {
-        return value;
+        return "\"" + value + "\"";
     }
 
     @Override

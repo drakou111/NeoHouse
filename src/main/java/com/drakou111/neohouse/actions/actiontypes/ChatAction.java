@@ -1,7 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 
@@ -20,6 +20,6 @@ public class ChatAction extends Action {
             return true;
         }
 
-        throw new InteruptActionException("An unexpected error occurred, could not type in chat.");
+        throw new InterruptActionException("An unexpected error occurred, could not type in chat.");
     }
 }

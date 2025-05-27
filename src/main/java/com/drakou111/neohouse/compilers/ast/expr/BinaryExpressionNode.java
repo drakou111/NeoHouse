@@ -2,16 +2,18 @@ package com.drakou111.neohouse.compilers.ast.expr;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.enums.BinaryOperator;
+import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class BinaryExpressionNode extends ExpressionNode {
     public final BinaryOperator operator;
     public final ExpressionNode left;
     public final ExpressionNode right;
 
-    public BinaryExpressionNode(final ExpressionNode left, final ExpressionNode right, final BinaryOperator operator) {
+    public BinaryExpressionNode(final ExpressionNode left, final ExpressionNode right, final BinaryOperator operator, final Token token) {
         this.left = left;
         this.right = right;
         this.operator = operator;
+        this.token = token;
     }
 
     @Override

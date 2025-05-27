@@ -11,7 +11,9 @@ public final class StringArrayValue implements ConstantArray {
     public String toString() {
         StringBuilder ret = new StringBuilder();
         for (int i = 0; i < value.size(); i++) {
+            ret.append("\"");
             ret.append(value.get(i).toString());
+            ret.append("\"");
             if (i < value.size() - 1) ret.append(",");
         }
         return ret.toString();

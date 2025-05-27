@@ -5,14 +5,19 @@ import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.*;
+import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
-import com.drakou111.neohouse.compilers.ast.statement.AssignationNode;
-import com.drakou111.neohouse.compilers.ast.statement.DeclarationNode;
-import com.drakou111.neohouse.compilers.ast.statement.GlobalDeclarationNode;
+import com.drakou111.neohouse.compilers.ast.main.*;
+import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compilers.ast.statement.*;
+import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
 import com.drakou111.neohouse.compilers.lexer.Token;
 import com.drakou111.neohouse.compilers.lexer.TokenType;
-import com.drakou111.neohouse.exceptions.ParseException;
+import com.drakou111.neohouse.exceptions.ParsingException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
@@ -47,6 +52,11 @@ public class Parser {
         return previous();
     }
 
+    private Token stepBack() {
+        if (pos > 0) pos--;
+        return peek();
+    }
+
     private boolean isAtEnd() {
         return peek().type == TokenType.EOF;
     }
@@ -59,9 +69,206 @@ public class Parser {
         return tokens.get(pos - 1);
     }
 
-    private ParseException error(Token token, String message) {
+    private ParsingException error(Token token, String message) {
         System.err.println("[line " + token.line + "] Error at '" + token.text + "': " + message);
-        return new ParseException(message);
+        return new ParsingException(message);
+    }
+
+
+
+    public MainNode parseMain() {
+        List<MainStatementNode> nodes = new ArrayList<>();
+
+        while (!isAtEnd()) {
+            if (check(TokenType.FUNCTION)) {
+                nodes.add(parseFunction());
+            } else if (check(TokenType.LOOP)) {
+                nodes.add(parseLoop());
+            } else if (check(TokenType.EVENT)) {
+                nodes.add(parseEvent());
+            } else if (isType(peek())) {
+                nodes.add(parseGlobalDeclaration());
+            } else {
+                throw error(peek(), "Unexpected token at top level: " + peek().text);
+            }
+        }
+
+        return new MainNode(nodes);
+    }
+
+    public EventNode parseEvent() {
+        Token eventToken = consume(TokenType.EVENT, "Expected 'event' keyword");
+
+        Token nameToken = consume(TokenType.IDENT, "Expected event name");
+        String eventName = nameToken.text;
+
+        Event event = Event.fromName(eventName);
+        if (event == null) {
+            throw error(nameToken, "Invalid event name: '" + eventName + "'");
+        }
+
+        consume(TokenType.LBRACE, "Expected '{' to begin event body");
+
+        List<StatementNode> body = new ArrayList<>();
+        while (!check(TokenType.RBRACE) && !isAtEnd()) {
+            body.add(parseStatement());
+        }
+
+        consume(TokenType.RBRACE, "Expected '}' after event body");
+
+        return new EventNode(event, new StatementListNode(body), eventToken);
+    }
+
+    public FunctionNode parseFunction() {
+        Token functionToken = consume(TokenType.FUNCTION, "Expected 'function' keyword");
+
+        VariableType returnType = null;
+        String functionName;
+
+        // Peek ahead: if it's a type, it's a typed function
+        if (isType(peek())) {
+            Token typeToken = advance();
+            returnType = parseVariableFromToken(typeToken);
+            functionName = consume(TokenType.IDENT, "Expected function name").text;
+        } else {
+            // No return type: next must be function name
+            functionName = consume(TokenType.IDENT, "Expected function name").text;
+        }
+
+        consume(TokenType.LPAREN, "Expected '(' after function name");
+
+        List<VariableNode> parameters = new ArrayList<>();
+        if (!check(TokenType.RPAREN)) {
+            do {
+                parameters.add(parseVariable());
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RPAREN, "Expected ')' after parameters");
+
+        consume(TokenType.LBRACE, "Expected '{' to begin function body");
+
+        List<StatementNode> body = new ArrayList<>();
+        while (!check(TokenType.RBRACE) && !isAtEnd()) {
+            body.add(parseStatement());
+        }
+
+        consume(TokenType.RBRACE, "Expected '}' after function body");
+
+        return new FunctionNode(functionName, "", returnType, new ParameterListNode(parameters), new StatementListNode(body), functionToken);
+    }
+
+    public RepeatNode parseRepeat() {
+        Token repeatToken = consume(TokenType.REPEAT, "Expected 'repeat' keyword");
+        consume(TokenType.LPAREN, "Expected '(' after 'repeat'");
+
+        // Only allow a long constant
+        Token countToken = consume(TokenType.LONG_CONST, "Expected long constant as repeat count");
+        long count = Long.parseLong(countToken.text);
+
+        consume(TokenType.RPAREN, "Expected ')' after repeat count");
+        consume(TokenType.LBRACE, "Expected '{' to begin repeat block");
+
+        List<StatementNode> body = new ArrayList<>();
+        while (!check(TokenType.RBRACE) && !isAtEnd()) {
+            body.add(parseStatement());
+        }
+
+        consume(TokenType.RBRACE, "Expected '}' after repeat block");
+
+        return new RepeatNode(count, new StatementListNode(body), repeatToken);
+    }
+    public ConditionalNode parseIf() {
+        Token token = consume(TokenType.IF, "Expected 'if' keyword");
+        consume(TokenType.LPAREN, "Expected '(' after 'if'");
+        ExpressionNode condition = parseExpression();
+        consume(TokenType.RPAREN, "Expected ')' after if condition");
+
+        consume(TokenType.LBRACE, "Expected '{' to begin 'if' block");
+        List<StatementNode> thenBranch = new ArrayList<>();
+        while (!check(TokenType.RBRACE) && !isAtEnd()) {
+            thenBranch.add(parseStatement());
+        }
+        consume(TokenType.RBRACE, "Expected '}' after 'if' block");
+
+        List<StatementNode> elseBranch = null;
+        if (match(TokenType.ELSE)) {
+            consume(TokenType.LBRACE, "Expected '{' to begin 'else' block");
+            elseBranch = new ArrayList<>();
+            while (!check(TokenType.RBRACE) && !isAtEnd()) {
+                elseBranch.add(parseStatement());
+            }
+            consume(TokenType.RBRACE, "Expected '}' after 'else' block");
+        }
+
+        return new ConditionalNode(condition, new StatementListNode(thenBranch), new StatementListNode(elseBranch), token);
+    }
+
+
+
+    public RandomNode parseRandom() {
+        Token randomToken = consume(TokenType.RANDOM, "Expected 'random' keyword");
+        consume(TokenType.LBRACK, "Expected '[' after 'random'");
+
+        List<StatementListNode> options = new ArrayList<>();
+
+        while (!check(TokenType.RBRACK) && !isAtEnd()) {
+            consume(TokenType.LBRACE, "Expected '{' to begin a random block");
+
+            List<StatementNode> block = new ArrayList<>();
+            while (!check(TokenType.RBRACE) && !isAtEnd()) {
+                block.add(parseStatement());
+            }
+
+            consume(TokenType.RBRACE, "Expected '}' to close a random block");
+            options.add(new StatementListNode(block));
+        }
+
+        consume(TokenType.RBRACK, "Expected ']' to close random options");
+
+        return new RandomNode(options, randomToken);
+    }
+
+    public LoopNode parseLoop() {
+        Token loopToken = consume(TokenType.LOOP, "Expected 'loop' keyword");
+
+        String name = consume(TokenType.IDENT, "Expected loop name").text;
+
+        long delay = 4;
+        if (check(TokenType.LONG_CONST)) {
+            String longText = advance().text;
+            delay = Long.parseLong(longText);
+        }
+
+        consume(TokenType.LBRACE, "Expected '{' to begin loop body");
+
+        List<StatementNode> body = new ArrayList<>();
+        while (!check(TokenType.RBRACE) && !isAtEnd()) {
+            body.add(parseStatement());
+        }
+
+        consume(TokenType.RBRACE, "Expected '}' after loop body");
+
+        return new LoopNode(name, "", new StatementListNode(body), delay, loopToken);
+    }
+
+    private boolean isType(Token token) {
+        return switch (token.type) {
+            case LONG, DOUBLE, STRING, BOOL, VAR -> true;
+            default -> false;
+        };
+    }
+
+    public StatementNode parseStatement() {
+
+        if (check(TokenType.RANDOM)) return parseRandom();
+        if (check(TokenType.REPEAT)) return parseRepeat();
+        if (check(TokenType.IF)) return parseIf();
+
+        if (isType(peek())) return parseDeclaration();
+        if (check(TokenType.IDENT)) return parseAssignment();
+
+        throw error(peek(), "Unknown statement");
     }
 
     private ExpressionNode parseExpression() {
@@ -74,6 +281,17 @@ public class Parser {
         advance();
         ExpressionNode left = parsePrefix(prefixToken);
 
+        // Handle postfix operators (e.g. ++, --) first
+        while (!isAtEnd() && getPostfixPrecedence().ordinal() > prec.ordinal()) {
+            Token postfixToken = peek();
+            if (postfixToken.type == TokenType.PLUS_PLUS || postfixToken.type == TokenType.MINUS_MINUS) {
+                advance();
+                left = new UnaryExpressionNode(parseUnaryOperatorFromToken(postfixToken), left, previous());
+            } else {
+                break;
+            }
+        }
+
         // Parse infix as long as the next operator has higher precedence
         while (!isAtEnd() && prec.ordinal() < getCurrentPrecedence().ordinal()) {
             Token infixToken = peek();
@@ -84,44 +302,51 @@ public class Parser {
         return left;
     }
 
+    private Precedence getPostfixPrecedence() {
+        if (isAtEnd()) return Precedence.NONE;
+        return switch (peek().type) {
+            case PLUS_PLUS, MINUS_MINUS -> Precedence.POSTFIX;
+            default -> Precedence.NONE;
+        };
+    }
+
     private ExpressionNode parsePrefix(Token token) {
         switch (token.type) {
             case BANG:
             case MINUS:
                 // Unary operators
                 ExpressionNode right = parsePrecedence(Precedence.UNARY);
-                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), right);
+                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), right, token);
             case CONST_IDENT:
                 return switch (token.text) {
-                    case "PI" -> new ConstantPrimitiveNode(new DoubleValue(3.14159265358979));
-                    case "E" -> new ConstantPrimitiveNode(new DoubleValue(2.71828182845904));
-                    case "HALF_PI" -> new ConstantPrimitiveNode(new DoubleValue(1.57079632679489));
-                    case "TWO_PI" -> new ConstantPrimitiveNode(new DoubleValue(6.28318530717958));
-                    case "SQRT_TWO" -> new ConstantPrimitiveNode(new DoubleValue(1.41421356237309));
-                    case "SQRT_THREE" -> new ConstantPrimitiveNode(new DoubleValue(1.73205080756887));
-                    case "SQRT_FIVE" -> new ConstantPrimitiveNode(new DoubleValue(2.23606797749978));
-                    case "PHI" -> new ConstantPrimitiveNode(new DoubleValue(1.61803398874989));
+                    case "PI" -> new ConstantPrimitiveNode(new DoubleValue(3.14159265358979), token);
+                    case "E" -> new ConstantPrimitiveNode(new DoubleValue(2.71828182845904), token);
+                    case "HALF_PI" -> new ConstantPrimitiveNode(new DoubleValue(1.57079632679489), token);
+                    case "TWO_PI" -> new ConstantPrimitiveNode(new DoubleValue(6.28318530717958), token);
+                    case "SQRT_TWO" -> new ConstantPrimitiveNode(new DoubleValue(1.41421356237309), token);
+                    case "SQRT_THREE" -> new ConstantPrimitiveNode(new DoubleValue(1.73205080756887), token);
+                    case "SQRT_FIVE" -> new ConstantPrimitiveNode(new DoubleValue(2.23606797749978), token);
+                    case "PHI" -> new ConstantPrimitiveNode(new DoubleValue(1.61803398874989), token);
                     default -> throw error(token, "Unsupported constant: " + token.text);
                 };
             case STRING_CONST:
-                return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)));
+                return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)), token);
             case LONG_CONST:
-                return new ConstantPrimitiveNode(new LongValue(Long.parseLong(token.text)));
+                return new ConstantPrimitiveNode(new LongValue(Long.parseLong(token.text)), token);
             case DOUBLE_CONST:
-                return new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(token.text.replace("d",""))));
+                return new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(token.text.replace("d",""))), token);
             case TRUE:
-                return new ConstantPrimitiveNode(new BoolValue(true));
+                return new ConstantPrimitiveNode(new BoolValue(true), token);
             case FALSE:
-                return new ConstantPrimitiveNode(new BoolValue(false));
+                return new ConstantPrimitiveNode(new BoolValue(false), token);
             case LPAREN:
                 ExpressionNode expr = parseExpression();
                 consume(TokenType.RPAREN, "Expect ')' after expression.");
                 return expr;
             case IDENT: {
-                Holder holder = parseHolderFromToken(token);
-                consume(TokenType.DOT, "Expected '.' after holder (p/g/t).");
-                Token nameToken = consume(TokenType.IDENT, "Expected variable name after '.'.");
-                return new VariableNode(null, holder, nameToken.text);
+                if (token.text.equals("ph")) return parsePlaceholder();
+                stepBack();
+                return parseVariable();
             }
             default:
                 throw error(token, "Expected expression.");
@@ -131,7 +356,7 @@ public class Parser {
     private ExpressionNode parseInfix(ExpressionNode left, Token token) {
         Precedence prec = getOperatorPrecedence(token.type);
         ExpressionNode right = parsePrecedence(prec);
-        return new BinaryExpressionNode(left, right, parseBinaryOperatorFromToken(token));
+        return new BinaryExpressionNode(left, right, parseBinaryOperatorFromToken(token), token);
     }
 
     private Precedence getCurrentPrecedence() {
@@ -159,9 +384,9 @@ public class Parser {
         AssignmentOperator operator = parseAssignmentOperatorFromToken(operatorToken);
 
         ExpressionNode expression = parseExpression();
-        consume(TokenType.SEMI, "Expect ';' after declaration");
+        consume(TokenType.SEMI, "Expect ';' after assignation");
 
-        return new AssignationNode(variableNode, operator, expression);
+        return new AssignationNode(variableNode, operator, expression, operatorToken);
     }
 
     public DeclarationNode parseDeclaration() {
@@ -171,7 +396,7 @@ public class Parser {
         VariableNode variableNode = parseVariable();
 
         consume(TokenType.SEMI, "Expect ';' after declaration");
-        return new DeclarationNode(new VariableNode(variableType, variableNode.holder, variableNode.name));
+        return new DeclarationNode(new VariableNode(variableType, variableNode.holder, variableNode.name, previous()), type);
     }
 
     VariableNode parseVariable() {
@@ -179,12 +404,55 @@ public class Parser {
         Holder holderType = parseHolderFromToken(holder);
         consume(TokenType.DOT, "Expect '.' after scope prefix");
         Token name = consume(TokenType.IDENT, "Expect variable name identifier");
-        return new VariableNode(null, holderType, name.text);
+        return new VariableNode(null, holderType, name.text, name);
+    }
+
+    PlaceholderNode parsePlaceholder() {
+        consume(TokenType.DOT, "Expected '.' after 'ph'");
+        Token placeholderName = consume(TokenType.IDENT, "Expected placeholder name after 'ph.'");
+        consume(TokenType.LPAREN, "Expected '(' after placeholder name");
+
+        List<ConstantPrimitive> args = new ArrayList<>();
+
+        if (!check(TokenType.RPAREN)) {
+            do {
+                ConstantPrimitive constArg = parseConstantPrimitive();
+                args.add(constArg);
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RPAREN, "Expected ')' after placeholder parameters");
+        return new PlaceholderNode(placeholderName.text, new ConstantPrimitiveList(args), placeholderName);
     }
 
     GlobalDeclarationNode parseGlobalDeclaration() {
-        return new GlobalDeclarationNode(parseDeclaration().variable);
+        DeclarationNode declarationNode = parseDeclaration();
+        return new GlobalDeclarationNode(declarationNode.variable, declarationNode.token);
     }
+
+    private ConstantPrimitive parseConstantPrimitive() {
+        Token token = advance();
+        return switch (token.type) {
+            case STRING_CONST -> new StringValue(token.text.substring(1, token.text.length() - 1));
+            case LONG_CONST -> new LongValue(Long.parseLong(token.text));
+            case DOUBLE_CONST -> new DoubleValue(Double.parseDouble(token.text.replace("d", "").replace("D", "")));
+            case TRUE -> new BoolValue(true);
+            case FALSE -> new BoolValue(false);
+            case CONST_IDENT -> switch (token.text) {
+                case "PI" -> new DoubleValue(3.14159265358979);
+                case "E" -> new DoubleValue(2.71828182845904);
+                case "HALF_PI" -> new DoubleValue(1.57079632679489);
+                case "TWO_PI" -> new DoubleValue(6.28318530717958);
+                case "SQRT_TWO" -> new DoubleValue(1.41421356237309);
+                case "SQRT_THREE" -> new DoubleValue(1.73205080756887);
+                case "SQRT_FIVE" -> new DoubleValue(2.23606797749978);
+                case "PHI" -> new DoubleValue(1.61803398874989);
+                default -> throw error(token, "Unsupported constant: " + token.text);
+            };
+            default -> throw error(token, "Expected a constant value.");
+        };
+    }
+
 
     VariableType parseVariableFromToken(Token type) {
         return switch (type.type) {

@@ -7,5 +7,6 @@ public enum Precedence {
     TERM,       // + -
     FACTOR,     // * /
     UNARY,      // ! -
-    PRIMARY;    // 1 1.0 "1.0" true
+    POSTFIX,    // ++ --
+    CALL        // function call
 }

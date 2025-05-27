@@ -1,7 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.exceptions.InteruptActionException;
+import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
@@ -25,13 +25,13 @@ public class AnvilAction extends Action {
 
     @Override
     public boolean run(Minecraft mc) {
-        if (!(mc.screen instanceof AnvilScreen anvil)) throw new InteruptActionException("Not in anvil screen.");
+        if (!(mc.screen instanceof AnvilScreen anvil)) throw new InterruptActionException("Not in anvil screen.");
 
         EditBox edit;
         try {
             edit = (EditBox) nameField.get(anvil);
         } catch (IllegalAccessException e) {
-            throw new InteruptActionException(e.getMessage());
+            throw new InterruptActionException(e.getMessage());
         }
 
         if (edit == null || edit.getValue() == null || edit.getValue().isEmpty()) return false;
