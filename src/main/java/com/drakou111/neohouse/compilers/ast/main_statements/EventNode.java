@@ -23,7 +23,7 @@ public class EventNode extends MainStatementNode {
 
     @Override
     public String toString() {
-        return "EventNode [event=" + event + ", statements=" + statements + "]";
+        return "EventNode[event=" + event + ", statements=" + statements + "]";
     }
 
     @Override

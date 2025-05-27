@@ -1,16 +1,17 @@
 package com.drakou111.neohouse.compilers.ast.statement;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compilers.ast.main.ArgumentListNode;
+import com.drakou111.neohouse.compilers.ast.main.StatementNode;
 import com.drakou111.neohouse.compilers.lexer.Token;
 
-public class VoidFunctionCallNode extends ExpressionNode {
+public class VoidFunctionCallNode extends StatementNode {
     public final String functionName;
-    public final boolean global;
+    public final ArgumentListNode arguments;
 
-    public VoidFunctionCallNode(final String functionName, final boolean global, final Token token) {
+    public VoidFunctionCallNode(final String functionName, final ArgumentListNode arguments, final Token token) {
         this.functionName = functionName;
-        this.global = global;
+        this.arguments = arguments;
         this.token = token;
     }
 
@@ -21,11 +22,11 @@ public class VoidFunctionCallNode extends ExpressionNode {
 
     @Override
     public String toString() {
-        return "VoidFunctionCallNode [functionName=" + functionName + ", global=" + global + "]";
+        return "VoidFunctionCallNode[functionName=" + functionName + ", arguments=" + arguments + "]";
     }
 
     @Override
     public String toShortString() {
-        return "VoidFunCall[name=" + functionName + ", global=" + global + "]";
+        return "VoidFunCall[name=" + functionName + ", args=" + arguments + "]";
     }
 }

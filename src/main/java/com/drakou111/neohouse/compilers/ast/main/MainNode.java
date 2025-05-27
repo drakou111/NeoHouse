@@ -21,7 +21,7 @@ public class MainNode extends ASTNode {
 
     @Override
     public String toString() {
-        return "MainNode [statements=" + statements + "]";
+        return "MainNode[statements=" + statements + "]";
     }
 
     @Override

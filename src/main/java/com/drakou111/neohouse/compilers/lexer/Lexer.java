@@ -79,22 +79,4 @@ public class Lexer {
 
         return new TokenException(message.toString());
     }
-
-    public static void main(String[] args) {
-        String code = """
-            /// doc comment
-            function foo(ph.server.name, PI) {
-              broadcast title("Hi", "All", 1, 0, 1);
-              p.x += 3.14D;
-              repeat (20) { // repeat block
-                xp(5);
-              }
-            }
-            """;
-
-        Lexer lex = new Lexer(code);
-        for (Token tok : lex.tokenize()) {
-            System.out.println(tok);
-        }
-    }
 }

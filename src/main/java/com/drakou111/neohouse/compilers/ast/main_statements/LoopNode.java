@@ -26,11 +26,11 @@ public class LoopNode extends MainStatementNode {
 
     @Override
     public String toString() {
-        return "AutomaticFunctionNode [name=" + name + ", description=" + description + ", statements=" + statements + ", tickDelay=" + tickDelay + "]";
+        return "LoopNode[name=" + name + ", description=" + description + ", statements=" + statements + ", tickDelay=" + tickDelay + "]";
     }
 
     @Override
     public String toShortString() {
-        return "AutoFun[name=" + name + ", desc=" + description + ", stmts=" + statements.toShortString() + ", delay=" + tickDelay + "]";
+        return "Loop[name=" + name + ", desc=" + description + ", stmts=" + statements.toShortString() + ", delay=" + tickDelay + "]";
     }
 }

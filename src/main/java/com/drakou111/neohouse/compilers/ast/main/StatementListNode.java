@@ -21,7 +21,7 @@ public class StatementListNode extends ASTNode {
 
     @Override
     public String toString() {
-        return "StatementListNode [statements=" + statements + "]";
+        return "StatementListNode[statements=" + statements + "]";
     }
 
     @Override

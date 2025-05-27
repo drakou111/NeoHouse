@@ -22,7 +22,7 @@ public class ConstantPrimitiveList extends ASTNode {
 
     @Override
     public String toString() {
-        return "ConstantPrimitiveList [constants=" + constants + "]";
+        return "ConstantPrimitiveList[constants=" + constants + "]";
     }
 
     @Override

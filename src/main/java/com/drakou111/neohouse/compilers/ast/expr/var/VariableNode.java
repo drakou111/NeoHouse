@@ -7,7 +7,7 @@ import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class VariableNode extends ExpressionNode {
-    public final VariableType type;
+    public VariableType type;
     public final Holder holder;
     public final String name;
 
@@ -25,7 +25,7 @@ public class VariableNode extends ExpressionNode {
 
     @Override
     public String toString() {
-        return "VariableNode [type=" + type + ", holder=" + holder + ", name=" + name + "]";
+        return "VariableNode[type=" + type + ", holder=" + holder + ", name=" + name + "]";
     }
 
     @Override

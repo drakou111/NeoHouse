@@ -26,7 +26,7 @@ public class AssignationNode extends StatementNode {
 
     @Override
     public String toString() {
-        return "AssignationNode [variable=" + variable + ", operator=" + operator + ", value=" + value + "]";
+        return "AssignationNode[variable=" + variable + ", operator=" + operator + ", value=" + value + "]";
     }
 
     @Override

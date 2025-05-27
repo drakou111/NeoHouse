@@ -4,6 +4,7 @@ import com.drakou111.neohouse.compilers.ast.enums.*;
 import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.UnaryExpressionNode;
+import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.*;
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
@@ -47,6 +48,11 @@ public class Parser {
         return !isAtEnd() && peek().type == type;
     }
 
+    private boolean checkTwo(TokenType type) {
+        Token next = tokens.get(pos + 1);
+        return next.type != TokenType.EOF && next.type == type;
+    }
+
     private Token advance() {
         if (!isAtEnd()) pos++;
         return previous();
@@ -75,6 +81,12 @@ public class Parser {
     }
 
 
+    private boolean isType(Token token) {
+        return switch (token.type) {
+            case LONG, DOUBLE, STRING, BOOL, VAR -> true;
+            default -> false;
+        };
+    }
 
     public MainNode parseMain() {
         List<MainStatementNode> nodes = new ArrayList<>();
@@ -140,7 +152,7 @@ public class Parser {
         List<VariableNode> parameters = new ArrayList<>();
         if (!check(TokenType.RPAREN)) {
             do {
-                parameters.add(parseVariable());
+                parameters.add(parseTypedVariable());
             } while (match(TokenType.COMMA));
         }
 
@@ -234,11 +246,15 @@ public class Parser {
 
         String name = consume(TokenType.IDENT, "Expected loop name").text;
 
+        consume(TokenType.LPAREN, "Expected '('");
+
         long delay = 4;
         if (check(TokenType.LONG_CONST)) {
             String longText = advance().text;
             delay = Long.parseLong(longText);
         }
+
+        consume(TokenType.RPAREN, "Expected ')'");
 
         consume(TokenType.LBRACE, "Expected '{' to begin loop body");
 
@@ -252,13 +268,6 @@ public class Parser {
         return new LoopNode(name, "", new StatementListNode(body), delay, loopToken);
     }
 
-    private boolean isType(Token token) {
-        return switch (token.type) {
-            case LONG, DOUBLE, STRING, BOOL, VAR -> true;
-            default -> false;
-        };
-    }
-
     public StatementNode parseStatement() {
 
         if (check(TokenType.RANDOM)) return parseRandom();
@@ -266,6 +275,36 @@ public class Parser {
         if (check(TokenType.IF)) return parseIf();
 
         if (isType(peek())) return parseDeclaration();
+
+        if (match(TokenType.GLOBAL)) {
+            Token nameToken = consume(TokenType.IDENT, "Expect function name after 'global'");
+            consume(TokenType.LPAREN, "Expect '(' after function name");
+            List<ExpressionNode> args = new ArrayList<>();
+            if (!check(TokenType.RPAREN)) {
+                do {
+                    args.add(parseExpression());
+                } while (match(TokenType.COMMA));
+            }
+            consume(TokenType.RPAREN, "Expect ')' after arguments");
+            consume(TokenType.SEMI, "Expect ';' after call");
+            return new GlobalFunctionCallNode(nameToken.text, new ArgumentListNode(args), nameToken);
+        }
+
+        if (check(TokenType.IDENT) && checkTwo(TokenType.LPAREN)) {
+            Token nameToken = peek();
+            advance();
+            advance();
+            List<ExpressionNode> args = new ArrayList<>();
+            if (!check(TokenType.RPAREN)) {
+                do {
+                    args.add(parseExpression());
+                } while (match(TokenType.COMMA));
+            }
+            consume(TokenType.RPAREN, "Expect ')' after arguments");
+            consume(TokenType.SEMI, "Expect ';' after call");
+            return new VoidFunctionCallNode(nameToken.text, new ArgumentListNode(args), nameToken);
+        }
+
         if (check(TokenType.IDENT)) return parseAssignment();
 
         throw error(peek(), "Unknown statement");
@@ -276,12 +315,12 @@ public class Parser {
     }
 
     private ExpressionNode parsePrecedence(Precedence prec) {
-        // Parse prefix
+        // 1) prefix
         Token prefixToken = peek();
         advance();
         ExpressionNode left = parsePrefix(prefixToken);
 
-        // Handle postfix operators (e.g. ++, --) first
+        // 2) postfix (++/--)
         while (!isAtEnd() && getPostfixPrecedence().ordinal() > prec.ordinal()) {
             Token postfixToken = peek();
             if (postfixToken.type == TokenType.PLUS_PLUS || postfixToken.type == TokenType.MINUS_MINUS) {
@@ -292,7 +331,7 @@ public class Parser {
             }
         }
 
-        // Parse infix as long as the next operator has higher precedence
+        // 3) infix (+, -, *, /, ==, etc.)
         while (!isAtEnd() && prec.ordinal() < getCurrentPrecedence().ordinal()) {
             Token infixToken = peek();
             advance();
@@ -344,7 +383,20 @@ public class Parser {
                 consume(TokenType.RPAREN, "Expect ')' after expression.");
                 return expr;
             case IDENT: {
+                if (check(TokenType.LPAREN)) {
+                    advance();
+                    List<ExpressionNode> args = new ArrayList<>();
+                    if (!check(TokenType.RPAREN)) {
+                        do {
+                            args.add(parseExpression());
+                        } while (match(TokenType.COMMA));
+                    }
+                    consume(TokenType.RPAREN, "Expect ')' after arguments");
+                    return new FunctionCallNode(token.text, new ArgumentListNode(args), token);
+                }
+
                 if (token.text.equals("ph")) return parsePlaceholder();
+
                 stepBack();
                 return parseVariable();
             }
@@ -367,6 +419,7 @@ public class Parser {
 
     private Precedence getOperatorPrecedence(TokenType type) {
         return switch (type) {
+            case LPAREN -> Precedence.CALL;
             case EQ_EQ, NOT_EQ -> Precedence.EQUALITY;
             case LT, LE, GT, GE -> Precedence.COMPARISON;
             case PLUS, MINUS -> Precedence.TERM;
@@ -374,7 +427,6 @@ public class Parser {
             default -> Precedence.NONE;
         };
     }
-
 
     public AssignationNode parseAssignment() {
 
@@ -390,13 +442,9 @@ public class Parser {
     }
 
     public DeclarationNode parseDeclaration() {
-        Token type = advance();
-        VariableType variableType = parseVariableFromToken(type);
-
-        VariableNode variableNode = parseVariable();
-
+        VariableNode var = parseTypedVariable();
         consume(TokenType.SEMI, "Expect ';' after declaration");
-        return new DeclarationNode(new VariableNode(variableType, variableNode.holder, variableNode.name, previous()), type);
+        return new DeclarationNode(var, var.token);
     }
 
     VariableNode parseVariable() {
@@ -405,6 +453,14 @@ public class Parser {
         consume(TokenType.DOT, "Expect '.' after scope prefix");
         Token name = consume(TokenType.IDENT, "Expect variable name identifier");
         return new VariableNode(null, holderType, name.text, name);
+    }
+
+    VariableNode parseTypedVariable() {
+        Token type = advance();
+        VariableType variableType = parseVariableFromToken(type);
+        VariableNode variableNode = parseVariable();
+        variableNode.type = variableType;
+        return variableNode;
     }
 
     PlaceholderNode parsePlaceholder() {

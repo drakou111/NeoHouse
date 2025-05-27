@@ -22,7 +22,7 @@ public class ParameterListNode extends ASTNode {
 
     @Override
     public String toString() {
-        return "ParameterListNode [parameters=" + parameters + "]";
+        return "ParameterListNode[parameters=" + parameters + "]";
     }
 
     @Override

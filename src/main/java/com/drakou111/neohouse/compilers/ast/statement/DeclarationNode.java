@@ -20,7 +20,7 @@ public class DeclarationNode extends StatementNode {
 
     @Override
     public String toString() {
-        return "DeclarationNode [variable=" + variable + "]";
+        return "DeclarationNode[variable=" + variable + "]";
     }
 
     @Override

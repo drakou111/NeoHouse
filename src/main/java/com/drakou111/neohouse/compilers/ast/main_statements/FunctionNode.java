@@ -30,7 +30,7 @@ public class FunctionNode extends MainStatementNode {
 
     @Override
     public String toString() {
-        return "FunctionNode [name=" + name + ", description=" + description + ", returnType=" + returnType + ", parameters=" + parameters + ", statements=" + statements + "]";
+        return "FunctionNode[name=" + name + ", description=" + description + ", returnType=" + returnType + ", parameters=" + parameters + ", statements=" + statements + "]";
     }
 
     @Override

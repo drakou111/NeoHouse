@@ -22,7 +22,7 @@ public class RepeatNode extends StatementNode {
 
     @Override
     public String toString() {
-        return "RepeatNode [count=" + count + ", statements=" + statements + "]";
+        return "RepeatNode[count=" + count + ", statements=" + statements + "]";
     }
     @Override
     public String toShortString() {

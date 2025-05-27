@@ -19,7 +19,7 @@ public class ConstantPrimitiveNode extends ExpressionNode {
 
     @Override
     public String toString() {
-        return "ConstantPrimitiveNode [value=" + value + "]";
+        return "ConstantPrimitiveNode[value=" + value + "]";
     }
 
     @Override

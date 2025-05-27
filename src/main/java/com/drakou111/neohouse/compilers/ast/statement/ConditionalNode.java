@@ -25,7 +25,7 @@ public class ConditionalNode extends StatementNode {
 
     @Override
     public String toString() {
-        return "ConditionalNode [condition=" + condition + ", thenBlock=" + thenBlock + ", elseBlock=" + elseBlock + "]";
+        return "ConditionalNode[condition=" + condition + ", thenBlock=" + thenBlock + ", elseBlock=" + elseBlock + "]";
     }
 
     @Override

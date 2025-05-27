@@ -25,7 +25,7 @@ public class RandomNode extends StatementNode {
 
     @Override
     public String toString() {
-        return "RandomNode [statements=" + statements + "]";
+        return "RandomNode[statements=" + statements + "]";
     }
 
     @Override

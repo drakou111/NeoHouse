@@ -22,7 +22,7 @@ public class ArgumentListNode extends ASTNode {
 
     @Override
     public String toString() {
-        return "ArgumentListNode [expressions=" + expressions + "]";
+        return "ArgumentListNode[expressions=" + expressions + "]";
     }
 
     @Override

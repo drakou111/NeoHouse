@@ -21,7 +21,7 @@ public class DefinitionNode extends StatementNode {
 
     @Override
     public String toString() {
-         return "DefinitionNode [name=" + name + ", definition=" + definition + "]";
+         return "DefinitionNode[name=" + name + ", definition=" + definition + "]";
     }
 
     @Override

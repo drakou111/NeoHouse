@@ -3,8 +3,7 @@ package com.drakou111.neohouse.compilers.ast;
 import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
 import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.UnaryExpressionNode;
-import com.drakou111.neohouse.compilers.ast.expr.call.GlobalFunctionCallNode;
-import com.drakou111.neohouse.compilers.ast.expr.call.SingleFunctionCallNode;
+import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantArrayNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantPrimitiveNode;
@@ -25,8 +24,7 @@ public interface ASTVisitor<T> {
     T visitBinaryExpr(BinaryExpressionNode binaryExpression);
     T visitVariable(VariableNode variable);
     T visitPlaceholder(PlaceholderNode placeholder);
-    T visitSingleFunctionCall(SingleFunctionCallNode functionCall);
-    T visitGlobalFunctionCall(GlobalFunctionCallNode functionCall);
+    T visitSingleFunctionCall(FunctionCallNode functionCall);
 
     // Main Statements
     T visitFunction(FunctionNode function);
@@ -42,6 +40,7 @@ public interface ASTVisitor<T> {
     T visitDeclaration(DeclarationNode declaration);
     T visitAssignation(AssignationNode assignation);
     T visitVoidFunctionCallStatement(VoidFunctionCallNode function);
+    T visitGlobalFunctionCall(GlobalFunctionCallNode function);
     T visitRandom(RandomNode random);
     T visitRepeat(RepeatNode random);
 

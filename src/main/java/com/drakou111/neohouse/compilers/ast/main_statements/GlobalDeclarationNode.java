@@ -20,7 +20,7 @@ public class GlobalDeclarationNode extends MainStatementNode {
 
     @Override
     public String toString() {
-        return "GlobalDeclarationNode [variable=" + variable + "]";
+        return "GlobalDeclarationNode[variable=" + variable + "]";
     }
 
     @Override

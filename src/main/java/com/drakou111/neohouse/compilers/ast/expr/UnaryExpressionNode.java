@@ -21,7 +21,7 @@ public class UnaryExpressionNode extends ExpressionNode {
 
     @Override
     public String toString() {
-        return "UnaryExpressionNode [operator=" + operator + ", operand=" + operand + "]";
+        return "UnaryExpressionNode[operator=" + operator + ", operand=" + operand + "]";
     }
 
     @Override

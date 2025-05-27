@@ -23,7 +23,7 @@ public class BinaryExpressionNode extends ExpressionNode {
 
     @Override
     public String toString() {
-        return "BinaryExpressionNode [operator=" + operator + ", left=" + left + ", right=" + right + "]";
+        return "BinaryExpressionNode[operator=" + operator + ", left=" + left + ", right=" + right + "]";
     }
 
     @Override
