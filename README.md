@@ -30,6 +30,8 @@ This version currently only supports NeoForge 1.21.4, but is planned to work for
   - ✅ Create syntax
   - ✅ Create AST Tree
   - ✅ Create tokenizer (Raw text -> Tokens)
-  - 🚧 Create parser (Tokens -> AST Tree)
-  - ❌ Create AST optimizations (AST Tree -> Optimized AST Tree)
+  - ✅ Create parser (Tokens -> AST Tree)
+  - 🚧 Create AST optimizations (AST Tree -> Optimized AST Tree)
   - ❌ Create code translation (Optimized AST Tree -> Output)
+
+Note: I will obviously need to rework some parts, so ✅ doesn't mean 100% done, just mostly done.

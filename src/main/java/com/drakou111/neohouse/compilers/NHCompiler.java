@@ -24,6 +24,9 @@ public class NHCompiler implements Compiler {
                     p.test = test("amongus");
                     test("something");
                     global test("something");
+                    cancel;
+                    return;
+                    return 1;
                 }
                 """;
 

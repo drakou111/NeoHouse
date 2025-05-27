@@ -170,6 +170,27 @@ public class Parser {
         return new FunctionNode(functionName, "", returnType, new ParameterListNode(parameters), new StatementListNode(body), functionToken);
     }
 
+    public CancelNode parseCancel() {
+        Token cancelToken = consume(TokenType.CANCEL, "Expected 'cancel' keyword");
+        consume(TokenType.SEMI, "Expected ';' after cancel statement");
+        return new CancelNode(cancelToken);
+    }
+
+    public ReturnNode parseReturn() {
+        Token returnToken = consume(TokenType.RETURN, "Expected 'return'");
+
+        // Case 1: return;
+        if (check(TokenType.SEMI)) {
+            advance(); // consume ;
+            return new ReturnNode(null, returnToken);
+        }
+
+        // Case 2: return EXPRESSION;
+        ExpressionNode value = parseExpression();
+        consume(TokenType.SEMI, "Expected ';' after return expression");
+        return new ReturnNode(value, returnToken);
+    }
+
     public RepeatNode parseRepeat() {
         Token repeatToken = consume(TokenType.REPEAT, "Expected 'repeat' keyword");
         consume(TokenType.LPAREN, "Expected '(' after 'repeat'");
@@ -190,6 +211,7 @@ public class Parser {
 
         return new RepeatNode(count, new StatementListNode(body), repeatToken);
     }
+
     public ConditionalNode parseIf() {
         Token token = consume(TokenType.IF, "Expected 'if' keyword");
         consume(TokenType.LPAREN, "Expected '(' after 'if'");
@@ -272,6 +294,8 @@ public class Parser {
 
         if (check(TokenType.RANDOM)) return parseRandom();
         if (check(TokenType.REPEAT)) return parseRepeat();
+        if (check(TokenType.CANCEL)) return parseCancel();
+        if (check(TokenType.RETURN)) return parseReturn();
         if (check(TokenType.IF)) return parseIf();
 
         if (isType(peek())) return parseDeclaration();
