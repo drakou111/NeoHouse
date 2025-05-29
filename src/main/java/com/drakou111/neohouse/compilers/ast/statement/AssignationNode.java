@@ -10,7 +10,7 @@ import com.drakou111.neohouse.compilers.lexer.Token;
 public class AssignationNode extends StatementNode {
     public final VariableNode variable;
     public final AssignmentOperator operator;
-    public final ExpressionNode value;
+    public ExpressionNode value;
 
     public AssignationNode(final VariableNode variable, final AssignmentOperator operator, final ExpressionNode value, final Token token) {
         this.variable = variable;

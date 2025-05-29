@@ -24,11 +24,11 @@ public interface ASTVisitor<T> {
     T visitBinaryExpr(BinaryExpressionNode binaryExpression);
     T visitVariable(VariableNode variable);
     T visitPlaceholder(PlaceholderNode placeholder);
-    T visitSingleFunctionCall(FunctionCallNode functionCall);
+    T visitFunctionCall(FunctionCallNode functionCall);
 
     // Main Statements
     T visitFunction(FunctionNode function);
-    T visitAutomaticFunction(LoopNode function);
+    T visitLoop(LoopNode function);
     T visitEvent(EventNode event);
     T visitGlobalDeclaration(GlobalDeclarationNode declaration);
 

@@ -21,7 +21,7 @@ public class LoopNode extends MainStatementNode {
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visitAutomaticFunction(this);
+        return visitor.visitLoop(this);
     }
 
     @Override

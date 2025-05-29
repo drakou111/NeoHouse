@@ -7,7 +7,7 @@ import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class VoidFunctionCallNode extends StatementNode {
     public final String functionName;
-    public final ArgumentListNode arguments;
+    public ArgumentListNode arguments;
 
     public VoidFunctionCallNode(final String functionName, final ArgumentListNode arguments, final Token token) {
         this.functionName = functionName;

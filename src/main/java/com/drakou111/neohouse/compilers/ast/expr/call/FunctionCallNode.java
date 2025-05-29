@@ -17,7 +17,7 @@ public class FunctionCallNode extends ExpressionNode {
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visitSingleFunctionCall(this);
+        return visitor.visitFunctionCall(this);
     }
 
     @Override

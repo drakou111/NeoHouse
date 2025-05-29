@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StatementListNode extends ASTNode {
-    public final List<StatementNode> statements;
+    public List<StatementNode> statements;
 
     public StatementListNode(final List<StatementNode> statements) {
         this.statements = new ArrayList<>(statements);
