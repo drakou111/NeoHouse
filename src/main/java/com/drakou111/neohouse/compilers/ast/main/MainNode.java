@@ -11,7 +11,10 @@ public class MainNode extends ASTNode {
     public final List<MainStatementNode> statements;
 
     public MainNode(final List<MainStatementNode> statements) {
-        this.statements = new ArrayList<>(statements);
+        if (statements == null || statements.isEmpty())
+            this.statements = new ArrayList<>();
+        else
+            this.statements = new ArrayList<>(statements);
     }
 
     @Override

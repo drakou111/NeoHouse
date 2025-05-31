@@ -12,7 +12,10 @@ public class ParameterListNode extends ASTNode {
     public final List<VariableNode> parameters;
 
     public ParameterListNode(final List<VariableNode> parameters) {
-        this.parameters = new ArrayList<>(parameters);
+        if (parameters == null || parameters.isEmpty())
+            this.parameters = new ArrayList<>();
+        else
+            this.parameters = new ArrayList<>(parameters);
     }
 
     @Override

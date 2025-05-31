@@ -12,7 +12,10 @@ public class ArgumentListNode extends ASTNode {
     public final List<ExpressionNode> expressions;
 
     public ArgumentListNode(final List<ExpressionNode> expressions) {
-        this.expressions = new ArrayList<>(expressions);
+        if (expressions == null || expressions.isEmpty())
+            this.expressions = new ArrayList<>();
+        else
+            this.expressions = new ArrayList<>(expressions);
     }
 
     @Override

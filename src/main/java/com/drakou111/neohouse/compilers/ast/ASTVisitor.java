@@ -1,5 +1,7 @@
 package com.drakou111.neohouse.compilers.ast;
 
+import com.drakou111.neohouse.compilers.ast.expr.BooleanExpressionNode;
+import com.drakou111.neohouse.compilers.ast.expr.LogicalExpressionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
 import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.UnaryExpressionNode;
@@ -22,6 +24,8 @@ public interface ASTVisitor<T> {
     T visitConstantArray(ConstantArrayNode constant);
     T visitUnaryExpr(UnaryExpressionNode unaryExpression);
     T visitBinaryExpr(BinaryExpressionNode binaryExpression);
+    T visitBooleanExpr(BooleanExpressionNode booleanExpression);
+    T visitLogicalExpr(LogicalExpressionNode logicalExpression);
     T visitVariable(VariableNode variable);
     T visitPlaceholder(PlaceholderNode placeholder);
     T visitFunctionCall(FunctionCallNode functionCall);

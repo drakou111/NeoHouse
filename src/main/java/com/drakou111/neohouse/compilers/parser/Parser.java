@@ -1,9 +1,7 @@
 package com.drakou111.neohouse.compilers.parser;
 
 import com.drakou111.neohouse.compilers.ast.enums.*;
-import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
-import com.drakou111.neohouse.compilers.ast.expr.UnaryExpressionNode;
+import com.drakou111.neohouse.compilers.ast.expr.*;
 import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.*;
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
@@ -215,7 +213,7 @@ public class Parser {
     public ConditionalNode parseIf() {
         Token token = consume(TokenType.IF, "Expected 'if' keyword");
         consume(TokenType.LPAREN, "Expected '(' after 'if'");
-        ExpressionNode condition = parseExpression();
+        ConditionExpressionNode condition = parseCondition();
         consume(TokenType.RPAREN, "Expected ')' after if condition");
 
         consume(TokenType.LBRACE, "Expected '{' to begin 'if' block");
@@ -234,7 +232,6 @@ public class Parser {
             }
             consume(TokenType.RBRACE, "Expected '}' after 'else' block");
         }
-
         return new ConditionalNode(condition, new StatementListNode(thenBranch), new StatementListNode(elseBranch), token);
     }
 
@@ -334,22 +331,22 @@ public class Parser {
         throw error(peek(), "Unknown statement");
     }
 
-    private ExpressionNode parseExpression() {
+    private NormalExpressionNode parseExpression() {
         return parsePrecedence(Precedence.NONE);
     }
 
-    private ExpressionNode parsePrecedence(Precedence prec) {
+    private NormalExpressionNode parsePrecedence(Precedence prec) {
         // 1) prefix
         Token prefixToken = peek();
         advance();
-        ExpressionNode left = parsePrefix(prefixToken);
+        NormalExpressionNode left = parsePrefix(prefixToken);
 
         // 2) postfix (++/--)
         while (!isAtEnd() && getPostfixPrecedence().ordinal() > prec.ordinal()) {
             Token postfixToken = peek();
             if (postfixToken.type == TokenType.PLUS_PLUS || postfixToken.type == TokenType.MINUS_MINUS) {
                 advance();
-                left = new UnaryExpressionNode(parseUnaryOperatorFromToken(postfixToken), left, previous());
+                left = new UnaryExpressionNode(parseUnaryOperatorFromToken(postfixToken), left, null, previous());
             } else {
                 break;
             }
@@ -373,37 +370,37 @@ public class Parser {
         };
     }
 
-    private ExpressionNode parsePrefix(Token token) {
+    private NormalExpressionNode parsePrefix(Token token) {
         switch (token.type) {
             case BANG:
             case MINUS:
                 // Unary operators
-                ExpressionNode right = parsePrecedence(Precedence.UNARY);
-                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), right, token);
+                NormalExpressionNode right = parsePrecedence(Precedence.UNARY);
+                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), right, null, token);
             case CONST_IDENT:
                 return switch (token.text) {
-                    case "PI" -> new ConstantPrimitiveNode(new DoubleValue(3.14159265358979), token);
-                    case "E" -> new ConstantPrimitiveNode(new DoubleValue(2.71828182845904), token);
-                    case "HALF_PI" -> new ConstantPrimitiveNode(new DoubleValue(1.57079632679489), token);
-                    case "TWO_PI" -> new ConstantPrimitiveNode(new DoubleValue(6.28318530717958), token);
-                    case "SQRT_TWO" -> new ConstantPrimitiveNode(new DoubleValue(1.41421356237309), token);
-                    case "SQRT_THREE" -> new ConstantPrimitiveNode(new DoubleValue(1.73205080756887), token);
-                    case "SQRT_FIVE" -> new ConstantPrimitiveNode(new DoubleValue(2.23606797749978), token);
-                    case "PHI" -> new ConstantPrimitiveNode(new DoubleValue(1.61803398874989), token);
+                    case "PI" -> new ConstantPrimitiveNode(new DoubleValue(3.14159265358979), VariableType.DOUBLE, token);
+                    case "E" -> new ConstantPrimitiveNode(new DoubleValue(2.71828182845904), VariableType.DOUBLE, token);
+                    case "HALF_PI" -> new ConstantPrimitiveNode(new DoubleValue(1.57079632679489), VariableType.DOUBLE, token);
+                    case "TWO_PI" -> new ConstantPrimitiveNode(new DoubleValue(6.28318530717958), VariableType.DOUBLE, token);
+                    case "SQRT_TWO" -> new ConstantPrimitiveNode(new DoubleValue(1.41421356237309), VariableType.DOUBLE, token);
+                    case "SQRT_THREE" -> new ConstantPrimitiveNode(new DoubleValue(1.73205080756887), VariableType.DOUBLE, token);
+                    case "SQRT_FIVE" -> new ConstantPrimitiveNode(new DoubleValue(2.23606797749978), VariableType.DOUBLE, token);
+                    case "PHI" -> new ConstantPrimitiveNode(new DoubleValue(1.61803398874989), VariableType.DOUBLE, token);
                     default -> throw error(token, "Unsupported constant: " + token.text);
                 };
             case STRING_CONST:
-                return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)), token);
+                return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)), VariableType.STRING, token);
             case LONG_CONST:
-                return new ConstantPrimitiveNode(new LongValue(Long.parseLong(token.text)), token);
+                return new ConstantPrimitiveNode(new LongValue(Long.parseLong(token.text)), VariableType.LONG, token);
             case DOUBLE_CONST:
-                return new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(token.text.replace("d",""))), token);
+                return new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(token.text.replace("d",""))), VariableType.DOUBLE, token);
             case TRUE:
-                return new ConstantPrimitiveNode(new BoolValue(true), token);
+                return new ConstantPrimitiveNode(new BoolValue(true), VariableType.BOOL, token);
             case FALSE:
-                return new ConstantPrimitiveNode(new BoolValue(false), token);
+                return new ConstantPrimitiveNode(new BoolValue(false), VariableType.BOOL, token);
             case LPAREN:
-                ExpressionNode expr = parseExpression();
+                NormalExpressionNode expr = parseExpression();
                 consume(TokenType.RPAREN, "Expect ')' after expression.");
                 return expr;
             case IDENT: {
@@ -416,7 +413,7 @@ public class Parser {
                         } while (match(TokenType.COMMA));
                     }
                     consume(TokenType.RPAREN, "Expect ')' after arguments");
-                    return new FunctionCallNode(token.text, new ArgumentListNode(args), token);
+                    return new FunctionCallNode(token.text, new ArgumentListNode(args), null, token);
                 }
 
                 if (token.text.equals("ph")) return parsePlaceholder();
@@ -425,14 +422,61 @@ public class Parser {
                 return parseVariable();
             }
             default:
-                throw error(token, "Expected expression.");
+                throw error(token, "Expected an expression.");
         }
     }
 
-    private ExpressionNode parseInfix(ExpressionNode left, Token token) {
+    private NormalExpressionNode parseInfix(NormalExpressionNode left, Token token) {
         Precedence prec = getOperatorPrecedence(token.type);
-        ExpressionNode right = parsePrecedence(prec);
-        return new BinaryExpressionNode(left, right, parseBinaryOperatorFromToken(token), token);
+        NormalExpressionNode right = parsePrecedence(prec);
+        BinaryOperator binOp = parseBinaryOperatorFromToken(token);
+        return new BinaryExpressionNode(left, right, binOp, null, token);
+    }
+
+    private ConditionExpressionNode parseCondition() {
+        Token startToken = peek();
+
+        NormalExpressionNode leftExpr = parseNormalExpression();
+        Token opToken = advance();
+        BooleanOperator boolOp = parseBooleanOperatorFromToken(opToken);
+        NormalExpressionNode rightExpr = parseNormalExpression();
+        BooleanExpressionNode first = new BooleanExpressionNode(leftExpr, rightExpr, boolOp, opToken);
+
+        List<BooleanExpressionNode> all = new ArrayList<>();
+        all.add(first);
+
+        LogicalOperator logicOp = null;
+        while (true) {
+            if (match(TokenType.AND)) {
+                if (logicOp == null) logicOp = LogicalOperator.AND;
+                else if (logicOp != LogicalOperator.AND) {
+                    throw error(previous(), "Cannot mix '||' with '&&' in one condition");
+                }
+            } else if (match(TokenType.OR)) {
+                if (logicOp == null) logicOp = LogicalOperator.OR;
+                else if (logicOp != LogicalOperator.OR) {
+                    throw error(previous(), "Cannot mix '&&' with '||' in one condition");
+                }
+            } else {
+                break;
+            }
+
+            NormalExpressionNode l = parseNormalExpression();
+            Token t = advance();
+            BooleanOperator bop = parseBooleanOperatorFromToken(t);
+            NormalExpressionNode r = parseNormalExpression();
+            all.add(new BooleanExpressionNode(l, r, bop, t));
+        }
+
+        if (all.size() == 1) {
+            return first;
+        } else {
+            return new LogicalExpressionNode(all, logicOp, startToken);
+        }
+    }
+
+    private NormalExpressionNode parseNormalExpression() {
+        return parsePrecedence(Precedence.NONE);
     }
 
     private Precedence getCurrentPrecedence() {
@@ -444,8 +488,6 @@ public class Parser {
     private Precedence getOperatorPrecedence(TokenType type) {
         return switch (type) {
             case LPAREN -> Precedence.CALL;
-            case EQ_EQ, NOT_EQ -> Precedence.EQUALITY;
-            case LT, LE, GT, GE -> Precedence.COMPARISON;
             case PLUS, MINUS -> Precedence.TERM;
             case STAR, SLASH -> Precedence.FACTOR;
             default -> Precedence.NONE;
@@ -502,7 +544,7 @@ public class Parser {
         }
 
         consume(TokenType.RPAREN, "Expected ')' after placeholder parameters");
-        return new PlaceholderNode(placeholderName.text, new ConstantPrimitiveList(args), placeholderName);
+        return new PlaceholderNode(placeholderName.text, new ConstantPrimitiveList(args), null, placeholderName);
     }
 
     GlobalDeclarationNode parseGlobalDeclaration() {
@@ -571,15 +613,27 @@ public class Parser {
             case MINUS -> BinaryOperator.SUBTRACT;
             case STAR -> BinaryOperator.MULTIPLY;
             case SLASH -> BinaryOperator.DIVIDE;
-            case EQ_EQ -> BinaryOperator.EQUALS;
-            case NOT_EQ -> BinaryOperator.NOT_EQUALS;
-            case LT -> BinaryOperator.LESS_THAN;
-            case LE -> BinaryOperator.LESS_THAN_EQUALS;
-            case GT -> BinaryOperator.GREATER_THAN;
-            case GE -> BinaryOperator.GREATER_THAN_EQUALS;
-            case AND -> BinaryOperator.AND;
-            case OR -> BinaryOperator.OR;
-            default -> throw error(operator, "Invalid binary operator, expected '+', '-', '*', '/', '==', '!=', '<' ,'<=', '>', '>=', '&&' or '||'");
+            default -> throw error(operator, "Invalid binary operator, expected '+', '-', '*' or '/'");
+        };
+    }
+
+    LogicalOperator parseLogicalOperatorFromToken(Token operator) {
+        return switch (operator.type) {
+            case AND -> LogicalOperator.AND;
+            case OR -> LogicalOperator.OR;
+            default -> throw error(operator, "Invalid binary operator, expected '&&' or '||'");
+        };
+    }
+
+    BooleanOperator parseBooleanOperatorFromToken(Token operator) {
+        return switch (operator.type) {
+            case EQ_EQ -> BooleanOperator.EQUALS;
+            case NOT_EQ -> BooleanOperator.NOT_EQUALS;
+            case LT -> BooleanOperator.LESS_THAN;
+            case LE -> BooleanOperator.LESS_THAN_EQUALS;
+            case GT -> BooleanOperator.GREATER_THAN;
+            case GE -> BooleanOperator.GREATER_THAN_EQUALS;
+            default -> throw error(operator, "Invalid boolean operator, expected '==', '!=', '<' ,'<=', '>' or '>='");
         };
     }
 

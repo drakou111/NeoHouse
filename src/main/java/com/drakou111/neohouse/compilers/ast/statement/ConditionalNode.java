@@ -1,17 +1,18 @@
 package com.drakou111.neohouse.compilers.ast.statement;
 
+import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compilers.ast.expr.ConditionExpressionNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementNode;
 import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class ConditionalNode extends StatementNode {
-    public final ExpressionNode condition;
+    public ConditionExpressionNode condition;
     public final StatementListNode thenBlock;
     public final StatementListNode elseBlock;
 
-    public ConditionalNode(final ExpressionNode condition, final StatementListNode thenBlock, final StatementListNode elseBlock, final Token token) {
+    public ConditionalNode(final ConditionExpressionNode condition, final StatementListNode thenBlock, final StatementListNode elseBlock, final Token token) {
         this.condition = condition;
         this.thenBlock = thenBlock;
         this.elseBlock = elseBlock;

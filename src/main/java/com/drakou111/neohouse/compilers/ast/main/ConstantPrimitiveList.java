@@ -12,7 +12,10 @@ public class ConstantPrimitiveList extends ASTNode {
     public final List<ConstantPrimitive> constants;
 
     public ConstantPrimitiveList(final List<ConstantPrimitive> constants) {
-        this.constants = new ArrayList<>(constants);
+        if (constants == null || constants.isEmpty())
+            this.constants = new ArrayList<>();
+        else
+            this.constants = new ArrayList<>(constants);
     }
 
     @Override

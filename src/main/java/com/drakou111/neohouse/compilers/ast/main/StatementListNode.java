@@ -1,17 +1,19 @@
 package com.drakou111.neohouse.compilers.ast.main;
 
-import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.helpers.StringHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StatementListNode extends ASTNode {
+public class StatementListNode extends StatementNode {
     public List<StatementNode> statements;
 
     public StatementListNode(final List<StatementNode> statements) {
-        this.statements = new ArrayList<>(statements);
+        if (statements == null || statements.isEmpty())
+            this.statements = new ArrayList<>();
+        else
+            this.statements = new ArrayList<>(statements);
     }
 
     @Override

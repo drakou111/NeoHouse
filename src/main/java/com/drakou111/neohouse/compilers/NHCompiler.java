@@ -24,7 +24,9 @@ public class NHCompiler implements Compiler {
     public static void main(String[] args) {
         String code = """
                 function test (long p.test) {
-                    p.test = (-p.test);
+                    if (p.test < 2 || 4 > p.test + 1 + somecall() || p.test < 2) {
+                        p.hello = 1 + 2;
+                    }
                 }
                 """;
 
@@ -40,9 +42,9 @@ public class NHCompiler implements Compiler {
         //System.out.println(StringHelper.formatLikeJson(node.toString(), "  "));
 
         SimplifyingExpressionsVisitor flat = new SimplifyingExpressionsVisitor();
-        flat.analyze(node);
+        MainNode newNode = flat.analyze(node);
 
 
-        System.out.println(StringHelper.formatLikeJson(node.toString(), "  "));
+        System.out.println(StringHelper.formatLikeJson(newNode.toString(), "  "));
     }
 }
