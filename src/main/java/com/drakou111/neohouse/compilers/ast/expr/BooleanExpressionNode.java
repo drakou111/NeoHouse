@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.compilers.ast.expr;
 
-import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.enums.BooleanOperator;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;

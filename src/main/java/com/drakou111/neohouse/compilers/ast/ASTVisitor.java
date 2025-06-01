@@ -1,9 +1,8 @@
 package com.drakou111.neohouse.compilers.ast;
 
+import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.BooleanExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.LogicalExpressionNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compilers.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantArrayNode;
@@ -11,10 +10,11 @@ import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
+import com.drakou111.neohouse.compilers.ast.main.*;
+import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
-import com.drakou111.neohouse.compilers.ast.main.*;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 
 public interface ASTVisitor<T> {

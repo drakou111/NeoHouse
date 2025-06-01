@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.compilers.ast.main_statements;
 
-import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.enums.Event;
 import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
