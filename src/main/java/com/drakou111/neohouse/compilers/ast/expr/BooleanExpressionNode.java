@@ -10,7 +10,7 @@ public class BooleanExpressionNode extends ConditionExpressionNode {
     public final NormalExpressionNode left;
     public final NormalExpressionNode right;
 
-    public BooleanExpressionNode(final NormalExpressionNode left, final NormalExpressionNode right, final BooleanOperator operator,final Token token) {
+    public BooleanExpressionNode(final NormalExpressionNode left, final NormalExpressionNode right, final BooleanOperator operator, final Token token) {
         super(VariableType.BOOL);
         this.left = left;
         this.right = right;

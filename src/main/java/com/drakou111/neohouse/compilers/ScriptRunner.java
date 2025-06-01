@@ -26,7 +26,7 @@ public class ScriptRunner {
             String src = Files.readString(nhFile, StandardCharsets.UTF_8);
             runScript(src);
         } catch (IOException e) {
-            throw new CompilingException("Failed reading script: " + nhFile);
+            throw new CompilingException(null, "Failed reading script: " + nhFile);
         }
     }
 

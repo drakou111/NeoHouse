@@ -3,6 +3,7 @@ package com.drakou111.neohouse.compilers.ast.statement;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.enums.AssignmentOperator;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compilers.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementNode;
 import com.drakou111.neohouse.compilers.lexer.Token;
@@ -10,9 +11,9 @@ import com.drakou111.neohouse.compilers.lexer.Token;
 public class AssignationNode extends StatementNode {
     public final VariableNode variable;
     public final AssignmentOperator operator;
-    public ExpressionNode value;
+    public NormalExpressionNode value;
 
-    public AssignationNode(final VariableNode variable, final AssignmentOperator operator, final ExpressionNode value, final Token token) {
+    public AssignationNode(final VariableNode variable, final AssignmentOperator operator, final NormalExpressionNode value, final Token token) {
         this.variable = variable;
         this.operator = operator;
         this.value = value;

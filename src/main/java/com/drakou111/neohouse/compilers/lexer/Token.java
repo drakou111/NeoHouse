@@ -3,12 +3,14 @@ package com.drakou111.neohouse.compilers.lexer;
 public class Token {
     public final TokenType type;
     public final String text;
+    public final String lineContent;
     public final int line;
     public final int column;
 
-    public Token(TokenType type, String text, int line, int column) {
+    public Token(TokenType type, String text, String lineContent, int line, int column) {
         this.type = type;
         this.text = text;
+        this.lineContent = lineContent;
         this.line = line;
         this.column = column;
     }

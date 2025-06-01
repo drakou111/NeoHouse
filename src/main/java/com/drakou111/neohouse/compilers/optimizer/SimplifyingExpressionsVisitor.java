@@ -3,8 +3,10 @@ package com.drakou111.neohouse.compilers.optimizer;
 import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.enums.AssignmentOperator;
 import com.drakou111.neohouse.compilers.ast.enums.Holder;
+import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.expr.*;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantPrimitiveNode;
+import com.drakou111.neohouse.compilers.ast.expr.constants.DoubleValue;
 import com.drakou111.neohouse.compilers.ast.expr.constants.LongValue;
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
@@ -14,6 +16,7 @@ import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 import com.drakou111.neohouse.compilers.lexer.Token;
+import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +37,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         }
 
         if (expr instanceof BinaryExpressionNode bin) {
+            // 1) Lower left and right subexpressions
             LowerResult leftRes  = lowerExpr(bin.left);
             LowerResult rightRes = lowerExpr(bin.right);
 
@@ -41,23 +45,41 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             stmts.addAll(leftRes.stmts());
             stmts.addAll(rightRes.stmts());
 
-            VariableNode accVar;
-            boolean reuseLeft = leftRes.simple() instanceof VariableNode && ((VariableNode) leftRes.simple()).name.startsWith(VAR_PREFIX);
+            // 2) Determine result type from operand types
+            VariableType leftType  = leftRes.simple.type;
+            VariableType rightType = rightRes.simple.type;
 
-            if (reuseLeft) {
-                accVar = (VariableNode) leftRes.simple();
+            VariableType varType;
+            if (leftType == VariableType.VAR || rightType == VariableType.VAR) {
+                varType = VariableType.VAR;
+            } else if (leftType == rightType) {
+                varType = leftType;
             } else {
-                accVar = makeTemp(leftRes.simple().token);
-                stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, leftRes.simple(), bin.token));
+                throw new SemanticException(bin.token, "Type mismatch in binary expression: left is " + leftType + ", right is " + rightType);
             }
 
+            VariableNode accVar;
+            boolean reuseLeft = leftRes.simple instanceof VariableNode && ((VariableNode) leftRes.simple).name.startsWith(VAR_PREFIX);
+
+            if (reuseLeft) {
+                accVar = (VariableNode) leftRes.simple;
+            } else {
+                accVar = makeTemp(leftRes.simple.token);
+                accVar.type = varType;
+                stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) leftRes.simple, bin.token));
+            }
+
+            // 4) Choose the compound‐assignment operator
             AssignmentOperator opAssign = switch (bin.operator) {
                 case ADD      -> AssignmentOperator.ADD_ASSIGN;
                 case SUBTRACT -> AssignmentOperator.SUB_ASSIGN;
                 case MULTIPLY -> AssignmentOperator.MUL_ASSIGN;
                 case DIVIDE   -> AssignmentOperator.DIV_ASSIGN;
+                default -> throw new SemanticException(bin.token, "Unsupported binary operator: " + bin.operator);
             };
-            stmts.add(new AssignationNode(accVar, opAssign, rightRes.simple(), bin.token));
+
+            // 5) Add the final “accVar op= right” step
+            stmts.add(new AssignationNode(accVar, opAssign, (NormalExpressionNode) rightRes.simple, bin.token));
 
             return new LowerResult(accVar, stmts);
         }
@@ -67,21 +89,72 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
             List<StatementNode> stmts = new ArrayList<>(opRes.stmts());
 
+            // 1) Pick or create the accumulator variable
             VariableNode accVar;
-            boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode)opRes.simple()).name.startsWith(VAR_PREFIX);
+            boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
             if (reuse) {
-                accVar = (VariableNode)opRes.simple();
+                accVar = (VariableNode) opRes.simple();
             } else {
                 accVar = makeTemp(opRes.simple().token);
-                stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, opRes.simple(), un.token));
+                accVar.type = un.operand.type;
+                stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
             }
 
-            switch (un.operator) {
-                case NEGATE, NOT -> stmts.add(new AssignationNode(accVar, AssignmentOperator.MUL_ASSIGN, new ConstantPrimitiveNode(new LongValue(-1L), null, un.token), un.token));
-                case INC -> stmts.add(new AssignationNode(accVar, AssignmentOperator.ADD_ASSIGN, new ConstantPrimitiveNode(new LongValue(1L), null, un.token), un.token));
-                case DEC -> stmts.add(new AssignationNode(accVar, AssignmentOperator.SUB_ASSIGN, new ConstantPrimitiveNode(new LongValue(1L), null, un.token), un.token));
-                default -> throw new IllegalArgumentException("Unhandled unary op: " + un.operator);
+            // 2) Determine which constant to apply, based on varType
+            VariableType varType = un.operand.type;
+            ConstantPrimitiveNode constantNode;
+            switch (varType) {
+                case LONG -> {
+                    long value = switch (un.operator) {
+                        case NEGATE -> -1L;
+                        case INC, DEC -> 1L;
+                        default -> throw new SemanticException(
+                                un.token, "Unhandled unary op: " + un.operator
+                        );
+                    };
+                    constantNode = new ConstantPrimitiveNode(
+                            new LongValue(value),
+                            VariableType.LONG,
+                            un.token
+                    );
+                }
+                case DOUBLE -> {
+                    double value = switch (un.operator) {
+                        case NEGATE -> -1.0D;
+                        case INC, DEC -> 1.0D;
+                        default -> throw new SemanticException(
+                                un.token, "Unhandled unary op: " + un.operator
+                        );
+                    };
+                    constantNode = new ConstantPrimitiveNode(
+                            new DoubleValue(value),
+                            VariableType.DOUBLE,
+                            un.token
+                    );
+                }
+                case BOOL, STRING ->
+                        throw new SemanticException(
+                                un.token,
+                                "Cannot apply '" + un.operator + "' to type " + varType
+                        );
+                default ->
+                        throw new SemanticException(
+                                un.token,
+                                "Unknown VariableType: " + varType
+                        );
             }
+
+            // 3) Pick the correct compound‐assignment operator
+            AssignmentOperator op = switch (un.operator) {
+                case NEGATE -> AssignmentOperator.MUL_ASSIGN;
+                case INC    -> AssignmentOperator.ADD_ASSIGN;
+                case DEC    -> AssignmentOperator.SUB_ASSIGN;
+                default -> throw new SemanticException(
+                        un.token, "Unhandled unary op: " + un.operator
+                );
+            };
+
+            stmts.add(new AssignationNode(accVar, op, constantNode, un.token));
 
             return new LowerResult(accVar, stmts);
         }
@@ -101,7 +174,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 leftVar = v2;
             } else {
                 leftVar = makeTemp(leftRes.simple.token);
-                stmts.add(new AssignationNode(leftVar, AssignmentOperator.ASSIGN, leftRes.simple, be.token));
+                stmts.add(new AssignationNode(leftVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) leftRes.simple, be.token));
             }
 
             NormalExpressionNode rightSimple = (NormalExpressionNode)rightRes.simple;
@@ -173,11 +246,20 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitAssignation(AssignationNode assignation) {
-        // Lower the RHS expression fully:
         LowerResult lr = lowerExpr(assignation.value);
+
         List<StatementNode> stmts = new ArrayList<>(lr.stmts());
-        // The final assignment: target = lr.simple
-        stmts.add(new AssignationNode(assignation.variable, AssignmentOperator.ASSIGN, lr.simple, assignation.token));
+
+        VariableNode lhsVar = assignation.variable;
+        VariableType lhsType = lhsVar.type;
+        VariableType rhsType = lr.simple.type;
+
+        if (lhsType != VariableType.VAR && rhsType != VariableType.VAR && lhsType != rhsType) {
+            throw new SemanticException(assignation.token, "Cannot assign a " + rhsType + " into a " + lhsType + " variable '" + lhsVar.name + "'");
+        }
+
+        stmts.add(new AssignationNode(lhsVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) lr.simple, assignation.token));
+
         return new StatementListNode(stmts);
     }
 
@@ -234,9 +316,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
         ConditionExpressionNode simpleCond = (ConditionExpressionNode) lr.simple;
         StatementListNode newThen = (StatementListNode) visitStatements(conditional.thenBlock);
-        StatementListNode newElse = (conditional.elseBlock == null)
-                ? null
-                : (StatementListNode) visitStatements(conditional.elseBlock);
+        StatementListNode newElse = (conditional.elseBlock == null) ? null : (StatementListNode) visitStatements(conditional.elseBlock);
 
         ConditionalNode newIf = new ConditionalNode(simpleCond, newThen, newElse, conditional.token);
         beforeIf.add(newIf);

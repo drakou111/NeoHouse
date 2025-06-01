@@ -39,7 +39,7 @@ public class Parser {
 
     private Token consume(TokenType type, String message) {
         if (check(type)) return advance();
-        throw error(peek(), message);
+        throw new ParsingException(peek(), message);
     }
 
     private boolean check(TokenType type) {
@@ -73,12 +73,6 @@ public class Parser {
         return tokens.get(pos - 1);
     }
 
-    private ParsingException error(Token token, String message) {
-        System.err.println("[line " + token.line + "] Error at '" + token.text + "': " + message);
-        return new ParsingException(message);
-    }
-
-
     private boolean isType(Token token) {
         return switch (token.type) {
             case LONG, DOUBLE, STRING, BOOL, VAR -> true;
@@ -99,7 +93,7 @@ public class Parser {
             } else if (isType(peek())) {
                 nodes.add(parseGlobalDeclaration());
             } else {
-                throw error(peek(), "Unexpected token at top level: " + peek().text);
+                throw new ParsingException(peek(), "Unexpected token at top level: " + peek().text);
             }
         }
 
@@ -114,7 +108,7 @@ public class Parser {
 
         Event event = Event.fromName(eventName);
         if (event == null) {
-            throw error(nameToken, "Invalid event name: '" + eventName + "'");
+            throw new ParsingException(nameToken, "Invalid event name: '" + eventName + "'");
         }
 
         consume(TokenType.LBRACE, "Expected '{' to begin event body");
@@ -328,7 +322,7 @@ public class Parser {
 
         if (check(TokenType.IDENT)) return parseAssignment();
 
-        throw error(peek(), "Unknown statement");
+        throw new ParsingException(peek(), "Unknown statement");
     }
 
     private NormalExpressionNode parseExpression() {
@@ -387,7 +381,7 @@ public class Parser {
                     case "SQRT_THREE" -> new ConstantPrimitiveNode(new DoubleValue(1.73205080756887), VariableType.DOUBLE, token);
                     case "SQRT_FIVE" -> new ConstantPrimitiveNode(new DoubleValue(2.23606797749978), VariableType.DOUBLE, token);
                     case "PHI" -> new ConstantPrimitiveNode(new DoubleValue(1.61803398874989), VariableType.DOUBLE, token);
-                    default -> throw error(token, "Unsupported constant: " + token.text);
+                    default -> throw new ParsingException(token, "Unsupported constant: " + token.text);
                 };
             case STRING_CONST:
                 return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)), VariableType.STRING, token);
@@ -422,7 +416,7 @@ public class Parser {
                 return parseVariable();
             }
             default:
-                throw error(token, "Expected an expression.");
+                throw new ParsingException(token, "Expected an expression.");
         }
     }
 
@@ -450,12 +444,12 @@ public class Parser {
             if (match(TokenType.AND)) {
                 if (logicOp == null) logicOp = LogicalOperator.AND;
                 else if (logicOp != LogicalOperator.AND) {
-                    throw error(previous(), "Cannot mix '||' with '&&' in one condition");
+                    throw new ParsingException(previous(), "Cannot mix '||' with '&&' in one condition");
                 }
             } else if (match(TokenType.OR)) {
                 if (logicOp == null) logicOp = LogicalOperator.OR;
                 else if (logicOp != LogicalOperator.OR) {
-                    throw error(previous(), "Cannot mix '&&' with '||' in one condition");
+                    throw new ParsingException(previous(), "Cannot mix '&&' with '||' in one condition");
                 }
             } else {
                 break;
@@ -501,7 +495,7 @@ public class Parser {
         Token operatorToken = advance();
         AssignmentOperator operator = parseAssignmentOperatorFromToken(operatorToken);
 
-        ExpressionNode expression = parseExpression();
+        NormalExpressionNode expression = parseExpression();
         consume(TokenType.SEMI, "Expect ';' after assignation");
 
         return new AssignationNode(variableNode, operator, expression, operatorToken);
@@ -569,9 +563,9 @@ public class Parser {
                 case "SQRT_THREE" -> new DoubleValue(1.73205080756887);
                 case "SQRT_FIVE" -> new DoubleValue(2.23606797749978);
                 case "PHI" -> new DoubleValue(1.61803398874989);
-                default -> throw error(token, "Unsupported constant: " + token.text);
+                default -> throw new ParsingException(token, "Unsupported constant: " + token.text);
             };
-            default -> throw error(token, "Expected a constant value.");
+            default -> throw new ParsingException(token, "Expected a constant value.");
         };
     }
 
@@ -583,7 +577,7 @@ public class Parser {
             case TokenType.STRING -> VariableType.STRING;
             case TokenType.BOOL -> VariableType.BOOL;
             case TokenType.VAR -> VariableType.VAR;
-            default -> throw error(type, "Invalid variable type. Should be 'long', 'double', 'string', 'bool', 'var'");
+            default -> throw new ParsingException(type, "Invalid variable type. Should be 'long', 'double', 'string', 'bool', 'var'");
         };
     }
 
@@ -592,7 +586,7 @@ public class Parser {
             case "p" -> Holder.PLAYER;
             case "g" -> Holder.GLOBAL;
             case "t" -> Holder.TEAM;
-            default -> throw error(holder, "Invalid holder type, expected 'p', 'g' or 't'");
+            default -> throw new ParsingException(holder, "Invalid holder type, expected 'p', 'g' or 't'");
         };
     }
 
@@ -603,7 +597,7 @@ public class Parser {
             case MINUS_EQ -> AssignmentOperator.SUB_ASSIGN;
             case STAR_EQ -> AssignmentOperator.MUL_ASSIGN;
             case SLASH_EQ -> AssignmentOperator.DIV_ASSIGN;
-            default -> throw error(operator, "Invalid operator type, expected '=', '+=', '-=', '*=' or '/='");
+            default -> throw new ParsingException(operator, "Invalid operator type, expected '=', '+=', '-=', '*=' or '/='");
         };
     }
 
@@ -613,7 +607,7 @@ public class Parser {
             case MINUS -> BinaryOperator.SUBTRACT;
             case STAR -> BinaryOperator.MULTIPLY;
             case SLASH -> BinaryOperator.DIVIDE;
-            default -> throw error(operator, "Invalid binary operator, expected '+', '-', '*' or '/'");
+            default -> throw new ParsingException(operator, "Invalid binary operator, expected '+', '-', '*' or '/'");
         };
     }
 
@@ -621,7 +615,7 @@ public class Parser {
         return switch (operator.type) {
             case AND -> LogicalOperator.AND;
             case OR -> LogicalOperator.OR;
-            default -> throw error(operator, "Invalid binary operator, expected '&&' or '||'");
+            default -> throw new ParsingException(operator, "Invalid binary operator, expected '&&' or '||'");
         };
     }
 
@@ -633,7 +627,7 @@ public class Parser {
             case LE -> BooleanOperator.LESS_THAN_EQUALS;
             case GT -> BooleanOperator.GREATER_THAN;
             case GE -> BooleanOperator.GREATER_THAN_EQUALS;
-            default -> throw error(operator, "Invalid boolean operator, expected '==', '!=', '<' ,'<=', '>' or '>='");
+            default -> throw new ParsingException(operator, "Invalid boolean operator, expected '==', '!=', '<' ,'<=', '>' or '>='");
         };
     }
 
@@ -643,7 +637,7 @@ public class Parser {
             case BANG -> UnaryOperator.NOT;
             case PLUS_PLUS -> UnaryOperator.INC;
             case MINUS_MINUS -> UnaryOperator.DEC;
-            default -> throw error(operator, "Invalid unary operator, expected '-', '!', '++' or '--'");
+            default -> throw new ParsingException(operator, "Invalid unary operator, expected '-', '!', '++' or '--'");
         };
     }
 }

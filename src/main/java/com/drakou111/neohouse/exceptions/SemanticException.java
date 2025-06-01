@@ -1,7 +1,9 @@
 package com.drakou111.neohouse.exceptions;
 
+import com.drakou111.neohouse.compilers.lexer.Token;
+
 public class SemanticException extends CompilingException {
-    public SemanticException(String message) {
-        super(message);
+    public SemanticException(Token token, String message) {
+        super(token, message);
     }
 }

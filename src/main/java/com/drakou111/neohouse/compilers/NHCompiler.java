@@ -6,7 +6,10 @@ import com.drakou111.neohouse.compilers.ast.main.MainNode;
 import com.drakou111.neohouse.compilers.helpers.StringHelper;
 import com.drakou111.neohouse.compilers.lexer.Lexer;
 import com.drakou111.neohouse.compilers.lexer.Token;
+import com.drakou111.neohouse.compilers.optimizer.DeclarationCollectorVisitor;
+import com.drakou111.neohouse.compilers.optimizer.ScopeCheckingVisitor;
 import com.drakou111.neohouse.compilers.optimizer.SimplifyingExpressionsVisitor;
+import com.drakou111.neohouse.compilers.optimizer.TypeInferringVisitor;
 import com.drakou111.neohouse.compilers.parser.Parser;
 import com.drakou111.neohouse.exceptions.CompilingException;
 
@@ -21,10 +24,8 @@ public class NHCompiler implements Compiler {
 
     public static void main(String[] args) {
         String code = """
-                function test (long p.test) {
-                    if (p.test < 2 || 4 > p.test + 1 + somecall() || p.test < 2) {
-                        p.hello = 1 + 2;
-                    }
+                function somefunc (long p.somevar) {
+                    p.hello = 2 * p.somevar + somecall("tesT");
                 }
                 """;
 
@@ -39,10 +40,18 @@ public class NHCompiler implements Compiler {
         MainNode node = parser.parseMain();
         //System.out.println(StringHelper.formatLikeJson(node.toString(), "  "));
 
+        DeclarationCollectorVisitor collector = new DeclarationCollectorVisitor();
+        collector.analyze(node);
+
+        // 2) Run the actual scope/symbol‐table check:
+        ScopeCheckingVisitor checker = new ScopeCheckingVisitor(collector.globalDecls, collector.allLocalNames);
+        node = checker.analyze(node);
+
+        //TODO: function call typing (somecall() = return type of that function)
+
         SimplifyingExpressionsVisitor flat = new SimplifyingExpressionsVisitor();
-        MainNode newNode = flat.analyze(node);
+        node = flat.analyze(node);
 
-
-        System.out.println(StringHelper.formatLikeJson(newNode.toString(), "  "));
+        System.out.println(StringHelper.formatLikeJson(node.toString(), "  "));
     }
 }

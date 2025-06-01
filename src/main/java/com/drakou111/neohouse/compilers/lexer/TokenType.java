@@ -33,7 +33,8 @@ public enum TokenType {
     CONST_IDENT("PI|E|HALF_PI|TWO_PI|SQRT_TWO|SQRT_THREE|SQRT_FIVE|PHI"),
     IDENT("[a-zA-Z_][a-zA-Z0-9_]*"),
 
-    EOF(null);
+    EOF(null),
+    UNKNOWN(null);
 
     public final Pattern pattern;
     TokenType(String regex) {

@@ -8,12 +8,14 @@ import java.util.regex.Matcher;
 
 public class Lexer {
     private final String input;
+    private final String[] lines;
     private int position = 0;
     private int line = 1;
     private int column = 1;
 
     public Lexer(String input) {
         this.input = input;
+        this.lines = input.split("\n", -1);
     }
 
     public List<Token> tokenize() {
@@ -28,6 +30,8 @@ public class Lexer {
 
                 String lexeme = m.group();
                 matched = true;
+
+                int tokenLine = line;
 
                 // Track lines and columns
                 for (char c : lexeme.toCharArray()) {
@@ -46,7 +50,12 @@ public class Lexer {
                     break;
                 }
 
-                tokens.add(new Token(tt, lexeme, line, column));
+                String lineContent = "";
+                if (tokenLine >= 1 && tokenLine <= lines.length) {
+                    lineContent = lines[tokenLine - 1];
+                }
+
+                tokens.add(new Token(tt, lexeme, lineContent, line, column));
                 break;
             }
 
@@ -54,29 +63,11 @@ public class Lexer {
                 throw errorWithPointer();
             }
         }
-        tokens.add(new Token(TokenType.EOF, null, line, column));
+        tokens.add(new Token(TokenType.EOF, null, "", line, column));
         return tokens;
     }
 
     private TokenException errorWithPointer() {
-        int lineStart = position;
-        while (lineStart > 0 && input.charAt(lineStart - 1) != '\n') {
-            lineStart--;
-        }
-
-        int lineEnd = position;
-        while (lineEnd < input.length() && input.charAt(lineEnd) != '\n') {
-            lineEnd++;
-        }
-
-        String errorLine = input.substring(lineStart, lineEnd).replace("\t", " ");
-        int caretPos = position - lineStart;
-
-        StringBuilder message = new StringBuilder();
-        message.append("Unknown token at line ").append(line).append(", column ").append(column).append(":\n");
-        message.append(errorLine).append("\n");
-        message.append(" ".repeat(Math.max(0, caretPos))).append("^\n");
-
-        return new TokenException(message.toString());
+        return new TokenException(new Token(TokenType.UNKNOWN, input.charAt(position) + "", lines[line], line, column), "Tokenization error");
     }
 }

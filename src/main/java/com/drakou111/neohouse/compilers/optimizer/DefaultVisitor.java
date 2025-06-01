@@ -16,7 +16,7 @@ import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNod
 import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 
-public abstract class DefaultVisitor implements ASTVisitor<ASTNode> {
+public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
 
     // Expressions (Constants, Variables, Placeholder, Sub expressions, Function calls)
     @Override public ASTNode visitConstant(ConstantNode constant) {
