@@ -7,10 +7,7 @@ import com.drakou111.neohouse.compilers.ast.expr.constants.*;
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.*;
-import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.*;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 import com.drakou111.neohouse.compilers.lexer.Token;
 import com.drakou111.neohouse.compilers.lexer.TokenType;
@@ -159,7 +156,23 @@ public class Parser {
 
         consume(TokenType.RBRACE, "Expected '}' after function body");
 
-        return new FunctionNode(functionName, "", returnType, new ParameterListNode(parameters), new StatementListNode(body), functionToken);
+        StatementListNode bodyList = new StatementListNode(body);
+        ParameterListNode parameterList = new ParameterListNode(parameters);
+
+        if (returnType == null) {
+            // → build a VoidFunctionNode
+            return new VoidFunctionNode(functionName, "", parameterList, bodyList, functionToken);
+        } else {
+            // → build a TypedFunctionNode
+            return new TypedFunctionNode(
+                    functionName,
+                    "",
+                    returnType,
+                    parameterList,
+                    bodyList,
+                    functionToken
+            );
+        }
     }
 
     public CancelNode parseCancel() {
@@ -171,16 +184,14 @@ public class Parser {
     public ReturnNode parseReturn() {
         Token returnToken = consume(TokenType.RETURN, "Expected 'return'");
 
-        // Case 1: return;
         if (check(TokenType.SEMI)) {
-            advance(); // consume ;
-            return new ReturnNode(null, returnToken);
+            advance();
+            return new VoidReturnNode(returnToken);
         }
 
-        // Case 2: return EXPRESSION;
-        ExpressionNode value = parseExpression();
+        NormalExpressionNode value = parseExpression();
         consume(TokenType.SEMI, "Expected ';' after return expression");
-        return new ReturnNode(value, returnToken);
+        return new TypedReturnNode(value, returnToken);
     }
 
     public RepeatNode parseRepeat() {
@@ -294,7 +305,7 @@ public class Parser {
         if (match(TokenType.GLOBAL)) {
             Token nameToken = consume(TokenType.IDENT, "Expect function name after 'global'");
             consume(TokenType.LPAREN, "Expect '(' after function name");
-            List<ExpressionNode> args = new ArrayList<>();
+            List<NormalExpressionNode> args = new ArrayList<>();
             if (!check(TokenType.RPAREN)) {
                 do {
                     args.add(parseExpression());
@@ -309,7 +320,7 @@ public class Parser {
             Token nameToken = peek();
             advance();
             advance();
-            List<ExpressionNode> args = new ArrayList<>();
+            List<NormalExpressionNode> args = new ArrayList<>();
             if (!check(TokenType.RPAREN)) {
                 do {
                     args.add(parseExpression());
@@ -400,7 +411,7 @@ public class Parser {
             case IDENT: {
                 if (check(TokenType.LPAREN)) {
                     advance();
-                    List<ExpressionNode> args = new ArrayList<>();
+                    List<NormalExpressionNode> args = new ArrayList<>();
                     if (!check(TokenType.RPAREN)) {
                         do {
                             args.add(parseExpression());

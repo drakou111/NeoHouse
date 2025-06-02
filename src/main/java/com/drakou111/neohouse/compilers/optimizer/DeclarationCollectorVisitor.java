@@ -1,10 +1,10 @@
 package com.drakou111.neohouse.compilers.optimizer;
 
 import com.drakou111.neohouse.compilers.ast.main.MainNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compilers.ast.statement.DeclarationNode;
-import com.drakou111.neohouse.compilers.ast.statement.ConditionalNode;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.exceptions.SemanticException;
 import java.util.*;
@@ -36,7 +36,16 @@ public class DeclarationCollectorVisitor extends EmptyVisitor<Void> {
         return null;
     }
 
-    @Override public Void visitFunction(FunctionNode fn) {
+    @Override public Void visitTypedFunction(TypedFunctionNode fn) {
+        boolean saved = inFunction;
+        inFunction = true;
+        fn.parameters.accept(this);
+        fn.statements.accept(this);
+        inFunction = saved;
+        return null;
+    }
+
+    @Override public Void visitVoidFunction(VoidFunctionNode fn) {
         boolean saved = inFunction;
         inFunction = true;
         fn.parameters.accept(this);
@@ -57,13 +66,6 @@ public class DeclarationCollectorVisitor extends EmptyVisitor<Void> {
             throw new SemanticException(decl.token, "Duplicate local declaration of '" + fullname + "' in same or nested scope");
         }
         allLocalNames.add(fullname);
-        return null;
-    }
-
-    @Override public Void visitConditional(ConditionalNode cond) {
-        cond.condition.accept(this);
-        cond.thenBlock.accept(this);
-        if (cond.elseBlock != null) cond.elseBlock.accept(this);
         return null;
     }
 }

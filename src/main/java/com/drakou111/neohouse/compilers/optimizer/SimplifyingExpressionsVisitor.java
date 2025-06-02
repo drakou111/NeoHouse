@@ -5,6 +5,7 @@ import com.drakou111.neohouse.compilers.ast.enums.AssignmentOperator;
 import com.drakou111.neohouse.compilers.ast.enums.Holder;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.expr.*;
+import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compilers.ast.expr.constants.DoubleValue;
 import com.drakou111.neohouse.compilers.ast.expr.constants.LongValue;
@@ -12,8 +13,9 @@ import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.*;
 import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 import com.drakou111.neohouse.compilers.lexer.Token;
 import com.drakou111.neohouse.exceptions.SemanticException;
@@ -24,10 +26,6 @@ import java.util.List;
 public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     private final String VAR_PREFIX = "t$";
     private int tempCounter = 0;
-
-    public MainNode analyze(MainNode main) {
-        return (MainNode)main.accept(this);
-    }
 
     private record LowerResult(ExpressionNode simple, List<StatementNode> stmts) {}
 
@@ -198,6 +196,19 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             return new LowerResult(newLog, stmts);
         }
 
+        if (expr instanceof FunctionCallNode call) {
+            List<StatementNode> stmts = new ArrayList<>();
+            List<NormalExpressionNode> newArgs = new ArrayList<>();
+            for (NormalExpressionNode arg : call.arguments.expressions) {
+                LowerResult lr = lowerExpr(arg);
+                stmts.addAll(lr.stmts());
+                newArgs.add((NormalExpressionNode)lr.simple);
+            }
+            ArgumentListNode loweredArgs = new ArgumentListNode(newArgs);
+            FunctionCallNode newCall = new FunctionCallNode(call.functionName, loweredArgs, call.type, call.token);
+            return new LowerResult(newCall, stmts);
+        }
+
         return new LowerResult(expr, List.of());
     }
 
@@ -221,7 +232,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             } else if (lowered instanceof MainStatementNode single) {
                 result.add(single);
             } else {
-                throw new IllegalStateException("Expected MainStatementNode or MainNode but got: " + lowered.getClass().getSimpleName());
+                throw new SemanticException(main.token, "Expected start of code");
             }
         }
         return new MainNode(result);
@@ -237,8 +248,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             } else if (lowered instanceof StatementNode single) {
                 result.add(single);
             } else {
-                // Shouldn’t happen if every visitXYZ returns statements.
-                throw new IllegalStateException("Expected StatementNode or StatementListNode but got: " + lowered.getClass().getSimpleName());
+                throw new SemanticException(statements.token, "Expected statement(s)");
             }
         }
         return new StatementListNode(result);
@@ -265,15 +275,13 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitVoidFunctionCallStatement(VoidFunctionCallNode callStmt) {
-        // Lower each argument, collecting temporary pre‐stmts:
         List<StatementNode> stmts = new ArrayList<>();
-        List<ExpressionNode> newArgs = new ArrayList<>();
-        for (ExpressionNode arg : callStmt.arguments.expressions) {
+        List<NormalExpressionNode> newArgs = new ArrayList<>();
+        for (NormalExpressionNode arg : callStmt.arguments.expressions) {
             LowerResult lr = lowerExpr(arg);
             stmts.addAll(lr.stmts());
-            newArgs.add(lr.simple);
+            newArgs.add((NormalExpressionNode)lr.simple);
         }
-        // Recreate the FunctionCallNode with lowered args:
         ArgumentListNode newArgList = new ArgumentListNode(newArgs);
         VoidFunctionCallNode newCall = new VoidFunctionCallNode(callStmt.functionName, newArgList, callStmt.token);
         stmts.add(newCall);
@@ -283,11 +291,11 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     @Override
     public ASTNode visitGlobalFunctionCall(GlobalFunctionCallNode callStmt) {
         List<StatementNode> stmts = new ArrayList<>();
-        List<ExpressionNode> newArgs = new ArrayList<>();
-        for (ExpressionNode arg : callStmt.arguments.expressions) {
+        List<NormalExpressionNode> newArgs = new ArrayList<>();
+        for (NormalExpressionNode arg : callStmt.arguments.expressions) {
             LowerResult lr = lowerExpr(arg);
             stmts.addAll(lr.stmts());
-            newArgs.add(lr.simple);
+            newArgs.add((NormalExpressionNode)lr.simple);
         }
         ArgumentListNode newArgList = new ArgumentListNode(newArgs);
         GlobalFunctionCallNode newCall = new GlobalFunctionCallNode(callStmt.functionName, newArgList, callStmt.token);
@@ -296,12 +304,11 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     }
 
     @Override
-    public ASTNode visitReturn(ReturnNode returnNode) {
-        // Lower the returned expression (if any):
+    public ASTNode visitTypedReturn(TypedReturnNode returnNode) {
         if (returnNode.expression != null) {
             LowerResult lr = lowerExpr(returnNode.expression);
             List<StatementNode> stmts = new ArrayList<>(lr.stmts());
-            ReturnNode newRet = new ReturnNode(lr.simple, returnNode.token);
+            TypedReturnNode newRet = new TypedReturnNode((NormalExpressionNode)lr.simple, returnNode.token);
             stmts.add(newRet);
             return new StatementListNode(stmts);
         } else {
@@ -325,21 +332,18 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitRepeat(RepeatNode repeat) {
-        // Lower the body of the repeat:
         StatementListNode newBody = (StatementListNode)visitStatements(repeat.statements);
         return new RepeatNode(repeat.count, newBody, repeat.token);
     }
 
     @Override
     public ASTNode visitLoop(LoopNode loop) {
-        // Lower the body of the loop:
         StatementListNode newBody = (StatementListNode)visitStatements(loop.statements);
         return new LoopNode(loop.name, loop.description, newBody, loop.tickDelay, loop.token);
     }
 
     @Override
     public ASTNode visitRandom(RandomNode random) {
-        // Lower each alternative block:
         List<StatementListNode> newOptions = new ArrayList<>();
         for (StatementListNode opt : random.statements) {
             newOptions.add((StatementListNode)visitStatements(opt));
@@ -348,10 +352,15 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     }
 
     @Override
-    public ASTNode visitFunction(FunctionNode function) {
-        // Lower the function‐body statements, but leave signature intact:
+    public ASTNode visitTypedFunction(TypedFunctionNode function) {
         StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new FunctionNode(function.name, function.description, function.returnType, function.parameters, newBody, function.token);
+        return new TypedFunctionNode(function.name, function.description, function.returnType, function.parameters, newBody, function.token);
+    }
+
+    @Override
+    public ASTNode visitVoidFunction(VoidFunctionNode function) {
+        StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
+        return new VoidFunctionNode(function.name, function.description, function.parameters, newBody, function.token);
     }
 
     @Override

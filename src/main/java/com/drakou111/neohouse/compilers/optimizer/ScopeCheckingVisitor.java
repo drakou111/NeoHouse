@@ -3,16 +3,12 @@ package com.drakou111.neohouse.compilers.optimizer;
 import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.expr.ConditionExpressionNode;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.MainNode;
 import com.drakou111.neohouse.compilers.ast.main.ParameterListNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.*;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 import com.drakou111.neohouse.compilers.lexer.Token;
 import com.drakou111.neohouse.exceptions.SemanticException;
@@ -92,7 +88,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
 
     // 2) Entering a function → push a new local scope
     @Override
-    public ASTNode visitFunction(FunctionNode fn) {
+    public ASTNode visitTypedFunction(TypedFunctionNode fn) {
         // 1) Build new local scope, seeded with parameters
         Map<String, VariableType> localScope = new HashMap<>();
         for (VariableNode param : fn.parameters.parameters) {
@@ -120,7 +116,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         ParameterListNode newParamList = new ParameterListNode(newParams);
 
         // 5) Return new FunctionNode
-        return new FunctionNode(
+        return new TypedFunctionNode(
                 fn.name,
                 fn.description,
                 fn.returnType,
@@ -128,6 +124,38 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
                 newBody,
                 fn.token
         );
+    }
+
+    @Override
+    public ASTNode visitVoidFunction(VoidFunctionNode fn) {
+        // 1) Build new local scope, seeded with parameters
+        Map<String, VariableType> localScope = new HashMap<>();
+        for (VariableNode param : fn.parameters.parameters) {
+            String fullname = param.holder + "." + param.name;
+            localScope.put(fullname, param.type);
+        }
+        scopeStack.push(localScope);
+
+        // 2) Recurse into statements/body
+        StatementListNode newBody = (StatementListNode) fn.statements.accept(this);
+
+        // 3) Pop local scope
+        scopeStack.pop();
+
+        // 4) Rebuild the parameter list (they were already typed by the parser)
+        List<VariableNode> newParams = new ArrayList<>();
+        for (VariableNode param : fn.parameters.parameters) {
+            newParams.add(new VariableNode(
+                    param.type,
+                    param.holder,
+                    param.name,
+                    param.token
+            ));
+        }
+        ParameterListNode newParamList = new ParameterListNode(newParams);
+
+        // 5) Return new VoidFunctionNode
+        return new VoidFunctionNode(fn.name, fn.description, newParamList, newBody, fn.token);
     }
 
     @Override public ASTNode visitDeclaration(DeclarationNode decl) {

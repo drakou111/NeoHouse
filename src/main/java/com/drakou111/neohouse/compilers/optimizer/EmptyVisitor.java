@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.compilers.optimizer;
 
-import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
 import com.drakou111.neohouse.compilers.ast.expr.*;
 import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
@@ -10,10 +9,7 @@ import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantPrimitiveNode
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.*;
-import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.*;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 
 public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
@@ -70,7 +66,13 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
     }
 
     // Main Statements
-    @Override public T visitFunction(FunctionNode function) {
+    @Override public T visitTypedFunction(TypedFunctionNode function) {
+        function.parameters.accept(this);
+        function.statements.accept(this);
+        return null;
+    }
+
+    @Override public T visitVoidFunction(VoidFunctionNode function) {
         function.parameters.accept(this);
         function.statements.accept(this);
         return null;
@@ -92,9 +94,13 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
     }
 
     // Statements
-    @Override public T visitReturn(ReturnNode returnNode) {
-        if (returnNode.expression != null)
-            returnNode.expression.accept(this);
+    @Override public T visitTypedReturn(TypedReturnNode returnNode) {
+        returnNode.expression.accept(this);
+        return null;
+    }
+
+    // Statements
+    @Override public T visitVoidReturn(VoidReturnNode returnNode) {
         return null;
     }
 

@@ -4,7 +4,7 @@ import com.drakou111.neohouse.compilers.lexer.Token;
 
 public class CompilingException extends RuntimeException {
     public CompilingException(Token token, String message) {
-        super("\n[ERROR] An error occurred while compiling at '" + token.text + "', at line " + token.line + " & col " + token.column + ": " + message + "\n[ERROR] " + token.lineContent + "\n" + arrowText(token) + "\n");
+        super(token == null ? message : "\n[ERROR] An error occurred while compiling at '" + token.text + "', at line " + token.line + " & col " + token.column + ": " + message + "\n[ERROR] " + token.lineContent + "\n" + arrowText(token) + "\n");
     }
 
     private static String arrowText(Token token) {

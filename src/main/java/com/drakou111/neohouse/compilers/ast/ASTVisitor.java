@@ -11,10 +11,7 @@ import com.drakou111.neohouse.compilers.ast.expr.constants.ConstantPrimitiveNode
 import com.drakou111.neohouse.compilers.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.*;
-import com.drakou111.neohouse.compilers.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.FunctionNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.*;
 import com.drakou111.neohouse.compilers.ast.statement.*;
 
 public interface ASTVisitor<T> {
@@ -31,13 +28,15 @@ public interface ASTVisitor<T> {
     T visitFunctionCall(FunctionCallNode functionCall);
 
     // Main Statements
-    T visitFunction(FunctionNode function);
+    T visitTypedFunction(TypedFunctionNode function);
+    T visitVoidFunction(VoidFunctionNode function);
     T visitLoop(LoopNode function);
     T visitEvent(EventNode event);
     T visitGlobalDeclaration(GlobalDeclarationNode declaration);
 
     // Statements
-    T visitReturn(ReturnNode returnNode);
+    T visitTypedReturn(TypedReturnNode returnNode);
+    T visitVoidReturn(VoidReturnNode returnNode);
     T visitCancel(CancelNode cancelNode);
     T visitConditional(ConditionalNode conditional);
     T visitDefinition(DefinitionNode definition);

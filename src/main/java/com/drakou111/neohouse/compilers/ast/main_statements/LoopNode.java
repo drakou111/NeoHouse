@@ -5,16 +5,11 @@ import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
 import com.drakou111.neohouse.compilers.lexer.Token;
 
-public class LoopNode extends MainStatementNode {
-    public final String name;
-    public final String description;
-    public final StatementListNode statements;
+public class LoopNode extends FunctionNode {
     public final long tickDelay;
 
     public LoopNode(final String name, final String description, final StatementListNode statements, final long delay, final Token token) {
-        this.name = name;
-        this.description = description;
-        this.statements = statements;
+        super(name, description, statements, token);
         this.tickDelay = delay;
         this.token = token;
     }

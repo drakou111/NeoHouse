@@ -6,10 +6,7 @@ import com.drakou111.neohouse.compilers.ast.main.MainNode;
 import com.drakou111.neohouse.compilers.helpers.StringHelper;
 import com.drakou111.neohouse.compilers.lexer.Lexer;
 import com.drakou111.neohouse.compilers.lexer.Token;
-import com.drakou111.neohouse.compilers.optimizer.DeclarationCollectorVisitor;
-import com.drakou111.neohouse.compilers.optimizer.ScopeCheckingVisitor;
-import com.drakou111.neohouse.compilers.optimizer.SimplifyingExpressionsVisitor;
-import com.drakou111.neohouse.compilers.optimizer.TypeInferringVisitor;
+import com.drakou111.neohouse.compilers.optimizer.*;
 import com.drakou111.neohouse.compilers.parser.Parser;
 import com.drakou111.neohouse.exceptions.CompilingException;
 
@@ -24,33 +21,59 @@ public class NHCompiler implements Compiler {
 
     public static void main(String[] args) {
         String code = """
-                function somefunc (long p.somevar) {
-                    p.hello = 2 * p.somevar + somecall("tesT");
+                function long b (long p.something) {
+                    return 1;
                 }
+                function long a (long p.something) {
+                    return 1;
+                }
+                function long somefunc (long p.somevar) {
+                    p.somevar2 = a(p.somevar);
+                    return 1;
+                }
+                
                 """;
 
         Lexer lexer = new Lexer(code);
         List<Token> tokens = lexer.tokenize();
 
-        /*for (Token token : tokens) {
-            System.out.println(token);
-        }*/
-
         Parser parser = new Parser(tokens);
         MainNode node = parser.parseMain();
-        //System.out.println(StringHelper.formatLikeJson(node.toString(), "  "));
 
+        // ...
+        ReturnContextChecker returnContextChecker = new ReturnContextChecker();
+        returnContextChecker.analyze(node);
+
+        // ...
+        LinkFunctionVisitor linkFunctionVisitor = new LinkFunctionVisitor(node);
+        node = linkFunctionVisitor.analyze(node);
+
+        // ...
+        RepeatUnrollingVisitor repeatUnroller = new RepeatUnrollingVisitor();
+        node = repeatUnroller.analyze(node);
+
+        // ...
         DeclarationCollectorVisitor collector = new DeclarationCollectorVisitor();
         collector.analyze(node);
 
-        // 2) Run the actual scope/symbol‐table check:
+        // ...
         ScopeCheckingVisitor checker = new ScopeCheckingVisitor(collector.globalDecls, collector.allLocalNames);
         node = checker.analyze(node);
 
-        //TODO: function call typing (somecall() = return type of that function)
-
+        // ...
         SimplifyingExpressionsVisitor flat = new SimplifyingExpressionsVisitor();
         node = flat.analyze(node);
+
+        // ...
+        FunctionCallLoweringVisitor lower = new FunctionCallLoweringVisitor(node);
+        node = lower.analyze(node);
+
+        // ...
+        ReturnCheckVisitor returnCheck = new ReturnCheckVisitor();
+        returnCheck.analyze(node);
+
+        FunctionParamLoweringVisitor functionParamLoweringVisitor = new FunctionParamLoweringVisitor();
+        node = functionParamLoweringVisitor.analyze(node);
 
         System.out.println(StringHelper.formatLikeJson(node.toString(), "  "));
     }
