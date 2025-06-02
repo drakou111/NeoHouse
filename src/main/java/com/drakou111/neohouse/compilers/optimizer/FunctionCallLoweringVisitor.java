@@ -1,9 +1,8 @@
 package com.drakou111.neohouse.compilers.optimizer;
 
-import com.drakou111.neohouse.compilers.ast.*;
+import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.enums.AssignmentOperator;
 import com.drakou111.neohouse.compilers.ast.enums.Holder;
-import com.drakou111.neohouse.compilers.ast.expr.ConditionExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
@@ -11,12 +10,16 @@ import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.*;
 import com.drakou111.neohouse.compilers.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.VoidFunctionNode;
-import com.drakou111.neohouse.compilers.ast.statement.*;
-import com.drakou111.neohouse.compilers.helpers.HolderAndName;
-import com.drakou111.neohouse.compilers.lexer.Token;
+import com.drakou111.neohouse.compilers.ast.statement.AssignationNode;
+import com.drakou111.neohouse.compilers.ast.statement.GlobalFunctionCallNode;
+import com.drakou111.neohouse.compilers.ast.statement.TypedReturnNode;
+import com.drakou111.neohouse.compilers.ast.statement.VoidFunctionCallNode;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FunctionCallLoweringVisitor extends DefaultVisitor {
 
@@ -43,40 +46,22 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
         }
     }
 
-    /**
-     * Returns a pair (simpleExpr, stmts), where:
-     *  - simpleExpr is either the original argument (if not a call),
-     *    or `p.o$` (if you lowered a nested function call).
-     *  - stmts is a list of StatementNode that implement the lowering of
-     *    that nested call (if any), or an empty list otherwise.
-     */
     private record ArgLowerResult(NormalExpressionNode simple, List<StatementNode> stmts) {}
 
-    /**
-     * If expr is a FunctionCallNode, lower it exactly as if it were:
-     *    call arguments → call → return value in p.o$
-     * and return (p.o$, allLoweringStmts).
-     * Otherwise, return (expr, emptyList).
-     */
     private ArgLowerResult lowerArgument(ExpressionNode expr) {
         if (expr instanceof FunctionCallNode tfc) {
-            // 1) Lower the nested call’s arguments
             TypedFunctionNode def = typedFunctions.get(tfc.functionName);
             List<VariableNode> params = def.parameters.parameters;
             List<StatementNode> stmts = new ArrayList<>();
 
-            // Lower each argument expression recursively
             List<NormalExpressionNode> realArgs = new ArrayList<>();
             for (int i = 0; i < tfc.arguments.expressions.size(); i++) {
                 ExpressionNode rawArg = tfc.arguments.expressions.get(i);
                 ArgLowerResult sub = lowerArgument(rawArg);
                 stmts.addAll(sub.stmts());
-
-                // Now sub.simple is a NormalExpressionNode (could be a constant, var, or p.o$)
                 realArgs.add(sub.simple);
             }
 
-            // 2) Assign those realArgs into a_p$N, etc.
             for (int i = 0; i < realArgs.size(); i++) {
                 NormalExpressionNode argExpr = realArgs.get(i);
                 VariableNode param = params.get(i);
@@ -146,13 +131,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }
 
-        // 2) Emit the (void) global call
-        stmts.add(new GlobalFunctionCallNode(
-                call.functionName,
-                new ArgumentListNode(List.of()),
-                call.token
-        ));
-
+        stmts.add(new GlobalFunctionCallNode(call.functionName,new ArgumentListNode(List.of()),call.token));
         return new StatementListNode(stmts);
     }
 

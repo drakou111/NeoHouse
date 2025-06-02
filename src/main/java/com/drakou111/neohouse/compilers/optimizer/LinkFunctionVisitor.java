@@ -2,16 +2,18 @@ package com.drakou111.neohouse.compilers.optimizer;
 
 import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;
-import com.drakou111.neohouse.compilers.ast.expr.ConditionExpressionNode;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
-import com.drakou111.neohouse.compilers.ast.main.*;
-import com.drakou111.neohouse.compilers.ast.main_statements.*;
-import com.drakou111.neohouse.compilers.ast.statement.*;
-import com.drakou111.neohouse.compilers.lexer.Token;
+import com.drakou111.neohouse.compilers.ast.main.ArgumentListNode;
+import com.drakou111.neohouse.compilers.ast.main.MainNode;
+import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.TypedFunctionNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compilers.ast.statement.GlobalFunctionCallNode;
+import com.drakou111.neohouse.compilers.ast.statement.VoidFunctionCallNode;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 1) In the constructor, we scan the MainNode to collect every TypedFunctionNode
@@ -78,10 +80,7 @@ public class LinkFunctionVisitor extends DefaultVisitor {
         String fname = call.functionName;
         VoidFunctionNode def = voidDefs.get(fname);
         if (def == null) {
-            throw new SemanticException(
-                    call.token,
-                    "Undefined global function '" + fname + "'"
-            );
+            throw new SemanticException(call.token, "Undefined global function '" + fname + "')");
         }
         ArgumentListNode newArgs = (ArgumentListNode) call.arguments.accept(this);
         return new GlobalFunctionCallNode(fname, newArgs, call.token);

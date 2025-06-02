@@ -1,9 +1,7 @@
 package com.drakou111.neohouse.compilers.ast.main_statements;
 
 import com.drakou111.neohouse.compilers.ast.ASTVisitor;
-import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
-import com.drakou111.neohouse.compilers.ast.main.ParameterListNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
 import com.drakou111.neohouse.compilers.lexer.Token;
 

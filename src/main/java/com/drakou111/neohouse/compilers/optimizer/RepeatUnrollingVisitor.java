@@ -1,9 +1,6 @@
 package com.drakou111.neohouse.compilers.optimizer;
 
 import com.drakou111.neohouse.compilers.ast.ASTNode;
-import com.drakou111.neohouse.compilers.ast.expr.ExpressionNode;
-import com.drakou111.neohouse.compilers.ast.main.MainNode;
-import com.drakou111.neohouse.compilers.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementListNode;
 import com.drakou111.neohouse.compilers.ast.main.StatementNode;
 import com.drakou111.neohouse.compilers.ast.statement.RepeatNode;

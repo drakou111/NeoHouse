@@ -3,9 +3,7 @@ package com.drakou111.neohouse.compilers.optimizer;
 import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.expr.*;
-import com.drakou111.neohouse.compilers.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compilers.ast.main.MainNode;
-import com.drakou111.neohouse.compilers.ast.statement.AssignationNode;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;

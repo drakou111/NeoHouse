@@ -1,13 +1,17 @@
 package com.drakou111.neohouse.compilers.optimizer;
 
+import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.main.MainNode;
-import com.drakou111.neohouse.compilers.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.GlobalDeclarationNode;
+import com.drakou111.neohouse.compilers.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compilers.ast.statement.DeclarationNode;
-import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.exceptions.SemanticException;
-import java.util.*;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Pass 1: collect all global‐scope declarations and all local‐only declarations.
