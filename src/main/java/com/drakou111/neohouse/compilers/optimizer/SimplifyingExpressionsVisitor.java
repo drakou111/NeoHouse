@@ -3,6 +3,7 @@ package com.drakou111.neohouse.compilers.optimizer;
 import com.drakou111.neohouse.compilers.ast.ASTNode;
 import com.drakou111.neohouse.compilers.ast.enums.AssignmentOperator;
 import com.drakou111.neohouse.compilers.ast.enums.Holder;
+import com.drakou111.neohouse.compilers.ast.enums.UnaryOperator;
 import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.expr.*;
 import com.drakou111.neohouse.compilers.ast.expr.call.FunctionCallNode;
@@ -87,6 +88,34 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
             List<StatementNode> stmts = new ArrayList<>(opRes.stmts());
 
+            switch (un.operator) {
+                case LONG_CAST, DOUBLE_CAST, STRING_CAST -> {
+                    VariableNode result;
+                    boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
+                    if (reuse) {
+                        result = (VariableNode) opRes.simple();
+                    } else {
+                        result = makeTemp(un.token);
+                        result.type = switch (un.operator) {
+                            case LONG_CAST -> VariableType.LONG;
+                            case DOUBLE_CAST -> VariableType.DOUBLE;
+                            case STRING_CAST -> VariableType.STRING;
+                            default -> throw new IllegalStateException("Unexpected cast operator");
+                        };
+                        stmts.add(new AssignationNode(result, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
+                    }
+
+                    result.type = switch (un.operator) {
+                        case LONG_CAST -> VariableType.LONG;
+                        case DOUBLE_CAST -> VariableType.DOUBLE;
+                        case STRING_CAST -> VariableType.STRING;
+                        default -> throw new SemanticException(un.token, "Unknown cast type");
+                    };
+
+                    return new LowerResult(result, stmts);
+                }
+            }
+
             // 1) Pick or create the accumulator variable
             VariableNode accVar;
             boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
@@ -97,6 +126,8 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 accVar.type = un.operand.type;
                 stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
             }
+
+
 
             // 2) Determine which constant to apply, based on varType
             VariableType varType = un.operand.type;

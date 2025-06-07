@@ -5,5 +5,7 @@ public enum UnaryOperator {
     NOT,                    // !bool
     INC,                    // int++ [or] double++
     DEC,                    // int-- [or] double--
-    LEN                     // arr.length
+    LONG_CAST,              // (long)
+    DOUBLE_CAST,            // (double)
+    STRING_CAST;            // (string)
 }

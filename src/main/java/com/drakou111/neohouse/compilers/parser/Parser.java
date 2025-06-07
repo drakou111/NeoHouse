@@ -72,7 +72,7 @@ public class Parser {
 
     private boolean isType(Token token) {
         return switch (token.type) {
-            case LONG, DOUBLE, STRING, BOOL, VAR -> true;
+            case LONG, DOUBLE, STRING, VAR -> true;
             default -> false;
         };
     }
@@ -377,11 +377,11 @@ public class Parser {
 
     private NormalExpressionNode parsePrefix(Token token) {
         switch (token.type) {
-            case BANG:
             case MINUS:
-                // Unary operators
-                NormalExpressionNode right = parsePrecedence(Precedence.UNARY);
-                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), right, null, token);
+            case LONG_CAST:
+            case DOUBLE_CAST:
+            case STRING_CAST:
+                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), null, token);
             case CONST_IDENT:
                 return switch (token.text) {
                     case "PI" -> new ConstantPrimitiveNode(new DoubleValue(3.14159265358979), VariableType.DOUBLE, token);
@@ -645,10 +645,12 @@ public class Parser {
     UnaryOperator parseUnaryOperatorFromToken(Token operator) {
         return switch (operator.type) {
             case MINUS -> UnaryOperator.NEGATE;
-            case BANG -> UnaryOperator.NOT;
             case PLUS_PLUS -> UnaryOperator.INC;
             case MINUS_MINUS -> UnaryOperator.DEC;
-            default -> throw new ParsingException(operator, "Invalid unary operator, expected '-', '!', '++' or '--'");
+            case LONG_CAST -> UnaryOperator.LONG_CAST;
+            case DOUBLE_CAST -> UnaryOperator.DOUBLE_CAST;
+            case STRING_CAST -> UnaryOperator.STRING_CAST;
+            default -> throw new ParsingException(operator, "Invalid unary operator, expected '-', '!', '++', '--', '(long)', '(double)' or '(string)'");
         };
     }
 }

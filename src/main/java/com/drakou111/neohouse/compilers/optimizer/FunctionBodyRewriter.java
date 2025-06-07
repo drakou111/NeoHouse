@@ -41,9 +41,4 @@ public class FunctionBodyRewriter extends DefaultVisitor {
         VoidReturnNode voidReturn = new VoidReturnNode(ret.token);
         return new StatementListNode(List.of(assignToO, voidReturn));
     }
-
-    @Override
-    public ASTNode visitVoidReturn(VoidReturnNode ret) {
-        return ret;
-    }
 }

@@ -27,9 +27,9 @@ public class NHCompiler implements Compiler {
                 function long a (long p.something) {
                     return 1;
                 }
-                function long somefunc (long p.somevar) {
-                    p.somevar2 = a(p.somevar);
-                    return 1;
+                function double somefunc (long p.somevar) {
+                    p.somevar2 = a(a(1));
+                    return (double)a(1);
                 }
                 
                 """;
@@ -39,10 +39,6 @@ public class NHCompiler implements Compiler {
 
         Parser parser = new Parser(tokens);
         MainNode node = parser.parseMain();
-
-        // Makes sure 'return e;' is only used in a typedFunction and nothing else, and can't use 'return;'.
-        ReturnContextChecker returnContextChecker = new ReturnContextChecker();
-        returnContextChecker.analyze(node);
 
         // Sets types to function calls from the definition of the functions.
         LinkFunctionVisitor linkFunctionVisitor = new LinkFunctionVisitor(node);
@@ -71,6 +67,10 @@ public class NHCompiler implements Compiler {
         // Makes sure that all paths of a function ends with a return (only for TypedFunction)
         ReturnCheckVisitor returnCheck = new ReturnCheckVisitor();
         returnCheck.analyze(node);
+
+        // Makes sure 'return e;' is only used in a typedFunction and nothing else, and can't use 'return;'.
+        ReturnContextChecker returnContextChecker = new ReturnContextChecker();
+        returnContextChecker.analyze(node);
 
         // Makes all functions void with 0 parameters.
         FunctionParamLoweringVisitor functionParamLoweringVisitor = new FunctionParamLoweringVisitor();

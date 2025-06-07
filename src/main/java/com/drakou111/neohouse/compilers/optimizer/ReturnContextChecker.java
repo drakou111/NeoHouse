@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.compilers.optimizer;
 
 import com.drakou111.neohouse.compilers.ast.ASTNode;
+import com.drakou111.neohouse.compilers.ast.enums.VariableType;
 import com.drakou111.neohouse.compilers.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compilers.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compilers.ast.statement.TypedReturnNode;
@@ -15,6 +16,7 @@ import com.drakou111.neohouse.exceptions.SemanticException;
  */
 public class ReturnContextChecker extends EmptyVisitor<Void> {
     private boolean inTypedFunction = false;
+    private VariableType functionType = null;
 
     public Void analyze(ASTNode root) {
         root.accept(this);
@@ -32,6 +34,7 @@ public class ReturnContextChecker extends EmptyVisitor<Void> {
     @Override
     public Void visitTypedFunction(TypedFunctionNode fn) {
         inTypedFunction = true;
+        functionType = fn.returnType;
         fn.parameters.accept(this);
         fn.statements.accept(this);
         inTypedFunction = false;
@@ -44,6 +47,9 @@ public class ReturnContextChecker extends EmptyVisitor<Void> {
             throw new SemanticException(ret.token, "Cannot return a value here, not in a typed function");
         }
         ret.expression.accept(this);
+        if (functionType != ret.expression.type)
+            throw new SemanticException(ret.token, "Return type mismatch. Expected to return " + functionType + " but returning " + ret.expression.type);
+
         return null;
     }
 
@@ -52,6 +58,7 @@ public class ReturnContextChecker extends EmptyVisitor<Void> {
         if (inTypedFunction) {
             throw new SemanticException(ret.token, "Must return a value in a typed function");
         }
+
         return null;
     }
 }
