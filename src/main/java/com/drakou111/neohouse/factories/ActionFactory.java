@@ -297,33 +297,63 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionVariable(RestrictionAction state, Holder holder, String variable, Operator operator, String value, boolean automaticUnset, String note) {
+    public static Action addActionVariable(RestrictionAction state, Holder holder, String variable, String teamName, Operator operator, String value, boolean automaticUnset, String note) {
         if (state.pageSlotFor(AddAction.VARIABLE) == null) throw new InterruptActionException("Cannot add action 'Variable' here.");
 
-        return new ActionBuilder()
-                .addAction(AddAction.VARIABLE, state)
-                .onlyIf(holder != Holder.PLAYER, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_HOLDER, true)
-                        .clickAndSelectSlot(holder.getPage(), holder.getSlotID())
-                )
-                .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
-                        .chatInput(variable, Slots.ACTION_SET_VARIABLE_VAR)
-                )
-                .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_OPERATION, true)
-                        .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
-                )
-                .onlyIf(!value.equals("1"), () -> new ActionBuilder()
-                        .chatInput(value, Slots.ACTION_SET_VARIABLE_VALUE)
-                )
-                .onlyIf(automaticUnset, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_AUTOMATIC_UNSET, true)
-                )
-                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
-                )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
-                .get();
+        if (holder != Holder.TEAM) {
+            return new ActionBuilder()
+                    .addAction(AddAction.VARIABLE, state)
+                    .onlyIf(holder != Holder.PLAYER, () -> new ActionBuilder()
+                            .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_HOLDER, true)
+                            .clickAndSelectSlot(holder.getPage(), holder.getSlotID())
+                    )
+                    .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
+                            .chatInput(variable, Slots.ACTION_SET_VARIABLE_VAR)
+                    )
+                    .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
+                            .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_OPERATION, true)
+                            .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
+                    )
+                    .onlyIf(!value.equals("1"), () -> new ActionBuilder()
+                            .chatInput(value, Slots.ACTION_SET_VARIABLE_VALUE)
+                    )
+                    .onlyIf(automaticUnset, () -> new ActionBuilder()
+                            .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_AUTOMATIC_UNSET, true)
+                    )
+                    .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                            .chatInput(note, Slots.GENERAL_NOTE_H4)
+                    )
+                    .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                    .get();
+        }
+        else {
+            return new ActionBuilder()
+                    .addAction(AddAction.VARIABLE, state)
+                    .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_HOLDER, true)
+                    .clickAndSelectSlot(holder.getPage(), holder.getSlotID())
+                    .onlyIf(teamName != null && !teamName.trim().isEmpty() && !teamName.equals("None"), () -> new ActionBuilder()
+                            .clickSlotAndWait(Slots.ACTION_SET_TEAM_NAME, true)
+                            .search(teamName, null, true, null, null)
+                    )
+                    .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
+                            .chatInput(variable, Slots.ACTION_SET_TEAM_VARIABLE_VAR)
+                    )
+                    .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
+                            .clickSlotAndWait(Slots.ACTION_SET_TEAM_VARIABLE_OPERATION, true)
+                            .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
+                    )
+                    .onlyIf(!value.equals("1"), () -> new ActionBuilder()
+                            .chatInput(value, Slots.ACTION_SET_TEAM_VARIABLE_VALUE)
+                    )
+                    .onlyIf(automaticUnset, () -> new ActionBuilder()
+                            .clickSlotAndWait(Slots.ACTION_SET_TEAM_VARIABLE_AUTOMATIC_UNSET, true)
+                    )
+                    .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                            .chatInput(note, Slots.GENERAL_NOTE_H4)
+                    )
+                    .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                    .get();
+        }
     }
 
     public static Action addActionTeleport(RestrictionAction state, Teleport teleport, String customLocation, boolean preventInsideBlocks, String note) {

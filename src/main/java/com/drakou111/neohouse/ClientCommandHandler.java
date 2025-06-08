@@ -2,8 +2,8 @@ package com.drakou111.neohouse;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
-import com.drakou111.neohouse.compilers.NHCompiler;
-import com.drakou111.neohouse.compilers.ScriptRunner;
+import com.drakou111.neohouse.compiler.NHCompiler;
+import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.factories.MovementFactory;
 import com.drakou111.neohouse.utils.ActionBuilder;

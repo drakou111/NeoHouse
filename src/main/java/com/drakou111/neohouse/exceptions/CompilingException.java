@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.exceptions;
 
-import com.drakou111.neohouse.compilers.lexer.Token;
+import com.drakou111.neohouse.compiler.lexer.Token;
 
 public class CompilingException extends RuntimeException {
     public CompilingException(Token token, String message) {

@@ -77,6 +77,13 @@ public class Slots {
     public static final int ACTION_SET_VARIABLE_VALUE = 13;
     public static final int ACTION_SET_VARIABLE_AUTOMATIC_UNSET = 14;
 
+    // SET_VARIABLE -> TEAM
+    public static final int ACTION_SET_TEAM_NAME = 11;
+    public static final int ACTION_SET_TEAM_VARIABLE_VAR = 12;
+    public static final int ACTION_SET_TEAM_VARIABLE_OPERATION = 13;
+    public static final int ACTION_SET_TEAM_VARIABLE_VALUE = 14;
+    public static final int ACTION_SET_TEAM_VARIABLE_AUTOMATIC_UNSET = 15;
+
     // TELEPORT
     public static final int ACTION_TELEPORT_LOCATION = 10;
     public static final int ACTION_TELEPORT_PREVENT_INSIDE_BLOCK = 11;
