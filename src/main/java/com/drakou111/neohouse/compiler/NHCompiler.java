@@ -22,11 +22,7 @@ public class NHCompiler implements Compiler {
     public static void main(String[] args) {
         String code = """
                 function long b (long p.something) {
-                    setGroup(121.4);
-                    long t.test;
-                    if (ph.dateDayTimezone(p)) {}
-                    long p.a;
-                    p.a = p.something;
+                    pause(2);
                     return 1;
                 }
                 

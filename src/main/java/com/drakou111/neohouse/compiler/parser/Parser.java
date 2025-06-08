@@ -355,16 +355,25 @@ public class Parser {
 
             switch (expected) {
                 case STRING_LITERAL -> {
-                    Token t = consume(TokenType.STRING_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a string literal");
+                    Token t = consume(TokenType.STRING_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a STRING literal");
                     parsedArgs.add(new ConstantPrimitiveNode(new StringValue(t.text.substring(1, t.text.length()-1)), VariableType.STRING, nameToken));
                 }
                 case LONG_LITERAL -> {
-                    Token t = consume(TokenType.LONG_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a long literal");
+                    Token t = consume(TokenType.LONG_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a LONG literal");
                     parsedArgs.add(new ConstantPrimitiveNode(new LongValue(Long.parseLong(t.text)), VariableType.STRING, nameToken));
                 }
                 case DOUBLE_LITERAL -> {
-                    Token t = consume(TokenType.DOUBLE_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a double literal");
+                    Token t = consume(TokenType.DOUBLE_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a DOUBLE literal");
                     parsedArgs.add(new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(t.text)), VariableType.STRING, nameToken));
+                }
+                case BOOL_LITERAL -> {
+                    Token t;
+                    if (match(TokenType.TRUE)) t = previous();
+                    else if (match(TokenType.FALSE)) t = previous();
+                    else throw new ParsingException(peek(), "Action " + actionName + " param #" + (i+1) + " must be a BOOL literal (true or false).");
+
+                    boolean v = t.type == TokenType.TRUE;
+                    parsedArgs.add(new ConstantPrimitiveNode(new BoolValue(v), VariableType.BOOL, t));
                 }
                 case NORMAL_EXPRESSION -> parsedArgs.add(parseExpression());
             }
@@ -562,6 +571,15 @@ public class Parser {
                 case DOUBLE_LITERAL -> {
                     Token t = consume(TokenType.DOUBLE_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a DOUBLE");
                     parsedArgs.add(new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(t.text)), VariableType.DOUBLE, t));
+                }
+                case BOOL_LITERAL -> {
+                    Token t;
+                    if (match(TokenType.TRUE)) t = previous();
+                    else if (match(TokenType.FALSE)) t = previous();
+                    else throw new ParsingException(peek(), "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a BOOL");
+
+                    boolean v = t.type == TokenType.TRUE;
+                    parsedArgs.add(new ConstantPrimitiveNode(new BoolValue(v), VariableType.BOOL, t));
                 }
                 case NORMAL_EXPRESSION -> parsedArgs.add(parseExpression());
             }

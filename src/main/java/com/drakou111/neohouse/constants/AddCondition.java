@@ -13,30 +13,28 @@ import java.util.stream.Collectors;
  \********************/
 
 public enum AddCondition {
-    PORTAL_TYPE(true, "inPortalType", List.of()),
-    PVP_ENABLED(true, "isPvpEnabled", List.of()),
-    DAMAGE_CAUSE(true, "isDamageCause", List.of()),
-    DAMAGE_AMOUNT(true, "isDamageAmount", List.of()),
-    BLOCK_TYPE(true, "isBlockType", List.of()),
-    IS_ITEM(true, "isItem", List.of()),
-    FISHING_ENVIRONMENT(true, "isFishingEnvironment", List.of()),
-    GROUP(true, "isGroup", List.of()),
+    PORTAL_TYPE(true, "inPortalType", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    PVP_ENABLED(true, "isPvpEnabled", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    DAMAGE_CAUSE(true, "isDamageCause", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    DAMAGE_AMOUNT(true, "isDamageAmount", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.NORMAL_EXPRESSION)),
+    BLOCK_TYPE(true, "isBlockType", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.BOOL_LITERAL)),
+    IS_ITEM(true, "isItem", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.STRING_LITERAL)),
+    FISHING_ENVIRONMENT(true, "isFishingEnvironment", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    GROUP(true, "isGroup", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.BOOL_LITERAL)),
     VARIABLE(false, "_", List.of()),
-    PERMISSION(true, "hasPermission", List.of()),
-    REGION(true, "inRegion", List.of()),
-    HAS_ITEM(true, "hasItem", List.of()),
-    DOING_PARKOUR(true, "doingParkour", List.of()),
-    POTION(true, "hasPotion", List.of()),
-    SNEAKING(true, "isSneaking", List.of()),
-    FLYING(true, "isFlying", List.of()),
-    HEALTH(true, "hasHealth", List.of()),
-    MAX_HEALTH(true, "hasMaxHealth", List.of()),
-    HUNGER(true, "hasHunger", List.of()),
-    GAME_MODE(true, "hasGamemode", List.of()),
-    PLACEHOLDER(false, "_", List.of()),
-    TEAM(true, "hasTeam", List.of());
-
-    //TODO, change params
+    PERMISSION(true, "hasPermission", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    REGION(true, "inRegion", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    HAS_ITEM(true, "hasItem", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.STRING_LITERAL)),
+    DOING_PARKOUR(true, "doingParkour", List.of(ActionParamKind.BOOL_LITERAL)),
+    POTION(true, "hasPotion", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    SNEAKING(true, "isSneaking", List.of(ActionParamKind.BOOL_LITERAL)),
+    FLYING(true, "isFlying", List.of(ActionParamKind.BOOL_LITERAL)),
+    HEALTH(true, "hasHealth", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.NORMAL_EXPRESSION)),
+    MAX_HEALTH(true, "hasMaxHealth", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.NORMAL_EXPRESSION)),
+    HUNGER(true, "hasHunger", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL, ActionParamKind.NORMAL_EXPRESSION)),
+    GAME_MODE(true, "hasGamemode", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL)),
+    PLACEHOLDER(false, "_", List.of(ActionParamKind.BOOL_LITERAL)),
+    TEAM(true, "hasTeam", List.of(ActionParamKind.BOOL_LITERAL, ActionParamKind.STRING_LITERAL));
 
     public final boolean canBeUsed;
     public final String name;
