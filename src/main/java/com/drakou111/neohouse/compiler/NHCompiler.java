@@ -23,6 +23,7 @@ public class NHCompiler implements Compiler {
         String code = """
                 function long b (long p.something) {
                     pause(2);
+                    if (1 == 1.0) {}
                     return 1;
                 }
                 
@@ -74,6 +75,7 @@ public class NHCompiler implements Compiler {
         node = functionParamLoweringVisitor.analyze(node);
 
         // TODO: SOMEHOW handle actions and conditions :sob:                                                  [DONE]
+        // TODO: Handle type management for booleanconditions (eg: long == double)
         // TODO: Avoid illegal calls in events or other stuff like that...
         // TODO: Avoid restrictions... Ex: too many of the same statement, or conditional stack, or random
         // TODO: Rename all variables with small names...

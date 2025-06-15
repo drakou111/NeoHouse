@@ -19,6 +19,7 @@ import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.exceptions.ParsingException;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;
@@ -63,8 +64,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             if (reuseLeft) {
                 accVar = (VariableNode) leftRes.simple;
             } else {
-                accVar = makeTemp(leftRes.simple.token);
-                accVar.type = varType;
+                accVar = makeTemp(leftRes.simple.token, varType);
                 stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) leftRes.simple, bin.token));
             }
 
@@ -108,8 +108,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                     if (reuse) {
                         result = (VariableNode) opRes.simple();
                     } else {
-                        result = makeTemp(un.token);
-                        result.type = toType;
+                        result = makeTemp(un.token, toType);
                         stmts.add(new AssignationNode(result, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
                     }
 
@@ -124,8 +123,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             if (reuse) {
                 accVar = (VariableNode) opRes.simple();
             } else {
-                accVar = makeTemp(opRes.simple().token);
-                accVar.type = un.operand.type;
+                accVar = makeTemp(opRes.simple().token, un.operand.type);
                 stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
             }
 
@@ -171,6 +169,18 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             LowerResult leftRes  = lowerExpr(be.left);
             LowerResult rightRes = lowerExpr(be.right);
 
+            VariableType leftType = leftRes.simple.type;
+            VariableType rightType = rightRes.simple.type;
+
+            VariableType varType;
+            if (leftType == VariableType.VAR || rightType == VariableType.VAR) {
+                varType = VariableType.VAR;
+            } else if (leftType == rightType) {
+                varType = leftType;
+            } else {
+                throw new SemanticException(be.token, "Type mismatch in boolean expression: left is " + leftType + ", right is " + rightType);
+            }
+
             List<StatementNode> stmts = new ArrayList<>();
             stmts.addAll(leftRes.stmts());
             stmts.addAll(rightRes.stmts());
@@ -181,7 +191,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             } else if (leftRes.simple instanceof VariableNode v2) {
                 leftVar = v2;
             } else {
-                leftVar = makeTemp(leftRes.simple.token);
+                leftVar = makeTemp(leftRes.simple.token, varType);
                 stmts.add(new AssignationNode(leftVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) leftRes.simple, be.token));
             }
 
@@ -238,9 +248,9 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         return new LowerResult(expr, List.of());
     }
 
-    private VariableNode makeTemp(Token basedOn) {
+    private VariableNode makeTemp(Token basedOn, VariableType type) {
         String name = VAR_PREFIX + (tempCounter++);
-        return new VariableNode(VariableType.VAR, Holder.PLAYER, name, null, basedOn);
+        return new VariableNode(type, Holder.PLAYER, name, null, basedOn);
     }
 
     @Override
