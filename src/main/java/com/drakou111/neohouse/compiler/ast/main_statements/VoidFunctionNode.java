@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.compiler.ast.main_statements;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.ast.main.ParameterListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.lexer.Token;

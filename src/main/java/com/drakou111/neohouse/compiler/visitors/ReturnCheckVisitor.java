@@ -19,7 +19,7 @@ public class ReturnCheckVisitor extends EmptyVisitor<Void> {
     @Override
     public Void visitTypedFunction(TypedFunctionNode function) {
         if (!allPathsReturn(function.statements)) {
-            throw new SemanticException(function.token, "Function '" + function.name + "' may fall through without returning a value");
+            throw new SemanticException(function.token, "Function '" + function.name + "' may fall through without returning a value. Make sure the function will always return a value.");
         }
         return null;
     }

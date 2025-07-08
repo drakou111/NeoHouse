@@ -21,10 +21,36 @@ public class NHCompiler implements Compiler {
 
     public static void main(String[] args) {
         String code = """
-                function long b (long p.something) {
-                    pause(2);
-                    if (1 == 1.0) {}
-                    return 1;
+                function test() {
+                    if (p.va == 1) {
+                        p.va = 0;
+                        p.va = 1;
+                        p.va = 2;
+                        p.va = 3;
+                        p.va = 4;
+                        p.va = 5;
+                        p.va = 6;
+                        p.va = 7;
+                        p.va = 8;
+                        p.va = 9;
+                        p.va = 9;
+                        p.va = 9;
+                        p.va = 9;
+                        p.va = 9;
+                        p.va = 9;
+                        p.va = 9;
+                        p.va = 9;
+                        p.va = 0;
+                        p.va = 1;
+                        p.va = 2;
+                        p.va = 3;
+                        p.va = 4;
+                        p.va = 5;
+                        p.va = 6;
+                        p.va = 7;
+                        p.va = 8;
+                        p.va = 9;
+                    }
                 }
                 
                 """;
@@ -34,6 +60,8 @@ public class NHCompiler implements Compiler {
 
         Parser parser = new Parser(tokens);
         MainNode node = parser.parseMain();
+
+        // TODO: - 21 -> -21
 
         PlaceholderValidationVisitor pv = new PlaceholderValidationVisitor();
         node = pv.analyze(node);
@@ -70,18 +98,30 @@ public class NHCompiler implements Compiler {
         ReturnContextChecker returnContextChecker = new ReturnContextChecker();
         returnContextChecker.analyze(node);
 
-        // Makes all functions void with 0 parameters.
+        // TODO: can only use return in conditionals/randoms, or as the very last statement. IF at very end of functions, simply remove it, its literally useless, especially since exits can't exit in functions directly.
+
+        // Makes all functions void with 0 parameters by using global variables to share the parameters and outputs.
         FunctionParamLoweringVisitor functionParamLoweringVisitor = new FunctionParamLoweringVisitor();
         node = functionParamLoweringVisitor.analyze(node);
 
-        // TODO: SOMEHOW handle actions and conditions :sob:                                                  [DONE]
-        // TODO: Handle type management for booleanconditions (eg: long == double)
-        // TODO: Avoid illegal calls in events or other stuff like that...
-        // TODO: Avoid restrictions... Ex: too many of the same statement, or conditional stack, or random
-        // TODO: Rename all variables with small names...
-        // TODO: Rename all function names with small names...
+        // Unfold randoms with multiple statements into function calls
+        RandomUnfoldingVisitor randomUnfoldingVisitor = new RandomUnfoldingVisitor();
+        node = randomUnfoldingVisitor.analyze(node);
+
+        // unfold statements with too many of the same action to be put into a new function. For now, don't check if its valid.
+        ActionCountSplittingVisitor actionCountSplittingVisitor = new ActionCountSplittingVisitor();
+        node = actionCountSplittingVisitor.analyze(node);
+
+        // TODO: ^ same but for conditions, but just make it check.
+
+        // Prevent actions from being in the wrong areas. Like an IF inside an IF.
+        ActionRestrictionVisitor actionRestrictionVisitor = new ActionRestrictionVisitor();
+        node = actionRestrictionVisitor.analyze(node);
+
         // TODO: Add built-in functions...
 
         System.out.println(StringHelper.formatLikeJson(node.toString(), "  "));
     }
+
+
 }

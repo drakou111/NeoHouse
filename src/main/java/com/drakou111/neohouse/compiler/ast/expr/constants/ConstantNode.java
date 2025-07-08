@@ -1,9 +1,10 @@
 package com.drakou111.neohouse.compiler.ast.expr.constants;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.exceptions.SemanticException;
 
 public class ConstantNode extends NormalExpressionNode {
     public final ConstantValue value;
@@ -12,6 +13,12 @@ public class ConstantNode extends NormalExpressionNode {
         super(type);
         this.value = value;
         this.token = token;
+
+        if (value instanceof StringValue str) {
+            if (str.value.length() > 256) {
+                throw new SemanticException(token, "The constant '" + str.value + "' is too long.");
+            }
+        }
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.compiler.ast.main;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.helpers.StringHelper;
 
 import java.util.ArrayList;
@@ -10,10 +10,15 @@ public class StatementListNode extends StatementNode {
     public List<StatementNode> statements;
 
     public StatementListNode(final List<StatementNode> statements) {
-        if (statements == null || statements.isEmpty())
-            this.statements = new ArrayList<>();
-        else
-            this.statements = new ArrayList<>(statements);
+        this.statements = new ArrayList<>();
+        if (statements == null) return;
+
+        for (StatementNode statement : statements) {
+            if (statement instanceof StatementListNode s)
+                this.statements.addAll(s.statements);
+            else
+                this.statements.add(statement);
+        }
     }
 
     @Override

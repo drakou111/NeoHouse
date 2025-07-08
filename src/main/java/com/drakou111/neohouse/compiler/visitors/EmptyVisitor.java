@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.compiler.visitors;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantArrayNode;
@@ -131,7 +130,7 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
         return null;
     }
 
-    @Override public T visitVoidFunctionCallStatement(VoidFunctionCallNode function) {
+    @Override public T visitVoidFunctionCall(VoidFunctionCallNode function) {
         function.arguments.accept(this);
         return null;
     }

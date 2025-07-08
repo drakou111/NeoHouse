@@ -1,20 +1,9 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
 import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compiler.ast.main.ConstantPrimitiveList;
-import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
-import com.drakou111.neohouse.compiler.ast.main.MainNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.*;
-import com.drakou111.neohouse.compiler.ast.statement.*;
-import com.drakou111.neohouse.compiler.ast.expr.*;
-import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
-import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
-import com.drakou111.neohouse.compiler.ast.main.ParameterListNode;
-import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
-import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.constants.Placeholder;
 import com.drakou111.neohouse.exceptions.SemanticException;

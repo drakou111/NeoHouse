@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.compiler.ast.expr.constants;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.lexer.Token;

@@ -305,7 +305,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     }
 
     @Override
-    public ASTNode visitVoidFunctionCallStatement(VoidFunctionCallNode callStmt) {
+    public ASTNode visitVoidFunctionCall(VoidFunctionCallNode callStmt) {
         List<StatementNode> stmts = new ArrayList<>();
         List<NormalExpressionNode> newArgs = new ArrayList<>();
         for (NormalExpressionNode arg : callStmt.arguments.expressions) {

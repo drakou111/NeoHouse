@@ -78,7 +78,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     }
 
     @Override
-    public ASTNode visitVoidFunctionCallStatement(VoidFunctionCallNode call) {
+    public ASTNode visitVoidFunctionCall(VoidFunctionCallNode call) {
         VoidFunctionNode def = voidFunctions.get(call.functionName);
         if (def == null) {
             throw new SemanticException(call.token, "Undefined void function '" + call.functionName + "'");

@@ -1,6 +1,6 @@
 package com.drakou111.neohouse.compiler.ast.statement;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.lexer.Token;
@@ -17,7 +17,7 @@ public class VoidFunctionCallNode extends StatementNode {
 
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visitVoidFunctionCallStatement(this);
+        return visitor.visitVoidFunctionCall(this);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.drakou111.neohouse.compiler.ast;
+package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
@@ -39,7 +39,7 @@ public interface ASTVisitor<T> {
     T visitDefinition(DefinitionNode definition);
     T visitDeclaration(DeclarationNode declaration);
     T visitAssignation(AssignationNode assignation);
-    T visitVoidFunctionCallStatement(VoidFunctionCallNode function);
+    T visitVoidFunctionCall(VoidFunctionCallNode function);
     T visitGlobalFunctionCall(GlobalFunctionCallNode function);
     T visitRandom(RandomNode random);
     T visitRepeat(RepeatNode random);

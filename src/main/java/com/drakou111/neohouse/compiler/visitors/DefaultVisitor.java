@@ -116,12 +116,13 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
     }
 
     @Override public ASTNode visitConditional(ConditionalNode conditional) {
-        ExpressionNode cond = (ExpressionNode)conditional.condition.accept(this);
+        ExpressionNode cond = null;
+        if (conditional.condition != null)
+            cond = (ExpressionNode)conditional.condition.accept(this);
         StatementListNode thenBlock = (StatementListNode)conditional.thenBlock.accept(this);
         StatementListNode elseBlock = null;
-        if (conditional.elseBlock != null) {
+        if (conditional.elseBlock != null)
             elseBlock = (StatementListNode)conditional.elseBlock.accept(this);
-        }
         return new ConditionalNode(cond, thenBlock, elseBlock, conditional.token);
     }
 
@@ -140,7 +141,7 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         return new AssignationNode(var, assignation.operator, expr, assignation.token);
     }
 
-    @Override public ASTNode visitVoidFunctionCallStatement(VoidFunctionCallNode function) {
+    @Override public ASTNode visitVoidFunctionCall(VoidFunctionCallNode function) {
         ArgumentListNode args = (ArgumentListNode)function.arguments.accept(this);
         return new VoidFunctionCallNode(function.functionName, args, function.token);
     }

@@ -65,7 +65,7 @@ public class LinkFunctionVisitor extends DefaultVisitor {
     }
 
     @Override
-    public ASTNode visitVoidFunctionCallStatement(VoidFunctionCallNode call) {
+    public ASTNode visitVoidFunctionCall(VoidFunctionCallNode call) {
         String fname = call.functionName;
         VoidFunctionNode def = voidDefs.get(fname);
         if (def == null) {

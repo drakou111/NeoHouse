@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.compiler.ast;
 
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public abstract class ASTNode {
     public Token token;

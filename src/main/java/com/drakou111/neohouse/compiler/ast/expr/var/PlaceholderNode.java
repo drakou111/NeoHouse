@@ -1,10 +1,13 @@
 package com.drakou111.neohouse.compiler.ast.expr.var;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
+import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
+import com.drakou111.neohouse.compiler.ast.expr.constants.StringValue;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.main.ConstantPrimitiveList;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.exceptions.SemanticException;
 
 public class PlaceholderNode extends NormalExpressionNode {
 

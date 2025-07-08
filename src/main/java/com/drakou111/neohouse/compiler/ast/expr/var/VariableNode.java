@@ -1,10 +1,11 @@
 package com.drakou111.neohouse.compiler.ast.expr.var;
 
-import com.drakou111.neohouse.compiler.ast.ASTVisitor;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.exceptions.SemanticException;
 
 public class VariableNode extends NormalExpressionNode {
     public final Holder holder;
@@ -13,11 +14,15 @@ public class VariableNode extends NormalExpressionNode {
 
     public VariableNode(final VariableType type, final Holder holder, final String name, final String teamName, final Token token) {
         super(type);
+
         this.type = type;
         this.holder = holder;
         this.name = name;
         this.teamName = teamName;
         this.token = token;
+
+        if (name.length() > 16)
+            throw new SemanticException(token, "The variable named '" + name + "' is too long.");
     }
 
     @Override

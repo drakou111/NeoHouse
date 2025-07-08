@@ -63,4 +63,8 @@ public enum RestrictionAction {
         int page = idx / Slots.GENERAL_LIST_H6.length;
         return new PageSlot(page, slotId);
     }
+
+    public List<AddAction> getAllowedActions() {
+        return allowedActions;
+    }
 }
