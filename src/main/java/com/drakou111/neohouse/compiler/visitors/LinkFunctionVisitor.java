@@ -1,7 +1,6 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
@@ -10,6 +9,7 @@ import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
+import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.HashMap;

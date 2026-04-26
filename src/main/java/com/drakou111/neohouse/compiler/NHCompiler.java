@@ -2,12 +2,10 @@ package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
-import com.drakou111.neohouse.compiler.helpers.StringHelper;
 import com.drakou111.neohouse.compiler.lexer.Lexer;
 import com.drakou111.neohouse.compiler.lexer.Token;
-import com.drakou111.neohouse.compiler.visitors.*;
 import com.drakou111.neohouse.compiler.parser.Parser;
-import com.drakou111.neohouse.constants.Commands;
+import com.drakou111.neohouse.compiler.visitors.*;
 import com.drakou111.neohouse.exceptions.CompilingException;
 
 import java.util.List;

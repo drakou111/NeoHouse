@@ -1,12 +1,12 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.BooleanExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
+import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 public class TypeInferringVisitor extends DefaultVisitor {

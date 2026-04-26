@@ -1,9 +1,9 @@
 package com.drakou111.neohouse.compiler.ast.main_statements;
 
-import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class GlobalDeclarationNode extends MainStatementNode {
     public VariableNode variable;

@@ -1,11 +1,11 @@
 package com.drakou111.neohouse.compiler.ast.statement;
 
-import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
-import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
+import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class AssignationNode extends StatementNode {
     public final VariableNode variable;

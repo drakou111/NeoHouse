@@ -1,10 +1,10 @@
 package com.drakou111.neohouse.compiler.ast.main_statements;
 
-import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
-import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.main.ParameterListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
+import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class TypedFunctionNode extends FunctionNode {
     public final VariableType returnType;

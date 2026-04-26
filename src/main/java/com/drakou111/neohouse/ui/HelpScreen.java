@@ -2,7 +2,10 @@ package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.compiler.enums.ActionParamKind;
 import com.drakou111.neohouse.compiler.enums.VariableType;
-import com.drakou111.neohouse.constants.*;
+import com.drakou111.neohouse.constants.AddAction;
+import com.drakou111.neohouse.constants.AddCondition;
+import com.drakou111.neohouse.constants.Event;
+import com.drakou111.neohouse.constants.Placeholder;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;

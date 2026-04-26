@@ -1,14 +1,14 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
-import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
 import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
 import com.drakou111.neohouse.compiler.ast.statement.VoidReturnNode;
+import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
+import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.compiler.helpers.HolderAndName;
 
 import java.util.List;

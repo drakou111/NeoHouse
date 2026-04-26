@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.compiler.parser;
 
-import com.drakou111.neohouse.compiler.enums.*;
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.*;
@@ -9,6 +8,7 @@ import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.enums.*;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.lexer.TokenType;
 import com.drakou111.neohouse.constants.AddAction;

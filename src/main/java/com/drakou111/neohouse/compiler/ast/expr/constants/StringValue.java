@@ -1,7 +1,6 @@
 package com.drakou111.neohouse.compiler.ast.expr.constants;
 
 import com.drakou111.neohouse.compiler.enums.VariableType;
-import com.drakou111.neohouse.exceptions.SemanticException;
 
 public final class StringValue implements ConstantPrimitive {
     public final String value;

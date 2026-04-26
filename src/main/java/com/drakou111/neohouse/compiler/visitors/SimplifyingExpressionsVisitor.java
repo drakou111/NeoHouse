@@ -1,18 +1,9 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
-import com.drakou111.neohouse.compiler.enums.BooleanOperator;
-import com.drakou111.neohouse.compiler.enums.Holder;
-import com.drakou111.neohouse.compiler.enums.UnaryOperator;
-import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
-import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
-import com.drakou111.neohouse.compiler.ast.expr.constants.BoolValue;
-import com.drakou111.neohouse.compiler.ast.expr.constants.DoubleValue;
-import com.drakou111.neohouse.compiler.ast.expr.constants.LongValue;
-import com.drakou111.neohouse.compiler.ast.expr.constants.StringValue;
+import com.drakou111.neohouse.compiler.ast.expr.constants.*;
 import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
@@ -21,8 +12,8 @@ import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.enums.*;
 import com.drakou111.neohouse.compiler.lexer.Token;
-import com.drakou111.neohouse.exceptions.ParsingException;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;

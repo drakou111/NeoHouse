@@ -1,13 +1,11 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.*;
-import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.constants.AddAction;
 
 import java.util.ArrayList;

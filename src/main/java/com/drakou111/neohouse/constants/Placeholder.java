@@ -1,7 +1,6 @@
 package com.drakou111.neohouse.constants;
 
 import com.drakou111.neohouse.compiler.enums.VariableType;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.Arrays;
 import java.util.List;

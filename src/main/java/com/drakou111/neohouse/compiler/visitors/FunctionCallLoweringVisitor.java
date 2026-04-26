@@ -1,8 +1,6 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
-import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.compiler.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
@@ -14,6 +12,8 @@ import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
 import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
 import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
+import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
+import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;

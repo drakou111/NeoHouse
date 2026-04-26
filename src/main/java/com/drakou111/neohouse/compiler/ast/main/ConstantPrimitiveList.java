@@ -1,9 +1,9 @@
 package com.drakou111.neohouse.compiler.ast.main;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compiler.helpers.StringHelper;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 import java.util.ArrayList;
 import java.util.List;

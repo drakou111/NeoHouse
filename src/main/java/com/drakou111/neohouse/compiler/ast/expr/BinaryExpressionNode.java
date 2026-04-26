@@ -1,9 +1,9 @@
 package com.drakou111.neohouse.compiler.ast.expr;
 
-import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.enums.BinaryOperator;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class BinaryExpressionNode extends NormalExpressionNode {
     public final BinaryOperator operator;

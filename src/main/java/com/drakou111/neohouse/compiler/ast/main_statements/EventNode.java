@@ -1,10 +1,10 @@
 package com.drakou111.neohouse.compiler.ast.main_statements;
 
-import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
-import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
+import com.drakou111.neohouse.constants.Event;
 
 public class EventNode extends MainStatementNode {
     public final Event event;

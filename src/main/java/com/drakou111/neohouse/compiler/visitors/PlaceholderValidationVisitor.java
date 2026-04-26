@@ -1,8 +1,8 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
+import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.main.ConstantPrimitiveList;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.constants.Placeholder;

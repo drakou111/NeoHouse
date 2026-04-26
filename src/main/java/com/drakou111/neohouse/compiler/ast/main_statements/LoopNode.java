@@ -1,8 +1,8 @@
 package com.drakou111.neohouse.compiler.ast.main_statements;
 
-import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class LoopNode extends FunctionNode {
     public final long tickDelay;
