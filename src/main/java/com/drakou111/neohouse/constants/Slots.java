@@ -70,7 +70,7 @@ public class Slots {
     // SEND_LOBBY
     public static final int ACTION_SEND_LOBBY_LOBBY = 10;
 
-    // SET_VARIABLE
+    // SET_VARIABLE -> PLAYER/GLOBAL
     public static final int ACTION_SET_VARIABLE_HOLDER = 10;
     public static final int ACTION_SET_VARIABLE_VAR = 11;
     public static final int ACTION_SET_VARIABLE_OPERATION = 12;
@@ -140,7 +140,9 @@ public class Slots {
     public static final int ACTION_DROP_ITEM_DROP_NATURALLY = 12;
     public static final int ACTION_DROP_ITEM_DISABLE_MERGE = 13;
     public static final int ACTION_DROP_ITEM_PRIORITIZE_PLAYER = 14;
-    public static final int ACTION_DROP_ITEM_FALLBACK_INVENTORY = 15;
+    public static final int ACTION_DROP_ITEM_DESPAWN_DURATION = 15;
+    public static final int ACTION_DROP_ITEM_PICKUP_DELAY = 16;
+    public static final int ACTION_DROP_ITEM_FALLBACK_INVENTORY = 19;
 
     // CHANGE_VELOCITY
     public static final int ACTION_CHANGE_VELOCITY_X = 10;
@@ -169,13 +171,23 @@ public class Slots {
     public static final int CONDITION_GROUP_TYPE = 11;
     public static final int CONDITION_GROUP_INCLUDE_HIGHER = 12;
 
-    // VARIABLE
+    // VARIABLE (PLAYER/GLOBAL)
     public static final int CONDITION_VARIABLE_INVERT = 10;
     public static final int CONDITION_VARIABLE_HOLDER = 11;
     public static final int CONDITION_VARIABLE_VAR = 12;
     public static final int CONDITION_VARIABLE_COMPARATOR = 13;
     public static final int CONDITION_VARIABLE_VALUE = 14;
     public static final int CONDITION_VARIABLE_FALLBACK_VALUE = 15;
+
+
+    // VARIABLE (TEAM)
+    public static final int CONDITION_TEAM_VARIABLE_INVERT = 10;
+    public static final int CONDITION_TEAM_VARIABLE_HOLDER = 11;
+    public static final int CONDITION_TEAM_VARIABLE_TEAM_NAME = 12;
+    public static final int CONDITION_TEAM_VARIABLE_VAR = 13;
+    public static final int CONDITION_TEAM_VARIABLE_COMPARATOR = 14;
+    public static final int CONDITION_TEAM_VARIABLE_VALUE = 15;
+    public static final int CONDITION_TEAM_VARIABLE_FALLBACK_VALUE = 16;
 
     // PERMISSION
     public static final int CONDITION_PERMISSION_INVERT = 10;
@@ -262,6 +274,10 @@ public class Slots {
     public static final int CONDITION_IS_ITEM_WHERE_CHECK = 13;
     public static final int CONDITION_IS_ITEM_AMOUNT = 14;
 
+    // FISHING_ENVIRONMENT
+    public static final int CONDITION_FISHING_ENVIRONMENT_INVERT = 10;
+    public static final int CONDITION_FISHING_ENVIRONMENT_ENVIRONMENT = 11;
+
 
     /*************\
     *   GENERAL   *
@@ -279,5 +295,6 @@ public class Slots {
     public static final int GENERAL_NOTE_H4 = 32;
     public static final int GENERAL_NEXT_H4 = 35;
     public static final int GENERAL_CONFIRM = 11;
+    public static final int[] GENERAL_LIST_H4 = new int[]{ 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25 };
 
 }

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew compileJava)",
+      "Bash(./gradlew compileJava --rerun-tasks)",
+      "Bash(./gradlew tasks *)",
+      "Bash(xargs grep *)",
+      "Bash(del *)"
+    ]
+  }
+}

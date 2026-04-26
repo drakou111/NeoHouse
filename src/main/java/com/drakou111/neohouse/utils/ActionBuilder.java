@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.utils;
 
+import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.*;
 import com.drakou111.neohouse.constants.*;
@@ -23,6 +24,7 @@ public class ActionBuilder {
     public ActionBuilder clickSlotAndWait(int s, boolean leftCLick) {
         actions.add(new SlotAction(s, leftCLick));
         actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
         return this;
     }
 
@@ -34,6 +36,7 @@ public class ActionBuilder {
     public ActionBuilder sendChatAndWait(String s) {
         actions.add(new ChatAction(s));
         actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
         return this;
     }
 
@@ -51,34 +54,42 @@ public class ActionBuilder {
         for (int i = 0; i < pages; i++) {
             actions.add(new SlotAction(Slots.GENERAL_NEXT_H6, true));
             actions.add(new WaitForAction(ContainerScreen.class, true));
+            actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
         }
         return this;
     }
 
     public ActionBuilder chatInput(String string, int slot) {
-
         String capped = string.length() > StringLimits.CHAT_TEXT ? string.substring(0, StringLimits.CHAT_TEXT) : string;
 
         actions.add(new SlotAction(slot, true));
         actions.add(new WaitForAction(ContainerScreen.class, false));
+        actions.add(new WaitTicksAction(Math.max(1, NeoHouseConfig.get().clickDelay - 1)));
         actions.add(new ChatAction(capped));
         actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
         return this;
     }
 
     public ActionBuilder anvilInput(String string, int slot) {
-
         String capped = string.length() > StringLimits.ANVIL_TEXT ? string.substring(0, StringLimits.ANVIL_TEXT) : string;
 
         actions.add(new SlotAction(slot, true));
         actions.add(new WaitForAction(AnvilScreen.class, true));
+        actions.add(new WaitTicksAction(Math.max(1, NeoHouseConfig.get().clickDelay - 1)));
         actions.add(new AnvilAction(capped));
         actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
         return this;
     }
 
-    public ActionBuilder search(String text, Item itemType, boolean leftClick, ActionBuilder onFound, ActionBuilder onNotFound) {
+    public ActionBuilder searchH6(String text, Item itemType, boolean leftClick, ActionBuilder onFound, ActionBuilder onNotFound) {
         actions.add(new SearchAction(Slots.GENERAL_LIST_H6, text, itemType, Slots.GENERAL_NEXT_H6, leftClick, onFound != null ? onFound.get() : null, onNotFound != null ? onNotFound.get() : null));
+        return this;
+    }
+
+    public ActionBuilder searchH4(String text, Item itemType, boolean leftClick, ActionBuilder onFound, ActionBuilder onNotFound) {
+        actions.add(new SearchAction(Slots.GENERAL_LIST_H4, text, itemType, Slots.GENERAL_NEXT_H4, leftClick, onFound != null ? onFound.get() : null, onNotFound != null ? onNotFound.get() : null));
         return this;
     }
 
@@ -140,10 +151,10 @@ public class ActionBuilder {
     }
 
     public ActionBuilder removeFunctionIfPresent(String name) {
-        return this.search(name, null, false,
-                    new ActionBuilder().clickSlotAndWait(Slots.FUNCTION_DELETE, true).clickSlotAndWait(Slots.GENERAL_CONFIRM, true),
-                    new ActionBuilder().empty() // Do nothing
-                );
+        return this.searchH6(name, null, false,
+                             new ActionBuilder().clickSlotAndWait(Slots.FUNCTION_DELETE, true).clickSlotAndWait(Slots.GENERAL_CONFIRM, true),
+                             new ActionBuilder().empty() // Do nothing
+                            );
     }
 
     public ActionBuilder empty() {

@@ -4,12 +4,15 @@ import com.drakou111.neohouse.compiler.ast.ASTNode;
 import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.enums.BooleanOperator;
 import com.drakou111.neohouse.compiler.enums.Holder;
+import com.drakou111.neohouse.compiler.enums.UnaryOperator;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
+import com.drakou111.neohouse.compiler.ast.expr.constants.BoolValue;
 import com.drakou111.neohouse.compiler.ast.expr.constants.DoubleValue;
 import com.drakou111.neohouse.compiler.ast.expr.constants.LongValue;
+import com.drakou111.neohouse.compiler.ast.expr.constants.StringValue;
 import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
@@ -89,30 +92,48 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             List<StatementNode> stmts = new ArrayList<>(opRes.stmts());
 
             switch (un.operator) {
-                case LONG_CAST, DOUBLE_CAST, STRING_CAST -> {
-                    VariableNode result;
-                    boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
-
+                case LONG_CAST, DOUBLE_CAST -> {
                     VariableType fromType = un.operand.type;
-                    VariableType toType = switch (un.operator) {
-                        case LONG_CAST -> VariableType.LONG;
-                        case DOUBLE_CAST -> VariableType.DOUBLE;
-                        case STRING_CAST -> VariableType.STRING;
-                        default -> throw new IllegalStateException("Unexpected cast operator");
-                    };
+                    VariableType toType = un.operator == UnaryOperator.LONG_CAST
+                            ? VariableType.LONG : VariableType.DOUBLE;
 
-                    if ((toType == VariableType.LONG || toType == VariableType.DOUBLE) && fromType == VariableType.STRING) {
+                    if (fromType == VariableType.STRING) {
                         throw new SemanticException(un.token, "Cannot cast STRING to " + toType);
                     }
 
+                    boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
+                    VariableNode result;
                     if (reuse) {
                         result = (VariableNode) opRes.simple();
                     } else {
                         result = makeTemp(un.token, toType);
                         stmts.add(new AssignationNode(result, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
                     }
-
                     result.type = toType;
+                    return new LowerResult(result, stmts);
+                }
+                case STRING_CAST -> {
+                    VariableType fromType = un.operand.type;
+                    if (fromType == VariableType.STRING) return opRes;
+                    // Constant literal → convert at compile time, no temp variable needed
+                    if (opRes.simple() instanceof ConstantPrimitiveNode constNode) {
+                        String strVal = switch (constNode.value) {
+                            case LongValue l   -> l.toString();
+                            case DoubleValue d -> d.toString();
+                            case BoolValue b   -> b.toString();
+                            default -> throw new SemanticException(un.token, "Cannot cast to string");
+                        };
+                        ConstantPrimitiveNode strConst = new ConstantPrimitiveNode(
+                                new StringValue(strVal), VariableType.STRING, un.token);
+                        return new LowerResult(strConst, opRes.stmts());
+                    }
+                    // Variable/placeholder → assign "" then += value
+                    VariableNode result = makeTemp(un.token, VariableType.STRING);
+                    ConstantPrimitiveNode emptyStr = new ConstantPrimitiveNode(
+                            new StringValue(""), VariableType.STRING, un.token);
+                    stmts.add(new AssignationNode(result, AssignmentOperator.ASSIGN, emptyStr, un.token));
+                    stmts.add(new AssignationNode(result, AssignmentOperator.ADD_ASSIGN,
+                            (NormalExpressionNode) opRes.simple(), un.token));
                     return new LowerResult(result, stmts);
                 }
             }

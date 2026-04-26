@@ -5,4 +5,10 @@ public enum BinaryOperator {
     SUBTRACT,               // int - int [or] double - double
     MULTIPLY,               // int * int [or] double * double
     DIVIDE,                 // int / int [or] double / double
+    BITWISE_OR,             // |
+    BITWISE_AND,            // &
+    BITWISE_XOR,            // ^
+    LEFT_SHIFT,             // <<
+    RIGHT_SHIFT,            // >>
+    UNSIGNED_RIGHT_SHIFT,   // >>>
 }

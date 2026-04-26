@@ -3,6 +3,8 @@ package com.drakou111.neohouse.compiler.visitors;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.GlobalDeclarationNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.DeclarationNode;
@@ -58,14 +60,27 @@ public class DeclarationCollectorVisitor extends EmptyVisitor<Void> {
         return null;
     }
 
-    // 3) Any local declaration anywhere (function body, conditional, etc.)
+    @Override public Void visitEvent(EventNode node) {
+        boolean saved = inFunction;
+        inFunction = true;
+        super.visitEvent(node);
+        inFunction = saved;
+        return null;
+    }
+
+    @Override public Void visitLoop(LoopNode node) {
+        boolean saved = inFunction;
+        inFunction = true;
+        super.visitLoop(node);
+        inFunction = saved;
+        return null;
+    }
+
     @Override public Void visitDeclaration(DeclarationNode decl) {
-        // decl.variable() holds the VariableNode with holder/name and type
-        String fullname = decl.variable.holder + "." + decl.variable.name;
-        if (!inFunction) {
-            // That would be a non‐function‐scoped “var” too early (shouldn't happen),
-            // but if it does, treat it as a "local" too.
+        if (inFunction) {
+            throw new SemanticException(decl.token, "Variable declarations must be at top-level scope, not inside functions, events, or loops");
         }
+        String fullname = decl.variable.holder + "." + decl.variable.name;
         if (allLocalNames.contains(fullname)) {
             throw new SemanticException(decl.token, "Duplicate local declaration of '" + fullname + "' in same or nested scope");
         }

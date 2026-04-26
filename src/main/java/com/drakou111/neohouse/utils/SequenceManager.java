@@ -18,6 +18,11 @@ public class SequenceManager {
         currentAction = action;
     }
 
+    /** Cancel whatever is currently running. */
+    public static void cancelAction() {
+        currentAction = null;
+    }
+
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         if (currentAction == null) return;

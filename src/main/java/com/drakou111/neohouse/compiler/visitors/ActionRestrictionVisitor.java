@@ -46,8 +46,9 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     public ASTNode visitConditional(ConditionalNode cond) {
         ensureAllowed(AddAction.CONDITIONAL, cond.token);
         RestrictionAction parent = ctx.peek();
-        RestrictionAction here = parent.name().startsWith("EVENT_")
-                ? RestrictionAction.valueOf(parent.name().replace("EVENT_", "EVENT_CONDITION_"))
+        String pname = parent.name();
+        RestrictionAction here = pname.startsWith("EVENT_") && !pname.startsWith("EVENT_CONDITION_")
+                ? RestrictionAction.valueOf(pname.replace("EVENT_", "EVENT_CONDITION_"))
                 : RestrictionAction.CONDITIONAL;
         ctx.push(here);
         super.visitConditional(cond);
@@ -55,13 +56,13 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
         return cond;
     }
 
-    // Random acts like conditionals in housing. You can't use conditionals inside of randoms, and you can use "exit" in them.
     @Override
     public ASTNode visitRandom(RandomNode random) {
         ensureAllowed(AddAction.RANDOM, random.token);
         RestrictionAction parent = ctx.peek();
-        RestrictionAction here = parent.name().startsWith("EVENT_")
-                ? RestrictionAction.valueOf(parent.name().replace("EVENT_", "EVENT_CONDITION_"))
+        String pname = parent.name();
+        RestrictionAction here = pname.startsWith("EVENT_") && !pname.startsWith("EVENT_CONDITION_")
+                ? RestrictionAction.valueOf(pname.replace("EVENT_", "EVENT_CONDITION_"))
                 : RestrictionAction.CONDITIONAL;
         ctx.push(here);
         super.visitRandom(random);
@@ -83,7 +84,9 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitVoidReturn(VoidReturnNode ret) {
-        ensureAllowed(AddAction.EXIT, ret.token);
+        if (ctx.peek() != RestrictionAction.NONE) {
+            ensureAllowed(AddAction.EXIT, ret.token);
+        }
         return super.visitVoidReturn(ret);
     }
 

@@ -279,6 +279,9 @@ public class Parser {
         if (check(TokenType.LONG_VALUE)) {
             String longText = advance().text;
             delay = Long.parseLong(longText);
+            if (delay < 4) {
+                throw new ParsingException(peek(), "Loops must have a delay of at least 4 ticks (currently set to " + delay + " ticks).");
+            }
         }
 
         consume(TokenType.RPAREN, "Expected ')'");
@@ -429,6 +432,15 @@ public class Parser {
     private NormalExpressionNode parsePrefix(Token token) {
         switch (token.type) {
             case MINUS:
+                if (check(TokenType.LONG_VALUE)) {
+                    Token numTok = advance();
+                    return new ConstantPrimitiveNode(new LongValue(-Long.parseLong(numTok.text)), VariableType.LONG, token);
+                }
+                if (check(TokenType.DOUBLE_VALUE)) {
+                    Token numTok = advance();
+                    return new ConstantPrimitiveNode(new DoubleValue(-Double.parseDouble(numTok.text.replace("d", ""))), VariableType.DOUBLE, token);
+                }
+                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), null, token);
             case LONG_CAST:
             case DOUBLE_CAST:
             case STRING_CAST:
@@ -608,20 +620,27 @@ public class Parser {
             case LPAREN -> Precedence.CALL;
             case PLUS, MINUS -> Precedence.TERM;
             case STAR, SLASH -> Precedence.FACTOR;
+            case BAR, AMPERSAND, CARET, LEFT_SHIFT, RIGHT_SHIFT, UNSIGNED_RIGHT_SHIFT -> Precedence.BITWISE;
             default -> Precedence.NONE;
         };
     }
 
     public AssignationNode parseAssignment() {
-
         VariableNode variableNode = parseVariable();
-
         Token operatorToken = advance();
-        AssignmentOperator operator = parseAssignmentOperatorFromToken(operatorToken);
 
+        // x++; and x--; as shorthand for x += 1 and x -= 1
+        if (operatorToken.type == TokenType.PLUS_PLUS || operatorToken.type == TokenType.MINUS_MINUS) {
+            consume(TokenType.SEMI, "Expect ';' after ++/--");
+            AssignmentOperator op = operatorToken.type == TokenType.PLUS_PLUS
+                    ? AssignmentOperator.ADD_ASSIGN : AssignmentOperator.SUB_ASSIGN;
+            NormalExpressionNode one = new ConstantPrimitiveNode(new LongValue(1L), VariableType.LONG, operatorToken);
+            return new AssignationNode(variableNode, op, one, operatorToken);
+        }
+
+        AssignmentOperator operator = parseAssignmentOperatorFromToken(operatorToken);
         NormalExpressionNode expression = parseExpression();
         consume(TokenType.SEMI, "Expect ';' after assignation");
-
         return new AssignationNode(variableNode, operator, expression, operatorToken);
     }
 
@@ -632,14 +651,32 @@ public class Parser {
     }
 
     VariableNode parseVariable() {
-        Token holderTok = consume(TokenType.IDENT, "Expect a holder identifier ('p', 'g' or 't')");
-        Holder holder = parseHolderFromToken(holderTok);
+        Token firstTok = consume(TokenType.IDENT, "Expect a variable");
+
+        // Bare name (no holder prefix): default to PLAYER holder.
+        // A holder prefix is only recognised when it's exactly p/g/t followed by its separator.
+        boolean isHolderPrefix = switch (firstTok.text) {
+            case "p", "g" -> check(TokenType.DOT);
+            case "t" -> check(TokenType.DOT) || check(TokenType.LBRACK);
+            default -> false;
+        };
+
+        if (!isHolderPrefix) {
+            return new VariableNode(null, Holder.PLAYER, firstTok.text, null, firstTok);
+        }
+
+        Holder holder = parseHolderFromToken(firstTok);
 
         String teamName = null;
         if (holder == Holder.TEAM && check(TokenType.LBRACK)) {
             advance();
-            Token nameTok = consume(TokenType.IDENT, "Expected team name inside '[ ]'");
-            teamName = nameTok.text;
+            if (check(TokenType.STRING_VALUE)) {
+                Token strTok = advance();
+                teamName = strTok.text.substring(1, strTok.text.length() - 1);
+            } else {
+                Token nameTok = consume(TokenType.IDENT, "Expected team name inside '[ ]'");
+                teamName = nameTok.text;
+            }
             consume(TokenType.RBRACK, "Expected ']' after team name");
         }
 
@@ -731,7 +768,13 @@ public class Parser {
             case MINUS_EQ -> AssignmentOperator.SUB_ASSIGN;
             case STAR_EQ -> AssignmentOperator.MUL_ASSIGN;
             case SLASH_EQ -> AssignmentOperator.DIV_ASSIGN;
-            default -> throw new ParsingException(operator, "Invalid operator type, expected '=', '+=', '-=', '*=' or '/='");
+            case BAR_EQ -> AssignmentOperator.BITWISE_OR_ASSIGN;
+            case AMP_EQ -> AssignmentOperator.BITWISE_AND_ASSIGN;
+            case CARET_EQ -> AssignmentOperator.BITWISE_XOR_ASSIGN;
+            case LEFT_SHIFT_EQ -> AssignmentOperator.LEFT_SHIFT_ASSIGN;
+            case RIGHT_SHIFT_EQ -> AssignmentOperator.RIGHT_SHIFT_ASSIGN;
+            case UNSIGNED_RIGHT_SHIFT_EQ -> AssignmentOperator.UNSIGNED_RIGHT_SHIFT_ASSIGN;
+            default -> throw new ParsingException(operator, "Invalid operator type, expected '=', '+=', '-=', '*=', '/=', '|=', '&=', '^=', '<<=', '>>=' or '>>>='");
         };
     }
 
@@ -741,7 +784,13 @@ public class Parser {
             case MINUS -> BinaryOperator.SUBTRACT;
             case STAR -> BinaryOperator.MULTIPLY;
             case SLASH -> BinaryOperator.DIVIDE;
-            default -> throw new ParsingException(operator, "Invalid binary operator, expected '+', '-', '*' or '/'");
+            case BAR -> BinaryOperator.BITWISE_OR;
+            case AMPERSAND -> BinaryOperator.BITWISE_AND;
+            case CARET -> BinaryOperator.BITWISE_XOR;
+            case LEFT_SHIFT -> BinaryOperator.LEFT_SHIFT;
+            case RIGHT_SHIFT -> BinaryOperator.RIGHT_SHIFT;
+            case UNSIGNED_RIGHT_SHIFT -> BinaryOperator.UNSIGNED_RIGHT_SHIFT;
+            default -> throw new ParsingException(operator, "Invalid binary operator, expected '+', '-', '*', '/', '|', '&', '^', '<<', '>>' or '>>>'");
         };
     }
 

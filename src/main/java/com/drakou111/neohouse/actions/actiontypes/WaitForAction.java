@@ -2,14 +2,18 @@ package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.ScreenEvents;
+import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
 public class WaitForAction extends Action {
+    private static final int TIMEOUT_TICKS = 200;
+
     private final Class<? extends Screen> screenClass;
     private final boolean waitForOpen;
     private boolean done = false;
     private boolean registered = false;
+    private int ticksWaited = 0;
 
     public WaitForAction(Class<? extends Screen> screenClass, boolean waitForOpen) {
         this.screenClass = screenClass;
@@ -22,7 +26,11 @@ public class WaitForAction extends Action {
             ScreenEvents.watch(this);
             registered = true;
         }
-        return done;
+        if (done) return true;
+        if (++ticksWaited > TIMEOUT_TICKS) {
+            throw new InterruptActionException("Timed out waiting for UI screen to " + (waitForOpen ? "open" : "close") + ".");
+        }
+        return false;
     }
 
     public boolean matchesScreen(Screen screen, boolean isOpening) {
@@ -35,5 +43,7 @@ public class WaitForAction extends Action {
 
     public void reset() {
         this.done = false;
+        this.registered = false;
+        this.ticksWaited = 0;
     }
 }

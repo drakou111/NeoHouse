@@ -80,8 +80,14 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     @Override
     public ASTNode visitVoidFunctionCall(VoidFunctionCallNode call) {
         VoidFunctionNode def = voidFunctions.get(call.functionName);
+
+        // Allow calling a typed function as void (return value discarded)
         if (def == null) {
-            throw new SemanticException(call.token, "Undefined void function '" + call.functionName + "'");
+            TypedFunctionNode typedDef = typedFunctions.get(call.functionName);
+            if (typedDef != null) {
+                return lowerTypedCallAsVoid(call, typedDef);
+            }
+            throw new SemanticException(call.token, "Undefined function '" + call.functionName + "'");
         }
 
         List<NormalExpressionNode> rawArgs = call.arguments.expressions;
@@ -103,6 +109,28 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
 
         stmts.add(new VoidFunctionCallNode(call.functionName, new ArgumentListNode(List.of()), call.token));
 
+        return new StatementListNode(stmts);
+    }
+
+    private ASTNode lowerTypedCallAsVoid(VoidFunctionCallNode call, TypedFunctionNode def) {
+        List<NormalExpressionNode> rawArgs = call.arguments.expressions;
+        List<VariableNode> params = def.parameters.parameters;
+
+        if (rawArgs.size() != params.size()) {
+            throw new SemanticException(call.token, "Function " + call.functionName + " expects " + params.size() + " arguments but got " + rawArgs.size());
+        }
+
+        List<StatementNode> stmts = new ArrayList<>();
+        for (int i = 0; i < rawArgs.size(); i++) {
+            ArgLowerResult lowered = lowerArgument(rawArgs.get(i));
+            stmts.addAll(lowered.stmts());
+            VariableNode param = params.get(i);
+            String newName = call.functionName + "_p$" + i;
+            VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
+            stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
+        }
+        // Call the function; the return value in o$ is simply discarded
+        stmts.add(new VoidFunctionCallNode(call.functionName, new ArgumentListNode(List.of()), call.token));
         return new StatementListNode(stmts);
     }
 

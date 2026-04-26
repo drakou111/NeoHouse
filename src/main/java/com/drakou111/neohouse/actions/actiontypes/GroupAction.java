@@ -17,12 +17,10 @@ public class GroupAction extends Action {
 
     @Override
     public boolean run(Minecraft mc) {
-        if (current == null) return true;
-
-        boolean finished = current.run(mc);
-
-        if (finished) this.current = it.hasNext() ? it.next() : null;
-
-        return (current == null);
+        while (current != null) {
+            if (!current.run(mc)) return false;
+            current = it.hasNext() ? it.next() : null;
+        }
+        return true;
     }
 }

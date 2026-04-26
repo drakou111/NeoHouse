@@ -135,6 +135,32 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 }
 
+// Generates BuildConstants.java with the current build date so it is baked into the JAR.
+def generatedBuildSrcDir = layout.buildDirectory.dir("generated/sources/buildinfo")
+sourceSets.main.java.srcDir generatedBuildSrcDir
+
+def generateBuildConstants = tasks.register("generateBuildConstants") {
+    def buildDate = new Date().format("MMMM d, yyyy")
+    inputs.property("buildDate", buildDate)
+    outputs.dir(generatedBuildSrcDir)
+    doLast {
+        def out = generatedBuildSrcDir.get()
+                .file("com/drakou111/neohouse/BuildConstants.java").asFile
+        out.parentFile.mkdirs()
+        out.text = """\
+package com.drakou111.neohouse;
+
+public final class BuildConstants {
+    public static final String BUILD_DATE = "${buildDate}";
+    private BuildConstants() {}
+}
+"""
+    }
+}
+
+tasks.named("compileJava").configure { dependsOn(generateBuildConstants) }
+neoForge.ideSyncTask generateBuildConstants
+
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

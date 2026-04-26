@@ -68,6 +68,7 @@ public class Lexer {
     }
 
     private TokenException errorWithPointer() {
-        return new TokenException(new Token(TokenType.UNKNOWN, input.charAt(position) + "", lines[line], line, column), "Tokenization error");
+        String lineContent = (line >= 1 && line <= lines.length) ? lines[line - 1] : "";
+        return new TokenException(new Token(TokenType.UNKNOWN, input.charAt(position) + "", lineContent, line, column), "Tokenization error");
     }
 }

@@ -16,7 +16,7 @@ public class ConditionFactory {
                 )
                 .onlyIf(group != null, () -> new ActionBuilder()
                         .clickSlotAndWait(Slots.CONDITION_GROUP_TYPE, true)
-                        .search(group, null, true, null, null)
+                        .searchH6(group, null, true, null, null)
                 )
                 .onlyIf(includeHigherGroups, () -> new ActionBuilder()
                         .clickSlotAndWait(Slots.CONDITION_GROUP_INCLUDE_HIGHER, true)
@@ -28,17 +28,24 @@ public class ConditionFactory {
                 .get();
     }
 
-    public static Action addConditionVariable(RestrictionCondition state, boolean invert, Holder holder, String variable, Comparator comparator, String value, String fallback, String note) {
+    public static Action addConditionVariable(RestrictionCondition state, boolean invert, Holder holder, String teamName, String variable, Comparator comparator, String value, String fallback, String note) {
+        if (state.pageSlotFor(AddCondition.VARIABLE) == null) throw new InterruptActionException("Cannot add condition 'Variable' here.");
+
+        return switch (holder) {
+            case PLAYER -> addConditionPlayerVariable(state, invert, variable, comparator, value, fallback, note);
+            case GLOBAL -> addConditionGlobalVariable(state, invert, variable, comparator, value, fallback, note);
+            case TEAM -> addConditionTeamVariable(state, invert, teamName, variable, comparator, value, fallback, note);
+        };
+    }
+
+
+    public static Action addConditionPlayerVariable(RestrictionCondition state, boolean invert, String variable, Comparator comparator, String value, String fallback, String note) {
         if (state.pageSlotFor(AddCondition.VARIABLE) == null) throw new InterruptActionException("Cannot add condition 'Variable' here.");
 
         return new ActionBuilder()
                 .addCondition(AddCondition.VARIABLE, state)
                 .onlyIf(invert, () -> new ActionBuilder()
                         .clickSlotAndWait(Slots.CONDITION_VARIABLE_INVERT, true)
-                )
-                .onlyIf(holder != null && holder != Holder.PLAYER, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.CONDITION_VARIABLE_HOLDER, true)
-                        .clickAndSelectSlot(holder.getPage(), holder.getSlotID())
                 )
                 .onlyIf(variable != null && !variable.trim().isEmpty() && !variable.equals("Kills"), () -> new ActionBuilder()
                         .chatInput(variable, Slots.CONDITION_VARIABLE_VAR)
@@ -48,14 +55,77 @@ public class ConditionFactory {
                         .clickAndSelectSlot(comparator.getPage(), comparator.getSlotID())
                 )
                 .onlyIf(value != null && !value.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(value, Slots.CONDITION_VARIABLE_VALUE)
+                        .anvilInput(value, Slots.CONDITION_VARIABLE_VALUE)
                 )
                 .onlyIf(fallback != null && !fallback.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(fallback, Slots.CONDITION_VARIABLE_FALLBACK_VALUE)
+                        .anvilInput(fallback, Slots.CONDITION_VARIABLE_FALLBACK_VALUE)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
                 )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .get();
+    }
+
+    public static Action addConditionGlobalVariable(RestrictionCondition state, boolean invert, String variable, Comparator comparator, String value, String fallback, String note) {
+        if (state.pageSlotFor(AddCondition.VARIABLE) == null) throw new InterruptActionException("Cannot add condition 'Variable' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.VARIABLE, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_VARIABLE_INVERT, true)
+                       )
+                .clickSlotAndWait(Slots.CONDITION_VARIABLE_HOLDER, true)
+                .onlyIf(variable != null && !variable.trim().isEmpty() && !variable.equals("Kills"), () -> new ActionBuilder()
+                        .chatInput(variable, Slots.CONDITION_VARIABLE_VAR)
+                       )
+                .onlyIf(comparator != null && comparator != Comparator.EQUAL, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_VARIABLE_COMPARATOR, true)
+                        .clickAndSelectSlot(comparator.getPage(), comparator.getSlotID())
+                       )
+                .onlyIf(value != null && !value.trim().isEmpty(), () -> new ActionBuilder()
+                        .anvilInput(value, Slots.CONDITION_VARIABLE_VALUE)
+                       )
+                .onlyIf(fallback != null && !fallback.trim().isEmpty(), () -> new ActionBuilder()
+                        .anvilInput(fallback, Slots.CONDITION_VARIABLE_FALLBACK_VALUE)
+                       )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                       )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .get();
+    }
+
+    public static Action addConditionTeamVariable(RestrictionCondition state, boolean invert, String teamName, String variable, Comparator comparator, String value, String fallback, String note) {
+        if (state.pageSlotFor(AddCondition.VARIABLE) == null) throw new InterruptActionException("Cannot add condition 'Variable' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.VARIABLE, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_TEAM_VARIABLE_INVERT, true)
+                       )
+                .clickSlotAndWait(Slots.CONDITION_TEAM_VARIABLE_HOLDER, true)
+                .clickSlotAndWait(Slots.CONDITION_TEAM_VARIABLE_HOLDER, true)
+                .onlyIf(teamName != null && !teamName.equals("None"), () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_TEAM_VARIABLE_TEAM_NAME, true)
+                        .searchH6(teamName, null, true, null, null)
+                       )
+                .onlyIf(variable != null && !variable.trim().isEmpty() && !variable.equals("Kills"), () -> new ActionBuilder()
+                        .chatInput(variable, Slots.CONDITION_TEAM_VARIABLE_VAR)
+                       )
+                .onlyIf(comparator != null && comparator != Comparator.EQUAL, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_TEAM_VARIABLE_COMPARATOR, true)
+                        .clickAndSelectSlot(comparator.getPage(), comparator.getSlotID())
+                       )
+                .onlyIf(value != null && !value.trim().isEmpty(), () -> new ActionBuilder()
+                        .anvilInput(value, Slots.CONDITION_TEAM_VARIABLE_VALUE)
+                       )
+                .onlyIf(fallback != null && !fallback.trim().isEmpty(), () -> new ActionBuilder()
+                        .anvilInput(fallback, Slots.CONDITION_TEAM_VARIABLE_FALLBACK_VALUE)
+                       )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                       )
                 .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
                 .get();
     }
@@ -89,7 +159,7 @@ public class ConditionFactory {
                 )
                 .onlyIf(region != null && !region.trim().isEmpty(), () -> new ActionBuilder()
                         .clickSlotAndWait(Slots.CONDITION_REGION_TYPE, true)
-                        .search(region, null, true, null, null)
+                        .searchH6(region, null, true, null, null)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
@@ -313,7 +383,7 @@ public class ConditionFactory {
                 )
                 .onlyIf(team != null && !team.equals("None") && !team.trim().isEmpty(), () -> new ActionBuilder()
                         .clickSlotAndWait(Slots.CONDITION_TEAM_TYPE, true)
-                        .search(team, null, true, null, null)
+                        .searchH6(team, null, true, null, null)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)
@@ -389,6 +459,24 @@ public class ConditionFactory {
                 )
                 .onlyIf(value != null, () -> new ActionBuilder()
                         .anvilInput(value, Slots.CONDITION_DAMAGE_AMOUNT_VALUE)
+                )
+                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                )
+                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .get();
+    }
+
+    public static Action addConditionFishingEnvironment(RestrictionCondition state, boolean invert, FishingEnvironment fishingEnvironment, String note) {
+        if (state.pageSlotFor(AddCondition.BLOCK_TYPE) == null) throw new InterruptActionException("Cannot add condition 'Fishing Environment' here.");
+
+        return new ActionBuilder()
+                .addCondition(AddCondition.BLOCK_TYPE, state)
+                .onlyIf(invert, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_FISHING_ENVIRONMENT_INVERT, true)
+                )
+                .onlyIf(fishingEnvironment != FishingEnvironment.WATER, () -> new ActionBuilder()
+                        .clickSlotAndWait(Slots.CONDITION_FISHING_ENVIRONMENT_ENVIRONMENT, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
                         .chatInput(note, Slots.GENERAL_NOTE_H4)

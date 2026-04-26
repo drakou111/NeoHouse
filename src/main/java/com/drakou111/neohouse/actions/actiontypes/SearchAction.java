@@ -46,8 +46,6 @@ public class SearchAction extends Action {
 
     @Override
     public boolean run(Minecraft mc) {
-        MessageUtils.debugToChat("Searching " + targetName + " step: " + step.name());
-
         if (mc.player == null) return true;
         AbstractContainerMenu menu = mc.player.containerMenu;
         if (menu == null) return true;
@@ -55,6 +53,7 @@ public class SearchAction extends Action {
         if (step == Step.STEP_SEARCH) {
             boolean found = false;
             for (int idx : primarySlots) {
+                if (idx < 0 || idx >= menu.slots.size()) continue;
                 Slot s = menu.getSlot(idx);
                 if (s.hasItem() && s.getItem().getHoverName().getString().equals(targetName) && (itemType == null || s.getItem().getItem() == itemType) && mc.gameMode != null) {
                     mc.gameMode.handleInventoryMouseClick(menu.containerId, idx, leftClick ? 0 : 1, ClickType.PICKUP, mc.player);
@@ -67,6 +66,10 @@ public class SearchAction extends Action {
                 step = Step.STEP_CLICK_BACKUP;
         }
         else if (step == Step.STEP_CLICK_BACKUP) {
+            if (backupSlot < 0 || backupSlot >= menu.slots.size()) {
+                step = Step.STEP_NOT_FOUND;
+                return false;
+            }
             Slot arrow = menu.getSlot(backupSlot);
             if (arrow.hasItem() && mc.gameMode != null) {
                 mc.gameMode.handleInventoryMouseClick(menu.containerId, backupSlot, 0, ClickType.PICKUP, mc.player);
