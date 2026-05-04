@@ -14,10 +14,13 @@ import com.drakou111.neohouse.compiler.lexer.TokenType;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
+import com.drakou111.neohouse.constants.ReservedCommands;
 import com.drakou111.neohouse.exceptions.ParsingException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Parser {
     private final List<Token> tokens;
@@ -90,6 +93,10 @@ public class Parser {
                 nodes.add(parseLoop());
             } else if (check(TokenType.EVENT)) {
                 nodes.add(parseEvent());
+            } else if (check(TokenType.COMMAND)) {
+                nodes.add(parseCommand());
+            } else if (check(TokenType.MENU)) {
+                nodes.add(parseMenu());
             } else if (isType(peek())) {
                 nodes.add(parseGlobalDeclaration());
             } else {
@@ -298,6 +305,111 @@ public class Parser {
         return new LoopNode(name, "", new StatementListNode(body), delay, loopToken);
     }
 
+    public CommandNode parseCommand() {
+        Token cmdToken = consume(TokenType.COMMAND, "Expected 'command' keyword");
+        Token nameToken = consume(TokenType.IDENT, "Expected command name");
+        if (nameToken.text.length() < 3)
+            throw new ParsingException(nameToken, "Command name must be at least 3 characters long (got '" + nameToken.text + "')");
+        if (ReservedCommands.NAMES.contains(nameToken.text.toLowerCase()))
+            throw new ParsingException(nameToken, "'" + nameToken.text + "' is a reserved server command and cannot be used as a command name");
+        String name = nameToken.text;
+
+        boolean targeted = false;
+        if (check(TokenType.IDENT)) {
+            String kw = peek().text;
+            if (kw.equals("target") || kw.equals("targeted")) {
+                advance();
+                targeted = true;
+            } else if (kw.equals("self")) {
+                advance();
+            }
+            // anything else is left for '(' or '{' parsing below
+        }
+
+        int priority = 0;
+        boolean listed = true;
+        if (check(TokenType.LPAREN)) {
+            advance(); // consume '('
+            while (!check(TokenType.RPAREN) && !isAtEnd()) {
+                Token nToken = consume(TokenType.IDENT, "Expected parameter name ('priority' or 'listed')");
+                consume(TokenType.EQ, "Expected '=' after parameter name '" + nToken.text + "'");
+                switch (nToken.text) {
+                    case "priority" -> {
+                        Token priorityToken = consume(TokenType.LONG_VALUE, "Expected integer (0-20) for 'priority'");
+                        priority = (int) Long.parseLong(priorityToken.text);
+                        if (priority < 0 || priority > 20)
+                            throw new ParsingException(priorityToken, "Priority must be between 0 and 20, got " + priority);
+                    }
+                    case "listed" -> {
+                        if (match(TokenType.TRUE))       listed = true;
+                        else if (match(TokenType.FALSE)) listed = false;
+                        else throw new ParsingException(peek(), "Expected 'true' or 'false' for 'listed'");
+                    }
+                    default -> throw new ParsingException(nToken, "Unknown command parameter '" + nToken.text + "'; expected 'priority' or 'listed'");
+                }
+                if (!check(TokenType.RPAREN)) consume(TokenType.COMMA, "Expected ',' between command parameters");
+            }
+            consume(TokenType.RPAREN, "Expected ')' after command options");
+        }
+
+        consume(TokenType.LBRACE, "Expected '{' to begin command body");
+        List<StatementNode> body = new ArrayList<>();
+        while (!check(TokenType.RBRACE) && !isAtEnd()) {
+            body.add(parseStatement());
+        }
+        consume(TokenType.RBRACE, "Expected '}' after command body");
+
+        return new CommandNode(name, targeted, priority, listed, new StatementListNode(body), cmdToken);
+    }
+
+    public MenuNode parseMenu() {
+        Token menuToken = consume(TokenType.MENU, "Expected 'menu' keyword");
+        Token nameToken = consume(TokenType.IDENT, "Expected menu name");
+        String name = nameToken.text;
+
+        consume(TokenType.LPAREN, "Expected '(' after menu name");
+        Token rowsToken = consume(TokenType.LONG_VALUE, "Expected number of rows (1-6)");
+        int rows = (int) Long.parseLong(rowsToken.text);
+        if (rows < 1 || rows > 6)
+            throw new ParsingException(rowsToken, "Menu rows must be between 1 and 6, got " + rows);
+        consume(TokenType.RPAREN, "Expected ')' after row count");
+
+        consume(TokenType.LBRACE, "Expected '{' to begin menu body");
+
+        List<SlotNode> slots = new ArrayList<>();
+        Set<Integer> usedSlots = new HashSet<>();
+        int maxSlotId = rows * 9 - 1;
+
+        while (!check(TokenType.RBRACE) && !isAtEnd()) {
+            Token slotToken = consume(TokenType.IDENT, "Expected 'slot<N>' inside menu body (e.g. slot0, slot4)");
+            if (!slotToken.text.matches("slot\\d+"))
+                throw new ParsingException(slotToken, "Expected 'slot<N>' (e.g. slot0, slot5), got '" + slotToken.text + "'");
+
+            int slotId = Integer.parseInt(slotToken.text.substring(4));
+            if (slotId < 0 || slotId > maxSlotId)
+                throw new ParsingException(slotToken, "Slot " + slotId + " out of range for a " + rows + "-row menu (0–" + maxSlotId + ")");
+            if (!usedSlots.add(slotId))
+                throw new ParsingException(slotToken, "Duplicate slot definition: slot" + slotId);
+
+            consume(TokenType.COLON, "Expected ':' after slot identifier");
+            consume(TokenType.LPAREN, "Expected '(' before item literal");
+            String item = parseItemLiteral();
+            consume(TokenType.RPAREN, "Expected ')' after item literal");
+
+            consume(TokenType.LBRACE, "Expected '{' to begin slot body");
+            List<StatementNode> body = new ArrayList<>();
+            while (!check(TokenType.RBRACE) && !isAtEnd()) {
+                body.add(parseStatement());
+            }
+            consume(TokenType.RBRACE, "Expected '}' after slot body");
+
+            slots.add(new SlotNode(slotId, item, new StatementListNode(body), slotToken));
+        }
+
+        consume(TokenType.RBRACE, "Expected '}' after menu body");
+        return new MenuNode(name, rows, slots, menuToken);
+    }
+
     public StatementNode parseStatement() {
 
         if (check(TokenType.RANDOM)) return parseRandom();
@@ -354,19 +466,28 @@ public class Parser {
         List<NormalExpressionNode> parsedArgs = new ArrayList<>();
 
         for (int i = 0; i < sig.params.size(); i++) {
-            ActionParamKind expected = sig.params.get(i);
+            Param param = sig.params.get(i);
 
-            switch (expected) {
+            switch (param.kind()) {
                 case STRING_LITERAL -> {
                     Token t = consume(TokenType.STRING_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a STRING literal");
-                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(t.text.substring(1, t.text.length()-1)), VariableType.STRING, nameToken));
+                    String stripped = t.text.substring(1, t.text.length() - 1);
+                    if (param.hasEnumConstraint() && !param.isValidEnum(stripped)) throw new ParsingException(t,
+                        "'" + stripped + "' is not a valid value for '" + actionName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
+                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, nameToken));
                 }
                 case LONG_LITERAL -> {
                     Token t = consume(TokenType.LONG_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a LONG literal");
-                    parsedArgs.add(new ConstantPrimitiveNode(new LongValue(Long.parseLong(t.text)), VariableType.STRING, nameToken));
+                    long val = Long.parseLong(t.text);
+                    if (!param.inRange(val)) throw new ParsingException(t,
+                        "Value " + val + " is out of range for '" + actionName + "' param #" + (i+1) + ". Must be between " + param.rangeMin() + " and " + param.rangeMax() + ".");
+                    parsedArgs.add(new ConstantPrimitiveNode(new LongValue(val), VariableType.STRING, nameToken));
                 }
                 case DOUBLE_LITERAL -> {
                     Token t = consume(TokenType.DOUBLE_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a DOUBLE literal");
+                    double val = Double.parseDouble(t.text);
+                    if (!param.inRange(val)) throw new ParsingException(t,
+                                                                        "Value " + val + " is out of range for '" + actionName + "' param #" + (i+1) + ". Must be between " + param.decimalMin() + " and " + param.decimalMax() + ".");
                     parsedArgs.add(new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(t.text)), VariableType.STRING, nameToken));
                 }
                 case BOOL_LITERAL -> {
@@ -379,6 +500,10 @@ public class Parser {
                     parsedArgs.add(new ConstantPrimitiveNode(new BoolValue(v), VariableType.BOOL, t));
                 }
                 case NORMAL_EXPRESSION -> parsedArgs.add(parseExpression());
+                case ITEM_LITERAL -> {
+                    String searchName = parseItemLiteral();
+                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(searchName), VariableType.STRING, nameToken));
+                }
             }
 
             if (i < sig.params.size() - 1) consume(TokenType.COMMA, "Expected ',' between action parameters");
@@ -388,6 +513,26 @@ public class Parser {
         consume(TokenType.SEMI, "Expected ';' after action call");
 
         return new ActionCallNode(actionName, new ArgumentListNode(parsedArgs), nameToken);
+    }
+
+    private String parseItemLiteral() {
+        Token open = consume(TokenType.LBRACE, "Expected '{' to start item data");
+
+        StringBuilder snbt = new StringBuilder("{");
+        int braceCount = 1;
+
+        while (braceCount > 0 && !isAtEnd()) {
+            Token t = advance();
+            snbt.append(t.text);
+            if (t.type == TokenType.LBRACE) braceCount++;
+            else if (t.type == TokenType.RBRACE) braceCount--;
+        }
+
+        String result = snbt.toString();
+        if (result.replaceAll("\\s+", "").equals("{}")) {
+            throw new ParsingException(open, "A menu slot item cannot be empty — provide at least an id field.");
+        }
+        return result;
     }
 
     private NormalExpressionNode parseExpression() {
@@ -569,16 +714,22 @@ public class Parser {
         List<NormalExpressionNode> parsedArgs = new ArrayList<>();
 
         for (int i = 0; i < sig.params.size(); i++) {
-            ActionParamKind expected = sig.params.get(i);
+            Param param = sig.params.get(i);
 
-            switch (expected) {
+            switch (param.kind()) {
                 case STRING_LITERAL -> {
                     Token t = consume(TokenType.STRING_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a STRING");
-                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(t.text.substring(1, t.text.length()-1)), VariableType.STRING, t));
+                    String stripped = t.text.substring(1, t.text.length() - 1);
+                    if (param.hasEnumConstraint() && !param.isValidEnum(stripped)) throw new ParsingException(t,
+                        "'" + stripped + "' is not a valid value for '" + condName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
+                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, t));
                 }
                 case LONG_LITERAL -> {
                     Token t = consume(TokenType.LONG_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a LONG");
-                    parsedArgs.add(new ConstantPrimitiveNode(new LongValue(Long.parseLong(t.text)), VariableType.LONG, t));
+                    long val = Long.parseLong(t.text);
+                    if (!param.inRange(val)) throw new ParsingException(t,
+                        "Value " + val + " is out of range for '" + condName + "' param #" + (i+1) + ". Must be between " + param.rangeMin() + " and " + param.rangeMax() + ".");
+                    parsedArgs.add(new ConstantPrimitiveNode(new LongValue(val), VariableType.LONG, t));
                 }
                 case DOUBLE_LITERAL -> {
                     Token t = consume(TokenType.DOUBLE_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a DOUBLE");
@@ -594,6 +745,10 @@ public class Parser {
                     parsedArgs.add(new ConstantPrimitiveNode(new BoolValue(v), VariableType.BOOL, t));
                 }
                 case NORMAL_EXPRESSION -> parsedArgs.add(parseExpression());
+                case ITEM_LITERAL -> {
+                    String searchName = parseItemLiteral();
+                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(searchName), VariableType.STRING, nameToken));
+                }
             }
 
             if (i < sig.params.size() - 1) {

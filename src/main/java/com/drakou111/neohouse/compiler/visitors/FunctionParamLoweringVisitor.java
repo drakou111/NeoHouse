@@ -12,13 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 1) Renames each parameter (holder, oldName) → (same holder, "p$<index>") throughout the function body.
- * 2) Rewrites any `TypedReturnNode(expr)` into:
- *       p.o$ = <rewritten expr>;
- *       return;
- * 3) Converts both TypedFunctionNode and VoidFunctionNode into a parameterless VoidFunctionNode.
- */
 public class FunctionParamLoweringVisitor extends DefaultVisitor {
 
     @Override

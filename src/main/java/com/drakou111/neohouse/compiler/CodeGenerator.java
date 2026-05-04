@@ -1,6 +1,10 @@
 package com.drakou111.neohouse.compiler;
 
+import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.actions.actiontypes.CheckSlotEmptyAction;
+import com.drakou111.neohouse.actions.actiontypes.ClientMessageAction;
+import com.drakou111.neohouse.actions.actiontypes.DeleteAllAction;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.constants.*;
@@ -10,9 +14,7 @@ import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.enums.BooleanOperator;
@@ -21,6 +23,7 @@ import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.factories.ActionFactory;
 import com.drakou111.neohouse.factories.ConditionFactory;
 import com.drakou111.neohouse.factories.MovementFactory;
+import com.drakou111.neohouse.utils.ActionBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,24 +32,39 @@ public class CodeGenerator {
 
     public Action generate(MainNode main) {
         List<Action> parts = new ArrayList<>();
-        // Pass 1: create all functions and loops as empty shells for forward-reference support
-        for (MainStatementNode stmt : main.statements) {
-            if (stmt instanceof VoidFunctionNode fn) {
-                parts.add(MovementFactory.goAndRecreateFunction(fn.name, fn.description, null, false, 0));
-                parts.add(MovementFactory.exit(true));
-            } else if (stmt instanceof LoopNode loop) {
-                parts.add(MovementFactory.goAndRecreateFunction(loop.name, loop.description, null, true, (int) loop.tickDelay));
-                parts.add(MovementFactory.exit(true));
+        boolean override = NeoHouseConfig.get().overrideExisting;
+
+        if (override) {
+            // Pass 1: create empty shells for forward-reference support
+            for (MainStatementNode stmt : main.statements) {
+                if (stmt instanceof VoidFunctionNode fn) {
+                    parts.add(MovementFactory.goAndRecreateFunction(fn.name, fn.description, null, false, 0));
+                    parts.add(MovementFactory.exit(true));
+                } else if (stmt instanceof LoopNode loop) {
+                    parts.add(MovementFactory.goAndRecreateFunction(loop.name, loop.description, null, true, (int) loop.tickDelay));
+                    parts.add(MovementFactory.exit(true));
+                } else if (stmt instanceof CommandNode cmd) {
+                    parts.add(MovementFactory.goAndRecreateCommand(cmd.name, cmd.targeted, cmd.priority, cmd.listed));
+                    parts.add(MovementFactory.exit(true));
+                } else if (stmt instanceof MenuNode menu) {
+                    parts.add(MovementFactory.goAndRecreateMenu(menu.name, menu.rows));
+                    parts.add(MovementFactory.exit(true));
+                }
             }
         }
+
         // Pass 2: fill in bodies
         for (MainStatementNode stmt : main.statements) {
             if (stmt instanceof VoidFunctionNode fn) {
-                parts.add(generateFunction(fn));
+                parts.add(override ? generateFunction(fn) : generateFunctionIfAbsent(fn));
             } else if (stmt instanceof EventNode event) {
-                parts.add(generateEvent(event));
+                parts.add(override ? generateEvent(event) : generateEventIfEmpty(event));
             } else if (stmt instanceof LoopNode loop) {
-                parts.add(generateLoop(loop));
+                parts.add(override ? generateLoop(loop) : generateLoopIfAbsent(loop));
+            } else if (stmt instanceof CommandNode cmd) {
+                parts.add(override ? generateCommand(cmd) : generateCommandIfAbsent(cmd));
+            } else if (stmt instanceof MenuNode menu) {
+                parts.add(override ? generateMenu(menu) : generateMenuIfAbsent(menu));
             }
         }
         return new GroupAction(parts);
@@ -63,9 +81,10 @@ public class CodeGenerator {
     private Action generateEvent(EventNode event) {
         String key = "EVENT_" + event.event.name();
         RestrictionAction ra = RestrictionAction.valueOf(key);
-        RestrictionCondition rc = conditionCtxFor(ra);
+        RestrictionCondition rc = ra.conditionContext();
         List<Action> parts = new ArrayList<>();
         parts.add(MovementFactory.goToEvent(event.event));
+        parts.add(new ActionBuilder().append(new DeleteAllAction(10)).get());
         parts.add(generateStatements(event.statements, ra, rc));
         parts.add(MovementFactory.exit(true));
         return new GroupAction(parts);
@@ -76,6 +95,129 @@ public class CodeGenerator {
         parts.add(MovementFactory.goToFunction(false, loop.name));
         parts.add(generateStatements(loop.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
         parts.add(MovementFactory.exit(true));
+        return new GroupAction(parts);
+    }
+
+    private Action generateCommand(CommandNode cmd) {
+        List<Action> parts = new ArrayList<>();
+        parts.add(new ActionBuilder().gotoCommand(false, cmd.name, true).get());
+        parts.add(generateStatements(cmd.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
+        parts.add(MovementFactory.exit(true));
+        return new GroupAction(parts);
+    }
+
+    private Action generateMenu(MenuNode menu) {
+        List<Action> parts = new ArrayList<>();
+        parts.add(MovementFactory.goToMenuGrid(menu.name));
+        for (SlotNode slot : menu.slots) {
+            parts.add(generateSlot(slot));
+        }
+        parts.add(MovementFactory.exit(true));
+        return new GroupAction(parts);
+    }
+
+    private Action generateFunctionIfAbsent(VoidFunctionNode fn) {
+        Action warn = new GroupAction(List.of(
+            new ActionBuilder().closeAll().get(),
+            new ClientMessageAction("Skipped function '" + fn.name + "' — already exists.", true)
+        ));
+        Action createAndFill = new ActionBuilder()
+                .anvilInput(fn.name, Others.GENERAL_ADD_H6)
+                .append(MovementFactory.goToFunction(true, fn.name))
+                .append(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
+                .closeAll()
+                .get();
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.FUNCTIONS)
+                .search(fn.name, null, false, new ActionBuilder().append(warn), new ActionBuilder().append(createAndFill))
+                .get();
+    }
+
+    private Action generateLoopIfAbsent(LoopNode loop) {
+        Action warn = new GroupAction(List.of(
+            new ActionBuilder().closeAll().get(),
+            new ClientMessageAction("Skipped loop '" + loop.name + "' — already exists.", true)
+        ));
+        Action createAndFill = new ActionBuilder()
+                .anvilInput(loop.name, Others.GENERAL_ADD_H6)
+                .append(MovementFactory.goToFunction(true, loop.name))
+                .append(generateStatements(loop.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
+                .closeAll()
+                .get();
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.FUNCTIONS)
+                .search(loop.name, null, false, new ActionBuilder().append(warn), new ActionBuilder().append(createAndFill))
+                .get();
+    }
+
+    private Action generateCommandIfAbsent(CommandNode cmd) {
+        Action warn = new GroupAction(List.of(
+            new ActionBuilder().closeAll().get(),
+            new ClientMessageAction("Skipped command '/" + cmd.name + "' — already exists.", true)
+        ));
+        Action createAndFill = new ActionBuilder()
+                .anvilInput(cmd.name, Others.GENERAL_ADD_H6)
+                .append(new ActionBuilder().gotoCommand(true, cmd.name, true).get())
+                .append(generateStatements(cmd.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
+                .closeAll()
+                .get();
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.COMMANDS)
+                .search("/" + cmd.name, null, false, new ActionBuilder().append(warn), new ActionBuilder().append(createAndFill))
+                .get();
+    }
+
+    private Action generateEventIfEmpty(EventNode event) {
+        String key = "EVENT_" + event.event.name();
+        RestrictionAction ra = RestrictionAction.valueOf(key);
+        RestrictionCondition rc = ra.conditionContext();
+        Action warn = new GroupAction(List.of(
+            new ActionBuilder().closeAll().get(),
+            new ClientMessageAction("Skipped event '" + event.event.name() + "' — already has content.", true)
+        ));
+        Action fill = new GroupAction(List.of(
+            new DeleteAllAction(10),
+            generateStatements(event.statements, ra, rc),
+            MovementFactory.exit(true)
+        ));
+        return new GroupAction(List.of(
+            MovementFactory.goToEvent(event.event),
+            new CheckSlotEmptyAction(10, fill, warn)
+        ));
+    }
+
+    private Action generateMenuIfAbsent(MenuNode menu) {
+        Action warn = new GroupAction(List.of(
+            new ActionBuilder().closeAll().get(),
+            new ClientMessageAction("Skipped menu '" + menu.name + "' — already exists.", true)
+        ));
+        List<Action> slotActions = new ArrayList<>();
+        for (SlotNode slot : menu.slots) slotActions.add(generateSlot(slot));
+        Action createAndFill = new ActionBuilder()
+                .anvilInput(menu.name, Others.GENERAL_ADD_H6)
+                .append(MovementFactory.goToMenuGrid(menu.name))
+                .append(new GroupAction(slotActions))
+                .closeAll()
+                .get();
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.CUSTOM_MENUS)
+                .search(menu.name, null, false, new ActionBuilder().append(warn), new ActionBuilder().append(createAndFill))
+                .get();
+    }
+
+    private Action generateSlot(SlotNode slot) {
+        List<Action> parts = new ArrayList<>();
+        parts.add(new ActionBuilder()
+                .clickSlotAndWait(slot.slotId, false)
+                .customItem(slot.item)
+                .clickSlotAndWait(slot.slotId, true)
+                .get());
+        parts.add(generateStatements(slot.statements, RestrictionAction.MENU, RestrictionCondition.NONE));
+        parts.add(new ActionBuilder().clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true).get());
         return new GroupAction(parts);
     }
 
@@ -103,8 +245,6 @@ public class CodeGenerator {
         };
     }
 
-    // --- Statement generation ---
-
     private Action generateAssignation(AssignationNode assign, RestrictionAction ra) {
         Holder holder = toHolder(assign.variable.holder);
         String variable = assign.variable.name;
@@ -115,29 +255,26 @@ public class CodeGenerator {
     }
 
     private Action generateConditional(ConditionalNode cond, RestrictionAction ra, RestrictionCondition rc) {
-        // null condition = wrapper node from ActionCountSplittingVisitor — emit body directly with no IF wrapper
         if (cond.condition == null) {
             return generateStatements(cond.thenBlock, ra, rc);
         }
         boolean matchAny = cond.condition instanceof LogicalExpressionNode log
                 && log.operator == LogicalOperator.OR;
         Action conditions = generateConditionExpr(cond.condition, rc);
-        RestrictionAction innerRa = deriveConditionalActionCtx(ra);
+        RestrictionAction innerRa = ra.conditionalVariant();
         Action thenAction = generateStatements(cond.thenBlock, innerRa, rc);
         Action elseAction = cond.elseBlock != null && !cond.elseBlock.statements.isEmpty() ? generateStatements(cond.elseBlock, innerRa, rc) : null;
         return ActionFactory.addActionConditional(ra, matchAny, conditions, thenAction, elseAction, null);
     }
 
     private Action generateRandom(RandomNode rand, RestrictionAction ra, RestrictionCondition rc) {
-        RestrictionAction innerRa = deriveConditionalActionCtx(ra);
+        RestrictionAction innerRa = ra.conditionalVariant();
         List<Action> branches = new ArrayList<>();
         for (StatementListNode branch : rand.statements) {
             branches.add(generateStatements(branch, innerRa, rc));
         }
         return ActionFactory.addActionRandom(ra, new GroupAction(branches), null);
     }
-
-    // --- Condition expression generation ---
 
     private Action generateConditionExpr(ExpressionNode expr, RestrictionCondition rc) {
         return switch (expr) {
@@ -177,8 +314,10 @@ public class CodeGenerator {
                     ConditionFactory.addConditionPermission(rc, getBool(args, 0), Permission.valueOf(getString(args, 1)), null);
             case REGION ->
                     ConditionFactory.addConditionRegion(rc, getBool(args, 0), getString(args, 1), null);
-            case HAS_ITEM ->
-                    ConditionFactory.addConditionHasItem(rc, getBool(args, 0), parseItemSlot(args, 1), WhatCheck.valueOf(getString(args, 2)), WhereCheck.valueOf(getString(args, 3)), AmountCheck.valueOf(getString(args, 4)), null);
+            case HAS_ITEM -> {
+                String data = getString(args, 1);
+                yield ConditionFactory.addConditionHasItem(rc, getBool(args, 0), data, WhatCheck.valueOf(getString(args, 2)), WhereCheck.valueOf(getString(args, 3)), AmountCheck.valueOf(getString(args, 4)), null);
+            }
             case DOING_PARKOUR ->
                     ConditionFactory.addConditionDoingParkour(rc, getBool(args, 0), null);
             case POTION ->
@@ -205,18 +344,20 @@ public class CodeGenerator {
                     ConditionFactory.addConditionDamageCause(rc, getBool(args, 0), DamageCause.valueOf(getString(args, 1)), null);
             case DAMAGE_AMOUNT ->
                     ConditionFactory.addConditionDamageAmount(rc, getBool(args, 0), Comparator.valueOf(getString(args, 1)), exprToValue(args.get(2)), null);
-            case BLOCK_TYPE ->
-                    ConditionFactory.addConditionBlockType(rc, getBool(args, 0), parseItemSlot(args, 1), getBool(args, 2), null);
-            case IS_ITEM ->
-                    ConditionFactory.addConditionIsItem(rc, getBool(args, 0), parseItemSlot(args, 1), WhatCheck.valueOf(getString(args, 2)), WhereCheck.valueOf(getString(args, 3)), AmountCheck.valueOf(getString(args, 4)), null);
+            case BLOCK_TYPE -> {
+                String data = getString(args, 1);
+                yield ConditionFactory.addConditionBlockType(rc, getBool(args, 0), data, getBool(args, 2), null);
+            }
+            case IS_ITEM -> {
+                String data = getString(args, 1);
+                yield ConditionFactory.addConditionIsItem(rc, getBool(args, 0), data, WhatCheck.valueOf(getString(args, 2)), WhereCheck.valueOf(getString(args, 3)), AmountCheck.valueOf(getString(args, 4)), null);
+            }
             case FISHING_ENVIRONMENT ->
                     ConditionFactory.addConditionFishingEnvironment(rc, getBool(args, 0), FishingEnvironment.valueOf(getString(args, 1)), null);
             default ->
                     throw new IllegalStateException("Unhandled condition in code generation: " + kind);
         };
     }
-
-    // --- Action call generation ---
 
     private Action generateActionCall(ActionCallNode call, RestrictionAction ra) {
         AddAction kind = AddAction.requireByName(call.name);
@@ -238,10 +379,14 @@ public class CodeGenerator {
                     ActionFactory.addActionMaxHealth(ra, exprToValue(args.get(0)), RestrictedOperator.valueOf(getString(args, 1)), getBool(args, 2), null);
             case PARKOUR_CHECKPOINT ->
                     ActionFactory.addActionParkourCheckpoint(ra);
-            case GIVE_ITEM ->
-                    ActionFactory.addActionGiveItem(ra, parseItemSlot(args, 0), getBool(args, 1), InventorySlots.valueOf(getString(args, 2)), getBool(args, 3), 0, null);
-            case REMOVE_ITEM ->
-                    ActionFactory.addActionRemoveItem(ra, parseItemSlot(args, 0), null);
+            case GIVE_ITEM -> {
+                String data = getString(args, 0);
+                yield ActionFactory.addActionGiveItem(ra, data, getBool(args, 1), InventorySlots.valueOf(getString(args, 2)), getBool(args, 3), null);
+            }
+            case REMOVE_ITEM -> {
+                String data = getString(args, 0);
+                yield ActionFactory.addActionRemoveItem(ra, data, null);
+            }
             case CHAT_MESSAGE ->
                     ActionFactory.addActionSendMessage(ra, getString(args, 0), null);
             case APPLY_POTION ->
@@ -286,9 +431,10 @@ public class CodeGenerator {
             case DISPLAY_MENU ->
                     ActionFactory.addActionDisplayMenu(ra, getString(args, 0), null);
             case DROP_ITEM -> {
+                String data = getString(args, 0);
                 String loc = getString(args, 1);
                 Teleport tp = parseTeleport(loc);
-                yield ActionFactory.addActionDropItem(ra, parseItemSlot(args, 0), tp, tp == Teleport.CUSTOM ? loc : null, getBool(args, 2), getBool(args, 3), getLong(args, 4), getLong(args, 5), getBool(args, 6), getBool(args, 7), null);
+                yield ActionFactory.addActionDropItem(ra, data, tp, tp == Teleport.CUSTOM ? loc : null, getBool(args, 2), getBool(args, 3), getLong(args, 4), getLong(args, 5), getBool(args, 6), getBool(args, 7), null);
             }
             case CHANGE_VELOCITY ->
                     ActionFactory.addActionChangeVelocity(ra, exprToValue(args.get(0)), exprToValue(args.get(1)), exprToValue(args.get(2)), null);
@@ -310,8 +456,6 @@ public class CodeGenerator {
                     throw new IllegalStateException("Unhandled action in code generation: " + kind);
         };
     }
-
-    // --- Expression to value string ---
 
     private String exprToValue(NormalExpressionNode expr) {
         return switch (expr) {
@@ -354,8 +498,6 @@ public class CodeGenerator {
         return sb.toString();
     }
 
-    // --- Enum conversions ---
-
     private Holder toHolder(com.drakou111.neohouse.compiler.enums.Holder h) {
         return switch (h) {
             case PLAYER -> Holder.PLAYER;
@@ -390,30 +532,6 @@ public class CodeGenerator {
         };
     }
 
-    // --- Context derivation ---
-
-    private RestrictionAction deriveConditionalActionCtx(RestrictionAction outer) {
-        String name = outer.name();
-        if (name.startsWith("EVENT_") && !name.startsWith("EVENT_CONDITION_")) {
-            return RestrictionAction.valueOf(name.replace("EVENT_", "EVENT_CONDITION_"));
-        }
-        return RestrictionAction.CONDITIONAL;
-    }
-
-    private RestrictionCondition conditionCtxFor(RestrictionAction ra) {
-        String name = ra.name();
-        if (name.startsWith("EVENT_CONDITION_")) {
-            name = name.replace("EVENT_CONDITION_", "EVENT_");
-        }
-        try {
-            return RestrictionCondition.valueOf(name);
-        } catch (IllegalArgumentException e) {
-            return RestrictionCondition.NONE;
-        }
-    }
-
-    // --- Argument extraction helpers ---
-
     private boolean getBool(List<NormalExpressionNode> args, int idx) {
         return ((BoolValue) ((ConstantPrimitiveNode) args.get(idx)).value).value;
     }
@@ -428,15 +546,6 @@ public class CodeGenerator {
 
     private double getDouble(List<NormalExpressionNode> args, int idx) {
         return ((DoubleValue) ((ConstantPrimitiveNode) args.get(idx)).value).value;
-    }
-
-    // item slot params are STRING_LITERAL carrying a slot number; null if unparseable
-    private Integer parseItemSlot(List<NormalExpressionNode> args, int idx) {
-        try {
-            return Integer.parseInt(getString(args, idx));
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 
     private Teleport parseTeleport(String s) {

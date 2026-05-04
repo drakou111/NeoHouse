@@ -8,9 +8,9 @@ public enum TokenType {
     COMMENT_LINE("//[^\\n]*"),
 
     FUNCTION("function"), RETURN("return"), CANCEL("cancel"), LOOP("loop"), GLOBAL("global"),
-    IF("if"), ELSE("else"), REPEAT("repeat"), EVENT("event"),
+    IF("if"), ELSE("else"), REPEAT("repeat"), EVENT("event"), MENU("menu"),
     LONG_CAST("\\(long\\)"), DOUBLE_CAST("\\(double\\)"), STRING_CAST("\\(string\\)"),
-    DEFINE("define"), RANDOM("random"),
+    RANDOM("random"), COMMAND("command"), IMPORT("import"), ITEM("item"),
     TRUE("true"), FALSE("false"),
     LONG("long"), DOUBLE("double"), STRING("string"), BOOL("bool"), VAR("var"),
 
@@ -32,7 +32,7 @@ public enum TokenType {
 
     LPAREN("\\("), RPAREN("\\)"), LBRACE("\\{"), RBRACE("\\}"),
     LBRACK("\\["), RBRACK("\\]"),
-    COMMA(","), SEMI(";"), DOT("\\."), BAR("\\|"),
+    COMMA(","), SEMI(";"), COLON(":"), DOT("\\."), BAR("\\|"),
     WHITESPACE("[ \\t\\r\\n]+"),
 
     CONST_IDENT("PI|E|HALF_PI|TWO_PI|SQRT_TWO|SQRT_THREE|SQRT_FIVE|PHI"),

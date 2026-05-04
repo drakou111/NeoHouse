@@ -12,7 +12,6 @@ import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 
 public interface ASTVisitor<T> {
-    // Expressions (Constants, Variables, Placeholder, Sub expressions, Function calls)
     T visitConstant(ConstantNode constant);
     T visitConstantPrimitive(ConstantPrimitiveNode constant);
     T visitConstantArray(ConstantArrayNode constant);
@@ -24,14 +23,15 @@ public interface ASTVisitor<T> {
     T visitPlaceholder(PlaceholderNode placeholder);
     T visitFunctionCall(FunctionCallNode functionCall);
 
-    // Main Statements
     T visitTypedFunction(TypedFunctionNode function);
     T visitVoidFunction(VoidFunctionNode function);
     T visitLoop(LoopNode function);
     T visitEvent(EventNode event);
+    T visitCommand(CommandNode command);
+    T visitMenu(MenuNode menu);
+    T visitSlot(SlotNode slot);
     T visitGlobalDeclaration(GlobalDeclarationNode declaration);
 
-    // Statements
     T visitTypedReturn(TypedReturnNode returnNode);
     T visitVoidReturn(VoidReturnNode returnNode);
     T visitCancel(CancelNode cancelNode);
@@ -46,7 +46,6 @@ public interface ASTVisitor<T> {
     T visitConditionCall(ConditionCallNode condCall);
     T visitActionCall(ActionCallNode condCall);
 
-    // Lists
     T visitMain(MainNode main);
     T visitStatements(StatementListNode statements);
     T visitParameters(ParameterListNode parameters);

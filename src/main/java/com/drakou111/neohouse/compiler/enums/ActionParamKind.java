@@ -5,5 +5,6 @@ public enum ActionParamKind {
     BOOL_LITERAL,
     LONG_LITERAL,
     DOUBLE_LITERAL,
-    NORMAL_EXPRESSION
+    NORMAL_EXPRESSION,
+    ITEM_LITERAL
 }

@@ -15,15 +15,6 @@ import com.drakou111.neohouse.exceptions.SemanticException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 1) In the constructor, we scan the MainNode to collect every TypedFunctionNode
- *    into typedDefs, and every VoidFunctionNode into voidDefs.
- * 2) Then analyze(main) calls main.accept(this), and each visitXxx replaces
- *    every FunctionCallNode/ VoidFunctionCallNode/ GlobalFunctionCallNode
- *    with a new node whose .type is taken from the matching definition.
- *
- * If a call name is not found in the appropriate map, we throw SemanticException.
- */
 public class LinkFunctionVisitor extends DefaultVisitor {
     private final Map<String, TypedFunctionNode> typedDefs = new HashMap<>();
     private final Map<String, VoidFunctionNode> voidDefs = new HashMap<>();

@@ -11,14 +11,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Pass 1: collect all global‐scope declarations and all local‐only declarations.
- *   - globalDecls: maps fullName ("p.x", "g.foo", etc) → VariableType
- *   - allLocalNames: a set of every local‐declared name (to catch ambiguity later)
- * <p>
- * Any duplicate global declaration (same "p.x" twice) throws immediately.
- * We do *not* resolve or insert undeclared assignments here.
- */
 public class DeclarationCollectorVisitor extends EmptyVisitor<Void> {
     public final Map<String, VariableType> globalDecls = new HashMap<>();
     public final Set<String> allLocalNames = new HashSet<>();
@@ -68,6 +60,29 @@ public class DeclarationCollectorVisitor extends EmptyVisitor<Void> {
         boolean saved = inFunction;
         inFunction = true;
         super.visitLoop(node);
+        inFunction = saved;
+        return null;
+    }
+
+    @Override public Void visitCommand(CommandNode node) {
+        boolean saved = inFunction;
+        inFunction = true;
+        node.statements.accept(this);
+        inFunction = saved;
+        return null;
+    }
+
+    @Override public Void visitMenu(MenuNode menu) {
+        for (SlotNode slot : menu.slots) {
+            slot.accept(this);
+        }
+        return null;
+    }
+
+    @Override public Void visitSlot(SlotNode slot) {
+        boolean saved = inFunction;
+        inFunction = true;
+        slot.statements.accept(this);
         inFunction = saved;
         return null;
     }

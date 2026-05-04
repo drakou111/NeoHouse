@@ -7,20 +7,20 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @EventBusSubscriber(modid= NeoHouse.MOD_ID, bus=EventBusSubscriber.Bus.GAME, value= Dist.CLIENT)
 public class ScreenEvents {
-    private static final Map<WaitForAction, Void> waitingActions = new LinkedHashMap<>();
+    private static final Set<WaitForAction> waitingActions = new LinkedHashSet<>();
 
     public static void watch(WaitForAction action) {
-        waitingActions.put(action, null);
+        waitingActions.add(action);
     }
 
     @SubscribeEvent
     public static void onOpening(ScreenEvent.Opening event) {
-        for (WaitForAction action : waitingActions.keySet()) {
+        for (WaitForAction action : waitingActions) {
             if (action.matchesScreen(event.getNewScreen(), true)) {
                 action.markDone();
             }
@@ -29,11 +29,10 @@ public class ScreenEvents {
 
     @SubscribeEvent
     public static void onClosing(ScreenEvent.Closing event) {
-        for (WaitForAction action : waitingActions.keySet()) {
+        for (WaitForAction action : waitingActions) {
             if (action.matchesScreen(event.getScreen(), false)) {
                 action.markDone();
             }
         }
     }
 }
-

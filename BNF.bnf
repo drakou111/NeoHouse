@@ -19,7 +19,7 @@ name         ::= letter name_rest
 name_rest    ::= ε | letter name_rest
 
 // Variable, parameter, and placeholder
-holder       ::= 'p' | 'g' | 't'
+holder       ::= 'p' | 'g' | 't'[name]
 var          ::= holder '.' name
 
 phname       ::= 'server.name' | 'server.shortname' | 'player.name' | 'player.ping' | 'player.health' |
@@ -60,16 +60,6 @@ const_expr   ::= const
               | const_expr '--'
               | '-' const_expr
               | const_expr '%' const_expr
-       /*       | 'sin' '(' const_expr ')'
-              | 'asin' '(' const_expr ')'
-              | 'cos' '(' const_expr ')'
-              | 'acos' '(' const_expr ')'
-              | 'tan' '(' const_expr ')'
-              | 'atan' '(' const_expr ')'
-              | 'sqrt' '(' const_expr ')'
-              | 'nroot' '(' const_expr ',' const_expr ')'
-              | 'pow' '(' const_expr ',' const_expr ')'
-              | '|' const_expr '|'*/
 
 // General math (can include variables or anything else from expr)
 general_math_expr ::= expr '+' expr
@@ -180,21 +170,9 @@ double_arg   ::= const_expr
 operation    ::= 'set' | 'inc' | 'dec' | 'mult' | 'div'
 comparator   ::= 'l' | 'le' | 'e' | 'ge' | 'g'
 
-item         ::= //TODO
-slot         ::= //TODO
-potion       ::= //TODO
-lobby        ::= //TODO
-location     ::= //TODO
-sound        ::= //TODO
-gamemode     ::= //TODO
-enchant      ::= //TODO
-weather      ::= //TODO
-time         ::= //TODO
-
-permission   ::= //TODO
-what_check   ::= //TODO
-where_check  ::= //TODO
-amount       ::= //TODO
+item         ::= 'item' '{' item_field_list '}'
+item_field_list ::= item_field | item_field ',' item_field_list
+item_field   ::= 'id' '=' string_const | 'name' '=' string_const | 'count' '=' long_const
 
 // Assignments and definitions
 asgn         ::= note var '=' expr
@@ -203,7 +181,6 @@ asgn         ::= note var '=' expr
               | note var '*=' expr
               | note var '/=' expr
               | note var '%=' expr
-              | note var '~='
 
 def          ::= type var
 
@@ -228,6 +205,16 @@ repeat       ::= 'repeat' '(' long_arg ')' '{' stmt_list '}'
 event_def    ::= 'event' event_name '{' stmt_list '}'
 random       ::= 'random' '{' stmt_list '}'
 
+// Commands
+cmd_mode     ::= 'self' | 'target' | ε
+cmd_param    ::= 'priority' '=' long_arg | 'listed' '=' bool_const
+cmd_params   ::= '(' ')' | '(' cmd_param ')' | '(' cmd_param ',' cmd_param ')' | ε
+command_def  ::= 'command' name cmd_mode cmd_params '{' stmt_list '}'
+
+// Preprocessor directives (processed before parsing)
+define_dir   ::= 'define' name '=' string_const ';'
+import_dir   ::= 'import' string_const ';'
+
 // Descriptions and metadata
 note         ::= ε | '///' text '\n'
 event_name   ::= 'PlayerJoin' | 'PLayerQuit' | 'PlayerDeath' | 'PlayerKill' | 'PlayerRespawn'
@@ -235,5 +222,10 @@ event_name   ::= 'PlayerJoin' | 'PLayerQuit' | 'PlayerDeath' | 'PlayerKill' | 'P
               | 'PlayerBlockBreak' | 'StartParkour' | 'CompleteParkour' | 'PlayerDropItem'
               | 'PlayerPickUpItem' | 'PlayerChangeHeldItem' | 'PlayerToggleSneak' | 'PlayerToggleFlight'
 
+// Menus
+slot_id      ::= 'slot' long_const
+slot_def     ::= slot_id ':' '(' item ')' '{' stmt_list '}'
+menu_def     ::= 'menu' name '(' long_const ')' '{' slot_def* '}'
+
 // Program entry
-main         ::= func_def | event_def
+main         ::= func_def | event_def | command_def | menu_def | define_dir | import_dir

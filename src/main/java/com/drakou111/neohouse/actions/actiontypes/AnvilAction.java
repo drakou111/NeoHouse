@@ -19,7 +19,7 @@ public class AnvilAction extends Action {
             nameField = AnvilScreen.class.getDeclaredField("name");
             nameField.setAccessible(true);
         } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("AnvilScreen.name field not found — mapping mismatch?", e);
         }
     }
 
@@ -31,7 +31,7 @@ public class AnvilAction extends Action {
         try {
             edit = (EditBox) nameField.get(anvil);
         } catch (IllegalAccessException e) {
-            throw new InterruptActionException(e.getMessage());
+            throw new InterruptActionException("Cannot access anvil name field", e);
         }
 
         if (edit == null || edit.getValue() == null || edit.getValue().isEmpty()) return false;

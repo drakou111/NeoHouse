@@ -9,16 +9,11 @@ import com.drakou111.neohouse.exceptions.SemanticException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A visitor that replaces each "repeat (count) { ... }" with exactly `count` copies
- * of its inner statements.  If count ≤ 0, it emits no statements.
- */
+
 public class RepeatUnrollingVisitor extends DefaultVisitor {
 
-    // Unroll a RepeatNode into multiple copies of its body
     @Override
     public ASTNode visitRepeat(RepeatNode repeat) {
-        // First, recursively unroll any inner repeats inside the body
         StatementListNode rewrittenBody = (StatementListNode) repeat.statements.accept(this);
 
         long count = repeat.count;
@@ -29,12 +24,9 @@ public class RepeatUnrollingVisitor extends DefaultVisitor {
             );
         }
 
-        // Now duplicate the body 'count' times
         List<StatementNode> out = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            // Make sure to clone or re‐visit each statement so nested repeats inside get expanded
             for (StatementNode stmt : rewrittenBody.statements) {
-                // stmt.accept(this) is not needed here because we've already visited the whole block above.
                 out.add(stmt);
             }
         }

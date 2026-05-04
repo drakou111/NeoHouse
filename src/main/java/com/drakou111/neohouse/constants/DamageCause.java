@@ -1,31 +1,21 @@
 package com.drakou111.neohouse.constants;
 
-import com.drakou111.neohouse.utils.PageSlot;
-
 public enum DamageCause {
-    ENTITY_ATTACK(new PageSlot(0, 10)),
-    PROJECTILE(new PageSlot(0, 11)),
-    SUFFOCATION(new PageSlot(0, 12)),
-    FALL(new PageSlot(0, 13)),
-    LAVA(new PageSlot(0, 14)),
-    FIRE(new PageSlot(0, 15)),
-    FIRE_TICK(new PageSlot(0, 16)),
-    DROWNING(new PageSlot(0, 19)),
-    STARVATION(new PageSlot(0, 20)),
-    POISON(new PageSlot(0, 21)),
-    THORNS(new PageSlot(0, 22));
+    ENTITY_ATTACK("Entity Attack"),
+    PROJECTILE("Projectile"),
+    SUFFOCATION("Suffocation"),
+    FALL("Fall"),
+    LAVA("Lava"),
+    FIRE("Fire"),
+    FIRE_TICK("Fire Tick"),
+    DROWNING("Drowning"),
+    STARVATION("Starvation"),
+    POISON("Poison"),
+    THORNS("Thorns");
 
-    public final PageSlot pageSlot;
+    public final String displayName;
 
-    DamageCause(PageSlot pageSlot) {
-        this.pageSlot = pageSlot;
-    }
-
-    public int getPage() {
-        return this.pageSlot.page;
-    }
-
-    public int getSlotID() {
-        return this.pageSlot.slotID;
+    DamageCause(String displayName) {
+        this.displayName = displayName;
     }
 }

@@ -13,12 +13,10 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 public class SequenceManager {
     private static Action currentAction = null;
 
-    /** Start running any Action (including an ActionSequence). */
     public static void startAction(Action action) {
         currentAction = action;
     }
 
-    /** Cancel whatever is currently running. */
     public static void cancelAction() {
         currentAction = null;
     }
@@ -32,10 +30,14 @@ public class SequenceManager {
         boolean finished;
         try {
             finished = currentAction.run(mc);
-        }
-        catch (InterruptActionException e) {
-            MessageUtils.errorToChat(e.getMessage());
-            finished = true;
+        } catch (InterruptActionException e) {
+            MessageUtils.errorToChat(e.getMessage() != null ? e.getMessage() : e.toString());
+            currentAction = null;
+            return;
+        } catch (Exception e) {
+            MessageUtils.errorToChat("Script aborted due to unexpected error: " + e);
+            currentAction = null;
+            return;
         }
 
         if (finished) {

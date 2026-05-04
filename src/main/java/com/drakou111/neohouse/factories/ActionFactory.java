@@ -2,63 +2,65 @@ package com.drakou111.neohouse.factories;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.constants.*;
+import com.drakou111.neohouse.constants.actions.*;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.ActionBuilder;
+
 
 public class ActionFactory {
 
     public static Action addActionConditional(RestrictionAction state, boolean matchAny, Action conditions, Action ifs, Action elses, String note) {
-        if (state.pageSlotFor(AddAction.CONDITIONAL) == null) throw new InterruptActionException("Cannot add action 'Conditional' here.");
+        if (!state.isAllowed(AddAction.CONDITIONAL)) throw new InterruptActionException("Cannot add action 'Conditional' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CONDITIONAL, state)
                 .onlyIf(matchAny, () ->  new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_MATCH_ANY, true)
+                        .search(ConditionInputs.MATCH_ANY)
                 )
                 .onlyIf(conditions != null, () ->  new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_CONDITIONALS, true)
+                        .search(ConditionInputs.CONDITIONS)
                         .append(conditions)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
+                        .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(ifs != null, () ->  new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_IF, true)
+                        .search(ConditionInputs.IF)
                         .append(ifs)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
+                        .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(elses != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_CONDITIONAL_ELSE, true)
+                        .search(ConditionInputs.ELSE)
                         .append(elses)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
+                        .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionChangeGroup(RestrictionAction state, String groupName, boolean demotionProtection, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_GROUP) == null) throw new InterruptActionException("Cannot add action 'Change Group' here.");
+        if (!state.isAllowed(AddAction.CHANGE_GROUP)) throw new InterruptActionException("Cannot add action 'Change Group' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_GROUP, state)
                 .onlyIf(groupName != null && !groupName.trim().isEmpty(), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAYER_GROUP_VAL, true)
-                        .searchH6(groupName, null, true, null, null)
+                        .search(PlayerGroupInputs.GROUP)
+                        .search(groupName)
                 )
                 .onlyIf(!demotionProtection, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAYER_GROUP_DEMOTION_PROTECTION, true)
+                        .search(PlayerGroupInputs.DEMOTION_PROTECTION)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
 
     }
 
     public static Action addActionKillPlayer(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.KILL) == null) throw new InterruptActionException("Cannot add action 'Kill' here.");
+        if (!state.isAllowed(AddAction.KILL)) throw new InterruptActionException("Cannot add action 'Kill' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.KILL, state)
@@ -66,7 +68,7 @@ public class ActionFactory {
     }
 
     public static Action addActionFullHeal(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.FULL_HEAL) == null) throw new InterruptActionException("Cannot add action 'Full Heal' here.");
+        if (!state.isAllowed(AddAction.FULL_HEAL)) throw new InterruptActionException("Cannot add action 'Full Heal' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.FULL_HEAL, state)
@@ -74,7 +76,7 @@ public class ActionFactory {
     }
 
     public static Action addActionTitle(RestrictionAction state, String title, String subtitle, int fadeIn, int stay, int fadeOut, String note) {
-        if (state.pageSlotFor(AddAction.TITLE) == null) throw new InterruptActionException("Cannot add action 'Title' here.");
+        if (!state.isAllowed(AddAction.TITLE)) throw new InterruptActionException("Cannot add action 'Title' here.");
 
         String finalTitle;
         if (title == null || title.trim().isEmpty()) finalTitle = "&l";
@@ -87,29 +89,29 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.TITLE, state)
                 .onlyIf(!finalTitle.equals("Hello World!"), () -> new ActionBuilder()
-                        .chatInput(finalTitle, Slots.ACTION_TITLE_TITLE)
+                        .searchForChat(TitleInputs.TITLE, finalTitle)
                 )
                 .onlyIf(!finalSubTitle.equals("&l"), () -> new ActionBuilder()
-                        .chatInput(finalSubTitle, Slots.ACTION_TITLE_SUBTITLE)
+                        .searchForChat(TitleInputs.SUBTITLE, finalSubTitle)
                 )
                 .onlyIf(fadeIn != 1, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(fadeIn), Slots.ACTION_TITLE_FADE_IN)
+                        .searchForAnvil(TitleInputs.FADEIN, String.valueOf(fadeIn))
                 )
                 .onlyIf(stay != 5, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(stay), Slots.ACTION_TITLE_STAY)
+                        .searchForAnvil(TitleInputs.STAY, String.valueOf(stay))
                 )
                 .onlyIf(fadeOut != 1, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(fadeOut), Slots.ACTION_TITLE_FADE_OUT)
+                        .searchForAnvil(TitleInputs.FADEOUT, String.valueOf(fadeOut))
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionActionBar(RestrictionAction state, String text, String note) {
-        if (state.pageSlotFor(AddAction.ACTION_BAR) == null) throw new InterruptActionException("Cannot add action 'Action Bar' here.");
+        if (!state.isAllowed(AddAction.ACTION_BAR)) throw new InterruptActionException("Cannot add action 'Action Bar' here.");
 
         String finalText;
         if (text == null || text.trim().isEmpty()) finalText = "&l";
@@ -118,17 +120,17 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.ACTION_BAR, state)
                 .onlyIf(!finalText.equals("Hello World!"), () -> new ActionBuilder()
-                        .chatInput(finalText, Slots.ACTION_ACTION_BAR_TEXT)
+                        .searchForChat(ActionBarInputs.MESSAGE, finalText)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionResetInventory(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.CLEAR_INVENTORY) == null) throw new InterruptActionException("Cannot add action 'Clear Inventory' here.");
+        if (!state.isAllowed(AddAction.CLEAR_INVENTORY)) throw new InterruptActionException("Cannot add action 'Clear Inventory' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CLEAR_INVENTORY, state)
@@ -136,83 +138,79 @@ public class ActionFactory {
     }
 
     public static Action addActionMaxHealth(RestrictionAction state, String maxHealth, RestrictedOperator operator, boolean healOnChange, String note) {
-        if (state.pageSlotFor(AddAction.MAX_HEALTH) == null) throw new InterruptActionException("Cannot add action 'Max Health' here.");
+        if (!state.isAllowed(AddAction.MAX_HEALTH)) throw new InterruptActionException("Cannot add action 'Max Health' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.MAX_HEALTH, state)
                 .onlyIf(maxHealth != null && !maxHealth.equals("20"), () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(maxHealth), Slots.ACTION_MAX_HEALTH_VAL)
+                        .searchForAnvil(MaxHealthInputs.MAX_HEALTH, String.valueOf(maxHealth))
                 )
                 .onlyIf(operator != RestrictedOperator.SET, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_MAX_HEALTH_OPERATION, true)
-                        .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
+                        .search(MaxHealthInputs.MODE)
+                        .search(operator.displayName)
                 )
                 .onlyIf(!healOnChange, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_MAX_HEALTH_HEAL_ON_CHANGE, true)
+                        .search(MaxHealthInputs.HEAL_ON_CHANGE)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionParkourCheckpoint(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.PARKOUR_CHECKPOINT) == null) throw new InterruptActionException("Cannot add action 'Parkour Checkpoint' here.");
+        if (!state.isAllowed(AddAction.PARKOUR_CHECKPOINT)) throw new InterruptActionException("Cannot add action 'Parkour Checkpoint' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.PARKOUR_CHECKPOINT, state)
                 .get();
     }
 
-    public static Action addActionGiveItem(RestrictionAction state, Integer inventoryItemSlotID, boolean allowMultiple, InventorySlots inventorySlot, boolean replaceExistingItem, int manualInputIndex, String note) {
-        if (state.pageSlotFor(AddAction.GIVE_ITEM) == null) throw new InterruptActionException("Cannot add action 'Give Item' here.");
+    public static Action addActionGiveItem(RestrictionAction state, String snbtData, boolean allowMultiple, InventorySlots inventorySlot, boolean replaceExistingItem, String note) {
+        if (!state.isAllowed(AddAction.GIVE_ITEM)) throw new InterruptActionException("Cannot add action 'Give Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.GIVE_ITEM, state)
-                .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_ITEM, true)
-                        .clickSlotAndWait(inventoryItemSlotID, true)
+                .onlyIf(!snbtData.isEmpty(), () -> new ActionBuilder()
+                        .search(GiveItemInputs.ITEM)
+                        .customItem(snbtData)
                 )
                 .onlyIf(allowMultiple, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_ALLOW_MULTIPLE, true)
+                        .search(GiveItemInputs.ALLOW_MULTIPLE)
                 )
-                .onlyIf(inventorySlot != InventorySlots.FIRST_AVAILABLE_SLOT && inventorySlot != InventorySlots.MANUAL_INPUT, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_SLOT, true)
-                        .clickAndSelectSlot(inventorySlot.getPage(), inventorySlot.getSlotID())
-                )
-                .onlyIf(inventorySlot == InventorySlots.MANUAL_INPUT, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_SLOT, true)
-                        .anvilInput(String.valueOf(manualInputIndex), InventorySlots.MANUAL_INPUT.getSlotID())
+                .onlyIf(inventorySlot != InventorySlots.FIRST_AVAILABLE_SLOT, () -> new ActionBuilder()
+                        .search(GiveItemInputs.INVENTORY_SLOT)
+                        .search(inventorySlot.displayName)
                 )
                 .onlyIf(replaceExistingItem, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GIVE_ITEM_REPLACE_EXISTING, true)
+                        .search(GiveItemInputs.REPLACE_ITEM)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
-    public static Action addActionRemoveItem(RestrictionAction state, Integer inventoryItemSlotID, String note) {
-        if (state.pageSlotFor(AddAction.REMOVE_ITEM) == null) throw new InterruptActionException("Cannot add action 'Remove Item' here.");
+    public static Action addActionRemoveItem(RestrictionAction state, String snbtData, String note) {
+        if (!state.isAllowed(AddAction.REMOVE_ITEM)) throw new InterruptActionException("Cannot add action 'Remove Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.REMOVE_ITEM, state)
-                .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_REMOVE_ITEM_ITEM, true)
-                        .clickSlotAndWait(inventoryItemSlotID, true)
+                .onlyIf(!snbtData.isEmpty(), () -> new ActionBuilder()
+                        .search(RemoveItemInputs.ITEM)
+                        .customItem(snbtData)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionSendMessage(RestrictionAction state, String text, String note) {
-        if (state.pageSlotFor(AddAction.CHAT_MESSAGE) == null) throw new InterruptActionException("Cannot add action 'Send Chat Message' here.");
+        if (!state.isAllowed(AddAction.CHAT_MESSAGE)) throw new InterruptActionException("Cannot add action 'Send Chat Message' here.");
 
         String finalText;
         if (text == null || text.trim().isEmpty()) finalText = "&l";
@@ -221,45 +219,45 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.CHAT_MESSAGE, state)
                 .onlyIf(!finalText.equals("Hello!"), () -> new ActionBuilder()
-                        .chatInput(finalText, Slots.ACTION_CHAT_MESSAGE_TEXT)
+                        .searchForChat(ChatMessageInputs.MESSAGE, finalText)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionApplyPotion(RestrictionAction state, Potion potion, int duration, int level, boolean override, boolean showIcon, String note) {
-        if (state.pageSlotFor(AddAction.APPLY_POTION) == null) throw new InterruptActionException("Cannot add action 'Apply Potion' here.");
+        if (!state.isAllowed(AddAction.APPLY_POTION)) throw new InterruptActionException("Cannot add action 'Apply Potion' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.APPLY_POTION, state)
                 .onlyIf(potion != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_EFFECT, true)
-                        .clickAndSelectSlot(potion.getPage(), potion.getSlotID())
+                        .search(ApplyPotionInputs.EFFECT)
+                        .search(potion.displayName)
                 )
                 .onlyIf(duration != 60, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(duration), Slots.ACTION_APPLY_POTION_DURATION)
+                        .searchForAnvil(ApplyPotionInputs.DURATION, String.valueOf(duration))
                 )
                 .onlyIf(level != 1, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(level), Slots.ACTION_APPLY_POTION_LEVEL)
+                        .searchForAnvil(ApplyPotionInputs.LEVEL, String.valueOf(level))
                 )
                 .onlyIf(override, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_OVERRIDE, true)
+                        .search(ApplyPotionInputs.OVERRIDE)
                 )
                 .onlyIf(!showIcon, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_APPLY_POTION_SHOW_ICON, true)
+                        .search(ApplyPotionInputs.SHOW_ICON)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionClearPotion(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.CLEAR_POTION) == null) throw new InterruptActionException("Cannot add action 'Clear Potion' here.");
+        if (!state.isAllowed(AddAction.CLEAR_POTION)) throw new InterruptActionException("Cannot add action 'Clear Potion' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CLEAR_POTION, state)
@@ -267,120 +265,100 @@ public class ActionFactory {
     }
 
     public static Action addActionGiveXP(RestrictionAction state, int xp, String note) {
-        if (state.pageSlotFor(AddAction.GIVE_XP) == null) throw new InterruptActionException("Cannot add action 'Give XP' here.");
+        if (!state.isAllowed(AddAction.GIVE_XP)) throw new InterruptActionException("Cannot add action 'Give XP' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.GIVE_XP, state)
                 .onlyIf(xp != 1, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(xp), Slots.ACTION_GIVE_EXPERIENCE_VAL)
+                        .searchForAnvil(GiveExperienceInputs.LEVELS, String.valueOf(xp))
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionSendLobby(RestrictionAction state, Lobby lobby, String note) {
-        if (state.pageSlotFor(AddAction.SEND_LOBBY) == null) throw new InterruptActionException("Cannot add action 'Send to Lobby' here.");
+        if (!state.isAllowed(AddAction.SEND_LOBBY)) throw new InterruptActionException("Cannot add action 'Send to Lobby' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SEND_LOBBY, state)
                 .onlyIf(lobby != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SEND_LOBBY_LOBBY, true)
-                        .clickAndSelectSlot(lobby.getPage(), lobby.getSlotID())
+                        .search(SendLobbyInputs.LOCATION)
+                        .search(lobby.displayName)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionVariable(RestrictionAction state, Holder holder, String variable, String teamName, Operator operator, String value, boolean automaticUnset, String note) {
-        if (state.pageSlotFor(AddAction.VARIABLE) == null) throw new InterruptActionException("Cannot add action 'Variable' here.");
+        if (!state.isAllowed(AddAction.VARIABLE)) throw new InterruptActionException("Cannot add action 'Variable' here.");
 
-        if (holder != Holder.TEAM) {
-            return new ActionBuilder()
-                    .addAction(AddAction.VARIABLE, state)
-                    .onlyIf(holder != Holder.PLAYER, () -> new ActionBuilder()
-                            .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_HOLDER, true)
-                            .clickAndSelectSlot(holder.getPage(), holder.getSlotID())
-                    )
-                    .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
-                            .chatInput(variable, Slots.ACTION_SET_VARIABLE_VAR)
-                    )
-                    .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
-                            .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_OPERATION, true)
-                            .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
-                    )
-                    .onlyIf(!value.equals("1"), () -> new ActionBuilder()
-                            .anvilInput(value, Slots.ACTION_SET_VARIABLE_VALUE)
-                    )
-                    .onlyIf(automaticUnset, () -> new ActionBuilder()
-                            .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_AUTOMATIC_UNSET, true)
-                    )
-                    .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                            .chatInput(note, Slots.GENERAL_NOTE_H4)
-                    )
-                    .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
-                    .get();
-        }
-        else {
-            return new ActionBuilder()
-                    .addAction(AddAction.VARIABLE, state)
-                    .clickSlotAndWait(Slots.ACTION_SET_VARIABLE_HOLDER, true)
-                    .clickAndSelectSlot(holder.getPage(), holder.getSlotID())
-                    .onlyIf(teamName != null && !teamName.trim().isEmpty() && !teamName.equals("None"), () -> new ActionBuilder()
-                            .clickSlotAndWait(Slots.ACTION_SET_TEAM_NAME, true)
-                            .searchH6(teamName, null, true, null, null)
-                    )
-                    .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
-                            .chatInput(variable, Slots.ACTION_SET_TEAM_VARIABLE_VAR)
-                    )
-                    .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
-                            .clickSlotAndWait(Slots.ACTION_SET_TEAM_VARIABLE_OPERATION, true)
-                            .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
-                    )
-                    .onlyIf(!value.equals("1"), () -> new ActionBuilder()
-                            .chatInput(value, Slots.ACTION_SET_TEAM_VARIABLE_VALUE)
-                    )
-                    .onlyIf(automaticUnset, () -> new ActionBuilder()
-                            .clickSlotAndWait(Slots.ACTION_SET_TEAM_VARIABLE_AUTOMATIC_UNSET, true)
-                    )
-                    .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                            .chatInput(note, Slots.GENERAL_NOTE_H4)
-                    )
-                    .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
-                    .get();
-        }
+        return new ActionBuilder()
+            .addAction(AddAction.VARIABLE, state)
+            .onlyIf(holder == Holder.GLOBAL, () -> new ActionBuilder()
+                .search(SetVariableInputs.HOLDER)
+            )
+            .onlyIf(holder == Holder.TEAM, () -> new ActionBuilder()
+                    .search(SetVariableInputs.HOLDER)
+                    .search(SetVariableInputs.HOLDER)
+            )
+            .onlyIf(holder == Holder.TEAM && teamName != null && !teamName.trim().isEmpty() && !teamName.equals("None"), () -> new ActionBuilder()
+                    .search(SetVariableInputs.TEAM)
+                    .search(teamName)
+            )
+            .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
+                    .searchForChat(SetVariableInputs.VARIABLE, variable)
+            )
+            .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
+                    .search(SetVariableInputs.OPERATION)
+                    .search(operator.displayName, null, true, null,
+                            operator.requiresToggle ? new ActionBuilder()
+                                    .search(Operator.ADVANCED_OPERATIONS.displayName)
+                                    .search(operator.displayName) : null)
+            )
+            .onlyIf(!value.equals("1"), () -> new ActionBuilder()
+                    .searchForAnvil(SetVariableInputs.VALUE, value)
+            )
+            .onlyIf(automaticUnset, () -> new ActionBuilder()
+                    .search(SetVariableInputs.AUTOMATIC_UNSET)
+            )
+            .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
+                    .chatInput(note, Others.GENERAL_NOTE_H4)
+            )
+            .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+            .get();
     }
 
     public static Action addActionTeleport(RestrictionAction state, Teleport teleport, String customLocation, boolean preventInsideBlocks, String note) {
-        if (state.pageSlotFor(AddAction.TELEPORT) == null) throw new InterruptActionException("Cannot add action 'Teleport' here.");
+        if (!state.isAllowed(AddAction.TELEPORT)) throw new InterruptActionException("Cannot add action 'Teleport' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.TELEPORT, state)
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TELEPORT_LOCATION, true)
-                        .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
+                        .search(TeleportInputs.LOCATION)
+                        .search(teleport.displayName)
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TELEPORT_LOCATION, true)
-                        .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
+                        .search(TeleportInputs.LOCATION)
+                        .searchForAnvil(Teleport.CUSTOM.displayName, customLocation)
                 )
                 .onlyIf(preventInsideBlocks, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TELEPORT_PREVENT_INSIDE_BLOCK, true)
+                        .search(TeleportInputs.PREVENT_TELEPORT_INSIDE_BLOCKS)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionFailParkour(RestrictionAction state, String text, String note) {
-        if (state.pageSlotFor(AddAction.FAIL_PARKOUR) == null) throw new InterruptActionException("Cannot add action 'Fail Parkour' here.");
+        if (!state.isAllowed(AddAction.FAIL_PARKOUR)) throw new InterruptActionException("Cannot add action 'Fail Parkour' here.");
 
         String finalText;
         if (text == null || text.trim().isEmpty()) finalText = "&l";
@@ -389,174 +367,182 @@ public class ActionFactory {
         return new ActionBuilder()
                 .addAction(AddAction.FAIL_PARKOUR, state)
                 .onlyIf(!finalText.equals("Failed!"), () -> new ActionBuilder()
-                        .chatInput(finalText, Slots.ACTION_FAIL_PARKOUR_TEXT)
+                        .searchForChat(FailParkourInputs.REASON, finalText)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionPlaySound(RestrictionAction state, Sound sound, double volume, double pitch, Teleport teleport, String customLocation, String note) {
-        if (state.pageSlotFor(AddAction.PLAY_SOUND) == null) throw new InterruptActionException("Cannot add action 'Play Sound' here.");
+        if (!state.isAllowed(AddAction.PLAY_SOUND)) throw new InterruptActionException("Cannot add action 'Play Sound' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.PLAY_SOUND, state)
 
                 .onlyIf(sound != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_TYPE, true)
-                        .clickAndSelectSlot(sound.getPage(), sound.getSlotID())
+                        .search(PlaySoundInputs.SOUND)
+                        .search(sound.displayName)
                 )
                 .onlyIf(volume != 0.7D, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(volume), Slots.ACTION_PLAY_SOUND_VOLUME)
+                        .searchForAnvil(PlaySoundInputs.VOLUME, String.valueOf(volume))
                 )
                 .onlyIf(pitch != 1.0D, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(pitch), Slots.ACTION_PLAY_SOUND_PITCH)
+                        .searchForAnvil(PlaySoundInputs.PITCH, String.valueOf(pitch))
                 )
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_LOCATION, true)
-                        .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
+                        .search(PlaySoundInputs.LOCATION)
+                        .search(teleport.displayName)
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_PLAY_SOUND_LOCATION, true)
-                        .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
+                        .search(PlaySoundInputs.LOCATION)
+                        .searchForAnvil(Teleport.CUSTOM.displayName, customLocation)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionCompassTarget(RestrictionAction state, Teleport teleport, String customLocation, String note) {
-        if (state.pageSlotFor(AddAction.COMPASS_TARGET) == null) throw new InterruptActionException("Cannot add action 'Set Compass Target' here.");
+        if (!state.isAllowed(AddAction.COMPASS_TARGET)) throw new InterruptActionException("Cannot add action 'Set Compass Target' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.COMPASS_TARGET, state)
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_COMPASS_TARGET_LOCATION, true)
-                        .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
+                        .search(CompassTargetInputs.LOCATION)
+                        .search(teleport.displayName)
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_COMPASS_TARGET_LOCATION, true)
-                        .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
+                        .search(CompassTargetInputs.LOCATION)
+                        .searchForAnvil(Teleport.CUSTOM.displayName, customLocation)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionGamemode(RestrictionAction state, Gamemode gamemode, String note) {
-        if (state.pageSlotFor(AddAction.SET_GAME_MODE) == null) throw new InterruptActionException("Cannot add action 'Set Game Mode' here.");
+        if (!state.isAllowed(AddAction.SET_GAME_MODE)) throw new InterruptActionException("Cannot add action 'Set Game Mode' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_GAME_MODE, state)
-                .onlyIf(gamemode != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_GAME_MODE_TYPE, true)
-                        .clickAndSelectSlot(gamemode.getPage(), gamemode.getSlotID())
+                .onlyIf(gamemode == Gamemode.ADVENTURE, () -> new ActionBuilder()
+                        .search(GamemodeInputs.GAMEMODE)
+                )
+                .onlyIf(gamemode == Gamemode.SURVIVAL, () -> new ActionBuilder()
+                        .search(GamemodeInputs.GAMEMODE)
+                        .search(GamemodeInputs.GAMEMODE)
+                )
+                .onlyIf(gamemode == Gamemode.CREATIVE, () -> new ActionBuilder()
+                        .search(GamemodeInputs.GAMEMODE)
+                        .search(GamemodeInputs.GAMEMODE)
+                        .search(GamemodeInputs.GAMEMODE)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionChangeHealth(RestrictionAction state, String health, RestrictedOperator operator, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_HEALTH) == null) throw new InterruptActionException("Cannot add action 'Change Health' here.");
+        if (!state.isAllowed(AddAction.CHANGE_HEALTH)) throw new InterruptActionException("Cannot add action 'Change Health' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_HEALTH, state)
                 .onlyIf(!health.equals("20"), () -> new ActionBuilder()
-                        .anvilInput(health, Slots.ACTION_HEALTH_VAL)
+                        .searchForAnvil(HealthInputs.HEALTH, health)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_HEALTH_OPERATION, true)
-                        .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
+                        .search(HealthInputs.MODE)
+                        .search(operator.displayName)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionChangeHunger(RestrictionAction state, String hunger, RestrictedOperator operator, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_HUNGER) == null) throw new InterruptActionException("Cannot add action 'Change Hunger' here.");
+        if (!state.isAllowed(AddAction.CHANGE_HUNGER)) throw new InterruptActionException("Cannot add action 'Change Hunger' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_HUNGER, state)
                 .onlyIf(!hunger.equals("20"), () -> new ActionBuilder()
-                        .anvilInput(hunger, Slots.ACTION_HUNGER_VAL)
+                        .searchForAnvil(HungerInputs.LEVEL, hunger)
                 )
                 .onlyIf(operator != RestrictedOperator.SET, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_HUNGER_OPERATION, true)
-                        .clickAndSelectSlot(operator.getPage(), operator.getSlotID())
+                        .search(HungerInputs.MODE)
+                        .search(operator.displayName)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionRandom(RestrictionAction state, Action randoms, String note) {
-        if (state.pageSlotFor(AddAction.RANDOM) == null) throw new InterruptActionException("Cannot add action 'Random' here.");
+        if (!state.isAllowed(AddAction.RANDOM)) throw new InterruptActionException("Cannot add action 'Random' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.RANDOM, state)
                 .onlyIf(randoms != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_RANDOM_ACTIONS, true)
+                        .search(RandomInputs.ACTIONS)
                         .append(randoms)
-                        .clickSlotAndWait(Slots.GENERAL_GO_BACK_H6, true)
+                        .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionTriggerFunction(RestrictionAction state, String name, boolean forAll, String note) {
-        if (state.pageSlotFor(AddAction.TRIGGER_FUNCTION) == null) throw new InterruptActionException("Cannot add action 'Trigger Function' here.");
+        if (!state.isAllowed(AddAction.TRIGGER_FUNCTION)) throw new InterruptActionException("Cannot add action 'Trigger Function' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.TRIGGER_FUNCTION, state)
                 .onlyIf(name != null && !name.trim().isEmpty(), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TRIGGER_FUNCTION_TYPE, true)
-                        .searchH6(name, null, true, null, null)
+                        .search(TriggerFunctionInputs.FUNCTION)
+                        .search(name)
                 )
                 .onlyIf(forAll, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TRIGGER_FUNCTION_ALL, true)
+                        .search(TriggerFunctionInputs.TRIGGER_FOR_ALL)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionApplyLayout(RestrictionAction state, String name, String note) {
-        if (state.pageSlotFor(AddAction.APPLY_LAYOUT) == null) throw new InterruptActionException("Cannot add action 'Apply Layout' here.");
+        if (!state.isAllowed(AddAction.APPLY_LAYOUT)) throw new InterruptActionException("Cannot add action 'Apply Layout' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.APPLY_LAYOUT, state)
                 .onlyIf(name != null && !name.trim().isEmpty(), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_LAYOUT_TYPE, true)
-                        .searchH6(name, null, true, null, null)
+                        .search(LayoutInputs.LAYOUT)
+                        .search(name)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionExit(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.EXIT) == null) throw new InterruptActionException("Cannot add action 'Exit' here.");
+        if (!state.isAllowed(AddAction.EXIT)) throw new InterruptActionException("Cannot add action 'Exit' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.EXIT, state)
@@ -564,7 +550,7 @@ public class ActionFactory {
     }
 
     public static Action addActionCancelEvent(RestrictionAction state) {
-        if (state.pageSlotFor(AddAction.CANCEL_EVENT) == null) throw new InterruptActionException("Cannot add action 'Cancel Event' here.");
+        if (!state.isAllowed(AddAction.CANCEL_EVENT)) throw new InterruptActionException("Cannot add action 'Cancel Event' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CANCEL_EVENT, state)
@@ -572,208 +558,208 @@ public class ActionFactory {
     }
 
     public static Action addActionEnchantHeldItem(RestrictionAction state, Enchant enchant, int level, String note) {
-        if (state.pageSlotFor(AddAction.ENCHANT_HELD_ITEM) == null) throw new InterruptActionException("Cannot add action 'Enchant Held Item' here.");
+        if (!state.isAllowed(AddAction.ENCHANT_HELD_ITEM)) throw new InterruptActionException("Cannot add action 'Enchant Held Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.ENCHANT_HELD_ITEM, state)
                 .onlyIf(enchant != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_ENCHANT_HELD_ENCHANT, true)
-                        .clickAndSelectSlot(enchant.getPage(), enchant.getSlotID())
+                        .search(EnchantHeldInputs.ENCHANTMENT)
+                        .search(enchant.displayName)
                 )
                 .onlyIf(level != 1, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(level), Slots.ACTION_ENCHANT_HELD_LEVEL)
+                        .searchForAnvil(EnchantHeldInputs.LEVEL, String.valueOf(level))
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionPause(RestrictionAction state, int timeToWait, String note) {
-        if (state.pageSlotFor(AddAction.PAUSE) == null) throw new InterruptActionException("Cannot add action 'Pause' here.");
+        if (!state.isAllowed(AddAction.PAUSE)) throw new InterruptActionException("Cannot add action 'Pause' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.PAUSE, state)
                 .onlyIf(timeToWait != 20, () -> new ActionBuilder()
-                        .anvilInput(String.valueOf(timeToWait), Slots.ACTION_PAUSE_VAL)
+                        .searchForAnvil(PauseInputs.TICKS, String.valueOf(timeToWait))
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionTeam(RestrictionAction state, String team, String note) {
-        if (state.pageSlotFor(AddAction.SET_TEAM) == null) throw new InterruptActionException("Cannot add action 'Set Team' here.");
+        if (!state.isAllowed(AddAction.SET_TEAM)) throw new InterruptActionException("Cannot add action 'Set Team' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_TEAM, state)
                 .onlyIf(team != null && !team.equals("None"), () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_TEAM_TYPE, true)
-                        .searchH6(team, null, true, null, null)
+                        .search(TeamInputs.TEAM)
+                        .search(team)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionDisplayMenu(RestrictionAction state, String menu, String note) {
-        if (state.pageSlotFor(AddAction.DISPLAY_MENU) == null) throw new InterruptActionException("Cannot add action 'Display Menu' here.");
+        if (!state.isAllowed(AddAction.DISPLAY_MENU)) throw new InterruptActionException("Cannot add action 'Display Menu' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.DISPLAY_MENU, state)
                 .onlyIf(menu != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DISPLAY_MENU_TYPE, true)
-                        .searchH6(menu, null, true, null, null)
+                        .search(DisplayMenuInputs.MENU)
+                        .search(menu)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
-    public static Action addActionDropItem(RestrictionAction state, Integer inventoryItemSlotID, Teleport teleport, String customLocation, boolean dropNaturally, boolean disableItemMerging, long despawnDuration, long pickupDelay, boolean prioritizePlayer, boolean fallbackToInventory, String note) {
-        if (state.pageSlotFor(AddAction.DROP_ITEM) == null) throw new InterruptActionException("Cannot add action 'Drop Item' here.");
+    public static Action addActionDropItem(RestrictionAction state, String snbtData, Teleport teleport, String customLocation, boolean dropNaturally, boolean disableItemMerging, long despawnDuration, long pickupDelay, boolean prioritizePlayer, boolean fallbackToInventory, String note) {
+        if (!state.isAllowed(AddAction.DROP_ITEM)) throw new InterruptActionException("Cannot add action 'Drop Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.DROP_ITEM, state)
-                .onlyIf(inventoryItemSlotID != null, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_ITEM, true)
-                        .clickSlotAndWait(inventoryItemSlotID, true)
+                .onlyIf(!snbtData.isEmpty(), () -> new ActionBuilder()
+                        .search(DropItemInputs.ITEM)
+                        .customItem(snbtData)
                 )
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_LOCATION, true)
-                        .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
+                        .search(DropItemInputs.LOCATION)
+                        .search(teleport.displayName)
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_LOCATION, true)
-                        .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
+                        .search(DropItemInputs.LOCATION)
+                        .searchForAnvil(Teleport.CUSTOM.displayName, customLocation)
                 )
                 .onlyIf(!dropNaturally, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_DROP_NATURALLY, true)
-                )
+                        .search(DropItemInputs.DROP_NATURALLY)
+               )
                 .onlyIf(disableItemMerging, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_DISABLE_MERGE, true)
+                        .search(DropItemInputs.PREVENT_MERGE)
                )
                 .onlyIf(despawnDuration != 6000, () -> new ActionBuilder()
-                        .anvilInput(despawnDuration + "", Slots.ACTION_DROP_ITEM_DESPAWN_DURATION)
+                        .searchForAnvil(DropItemInputs.DESPAWN_DURATION, String.valueOf(despawnDuration))
                 )
                 .onlyIf(pickupDelay != 10, () -> new ActionBuilder()
-                        .anvilInput(pickupDelay + "", Slots.ACTION_DROP_ITEM_PICKUP_DELAY)
+                        .searchForAnvil(DropItemInputs.PICKUP_DELAY, String.valueOf(pickupDelay))
                 )
                 .onlyIf(prioritizePlayer, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_PRIORITIZE_PLAYER, true)
+                        .search(DropItemInputs.PRIORITIZE_PLAYER)
                 )
                 .onlyIf(fallbackToInventory, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_DROP_ITEM_FALLBACK_INVENTORY, true)
+                        .search(DropItemInputs.FALLBACK_INVENTORY)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionChangeVelocity(RestrictionAction state, String velocityX, String velocityY, String velocityZ, String note) {
-        if (state.pageSlotFor(AddAction.CHANGE_VELOCITY) == null) throw new InterruptActionException("Cannot add action 'Change Velocity' here.");
+        if (!state.isAllowed(AddAction.CHANGE_VELOCITY)) throw new InterruptActionException("Cannot add action 'Change Velocity' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.CHANGE_VELOCITY, state)
                 .onlyIf(velocityX != null && !velocityX.equals("10"), () -> new ActionBuilder()
-                        .anvilInput(velocityX, Slots.ACTION_CHANGE_VELOCITY_X)
+                        .searchForAnvil(ChangeVelocityInputs.X_DIRECTION, velocityX)
                 )
                 .onlyIf(velocityY != null && !velocityY.equals("10"), () -> new ActionBuilder()
-                        .anvilInput(velocityY, Slots.ACTION_CHANGE_VELOCITY_Y)
+                        .searchForAnvil(ChangeVelocityInputs.Y_DIRECTION, velocityY)
                 )
                 .onlyIf(velocityZ != null && !velocityZ.equals("10"), () -> new ActionBuilder()
-                        .anvilInput(velocityZ, Slots.ACTION_CHANGE_VELOCITY_Z)
+                        .searchForAnvil(ChangeVelocityInputs.Z_DIRECTION, velocityZ)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionLaunchTarget(RestrictionAction state, Teleport teleport, String customLocation, String strength, String note) {
-        if (state.pageSlotFor(AddAction.LAUNCH_TO_TARGET) == null) throw new InterruptActionException("Cannot add action 'Launch to Target' here.");
+        if (!state.isAllowed(AddAction.LAUNCH_TO_TARGET)) throw new InterruptActionException("Cannot add action 'Launch to Target' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.LAUNCH_TO_TARGET, state)
                 .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_LAUNCH_TARGET_LOCATION, true)
-                        .clickAndSelectSlot(teleport.getPage(), teleport.getSlotID())
+                        .search(LaunchTargetInputs.TARGET_LOCATION)
+                        .search(teleport.displayName)
                 )
                 .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_LAUNCH_TARGET_LOCATION, true)
-                        .anvilInput(customLocation, Teleport.CUSTOM.getSlotID())
+                        .search(LaunchTargetInputs.TARGET_LOCATION)
+                        .searchForAnvil(Teleport.CUSTOM.displayName, customLocation)
                 )
                 .onlyIf(strength != null && !strength.equals("2"), () -> new ActionBuilder()
-                        .anvilInput(strength, Slots.ACTION_LAUNCH_TARGET_STRENGTH)
+                        .searchForAnvil(LaunchTargetInputs.STRENGTH, strength)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionWeather(RestrictionAction state, Weather weather, String note) {
-        if (state.pageSlotFor(AddAction.SET_WEATHER) == null) throw new InterruptActionException("Cannot add action 'Set Weather' here.");
+        if (!state.isAllowed(AddAction.SET_WEATHER)) throw new InterruptActionException("Cannot add action 'Set Weather' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_WEATHER, state)
                 .onlyIf(weather == Weather.SUNNY, () -> new ActionBuilder()
-                        .clickSlotAndWait(Weather.WEATHER_SLOT, true)
+                        .search(SetWeatherInputs.WEATHER)
                 )
                 .onlyIf(weather == Weather.RAINING, () -> new ActionBuilder()
-                        .clickSlotAndWait(Weather.WEATHER_SLOT, true)
-                        .clickSlotAndWait(Weather.WEATHER_SLOT, true)
+                        .search(SetWeatherInputs.WEATHER)
+                        .search(SetWeatherInputs.WEATHER)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionTime(RestrictionAction state, Time time, String customTime, String note) {
-        if (state.pageSlotFor(AddAction.SET_TIME) == null) throw new InterruptActionException("Cannot add action 'Set Time' here.");
+        if (!state.isAllowed(AddAction.SET_TIME)) throw new InterruptActionException("Cannot add action 'Set Time' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.SET_TIME, state)
                 .onlyIf(time != null && time != Time.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_TIME_TIME, true)
-                        .clickAndSelectSlot(time.getPage(), time.getSlotID())
+                        .search(SetTimeInputs.TIME)
+                        .search(time.displayName)
                 )
                 .onlyIf(time == Time.CUSTOM, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_SET_TIME_TIME, true)
-                        .anvilInput(customTime, time.getSlotID())
+                        .search(SetTimeInputs.TIME)
+                        .searchForAnvil(Time.CUSTOM.displayName, customTime)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 
     public static Action addActionNametag(RestrictionAction state, boolean displayNametag, String note) {
-        if (state.pageSlotFor(AddAction.NAME_TAG_DISPLAY) == null) throw new InterruptActionException("Cannot add action 'Nametag Display' here.");
+        if (!state.isAllowed(AddAction.NAME_TAG_DISPLAY)) throw new InterruptActionException("Cannot add action 'Nametag Display' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.NAME_TAG_DISPLAY, state)
                 .onlyIf(!displayNametag, () -> new ActionBuilder()
-                        .clickSlotAndWait(Slots.ACTION_NAME_TAG_TOGGLE, true)
+                        .search(NameTagInputs.DISPLAY)
                 )
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Slots.GENERAL_NOTE_H4)
+                        .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
-                .clickSlotAndWait(Slots.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
 

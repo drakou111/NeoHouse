@@ -13,7 +13,6 @@ import com.drakou111.neohouse.compiler.ast.statement.*;
 
 public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
 
-    // Expressions (Constants, Variables, Placeholder, Sub expressions, Function calls)
     @Override public T visitConstant(ConstantNode constant) {
         return null;
     }
@@ -64,7 +63,6 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
         return null;
     }
 
-    // Main Statements
     @Override public T visitTypedFunction(TypedFunctionNode function) {
         function.parameters.accept(this);
         function.statements.accept(this);
@@ -87,18 +85,33 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
         return null;
     }
 
+    @Override public T visitCommand(CommandNode command) {
+        command.statements.accept(this);
+        return null;
+    }
+
+    @Override public T visitMenu(MenuNode menu) {
+        for (SlotNode slot : menu.slots) {
+            slot.accept(this);
+        }
+        return null;
+    }
+
+    @Override public T visitSlot(SlotNode slot) {
+        slot.statements.accept(this);
+        return null;
+    }
+
     @Override public T visitGlobalDeclaration(GlobalDeclarationNode declaration) {
         declaration.variable.accept(this);
         return null;
     }
 
-    // Statements
     @Override public T visitTypedReturn(TypedReturnNode returnNode) {
         returnNode.expression.accept(this);
         return null;
     }
 
-    // Statements
     @Override public T visitVoidReturn(VoidReturnNode returnNode) {
         return null;
     }
@@ -163,7 +176,6 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
     }
 
 
-    // Lists
     @Override public T visitMain(MainNode main) {
         for (MainStatementNode stmt : main.statements) {
             stmt.accept(this);

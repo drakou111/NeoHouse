@@ -25,6 +25,8 @@ public class Lexer {
             boolean matched = false;
 
             for (TokenType tt : TokenType.values()) {
+                if (tt.pattern == null) continue;
+
                 Matcher m = tt.pattern.matcher(rest);
                 if (!m.lookingAt()) continue;
 
@@ -55,7 +57,7 @@ public class Lexer {
                     lineContent = lines[tokenLine - 1];
                 }
 
-                tokens.add(new Token(tt, lexeme, lineContent, line, column));
+                tokens.add(new Token(tt, lexeme, lineContent, tokenLine, column));
                 break;
             }
 

@@ -8,12 +8,6 @@ import com.drakou111.neohouse.compiler.ast.statement.VoidReturnNode;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
-/**
- * Ensures that:
- *  - TypedReturnNode appears only inside a TypedFunctionNode.
- *  - VoidReturnNode appears only inside a VoidFunctionNode.
- *  - No return is allowed outside of any function.
- */
 public class ReturnContextChecker extends EmptyVisitor<Void> {
     private boolean inTypedFunction = false;
     private VariableType functionType = null;

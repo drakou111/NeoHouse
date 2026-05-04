@@ -1,5 +1,9 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.UIOpacity;
+import com.drakou111.neohouse.UITheme;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -10,73 +14,107 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 
 public class InputDialogScreen extends Screen {
-    private static final int DIALOG_W    = 260;
-    private static final int DIALOG_H    = 96;
-    private static final int CONFIRM_H   = 70;
+    private static final int LINE_H   = 10;
+    private static final int PAD      = 8;
+    private static final int BTN_H    = 20;
+    private static final int INPUT_H  = 18;
+    private static final int MIN_W    = 200;
+    private static final int TITLE_H  = 18;
 
-    private final String prompt;
-    private final String defaultValue;
-    private final Screen parent;
+    private final String   prompt;
+    private final String   defaultValue;
+    private final Screen   parent;
     private final Consumer<String> onConfirm;
-    private final boolean confirmOnly;
+    private final boolean  confirmOnly;
     private EditBox inputBox;
 
-    /** Input dialog with a text field. */
+    private int dialogW;
+    private int dialogH;
+
     public InputDialogScreen(String prompt, String defaultValue, Screen parent, Consumer<String> onConfirm) {
         super(Component.literal("Input"));
-        this.prompt      = prompt;
+        this.prompt       = prompt;
         this.defaultValue = defaultValue;
-        this.parent      = parent;
-        this.onConfirm   = onConfirm;
-        this.confirmOnly = false;
+        this.parent       = parent;
+        this.onConfirm    = onConfirm;
+        this.confirmOnly  = false;
     }
 
-    /** Confirm-only dialog (no text field). */
     public InputDialogScreen(String prompt, Screen parent, Runnable onConfirm) {
         super(Component.literal("Confirm"));
-        this.prompt      = prompt;
+        this.prompt       = prompt;
         this.defaultValue = "";
-        this.parent      = parent;
-        this.onConfirm   = ignored -> onConfirm.run();
-        this.confirmOnly = true;
+        this.parent       = parent;
+        this.onConfirm    = ignored -> onConfirm.run();
+        this.confirmOnly  = true;
     }
+
+    private String[] promptLines() { return prompt.split("\n", -1); }
 
     @Override
     protected void init() {
-        int h = confirmOnly ? CONFIRM_H : DIALOG_H;
-        int x = (this.width  - DIALOG_W) / 2;
-        int y = (this.height - h)        / 2;
+        String[] lines  = promptLines();
+        int promptH     = lines.length * LINE_H;
+
+        dialogW = MIN_W;
+        for (String l : lines) dialogW = Math.max(dialogW, this.font.width(l) + 2 * PAD + 4);
+        dialogW = Math.min(dialogW, this.width - 40);
+
+        if (confirmOnly) {
+            dialogH = TITLE_H + PAD + promptH + PAD + BTN_H + PAD;
+        } else {
+            dialogH = TITLE_H + PAD + promptH + PAD + INPUT_H + PAD + BTN_H + PAD;
+        }
+
+        int x = (this.width  - dialogW) / 2;
+        int y = (this.height - dialogH) / 2;
+
+        int afterPrompt = y + TITLE_H + PAD + promptH;
 
         if (!confirmOnly) {
-            inputBox = new EditBox(this.font, x + 6, y + 34, DIALOG_W - 12, 18, Component.empty());
+            inputBox = new EditBox(this.font, x + PAD, afterPrompt + PAD, dialogW - 2 * PAD, INPUT_H, Component.empty());
             inputBox.setMaxLength(256);
             inputBox.setValue(defaultValue);
             addRenderableWidget(inputBox);
             setInitialFocus(inputBox);
         }
 
-        int btnY = confirmOnly ? y + 36 : y + 60;
-        addRenderableWidget(Button.builder(Component.literal("OK"), btn -> confirm())
-                .bounds(x + 6, btnY, (DIALOG_W - 18) / 2, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), btn -> cancel())
-                .bounds(x + 12 + (DIALOG_W - 18) / 2, btnY, (DIALOG_W - 18) / 2, 20).build());
+        int btnY   = confirmOnly ? afterPrompt + PAD : afterPrompt + PAD + INPUT_H + PAD;
+        int btnW   = (dialogW - 3 * PAD) / 2;
+        addRenderableWidget(Button.builder(
+                Component.literal("✓ OK").withStyle(ChatFormatting.GREEN), btn -> confirm())
+                .bounds(x + PAD, btnY, btnW, BTN_H).build());
+        addRenderableWidget(Button.builder(
+                Component.literal("✗ Cancel").withStyle(ChatFormatting.RED), btn -> cancel())
+                .bounds(x + PAD * 2 + btnW, btnY, btnW, BTN_H).build());
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        int h = confirmOnly ? CONFIRM_H : DIALOG_H;
-        int x = (this.width  - DIALOG_W) / 2;
-        int y = (this.height - h)        / 2;
+        int x  = (this.width  - dialogW) / 2;
+        int y  = (this.height - dialogH) / 2;
+        int cx = x + dialogW / 2;
 
-        g.fill(0, 0, this.width, this.height, 0x88000000);
+        if (parent != null) parent.render(g, -1, -1, partialTick);
+        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
+        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        g.fill(0, 0, this.width, this.height, o.dimAlpha << 24);
 
-        g.fill(x,              y,      x + DIALOG_W, y + h,    0xDD2B2B2B);
-        g.fill(x,              y,      x + DIALOG_W, y + 1,    0xFF666688);
-        g.fill(x,              y + h - 1, x + DIALOG_W, y + h, 0xFF222244);
-        g.fill(x,              y,      x + 1,         y + h,   0xFF666688);
-        g.fill(x + DIALOG_W - 1, y,   x + DIALOG_W,  y + h,   0xFF222244);
+        // Dialog body
+        g.fill(x, y, x + dialogW, y + dialogH, t.dialog(o.panelAlpha));
+        g.renderOutline(x, y, dialogW, dialogH, t.accent());
 
-        g.drawString(this.font, prompt, x + 6, y + 10, 0xFFDDDDDD);
+        // Title bar
+        String titleLabel = confirmOnly ? "Confirm" : "Input";
+        g.fill(x, y, x + dialogW, y + TITLE_H, t.panel(0xFF));
+        g.fill(x, y + TITLE_H - 1, x + dialogW, y + TITLE_H, t.accent());
+        g.drawCenteredString(this.font, titleLabel, cx, y + (TITLE_H - 8) / 2, t.muted());
+
+        // Prompt lines
+        String[] lines = promptLines();
+        for (int i = 0; i < lines.length; i++) {
+            g.drawCenteredString(this.font, lines[i], cx, y + TITLE_H + PAD + i * LINE_H, 0xFFCCCCCC);
+        }
 
         super.render(g, mouseX, mouseY, partialTick);
     }
@@ -94,7 +132,6 @@ public class InputDialogScreen extends Screen {
     private void confirm() {
         Screen before = Minecraft.getInstance().screen;
         onConfirm.accept(inputBox != null ? inputBox.getValue().trim() : "");
-        // Only navigate to parent if the lambda didn't already navigate away
         if (Minecraft.getInstance().screen == before) {
             Minecraft.getInstance().setScreen(parent);
         }

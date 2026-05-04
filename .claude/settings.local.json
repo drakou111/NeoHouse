@@ -5,7 +5,16 @@
       "Bash(./gradlew compileJava --rerun-tasks)",
       "Bash(./gradlew tasks *)",
       "Bash(xargs grep *)",
-      "Bash(del *)"
+      "Bash(del *)",
+      "Bash(git *)",
+      "Bash(grep -E \"^d|\\\\.java$\")",
+      "Bash(xargs -I{} jar tf {})",
+      "Bash(Get-ChildItem *)",
+      "Bash(gradlew compileJava)",
+      "PowerShell(Get-Item \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\NeoHouse.java\" | Select-Object Length; [System.IO.File]::ReadAllText\\(\"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\NeoHouse.java\"\\))",
+      "PowerShell($content = [System.IO.File]::ReadAllBytes\\(\"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\NeoHouse.java\"\\); Write-Output \"File size: $\\($content.Length\\) bytes\"; [System.Text.Encoding]::UTF8.GetString\\($content\\))",
+      "Bash(Remove-Item *)",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }

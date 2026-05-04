@@ -1,5 +1,6 @@
 package com.drakou111.neohouse;
 
+import com.drakou111.neohouse.utils.MessageUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -14,9 +15,14 @@ import java.nio.file.Path;
 public class NeoHouseConfig {
     public static final NeoHouseConfig INSTANCE = new NeoHouseConfig();
 
-    public int clickDelay  = 2;
-    public int retryAmount = 3;
-    public int retryDelay  = 5;
+    public int     clickDelay                 = 2;
+    public boolean showArgumentHints          = true;
+    public boolean showArgumentRecommendations = true;
+    public boolean autoIndent                  = true;
+    public boolean overrideExisting            = true;
+    public String  syntaxTheme                = SyntaxTheme.VSCODE_DARK.name();
+    public String  uiTheme                   = UITheme.DARK_BLUE.name();
+    public String  uiOpacity                 = UIOpacity.DEFAULT.name();
 
     private static boolean loaded = false;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -38,17 +44,29 @@ public class NeoHouseConfig {
         try {
             String json = Files.readString(path, StandardCharsets.UTF_8);
             JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
-            if (obj.has("clickDelay"))  INSTANCE.clickDelay  = obj.get("clickDelay").getAsInt();
-            if (obj.has("retryAmount")) INSTANCE.retryAmount = obj.get("retryAmount").getAsInt();
-            if (obj.has("retryDelay"))  INSTANCE.retryDelay  = obj.get("retryDelay").getAsInt();
-        } catch (Exception ignored) {}
+            if (obj.has("clickDelay"))               INSTANCE.clickDelay                 = obj.get("clickDelay").getAsInt();
+            if (obj.has("showArgumentHints"))          INSTANCE.showArgumentHints          = obj.get("showArgumentHints").getAsBoolean();
+            if (obj.has("showArgumentRecommendations")) INSTANCE.showArgumentRecommendations = obj.get("showArgumentRecommendations").getAsBoolean();
+            if (obj.has("autoIndent"))                 INSTANCE.autoIndent                  = obj.get("autoIndent").getAsBoolean();
+            if (obj.has("overrideExisting"))           INSTANCE.overrideExisting            = obj.get("overrideExisting").getAsBoolean();
+            if (obj.has("syntaxTheme"))                INSTANCE.syntaxTheme                 = obj.get("syntaxTheme").getAsString();
+            if (obj.has("uiTheme"))                    INSTANCE.uiTheme                     = obj.get("uiTheme").getAsString();
+            if (obj.has("uiOpacity"))                  INSTANCE.uiOpacity                   = obj.get("uiOpacity").getAsString();
+        } catch (Exception e) {
+            MessageUtils.warningToChat("Config load failed (" + e.getClass().getSimpleName() + "): " + e.getMessage() + ". Using defaults.");
+        }
     }
 
     public void save() {
         JsonObject obj = new JsonObject();
-        obj.addProperty("clickDelay",  clickDelay);
-        obj.addProperty("retryAmount", retryAmount);
-        obj.addProperty("retryDelay",  retryDelay);
+        obj.addProperty("clickDelay",                 clickDelay);
+        obj.addProperty("showArgumentHints",          showArgumentHints);
+        obj.addProperty("showArgumentRecommendations", showArgumentRecommendations);
+        obj.addProperty("autoIndent",                  autoIndent);
+        obj.addProperty("overrideExisting",            overrideExisting);
+        obj.addProperty("syntaxTheme",                 syntaxTheme);
+        obj.addProperty("uiTheme",                    uiTheme);
+        obj.addProperty("uiOpacity",                  uiOpacity);
         try {
             Files.writeString(configPath(), GSON.toJson(obj), StandardCharsets.UTF_8);
         } catch (IOException ignored) {}

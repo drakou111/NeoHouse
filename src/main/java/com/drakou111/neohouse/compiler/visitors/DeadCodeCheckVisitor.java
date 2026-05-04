@@ -3,10 +3,7 @@ package com.drakou111.neohouse.compiler.visitors;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
@@ -21,12 +18,15 @@ public class DeadCodeCheckVisitor extends EmptyVisitor<Void> {
     @Override public Void visitVoidFunction(VoidFunctionNode f)   { checkBlock(f.statements); return null; }
     @Override public Void visitLoop(LoopNode l)                   { checkBlock(l.statements); return null; }
     @Override public Void visitEvent(EventNode e)                 { checkBlock(e.statements); return null; }
+    @Override public Void visitCommand(CommandNode c)             { checkBlock(c.statements); return null; }
+    @Override public Void visitMenu(MenuNode m)                   { for (SlotNode s : m.slots) s.accept(this); return null; }
+    @Override public Void visitSlot(SlotNode s)                   { checkBlock(s.statements); return null; }
 
     private void checkBlock(StatementListNode block) {
         checkBlockTerminates(block);
     }
 
-    /** Checks for dead code within the block and returns true if the block always terminates. */
+    // Checks for dead code within the block and returns true if the block always terminates.
     private boolean checkBlockTerminates(StatementListNode block) {
         boolean terminated = false;
         for (StatementNode stmt : block.statements) {

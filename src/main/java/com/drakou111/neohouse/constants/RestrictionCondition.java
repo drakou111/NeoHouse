@@ -1,7 +1,5 @@
 package com.drakou111.neohouse.constants;
 
-import com.drakou111.neohouse.utils.PageSlot;
-
 import java.util.List;
 
 public enum RestrictionCondition {
@@ -33,11 +31,7 @@ public enum RestrictionCondition {
         this.allowedConditions = allowedConditions;
     }
 
-    public PageSlot pageSlotFor(AddCondition condition) {
-        int idx = allowedConditions.indexOf(condition);
-        if (idx < 0) return null;
-        int slotId = Slots.GENERAL_LIST_H6[idx % Slots.GENERAL_LIST_H6.length];
-        int page = idx / Slots.GENERAL_LIST_H6.length;
-        return new PageSlot(page, slotId);
+    public boolean isAllowed(AddCondition condition) {
+        return allowedConditions.contains(condition);
     }
 }

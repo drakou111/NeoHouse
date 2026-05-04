@@ -15,14 +15,6 @@ import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.*;
 
-/**
- * Pass 2: builds and checks symbol tables (scopes).
- *   - On declaration: insert into current scope (error if duplicate).
- *   - On assignment/use: resolve up the scope stack or global.
- *       * If found in any scope → OK.
- *       * If not found and name ∈ allLocalNames → ERROR (ambiguous).
- *       * If not found in allLocalNames or globalDecls → insert in globalDecls as type=VAR.
- */
 public class ScopeCheckingVisitor extends DefaultVisitor {
     private final Map<String, VariableType> globalDecls;
     private final Set<String> allLocalNames;
@@ -95,7 +87,6 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitVoidFunction(VoidFunctionNode fn) {
-        // 1) Build new local scope, seeded with parameters
         Map<String, VariableType> localScope = new HashMap<>();
         for (VariableNode param : fn.parameters.parameters) {
             String fullname = param.holder + "." + param.name;
@@ -181,6 +172,31 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         scopeStack.pop();
         inFunction = saved;
         return new EventNode(event.event, event.statements, event.token);
+    }
+
+    @Override
+    public ASTNode visitCommand(CommandNode cmd) {
+        scopeStack.push(new HashMap<>());
+        StatementListNode newBody = (StatementListNode) cmd.statements.accept(this);
+        scopeStack.pop();
+        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, newBody, cmd.token);
+    }
+
+    @Override
+    public ASTNode visitMenu(MenuNode menu) {
+        List<SlotNode> newSlots = new ArrayList<>();
+        for (SlotNode slot : menu.slots) {
+            newSlots.add((SlotNode) slot.accept(this));
+        }
+        return new MenuNode(menu.name, menu.rows, newSlots, menu.token);
+    }
+
+    @Override
+    public ASTNode visitSlot(SlotNode slot) {
+        scopeStack.push(new HashMap<>());
+        StatementListNode newBody = (StatementListNode) slot.statements.accept(this);
+        scopeStack.pop();
+        return new SlotNode(slot.slotId, slot.item, newBody, slot.token);
     }
 
     @Override

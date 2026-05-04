@@ -1,25 +1,15 @@
 package com.drakou111.neohouse.constants;
 
-import com.drakou111.neohouse.utils.PageSlot;
-
 public enum Comparator {
-    LESS_THAN(new PageSlot(0, 10)),
-    LESS_THAN_OR_EQUAL(new PageSlot(0, 11)),
-    EQUAL(new PageSlot(0, 12)),
-    GREATER_THAN_OR_EQUAL(new PageSlot(0, 13)),
-    GREATER_THAN(new PageSlot(0, 14));
+    LESS_THAN("Less Than"),
+    LESS_THAN_OR_EQUAL("Less Than or Equal"),
+    EQUAL("Equal"),
+    GREATER_THAN_OR_EQUAL("Greater Than or Equal"),
+    GREATER_THAN("Greater Than");
 
-    public final PageSlot pageSlot;
+    public final String displayName;
 
-    Comparator(PageSlot pageSlot) {
-        this.pageSlot = pageSlot;
-    }
-
-    public int getPage() {
-        return this.pageSlot.page;
-    }
-
-    public int getSlotID() {
-        return this.pageSlot.slotID;
+    Comparator(String displayName) {
+        this.displayName = displayName;
     }
 }

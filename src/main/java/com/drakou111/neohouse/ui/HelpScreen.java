@@ -1,11 +1,15 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.UIOpacity;
+import com.drakou111.neohouse.UITheme;
 import com.drakou111.neohouse.compiler.enums.ActionParamKind;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Placeholder;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -53,8 +57,6 @@ public class HelpScreen extends Screen {
 
     private record TabButton(Tab tab, int x, int w) {}
 
-    // ── Static content (built once) ────────────────────────────────────────────
-
     private static final Map<Tab, List<HelpLine>> TAB_LINES;
     static {
         Map<Tab, List<HelpLine>> m = new EnumMap<>(Tab.class);
@@ -74,11 +76,17 @@ public class HelpScreen extends Screen {
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Commands"));
-        l.add(new HelpLine(COL_C, "  /neohouse              — open home screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse files        — open file browser"));
-        l.add(new HelpLine(COL_C, "  /neohouse run <file>   — compile & run a script"));
-        l.add(new HelpLine(COL_C, "  /neohouse help         — open this help screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse config       — open config screen"));
+        l.add(new HelpLine(COL_C, "  /neohouse                        — open home screen"));
+        l.add(new HelpLine(COL_C, "  /neohouse help                   — open this help screen"));
+        l.add(new HelpLine(COL_C, "  /neohouse files                  — open file browser"));
+        l.add(new HelpLine(COL_C, "  /neohouse run <file>             — compile & run a script"));
+        l.add(new HelpLine(COL_C, "  /neohouse run latest             — re-run last script"));
+        l.add(new HelpLine(COL_C, "  /neohouse config                 — open config screen"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete functions       — delete all functions"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete events          — delete all event actions"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete commands        — delete all commands"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete menus           — delete all custom menus"));
+        l.add(new HelpLine(COL_C, "  /neohouse nuke                   — delete everything"));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Variable Types"));
@@ -117,6 +125,7 @@ public class HelpScreen extends Screen {
             case LONG_LITERAL      -> "int";
             case DOUBLE_LITERAL    -> "float";
             case NORMAL_EXPRESSION -> "expr";
+            case ITEM_LITERAL      -> "item";
         };
     }
 
@@ -137,7 +146,7 @@ public class HelpScreen extends Screen {
             StringBuilder sig = new StringBuilder(a.name).append("(");
             for (int i = 0; i < a.params.size(); i++) {
                 if (i > 0) sig.append(", ");
-                sig.append(kindStr(a.params.get(i)));
+                sig.append(kindStr(a.params.get(i).kind()));
             }
             sig.append(")");
             l.add(new HelpLine(COL_C, sig.toString(), a.texture));
@@ -155,7 +164,7 @@ public class HelpScreen extends Screen {
             StringBuilder sig = new StringBuilder(c.name).append("(");
             for (int i = 0; i < c.params.size(); i++) {
                 if (i > 0) sig.append(", ");
-                sig.append(kindStr(c.params.get(i)));
+                sig.append(kindStr(c.params.get(i).kind()));
             }
             sig.append(")");
             l.add(new HelpLine(COL_C, sig.toString(), c.texture));
@@ -198,8 +207,6 @@ public class HelpScreen extends Screen {
         return l;
     }
 
-    // ── Instance state ─────────────────────────────────────────────────────────
-
     private Tab activeTab = Tab.OVERVIEW;
     private final Map<Tab, Integer> scrollPos = new EnumMap<>(Tab.class);
     private List<TabButton> tabButtons = Collections.emptyList();
@@ -208,16 +215,19 @@ public class HelpScreen extends Screen {
     private int sbDragStartY;
     private int sbDragStartScroll;
 
-    public HelpScreen() {
+    private final Screen parent;
+
+    public HelpScreen(Screen parent) {
         super(Component.literal("NeoHouse Help"));
+        this.parent = parent;
         for (Tab t : Tab.values()) scrollPos.put(t, 0);
     }
 
-    // ── Init ───────────────────────────────────────────────────────────────────
-
     @Override
     protected void init() {
-        addRenderableWidget(Button.builder(Component.literal("X"), b -> onClose())
+        addRenderableWidget(Button.builder(Component.literal("< Back"), b -> minecraft.setScreen(parent))
+                .bounds(PAD, 5, 52, 18).build());
+        addRenderableWidget(Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
                 .bounds(this.width - PAD - 18, 5, 18, 18).build());
 
         List<TabButton> tabs = new ArrayList<>();
@@ -230,37 +240,33 @@ public class HelpScreen extends Screen {
         tabButtons = Collections.unmodifiableList(tabs);
     }
 
-    // ── Rendering ──────────────────────────────────────────────────────────────
-
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Header
-        g.fill(0, 0, this.width, this.height, 0xCC141414);
-        g.fill(0, 0, this.width, HEADER_H, 0xCC1E1E2A);
-        g.drawString(this.font, "NeoHouse — Help", PAD, 9, 0xFFFFFFFF);
-        g.fill(0, HEADER_H, this.width, HEADER_H + 1, 0xFF444466);
+        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
+        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        g.fillGradient(0, 0, this.width, this.height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
+        g.fill(0, 0, this.width, HEADER_H, t.panel(o.panelAlpha));
+        g.drawString(this.font, "NeoHouse — Help", PAD + 56, 9, 0xFFFFFFFF);
+        g.fill(0, HEADER_H, this.width, HEADER_H + 1, t.accent());
 
-        // Tab buttons
         int tabY = HEADER_H + 1;
         for (TabButton tb : tabButtons) {
             boolean active = tb.tab() == activeTab;
             boolean hover  = mouseX >= tb.x() && mouseX < tb.x() + tb.w()
                           && mouseY >= tabY    && mouseY < tabY + TAB_BTN_H;
-            int bg = active ? 0xFF2A2A3A : hover ? 0xFF1E1E28 : 0xFF161620;
+            int bg = active ? t.highlight(0xFF) : hover ? t.panel(0xFF) : t.surface(0xFF);
             g.fill(tb.x(), tabY, tb.x() + tb.w(), tabY + TAB_BTN_H, bg);
             int labelX = tb.x() + (tb.w() - font.width(tb.tab().label)) / 2;
             int labelY = tabY + (TAB_BTN_H - 8) / 2;
             int textColor = active ? 0xFFFFFF88 : hover ? 0xFFCCCCCC : 0xFF888899;
             g.drawString(this.font, tb.tab().label, labelX, labelY, textColor, false);
             if (active)
-                g.fill(tb.x(), tabY + TAB_BTN_H - 2, tb.x() + tb.w(), tabY + TAB_BTN_H, 0xFFFFFF44);
+                g.fill(tb.x(), tabY + TAB_BTN_H - 2, tb.x() + tb.w(), tabY + TAB_BTN_H, t.accent());
         }
-        g.fill(0, tabY + TAB_BTN_H, this.width, tabY + TAB_BTN_H + 1, 0xFF444466);
+        g.fill(0, tabY + TAB_BTN_H, this.width, tabY + TAB_BTN_H + 1, t.accent());
 
-        // Widgets (Close button)
         super.render(g, mouseX, mouseY, partialTick);
 
-        // Content
         List<HelpLine> lines = TAB_LINES.get(activeTab);
         int scroll  = clampScroll(lines);
         int listH   = this.height - CONTENT_Y - 4;
@@ -281,10 +287,10 @@ public class HelpScreen extends Screen {
         }
         g.disableScissor();
 
-        renderScrollbar(g, lines, scroll, maxRows);
+        renderScrollbar(g, lines, scroll, maxRows, t);
     }
 
-    private void renderScrollbar(GuiGraphics g, List<HelpLine> lines, int scroll, int maxRows) {
+    private void renderScrollbar(GuiGraphics g, List<HelpLine> lines, int scroll, int maxRows, UITheme t) {
         int total = lines.size();
         if (total <= maxRows) return;
 
@@ -296,7 +302,7 @@ public class HelpScreen extends Screen {
         int maxOff = total - maxRows;
         int thumbH = Math.max(16, trackH * maxRows / total);
         int thumbY = trackY + (maxOff > 0 ? (trackH - thumbH) * scroll / maxOff : 0);
-        int thumbColor = sbDragging ? 0xCCCCCCEE : 0x99AAAACC;
+        int thumbColor = sbDragging ? 0xCCDDDDDD : (0x99000000 | (t.muted() & 0xFFFFFF));
         g.fill(trackX, thumbY, trackX + SB_W, thumbY + thumbH, thumbColor);
     }
 
@@ -315,15 +321,13 @@ public class HelpScreen extends Screen {
         if (item == Items.AIR) return;
         g.pose().pushPose();
         g.pose().translate(x, y, 0);
-        g.pose().scale(0.5f, 0.5f, 1f);
+        g.pose().scale(0.5f, 0.5f, 1.0f);
         g.renderItem(new ItemStack(item), 0, 0);
         g.pose().popPose();
     }
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
-
-    // ── Input ──────────────────────────────────────────────────────────────────
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {

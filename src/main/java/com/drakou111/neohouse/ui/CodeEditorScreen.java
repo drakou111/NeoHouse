@@ -1,9 +1,13 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.UIOpacity;
+import com.drakou111.neohouse.UITheme;
 import com.drakou111.neohouse.compiler.NHCompiler;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.utils.MessageUtils;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -20,7 +24,7 @@ public class CodeEditorScreen extends Screen {
     private static final ScriptRunner RUNNER  = new ScriptRunner(new NHCompiler());
     private static final NHCompiler   CHECKER = new NHCompiler();
 
-    private static final int HEADER_H = 26;
+    private static final int HEADER_H = 28;
 
     private final Path   filePath;
     private final Screen parent;
@@ -41,18 +45,19 @@ public class CodeEditorScreen extends Screen {
     protected void init() {
         int rx = this.width - 6;
         int bh = 18;
+        int by = (HEADER_H - bh) / 2;
 
         saveBtn = addRenderableWidget(Button.builder(Component.literal("Save"), btn -> save())
-                .bounds(rx - 186, 4, 46, bh).build());
+                .bounds(rx - 186, by, 46, bh).build());
         addRenderableWidget(Button.builder(Component.literal("Save & Run"), btn -> saveAndRun())
-                .bounds(rx - 136, 4, 76, bh).build());
-        addRenderableWidget(Button.builder(Component.literal("Discard"), btn -> discard())
-                .bounds(rx - 56, 4, 56, bh).build());
-        addRenderableWidget(Button.builder(Component.literal("(i)"), btn ->
-                        Minecraft.getInstance().setScreen(new HelpScreen()))
-                .bounds(6, 4, 24, bh).build());
+                .bounds(rx - 136, by, 76, bh).build());
+        addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose())
+                .bounds(rx - 56, by, 56, bh).build());
+        addRenderableWidget(Button.builder(Component.literal("(i)").withStyle(ChatFormatting.AQUA), btn ->
+                        Minecraft.getInstance().setScreen(new HelpScreen(this)))
+                .bounds(6, by, 24, bh).build());
 
-        editor = new SyntaxEditorWidget(4, HEADER_H + 2, this.width - 8, this.height - HEADER_H - 6);
+        editor = new SyntaxEditorWidget(4, HEADER_H + 2, this.width - 8, this.height - HEADER_H - 5);
         editor.setOnChange(() -> { checkErrors(); updateSaveBtn(); });
 
         String content;
@@ -89,7 +94,7 @@ public class CodeEditorScreen extends Screen {
 
     private void checkErrors() {
         try {
-            CHECKER.compile(editor.getValue());
+            CHECKER.compile(editor.getValue(), filePath.getParent());
             editor.clearError();
         } catch (CompilingException e) {
             if (e.errorToken != null) {
@@ -100,7 +105,7 @@ public class CodeEditorScreen extends Screen {
                 editor.setError(-1, -1, 0, e.getMessage());
             }
         } catch (Exception e) {
-            editor.setError(-1, -1, 0, "Internal error: " + e.getMessage());
+            editor.setError(-1, -1, 0, "Internal error: " + e);
         }
     }
 
@@ -121,7 +126,7 @@ public class CodeEditorScreen extends Screen {
             RUNNER.runScript(filePath);
             MessageUtils.debugToChat("Running: " + filePath.getFileName());
         } catch (Exception e) {
-            MessageUtils.errorToChat(e.getMessage());
+            MessageUtils.errorToChat(e.getMessage() != null ? e.getMessage() : e.toString());
         }
     }
 
@@ -131,6 +136,10 @@ public class CodeEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
+        if (key == GLFW.GLFW_KEY_ESCAPE && editor != null && editor.hasSuggestions()) {
+            editor.dismissSuggestions();
+            return true;
+        }
         if ((mods & GLFW.GLFW_MOD_CONTROL) != 0 && key == GLFW.GLFW_KEY_S) {
             save();
             return true;
@@ -157,10 +166,19 @@ public class CodeEditorScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fill(0, 0, this.width, this.height, 0xCC141414);
-        g.fill(0, 0, this.width, HEADER_H,    0xCC1E1E2A);
-        g.drawString(this.font, "Editing: " + filePath.getFileName(), 36, 8, 0xFFCCCCCC);
-        g.fill(0, HEADER_H, this.width, HEADER_H + 1, 0xFF444466);
+        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
+        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        g.fill(0, 0, this.width, this.height, t.bgTop(o.bgAlpha));
+        g.fill(0, 0, this.width, HEADER_H,    t.panel(o.panelAlpha));
+        g.fill(0, HEADER_H, this.width, HEADER_H + 1, t.accent());
+
+        boolean dirty = isDirty();
+        String indicator = dirty ? "● " : "";
+        int indicatorColor = dirty ? 0xFFFF9944 : t.accent();
+        g.drawString(this.font, indicator, 36, (HEADER_H - 8) / 2, indicatorColor, false);
+        int nameX = 36 + (dirty ? font.width("● ") : 0);
+        g.drawString(this.font, filePath.getFileName().toString(), nameX, (HEADER_H - 8) / 2,
+                dirty ? 0xFFDDCCBB : 0xFFCCCCCC, false);
 
         super.render(g, mouseX, mouseY, partialTick);
     }

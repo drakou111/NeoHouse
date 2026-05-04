@@ -2,9 +2,7 @@ package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
-import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.constants.AddAction;
 
@@ -19,9 +17,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
 
     @Override
     public MainNode analyze(MainNode main) {
-        // Rewrite the bodies of all top‐level statements:
         MainNode rewritten = (MainNode) main.accept(this);
-        // Append all generated helpers at the end:
         List<MainStatementNode> all = new ArrayList<>(rewritten.statements);
         all.addAll(this.all);
         return new MainNode(all);
@@ -61,11 +57,32 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         return new LoopNode(loop.name, loop.description, body, loop.tickDelay, loop.token);
     }
 
+    @Override
+    public ASTNode visitCommand(CommandNode cmd) {
+        StatementListNode stmts = (StatementListNode)cmd.statements.accept(this);
+        StatementListNode body = splitIfNeeded(stmts, false);
+        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.token);
+    }
+
+    @Override
+    public ASTNode visitMenu(MenuNode menu) {
+        List<SlotNode> slots = new ArrayList<>();
+        for (SlotNode slot : menu.slots) {
+            slots.add((SlotNode) slot.accept(this));
+        }
+        return new MenuNode(menu.name, menu.rows, slots, menu.token);
+    }
+
+    @Override
+    public ASTNode visitSlot(SlotNode slot) {
+        StatementListNode stmts = (StatementListNode) slot.statements.accept(this);
+        StatementListNode body = splitIfNeeded(stmts, false);
+        return new SlotNode(slot.slotId, slot.item, body, slot.token);
+    }
+
     private StatementListNode splitIfNeeded(StatementListNode stmts, boolean inCondition) {
-        // Work on a modifiable copy:
         List<StatementNode> list = new ArrayList<>(stmts.statements);
 
-        // ──────────────── Phase 1 ────────────────
         // Wrap each overflow segment in an empty if() { … } block, unless we're already in one
         if (!inCondition) {
             boolean didWrap;
@@ -96,7 +113,6 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
                         StatementListNode body = new StatementListNode(segment);
                         ConditionalNode wrapper = new ConditionalNode(null, body, null, segment.getFirst().token);
 
-                        // rebuild:
                         List<StatementNode> rebuilt = new ArrayList<>(list.subList(0, lastDelimIdx + 1));
                         rebuilt.add(wrapper);
                         rebuilt.addAll(list.subList(i, list.size()));
@@ -109,7 +125,6 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
             } while (didWrap);
         }
 
-        // ──────────────── Phase 2 ────────────────
         // Peel off any remaining overflow *tails* into helper functions
         Map<AddAction, Integer> counts = new HashMap<>();
         int overflowIdx = -1;
@@ -128,7 +143,6 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
             }
         }
 
-        // no overflow → done
         if (overflowIdx < 0) return new StatementListNode(list);
 
         // split off tail [overflowIdx..end) into a helper
@@ -138,7 +152,6 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         VoidFunctionNode helper = new VoidFunctionNode(helperName, "", new ParameterListNode(List.of()), helperBody, tail.getFirst().token);
         all.add(helper);
 
-        // replace tail with helper call
         VoidFunctionCallNode call = new VoidFunctionCallNode(
                 helperName, new ArgumentListNode(List.of()), tail.getFirst().token
         );

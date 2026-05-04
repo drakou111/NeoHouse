@@ -12,7 +12,6 @@ public class PlaceholderValidationVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitPlaceholder(PlaceholderNode node) {
-        // 1) lookup by name
         Placeholder sig;
         try {
             sig = Placeholder.requireByName(node.placeholder);
@@ -20,14 +19,12 @@ public class PlaceholderValidationVisitor extends DefaultVisitor {
             throw new SemanticException(node.token, "Unknown placeholder `" + node.placeholder + "`");
         }
 
-        // 2) check arity
         ConstantPrimitiveList args = node.constants;
         int expected = sig.constTypes.size();
         if (args.constants.size() != expected) {
             throw new SemanticException(node.token, "`" + node.placeholder + "` expects " + expected + " constant(s), but got " + args.constants.size());
         }
 
-        // 3) check each constant’s type
         for (int i = 0; i < expected; i++) {
             ConstantPrimitiveNode c = args.constants.get(i);
             VariableType want = sig.constTypes.get(i);

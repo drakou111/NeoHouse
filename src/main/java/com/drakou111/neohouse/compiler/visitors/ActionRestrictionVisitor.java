@@ -1,9 +1,7 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.constants.AddAction;
@@ -25,6 +23,14 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     }
 
     @Override
+    public ASTNode visitCommand(CommandNode cmd) {
+        ctx.push(RestrictionAction.NONE);
+        super.visitCommand(cmd);
+        ctx.pop();
+        return cmd;
+    }
+
+    @Override
     public ASTNode visitLoop(LoopNode fn) {
         ctx.push(RestrictionAction.NONE);
         super.visitLoop(fn);
@@ -43,14 +49,25 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     }
 
     @Override
+    public ASTNode visitMenu(MenuNode menu) {
+        for (SlotNode slot : menu.slots) {
+            slot.accept(this);
+        }
+        return menu;
+    }
+
+    @Override
+    public ASTNode visitSlot(SlotNode slot) {
+        ctx.push(RestrictionAction.MENU);
+        super.visitSlot(slot);
+        ctx.pop();
+        return slot;
+    }
+
+    @Override
     public ASTNode visitConditional(ConditionalNode cond) {
         ensureAllowed(AddAction.CONDITIONAL, cond.token);
-        RestrictionAction parent = ctx.peek();
-        String pname = parent.name();
-        RestrictionAction here = pname.startsWith("EVENT_") && !pname.startsWith("EVENT_CONDITION_")
-                ? RestrictionAction.valueOf(pname.replace("EVENT_", "EVENT_CONDITION_"))
-                : RestrictionAction.CONDITIONAL;
-        ctx.push(here);
+        ctx.push(deriveInner(ctx.peek()));
         super.visitConditional(cond);
         ctx.pop();
         return cond;
@@ -59,15 +76,21 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     @Override
     public ASTNode visitRandom(RandomNode random) {
         ensureAllowed(AddAction.RANDOM, random.token);
-        RestrictionAction parent = ctx.peek();
-        String pname = parent.name();
-        RestrictionAction here = pname.startsWith("EVENT_") && !pname.startsWith("EVENT_CONDITION_")
-                ? RestrictionAction.valueOf(pname.replace("EVENT_", "EVENT_CONDITION_"))
-                : RestrictionAction.CONDITIONAL;
-        ctx.push(here);
+        ctx.push(deriveInner(ctx.peek()));
         super.visitRandom(random);
         ctx.pop();
         return random;
+    }
+
+    private RestrictionAction deriveInner(RestrictionAction parent) {
+        String pname = parent.name();
+        if (pname.startsWith("EVENT_") && !pname.startsWith("EVENT_CONDITION_")) {
+            return RestrictionAction.valueOf(pname.replace("EVENT_", "EVENT_CONDITION_"));
+        }
+        if (pname.equals("MENU")) {
+            return RestrictionAction.MENU_CONDITIONAL;
+        }
+        return RestrictionAction.CONDITIONAL;
     }
 
     @Override
@@ -112,9 +135,9 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     }
 
     private void ensureAllowed(AddAction action, Token t) {
-        var allowed = ctx.peek();
-        if (!allowed.getAllowedActions().contains(action)) {
-            throw new SemanticException(t, "Action '" + action.name() + "' is not allowed in " + allowed.name().toLowerCase());
+        RestrictionAction restriction = ctx.peek();
+        if (!restriction.isAllowed(action)) {
+            throw new SemanticException(t, "'" + action.displayName + "' cannot be used in this context");
         }
     }
 }

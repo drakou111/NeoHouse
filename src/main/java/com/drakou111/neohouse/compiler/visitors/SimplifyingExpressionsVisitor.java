@@ -31,7 +31,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         }
 
         if (expr instanceof BinaryExpressionNode bin) {
-            // 1) Lower left and right subexpressions
             LowerResult leftRes  = lowerExpr(bin.left);
             LowerResult rightRes = lowerExpr(bin.right);
 
@@ -39,7 +38,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             stmts.addAll(leftRes.stmts());
             stmts.addAll(rightRes.stmts());
 
-            // 2) Determine result type from operand types
             VariableType leftType  = leftRes.simple.type;
             VariableType rightType = rightRes.simple.type;
 
@@ -62,7 +60,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) leftRes.simple, bin.token));
             }
 
-            // 4) Choose the compound‐assignment operator
             AssignmentOperator opAssign = switch (bin.operator) {
                 case ADD      -> AssignmentOperator.ADD_ASSIGN;
                 case SUBTRACT -> AssignmentOperator.SUB_ASSIGN;
@@ -71,7 +68,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 default -> throw new SemanticException(bin.token, "Unsupported binary operator: " + bin.operator);
             };
 
-            // 5) Add the final “accVar op= right” step
             stmts.add(new AssignationNode(accVar, opAssign, (NormalExpressionNode) rightRes.simple, bin.token));
 
             return new LowerResult(accVar, stmts);
@@ -129,7 +125,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 }
             }
 
-            // 1) Pick or create the accumulator variable
             VariableNode accVar;
             boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
             if (reuse) {
@@ -139,7 +134,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
             }
 
-            // 2) Determine which constant to apply, based on varType
             VariableType varType = un.operand.type;
             ConstantPrimitiveNode constantNode;
             switch (varType) {
@@ -163,7 +157,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 default -> throw new SemanticException(un.token, "Unknown VariableType: " + varType);
             }
 
-            // 3) Pick the correct compound‐assignment operator
             AssignmentOperator op = switch (un.operator) {
                 case NEGATE -> AssignmentOperator.MUL_ASSIGN;
                 case INC -> AssignmentOperator.ADD_ASSIGN;
@@ -239,7 +232,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 }
             }
 
-            // 5) rebuild the LogicalExpressionNode
             LogicalExpressionNode newLog = new LogicalExpressionNode(newConds, le.operator, le.token);
             return new LowerResult(newLog, stmts);
         }

@@ -8,21 +8,27 @@ import net.minecraft.world.inventory.ClickType;
 public class SlotAction extends Action {
     private final int slotIndex;
     private final boolean leftClick;
+    private final boolean fromEnd;
 
     public SlotAction(int slotIndex, boolean leftClick) {
+        this(slotIndex, leftClick, false);
+    }
+
+    public SlotAction(int slotIndex, boolean leftClick, boolean fromEnd) {
         this.slotIndex = slotIndex;
         this.leftClick = leftClick;
+        this.fromEnd = fromEnd;
     }
 
     @Override
     public boolean run(Minecraft mc) {
-        if (mc.player != null && mc.player.containerMenu != null && Minecraft.getInstance().gameMode != null) {
-            if (mc.player.containerMenu.slots.size() <= slotIndex) throw new InterruptActionException("Tried clicking a slot that doesn't exist.");
-            
-            Minecraft.getInstance().gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slotIndex, leftClick ? 0 : 1, ClickType.PICKUP, mc.player);
-            return true;
+        if (mc == null || mc.gameMode == null || mc.player == null) {
+            throw new InterruptActionException("An unexpected error occurred, could not click a slot.");
         }
 
-        throw new InterruptActionException("An unexpected error occurred, could not click a slot.");
+        int newIndex = fromEnd ? mc.player.containerMenu.slots.size() - 1 - slotIndex : slotIndex;
+        if (mc.player.containerMenu.slots.size() <= newIndex) throw new InterruptActionException("Tried clicking a slot that doesn't exist.");
+        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, newIndex, leftClick ? 0 : 1, ClickType.PICKUP, mc.player);
+        return true;
     }
 }

@@ -21,7 +21,6 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         return (MainNode) main.accept(this);
     }
 
-    // Expressions (Constants, Variables, Placeholder, Sub expressions, Function calls)
     @Override public ASTNode visitConstant(ConstantNode constant) {
         return constant;
     }
@@ -73,7 +72,6 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         return new FunctionCallNode(functionCall.functionName, args, functionCall.type, functionCall.token);
     }
 
-    // Main Statements
     @Override public ASTNode visitTypedFunction(TypedFunctionNode function) {
         ParameterListNode params = (ParameterListNode)function.parameters.accept(this);
         StatementListNode stmts = (StatementListNode)function.statements.accept(this);
@@ -96,12 +94,29 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         return new EventNode(event.event, stmts, event.token);
     }
 
+    @Override public ASTNode visitCommand(CommandNode command) {
+        StatementListNode stmts = (StatementListNode)command.statements.accept(this);
+        return new CommandNode(command.name, command.targeted, command.priority, command.listed, stmts, command.token);
+    }
+
+    @Override public ASTNode visitMenu(MenuNode menu) {
+        List<SlotNode> slots = new ArrayList<>();
+        for (SlotNode slot : menu.slots) {
+            slots.add((SlotNode) slot.accept(this));
+        }
+        return new MenuNode(menu.name, menu.rows, slots, menu.token);
+    }
+
+    @Override public ASTNode visitSlot(SlotNode slot) {
+        StatementListNode stmts = (StatementListNode) slot.statements.accept(this);
+        return new SlotNode(slot.slotId, slot.item, stmts, slot.token);
+    }
+
     @Override public ASTNode visitGlobalDeclaration(GlobalDeclarationNode declaration) {
         VariableNode var = (VariableNode)declaration.variable.accept(this);
         return new GlobalDeclarationNode(var, declaration.token);
     }
 
-    // Statements
     @Override public ASTNode visitTypedReturn(TypedReturnNode returnNode) {
         NormalExpressionNode expr = (NormalExpressionNode)returnNode.expression.accept(this);
         return new TypedReturnNode(expr, returnNode.token);
@@ -174,7 +189,6 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         return new ActionCallNode(actionCall.name, argList, actionCall.token);
     }
 
-    // Lists
     @Override public ASTNode visitMain(MainNode main) {
         List<MainStatementNode> stmts = new ArrayList<>();
         for (MainStatementNode stmt : main.statements) {
