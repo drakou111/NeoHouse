@@ -1,0 +1,114 @@
+apply plugin: 'dev.architectury.loom'
+apply plugin: 'com.gradleup.shadow'
+apply plugin: 'maven-publish'
+apply plugin: 'idea'
+apply plugin: 'architectury-plugin'
+
+architectury {
+    platformSetupLoomIde()
+    neoForge()
+}
+
+base {
+    archivesName = mod_id
+}
+
+version = mod_version
+group = mod_group_id
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+configurations {
+    common
+    shadowCommon
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentNeoForge.extendsFrom common
+}
+
+loom {
+    runs {
+        client { client() }
+        server { server() }
+    }
+}
+
+dependencies {
+    def mcVer    = rootProject.ext.active_mc_version
+    def parchMc  = rootProject.ext.active_parch_mc
+    def parchVer = rootProject.ext.active_parch_ver
+
+    minecraft "com.mojang:minecraft:${mcVer}"
+    if (parchVer && parchMc) {
+        mappings loom.layered() {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${parchMc}:${parchVer}@zip")
+        }
+    } else {
+        mappings loom.layered() { officialMojangMappings() }
+    }
+
+    neoForge "net.neoforged:neoforge:${rootProject.ext.active_neo_version}"
+
+    common(project(path: ':common', configuration: 'namedElements')) { transitive false }
+    shadowCommon(project(path: ':common', configuration: 'transformProductionNeoForge')) { transitive false }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+def mcVer = rootProject.ext.active_mc_version
+sourceSets.main.java.srcDir(
+        mcVer in ['1.21.11'] ? 'src/compat/mc12111plus' :
+        mcVer in ['1.21.9','1.21.10'] ? 'src/compat/mc1219plus' :
+                'src/compat/mc1218minus'
+)
+
+processResources {
+    def replaceProperties = [
+            minecraft_version_range: rootProject.ext.active_mc_range,
+            neo_version_range      : rootProject.ext.active_neo_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : project.version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description
+    ]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = null
+}
+
+jar {
+    archiveClassifier = 'dev'
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact remapJar.archiveFile
+        }
+    }
+    repositories {
+        maven { url "file://${project.projectDir}/repo" }
+    }
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

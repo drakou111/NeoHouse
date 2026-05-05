@@ -11,6 +11,5 @@ public class NeoHouse
 
     public NeoHouse(IEventBus modEventBus, ModContainer modContainer)
     {
-        modEventBus.addListener(CancelKeybind::registerKeys);
     }
 }

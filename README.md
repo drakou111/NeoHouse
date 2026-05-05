@@ -1,37 +1,112 @@
-# Neo House
-## Introduction
+Here’s your cleaned **complete `.md` file**:
 
-Hello! Neo House is a project that acts as a replacement over Housing Editor. The issues with Housing Editor is that it isn't quite up to date anymore.
-It also depends on other mods like chattriggers, and relies on an external website to be used properly. I liked the scratch-like UI it had, but I would
-rather have something closer to code. HTSL is a good program to use Housing Editor with a coding language, however I felt like it missed a couple things
-that it could have added.
+# NeoHouse
 
-I therefore decided to code my own version of Housing Editor as its standalone mod, along with a coding language and (probably) a syntax highlighter on Visual Studio Code!
+Maintained by: @drakou111
 
-## Dependencies
+---
 
-This version currently only supports NeoForge 1.21.4, but is planned to work for fabric too, and maybe some older/newer versions.
+## Overview
 
-## Installation
+**NeoHouse** is a standalone replacement for [Housing Editor](https://www.housingeditor.com/) and [HTSL](https://github.com/BusterBrown1218/HTSL).
 
-(NONE YET)
+Existing tools like [Housing Editor](https://www.housingeditor.com/) rely on external dependencies such as ChatTriggers and web-based workflows. While I liked its Scratch-like visual approach, I wanted something more code-oriented and fully in-game.
 
-## Utilisation
+Tools like [HTSL](https://github.com/BusterBrown1218/HTSL) improved the experience by introducing a coding language, but they still felt incomplete—lacking proper syntax highlighting, stronger compiler abstractions, and a more integrated IDE experience.
 
-(NONE YET)
+**NeoHouse** aims to address these limitations by providing:
 
-## TODO List
-- ✅ Make navigation system
-    - ✅ Make the navigation logic
-    - ✅ Map all housing slots into constants
-      - ✅ Actions
-      - ✅ Conditions
-- 🚧 Make coding language (.nh)
-  - ✅ Create syntax
-  - ✅ Create AST Tree
-  - ✅ Create tokenizer (Raw text -> Tokens)
-  - ✅ Create parser (Tokens -> AST Tree)
-  - 🚧 Create AST optimizations (AST Tree -> Optimized AST Tree)
-  - ✅ Create code translation (Optimized AST Tree -> Output)
+- A fully in-game scripting environment  
+- A custom-designed coding language  
+- An integrated IDE  
+- A self-contained workflow (no external websites required)  
 
-Note: I will obviously need to rework some parts, so ✅ doesn't mean 100% done, just mostly done.
+---
+
+## Screenshots
+
+TODO
+
+---
+
+## Getting Started
+
+### Download
+
+You can download **NeoHouse** from Modrinth:  
+<modrinth-link-TODO>
+
+Choose the version and mod loader that matches your setup, then place the `.jar` file into your `mods` folder.
+
+### Requirements
+
+- Minecraft 1.21.x (1.21 → 1.21.11)  
+- Fabric requires [Fabric API](https://modrinth.com/project/P7dR8mSH)
+
+---
+
+## Supported Versions
+
+**NeoHouse** currently supports:
+
+- Minecraft 1.21 → 1.21.11  
+- Fabric and NeoForge
+
+Some versions may still contain minor inconsistencies as development continues.
+
+---
+
+## Features
+
+### Scripting Language
+
+**NeoHouse** includes a custom scripting language designed specifically for Hypixel Housing.
+
+Key features:
+
+- Typed functions with parameters  
+  ```java
+    function long someFunction(double someParameter) { ... }
+  ```
+
+* Event, command, and menu modification support
+* Multiple functions, events, commands, and menus per file
+* Item support in actions and menus
+  (Use `/nh copyitem` to retrieve item data)
+
+Additional commands can be explored in-game:
+
+```
+/nh help
+```
+
+---
+
+### Integrated IDE
+
+**NeoHouse** includes a built-in in-game IDE focused on usability and customization.
+
+Features include:
+
+* Customizable UI themes (editor and interface)
+* Code suggestions and autocomplete
+* Function argument hints
+* Auto-indentation and tab support
+
+---
+
+## Goals
+
+**NeoHouse** is being developed with the following goals:
+
+* Remove dependency on external websites
+* Provide a more code-like experience than visual editors
+* Keep everything accessible directly in-game
+* Support more abstract and typed scripting features
+
+---
+
+## Notes
+
+This project is still in active development. Features, syntax, and compatibility may change between versions.
+

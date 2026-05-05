@@ -1,0 +1,93 @@
+apply plugin: 'dev.architectury.loom'
+apply plugin: 'com.gradleup.shadow'
+apply plugin: 'maven-publish'
+apply plugin: 'architectury-plugin'
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+base {
+    archivesName = "${mod_id}-fabric"
+}
+
+version = mod_version
+group = mod_group_id
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+configurations {
+    common
+    shadowCommon
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+loom {
+    runs {
+        client { client() }
+        server { server() }
+    }
+}
+
+dependencies {
+    def mcVer    = rootProject.ext.active_mc_version
+    def parchMc  = rootProject.ext.active_parch_mc
+    def parchVer = rootProject.ext.active_parch_ver
+
+    minecraft "com.mojang:minecraft:${mcVer}"
+    if (parchVer && parchMc) {
+        mappings loom.layered() {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${parchMc}:${parchVer}@zip")
+        }
+    } else {
+        mappings loom.layered() { officialMojangMappings() }
+    }
+
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.ext.active_fabric_api}"
+
+    common(project(path: ':common', configuration: 'namedElements')) { transitive false }
+    shadowCommon(project(path: ':common', configuration: 'transformProductionFabric')) { transitive false }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+// Fabric doesn't have loader-specific compat classes yet, but we keep the pattern consistent
+// (no-op for now; add loader-specific compat dirs here if needed in the future)
+
+processResources {
+    def replaceProperties = [version: project.version, mod_id: mod_id, minecraft_version: rootProject.ext.active_mc_version]
+    inputs.properties replaceProperties
+    filesMatching('fabric.mod.json') {
+        expand replaceProperties
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = null
+}
+
+jar {
+    archiveClassifier = 'dev'
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact remapJar.archiveFile
+        }
+    }
+    repositories {
+        maven { url "file://${project.projectDir}/repo" }
+    }
+}

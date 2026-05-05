@@ -1,0 +1,102 @@
+plugins {
+    id "dev.kikugie.stonecutter"
+    id 'dev.architectury.loom' apply false
+    id 'architectury-plugin' apply false
+    id 'com.gradleup.shadow' apply false
+}
+stonecutter.active('1.21.11') /* [SC] DO NOT EDIT */
+
+// Parse the active version from the line above (Stonecutter updates it on switch).
+def matcher = buildFile.text =~ /stonecutter\.active\('([^']+)'\)/
+def activeVer = matcher[0][1] as String
+def vprops = new Properties()
+def vpropsFile = file("versions/${activeVer}/gradle.properties")
+if (vpropsFile.exists()) vprops.load(new FileInputStream(vpropsFile))
+
+ext.active_mc_version  = vprops.getProperty('minecraft_version',           activeVer)
+ext.active_parch_mc    = vprops.getProperty('parchment_minecraft_version', '')
+ext.active_parch_ver   = vprops.getProperty('parchment_mappings_version',  '')
+ext.active_fabric_api  = vprops.getProperty('fabric_api_version',          '')
+ext.active_neo_version = vprops.getProperty('neo_version',                 '')
+ext.active_mc_range    = vprops.getProperty('minecraft_version_range',     '')
+ext.active_neo_range   = vprops.getProperty('neo_version_range',           '')
+
+allprojects {
+    repositories {
+        mavenLocal()
+        maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://maven.architectury.dev/' }
+        maven { url = 'https://maven.neoforged.net/releases' }
+        maven { url = 'https://maven.parchmentmc.org' }
+    }
+}
+
+// Register chiseled-build tasks (build every declared MC version).
+// Each version needs TWO separate Gradle processes:
+//   1. switch  — updates stonecutter.gradle + transforms sources
+//   2. compile — fresh process reads the new active version and configures Loom correctly
+// Running both in one process would compile with the old ext.active_mc_version.
+def gradlewCmd = org.gradle.internal.os.OperatingSystem.current().isWindows()
+        ? ['cmd', '/c', '.\\gradlew.bat'] : ['./gradlew']
+def verList = stonecutter.versions.toList()
+verList.forEach { ver ->
+    def switchTask = "switch-${ver.project}"
+    def remapTask  = "remap-${ver.project}"
+
+    tasks.register(switchTask, Exec) {
+        group      = 'stonecutter'
+        workingDir = rootDir
+        commandLine(*gradlewCmd, "stonecutterSwitchTo${ver.project}")
+    }
+    tasks.register(remapTask, Exec) {
+        group      = 'stonecutter'
+        workingDir = rootDir
+        commandLine(*gradlewCmd, ':neoforge:remapJar', ':fabric:remapJar')
+        dependsOn switchTask
+    }
+    tasks.register("collect-${ver.project}") {
+        group       = 'stonecutter'
+        def mcVer   = ver.project
+        def distDir = file("${rootDir}/dist")
+        doLast {
+            distDir.mkdirs()
+            copy {
+                from file("${rootDir}/neoforge/build/libs")
+                into distDir
+                include 'neohouse-*.jar'
+                exclude '*-dev*.jar', '*-shadow*.jar'
+                rename { "neohouse-neoforge-${mcVer}.jar" }
+            }
+            copy {
+                from file("${rootDir}/fabric/build/libs")
+                into distDir
+                include 'neohouse-fabric-*.jar'
+                exclude '*-dev*.jar', '*-shadow*.jar'
+                rename { "neohouse-fabric-${mcVer}.jar" }
+            }
+        }
+        dependsOn remapTask
+    }
+    tasks.register("build-${ver.project}") {
+        group       = 'stonecutter'
+        description = "Build NeoForge + Fabric JARs for MC ${ver.project}"
+        dependsOn "collect-${ver.project}"
+    }
+}
+// Force sequential ordering so version switches don't overlap.
+def prev = null
+verList.forEach { ver ->
+    if (prev != null) {
+        def cur = ver; def p = prev
+        tasks.named("switch-${cur.project}").configure { mustRunAfter "build-${p.project}" }
+    }
+    prev = ver
+}
+tasks.register('chiseledBuild') {
+    group       = 'stonecutter'
+    description = 'Build all MC versions (NeoForge + Fabric) sequentially'
+    verList.forEach { ver -> dependsOn "build-${ver.project}" }
+}
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}

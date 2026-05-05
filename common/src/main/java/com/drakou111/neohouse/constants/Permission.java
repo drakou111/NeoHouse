@@ -1,0 +1,61 @@
+package com.drakou111.neohouse.constants;
+
+public enum Permission {
+    FLY("Fly"),
+    WOOD_DOOR("Wood Door"),
+    IRON_DOOR("Iron Door"),
+    WOOD_TRAP_DOOR("Wood Trap Door"),
+    IRON_TRAP_DOOR("Iron Trap Door"),
+    FENCE_GATE("Fence Gate"),
+    BUTTON("Button"),
+    LEVER("Lever"),
+    USE_LAUNCH_PADS("Use Launch Pads"),
+    TP("/tp"),
+    TP_OTHER_PLAYERS("/tp Other Players"),
+    JUKEBOX("Jukebox"),
+    KICK("Kick"),
+    BAN("Ban"),
+    MUTE("Mute"),
+    PET_SPAWNING("Pet Spawning"),
+    BUILD("Build"),
+    OFFLINE_BUILD("Offline Build"),
+    FLUID("Fluid"),
+    PRO_TOOLS("Pro Tools"),
+    USE_CHESTS("Use Chests"),
+    USE_ENDER_CHESTS("Use Ender Chests"),
+    ITEM_EDITOR("Item Editor"),
+    SWITCH_GAME_MODE("Switch Game Mode"),
+    EDIT_VARIABLES("Edit Variables"),
+    CHANGE_PLAYER_GROUP("Change Player Group"),
+    CHANGE_GAME_RULES("Change Gamerules"),
+    HOUSING_MENU("Housing Menu"),
+    TEAM_CHAT_SPY("Team Chat Spy"),
+    EDIT_ACTIONS("Edit Actions"),
+    EDIT_REGIONS("Edit Regions"),
+    EDIT_SCOREBOARD("Edit Scoreboard"),
+    EDIT_EVENT_ACTIONS("Edit Event Actions"),
+    EDIT_COMMANDS("Edit Commands"),
+    EDIT_FUNCTIONS("Edit Functions"),
+    EDIT_INVENTORY_LAYOUTS("Edit Inventory Layouts"),
+    EDIT_TEAMS("Edit Teams"),
+    EDIT_CUSTOM_MENUS("Edit Custom Menus"),
+    VIEW_ANALYTICS("View Analytics"),
+    VIEW_LOGGER("View Logger"),
+    ITEM_MAILBOX("Item: Mailbox"),
+    ITEM_EGG_HUNT("Item: Egg Hunt"),
+    ITEM_TELEPORT_PAD("Item: Teleport Pad"),
+    ITEM_LAUNCH_PAD("Item: Launch Pad"),
+    ITEM_ACTION_PAD("Item: Action Pad"),
+    ITEM_HOLOGRAM("Item: Hologram"),
+    ITEM_NPC("Item: NPCs"),
+    ITEM_ACTION_BUTTON("Item: Action Button"),
+    ITEM_LEADERBOARD("Item: Leaderboard"),
+    ITEM_TRASH_CAN("Item: Trash Can"),
+    ITEM_BIOME_STICK("Item: Biome Stick");
+
+    public final String displayName;
+
+    Permission(String displayName) {
+        this.displayName = displayName;
+    }
+}
