@@ -25,7 +25,9 @@ Tools like [HTSL](https://github.com/BusterBrown1218/HTSL) improved the experien
 
 ## Screenshots
 
-TODO
+![img_1.png](img_1.png)
+
+![img_3.png](img_3.png)
 
 ---
 
