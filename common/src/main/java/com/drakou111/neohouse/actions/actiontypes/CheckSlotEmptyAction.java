@@ -20,6 +20,22 @@ public class CheckSlotEmptyAction extends Action {
     }
 
     @Override
+    public boolean requiresCreative() {
+        return (ifEmpty != null && ifEmpty.requiresCreative())
+                || (ifOccupied != null && ifOccupied.requiresCreative());
+    }
+
+    @Override
+    public int countSteps() {
+        int a = ifEmpty    != null ? ifEmpty.countSteps()    : 0;
+        int b = ifOccupied != null ? ifOccupied.countSteps() : 0;
+        return Math.max(a, b);
+    }
+
+    @Override
+    public boolean isContainer() { return true; }
+
+    @Override
     public boolean run(Minecraft mc) {
         if (active == null) {
             AbstractContainerMenu menu = mc.player.containerMenu;

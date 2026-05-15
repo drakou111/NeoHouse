@@ -1,40 +1,44 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
+import com.drakou111.neohouse.compiler.ast.expr.ConditionCallNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.constants.AddAction;
+import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.RestrictionAction;
+import com.drakou111.neohouse.constants.RestrictionCondition;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class ActionRestrictionVisitor extends DefaultVisitor {
-    private final Deque<RestrictionAction> ctx = new ArrayDeque<>();
+    private final Deque<RestrictionAction>    ctx   = new ArrayDeque<>();
+    private final Deque<RestrictionCondition> rcCtx = new ArrayDeque<>();
 
     @Override
     public ASTNode visitVoidFunction(VoidFunctionNode fn) {
-        ctx.push(RestrictionAction.NONE);
+        ctx.push(RestrictionAction.NONE); rcCtx.push(RestrictionCondition.NONE);
         super.visitVoidFunction(fn);
-        ctx.pop();
+        ctx.pop(); rcCtx.pop();
         return fn;
     }
 
     @Override
     public ASTNode visitCommand(CommandNode cmd) {
-        ctx.push(RestrictionAction.NONE);
+        ctx.push(RestrictionAction.NONE); rcCtx.push(RestrictionCondition.COMMAND);
         super.visitCommand(cmd);
-        ctx.pop();
+        ctx.pop(); rcCtx.pop();
         return cmd;
     }
 
     @Override
     public ASTNode visitLoop(LoopNode fn) {
-        ctx.push(RestrictionAction.NONE);
+        ctx.push(RestrictionAction.NONE); rcCtx.push(RestrictionCondition.NONE);
         super.visitLoop(fn);
-        ctx.pop();
+        ctx.pop(); rcCtx.pop();
         return fn;
     }
 
@@ -42,9 +46,10 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     public ASTNode visitEvent(EventNode event) {
         String key = "EVENT_" + event.event.name();
         RestrictionAction ra = RestrictionAction.valueOf(key);
-        ctx.push(ra);
+        RestrictionCondition rc = RestrictionCondition.valueOf(key);
+        ctx.push(ra); rcCtx.push(rc);
         super.visitEvent(event);
-        ctx.pop();
+        ctx.pop(); rcCtx.pop();
         return event;
     }
 
@@ -58,19 +63,31 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitSlot(SlotNode slot) {
-        ctx.push(RestrictionAction.MENU);
+        ctx.push(RestrictionAction.MENU); rcCtx.push(RestrictionCondition.NONE);
         super.visitSlot(slot);
-        ctx.pop();
+        ctx.pop(); rcCtx.pop();
         return slot;
     }
 
     @Override
     public ASTNode visitConditional(ConditionalNode cond) {
         ensureAllowed(AddAction.CONDITIONAL, cond.token);
-        ctx.push(deriveInner(ctx.peek()));
+        ctx.push(deriveInner(ctx.peek())); rcCtx.push(rcCtx.isEmpty() ? RestrictionCondition.NONE : rcCtx.peek());
         super.visitConditional(cond);
-        ctx.pop();
+        ctx.pop(); rcCtx.pop();
         return cond;
+    }
+
+    @Override
+    public ASTNode visitConditionCall(ConditionCallNode call) {
+        if (!rcCtx.isEmpty()) {
+            AddCondition cond = AddCondition.searchByName(call.name);
+            if (cond != null && !rcCtx.peek().isAllowed(cond)) {
+                throw new SemanticException(call.token,
+                    "'" + cond.displayName + "' cannot be used in this context.");
+            }
+        }
+        return super.visitConditionCall(call);
     }
 
     @Override

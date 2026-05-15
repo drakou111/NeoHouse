@@ -37,6 +37,6 @@ public class RandomUnfoldingVisitor extends DefaultVisitor {
                 newOptions.add(new StatementListNode(List.of(call)));
             }
         }
-        return new RandomNode(newOptions, random.token);
+        return new RandomNode(newOptions, random.weights, random.token);
     }
 }

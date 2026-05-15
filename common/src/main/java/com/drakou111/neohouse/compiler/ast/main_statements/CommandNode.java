@@ -10,7 +10,7 @@ public class CommandNode extends MainStatementNode {
     public final boolean targeted;
     public final int priority;
     public final boolean listed;
-    public StatementListNode statements;
+    public final StatementListNode statements;
 
     public CommandNode(String name, boolean targeted, int priority, boolean listed, StatementListNode statements, Token token) {
         this.name = name;

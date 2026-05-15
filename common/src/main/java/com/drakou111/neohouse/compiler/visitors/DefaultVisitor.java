@@ -114,7 +114,10 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
 
     @Override public ASTNode visitGlobalDeclaration(GlobalDeclarationNode declaration) {
         VariableNode var = (VariableNode)declaration.variable.accept(this);
-        return new GlobalDeclarationNode(var, declaration.token);
+        NormalExpressionNode init = declaration.initializer != null
+                ? (NormalExpressionNode) declaration.initializer.accept(this)
+                : null;
+        return new GlobalDeclarationNode(var, init, declaration.token);
     }
 
     @Override public ASTNode visitTypedReturn(TypedReturnNode returnNode) {
@@ -171,7 +174,7 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         for (StatementListNode list : random.statements) {
             stmts.add((StatementListNode)list.accept(this));
         }
-        return new RandomNode(stmts, random.token);
+        return new RandomNode(stmts, random.weights, random.token);
     }
 
     @Override public ASTNode visitRepeat(RepeatNode repeat) {

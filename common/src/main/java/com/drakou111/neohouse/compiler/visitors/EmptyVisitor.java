@@ -104,6 +104,7 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
 
     @Override public T visitGlobalDeclaration(GlobalDeclarationNode declaration) {
         declaration.variable.accept(this);
+        if (declaration.initializer != null) declaration.initializer.accept(this);
         return null;
     }
 
@@ -121,7 +122,8 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
     }
 
     @Override public T visitConditional(ConditionalNode conditional) {
-        conditional.condition.accept(this);
+        if (conditional.condition != null)
+            conditional.condition.accept(this);
         conditional.thenBlock.accept(this);
         if (conditional.elseBlock != null)
             conditional.elseBlock.accept(this);

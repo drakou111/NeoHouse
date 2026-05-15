@@ -9,4 +9,16 @@ public abstract class Action {
     public boolean requiresCreative() {
         return false;
     }
+
+    public String getDebugName() {
+        return getClass().getSimpleName();
+    }
+
+    public int countSteps() {
+        return 1;
+    }
+
+    public boolean isContainer() {
+        return false;
+    }
 }

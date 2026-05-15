@@ -59,7 +59,7 @@ public class ActionBuilder {
 
     public ActionBuilder anvilInput(String string, int slot) {
         String capped = string.length() > StringLimits.ANVIL_TEXT ? string.substring(0, StringLimits.ANVIL_TEXT) : string;
-
+        
         actions.add(new SlotAction(slot, true));
         actions.add(new WaitForAction(AnvilScreen.class, true));
         actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
@@ -223,6 +223,20 @@ public class ActionBuilder {
         actions.add(new WaitForAction(ContainerScreen.class, true));
         actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
         actions.add(new SearchAction(null, name, null, leftClick, null, null));
+        return this;
+    }
+
+    public ActionBuilder copyContext() {
+        actions.add(new SlotAction(Others.GENERAL_GO_COPY_PASTE_H6, false));
+        actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        return this;
+    }
+
+    public ActionBuilder pasteContext() {
+        actions.add(new SlotAction(Others.GENERAL_GO_COPY_PASTE_H6, true));
+        actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
         return this;
     }
 

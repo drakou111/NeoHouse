@@ -3,7 +3,7 @@ package com.drakou111.neohouse.ui;
 import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.UIOpacity;
 import com.drakou111.neohouse.UITheme;
-import com.drakou111.neohouse.compiler.NHCompiler;
+import com.drakou111.neohouse.compiler.CompilerSession;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.utils.MessageUtils;
@@ -16,13 +16,17 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
+import com.drakou111.neohouse.compiler.lexer.Token;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CodeEditorScreen extends ScreenBase {
-    private static final NHCompiler CHECKER = new NHCompiler();
+    private static final CompilerSession CHECKER = new CompilerSession();
 
     private static final int HEADER_H = 28;
 
@@ -43,6 +47,7 @@ public class CodeEditorScreen extends ScreenBase {
 
     @Override
     protected void init() {
+        if (editor != null && pendingContent == null) pendingContent = editor.getValue();
         int rx = this.width - 6;
         int bh = 18;
         int by = (HEADER_H - bh) / 2;
@@ -93,20 +98,50 @@ public class CodeEditorScreen extends ScreenBase {
     }
 
     private void checkErrors() {
-        try {
-            CHECKER.compile(editor.getValue(), filePath.getParent());
-            editor.clearError();
-        } catch (CompilingException e) {
-            if (e.errorToken != null) {
-                int line0     = e.errorToken.line - 1;
-                int colStart0 = e.errorToken.column - e.errorToken.text.length() - 1;
-                editor.setError(line0, Math.max(0, colStart0), e.errorToken.text.length(), e.getMessage());
-            } else {
-                editor.setError(-1, -1, 0, e.getMessage());
+        List<CompilingException> collected = new ArrayList<>();
+        String src = editor.getValue();
+        for (int attempt = 0; attempt < 8; attempt++) {
+            try {
+                CHECKER.compile(src, filePath.getParent());
+                break;
+            } catch (CompilingException e) {
+                collected.add(e);
+                if (e.errorToken == null) break;
+                int offset = tokenOffset(src, e.errorToken);
+                if (offset < 0 || offset + e.errorToken.text.length() > src.length()) break;
+                src = src.substring(0, offset) + " ".repeat(e.errorToken.text.length()) + src.substring(offset + e.errorToken.text.length());
+            } catch (Exception e) {
+                editor.setError(-1, -1, 0, "Internal error: " + e);
+                return;
             }
-        } catch (Exception e) {
-            editor.setError(-1, -1, 0, "Internal error: " + e);
         }
+        if (collected.isEmpty()) {
+            editor.clearError();
+        } else {
+            List<int[]> spans    = new ArrayList<>();
+            List<String> messages = new ArrayList<>();
+            for (CompilingException e : collected) {
+                messages.add(e.getMessage());
+                if (e.errorToken != null) {
+                    int line0     = e.errorToken.line - 1;
+                    int colStart0 = Math.max(0, e.errorToken.column - e.errorToken.text.length() - 1);
+                    spans.add(new int[]{line0, colStart0, e.errorToken.text.length()});
+                } else {
+                    spans.add(new int[]{-1, -1, 0});
+                }
+            }
+            editor.setErrors(spans, messages, collected.get(0).getMessage());
+        }
+    }
+
+    private static int tokenOffset(String source, Token t) {
+        String[] lines = source.split("\n", -1);
+        int lineIdx = t.line - 1;
+        if (lineIdx < 0 || lineIdx >= lines.length) return -1;
+        int offset = 0;
+        for (int i = 0; i < lineIdx; i++) offset += lines[i].length() + 1;
+        offset += Math.max(0, t.column - t.text.length() - 1);
+        return offset;
     }
 
     private void save() {
@@ -136,6 +171,10 @@ public class CodeEditorScreen extends ScreenBase {
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
+        if (key == GLFW.GLFW_KEY_ESCAPE && editor != null && editor.isFindOpen()) {
+            editor.closeFindBar();
+            return true;
+        }
         if (key == GLFW.GLFW_KEY_ESCAPE && editor != null && editor.hasSuggestions()) {
             editor.dismissSuggestions();
             return true;

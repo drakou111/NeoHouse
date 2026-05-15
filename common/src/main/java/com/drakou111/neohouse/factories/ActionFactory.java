@@ -1,9 +1,14 @@
 package com.drakou111.neohouse.factories;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.constants.actions.*;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
+import com.drakou111.neohouse.factories.params.DropItemParams;
+import com.drakou111.neohouse.factories.params.PlaySoundParams;
+import com.drakou111.neohouse.factories.params.TitleParams;
+import com.drakou111.neohouse.factories.params.VariableParams;
 import com.drakou111.neohouse.utils.ActionBuilder;
 
 
@@ -75,16 +80,16 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionTitle(RestrictionAction state, String title, String subtitle, int fadeIn, int stay, int fadeOut, String note) {
+    public static Action addActionTitle(RestrictionAction state, TitleParams p) {
         if (!state.isAllowed(AddAction.TITLE)) throw new InterruptActionException("Cannot add action 'Title' here.");
 
         String finalTitle;
-        if (title == null || title.trim().isEmpty()) finalTitle = "&l";
-        else finalTitle = title;
+        if (p.title == null || p.title.trim().isEmpty()) finalTitle = "&l";
+        else finalTitle = p.title;
 
         String finalSubTitle;
-        if (subtitle == null || subtitle.trim().isEmpty()) finalSubTitle = "&l";
-        else finalSubTitle = subtitle;
+        if (p.subtitle == null || p.subtitle.trim().isEmpty()) finalSubTitle = "&l";
+        else finalSubTitle = p.subtitle;
 
         return new ActionBuilder()
                 .addAction(AddAction.TITLE, state)
@@ -94,17 +99,17 @@ public class ActionFactory {
                 .onlyIf(!finalSubTitle.equals("&l"), () -> new ActionBuilder()
                         .searchForChat(TitleInputs.SUBTITLE, finalSubTitle)
                 )
-                .onlyIf(fadeIn != 1, () -> new ActionBuilder()
-                        .searchForAnvil(TitleInputs.FADEIN, String.valueOf(fadeIn))
+                .onlyIf(p.fadeIn != 1, () -> new ActionBuilder()
+                        .searchForAnvil(TitleInputs.FADEIN, String.valueOf(p.fadeIn))
                 )
-                .onlyIf(stay != 5, () -> new ActionBuilder()
-                        .searchForAnvil(TitleInputs.STAY, String.valueOf(stay))
+                .onlyIf(p.stay != 5, () -> new ActionBuilder()
+                        .searchForAnvil(TitleInputs.STAY, String.valueOf(p.stay))
                 )
-                .onlyIf(fadeOut != 1, () -> new ActionBuilder()
-                        .searchForAnvil(TitleInputs.FADEOUT, String.valueOf(fadeOut))
+                .onlyIf(p.fadeOut != 1, () -> new ActionBuilder()
+                        .searchForAnvil(TitleInputs.FADEOUT, String.valueOf(p.fadeOut))
                 )
-                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Others.GENERAL_NOTE_H4)
+                .onlyIf(p.note != null && !p.note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(p.note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
@@ -295,40 +300,40 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionVariable(RestrictionAction state, Holder holder, String variable, String teamName, Operator operator, String value, boolean automaticUnset, String note) {
+    public static Action addActionVariable(RestrictionAction state, VariableParams p) {
         if (!state.isAllowed(AddAction.VARIABLE)) throw new InterruptActionException("Cannot add action 'Variable' here.");
 
         return new ActionBuilder()
             .addAction(AddAction.VARIABLE, state)
-            .onlyIf(holder == Holder.GLOBAL, () -> new ActionBuilder()
+            .onlyIf(p.holder == Holder.GLOBAL, () -> new ActionBuilder()
                 .search(SetVariableInputs.HOLDER)
             )
-            .onlyIf(holder == Holder.TEAM, () -> new ActionBuilder()
+            .onlyIf(p.holder == Holder.TEAM, () -> new ActionBuilder()
                     .search(SetVariableInputs.HOLDER)
                     .search(SetVariableInputs.HOLDER)
             )
-            .onlyIf(holder == Holder.TEAM && teamName != null && !teamName.trim().isEmpty() && !teamName.equals("None"), () -> new ActionBuilder()
+            .onlyIf(p.holder == Holder.TEAM && p.teamName != null && !p.teamName.trim().isEmpty() && !p.teamName.equals("None"), () -> new ActionBuilder()
                     .search(SetVariableInputs.TEAM)
-                    .search(teamName)
+                    .search(p.teamName)
             )
-            .onlyIf(!variable.equals("Kills"), () -> new ActionBuilder()
-                    .searchForChat(SetVariableInputs.VARIABLE, variable)
+            .onlyIf(!p.variable.equals("Kills"), () -> new ActionBuilder()
+                    .searchForChat(SetVariableInputs.VARIABLE, p.variable)
             )
-            .onlyIf(operator != Operator.INCREMENT, () -> new ActionBuilder()
+            .onlyIf(p.operator != Operator.INCREMENT, () -> new ActionBuilder()
                     .search(SetVariableInputs.OPERATION)
-                    .search(operator.displayName, null, true, null,
-                            operator.requiresToggle ? new ActionBuilder()
+                    .search(p.operator.displayName, null, true, null,
+                            p.operator.requiresToggle ? new ActionBuilder()
                                     .search(Operator.ADVANCED_OPERATIONS.displayName)
-                                    .search(operator.displayName) : null)
+                                    .search(p.operator.displayName) : null)
             )
-            .onlyIf(!value.equals("1"), () -> new ActionBuilder()
-                    .searchForAnvil(SetVariableInputs.VALUE, value)
+            .onlyIf(!p.value.equals("1"), () -> new ActionBuilder()
+                    .searchForAnvil(SetVariableInputs.VALUE, p.value)
             )
-            .onlyIf(automaticUnset, () -> new ActionBuilder()
+            .onlyIf(p.automaticUnset, () -> new ActionBuilder()
                     .search(SetVariableInputs.AUTOMATIC_UNSET)
             )
-            .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                    .chatInput(note, Others.GENERAL_NOTE_H4)
+            .onlyIf(p.note != null && !p.note.trim().isEmpty(), () -> new ActionBuilder()
+                    .chatInput(p.note, Others.GENERAL_NOTE_H4)
             )
             .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
             .get();
@@ -376,32 +381,31 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionPlaySound(RestrictionAction state, Sound sound, double volume, double pitch, Teleport teleport, String customLocation, String note) {
+    public static Action addActionPlaySound(RestrictionAction state, PlaySoundParams p) {
         if (!state.isAllowed(AddAction.PLAY_SOUND)) throw new InterruptActionException("Cannot add action 'Play Sound' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.PLAY_SOUND, state)
-
-                .onlyIf(sound != null, () -> new ActionBuilder()
+                .onlyIf(p.sound != null, () -> new ActionBuilder()
                         .search(PlaySoundInputs.SOUND)
-                        .search(sound.displayName)
+                        .search(p.sound.displayName)
                 )
-                .onlyIf(volume != 0.7D, () -> new ActionBuilder()
-                        .searchForAnvil(PlaySoundInputs.VOLUME, String.valueOf(volume))
+                .onlyIf(p.volume != 0.7D, () -> new ActionBuilder()
+                        .searchForAnvil(PlaySoundInputs.VOLUME, String.valueOf(p.volume))
                 )
-                .onlyIf(pitch != 1.0D, () -> new ActionBuilder()
-                        .searchForAnvil(PlaySoundInputs.PITCH, String.valueOf(pitch))
+                .onlyIf(p.pitch != 1.0D, () -> new ActionBuilder()
+                        .searchForAnvil(PlaySoundInputs.PITCH, String.valueOf(p.pitch))
                 )
-                .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
+                .onlyIf(p.teleport != null && p.teleport != Teleport.CUSTOM, () -> new ActionBuilder()
                         .search(PlaySoundInputs.LOCATION)
-                        .search(teleport.displayName)
+                        .search(p.teleport.displayName)
                 )
-                .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
+                .onlyIf(p.teleport == Teleport.CUSTOM, () -> new ActionBuilder()
                         .search(PlaySoundInputs.LOCATION)
-                        .searchForAnvil(Teleport.CUSTOM.displayName, customLocation)
+                        .searchForAnvil(Teleport.CUSTOM.displayName, p.customLocation)
                 )
-                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Others.GENERAL_NOTE_H4)
+                .onlyIf(p.note != null && !p.note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(p.note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
@@ -623,43 +627,43 @@ public class ActionFactory {
                 .get();
     }
 
-    public static Action addActionDropItem(RestrictionAction state, String snbtData, Teleport teleport, String customLocation, boolean dropNaturally, boolean disableItemMerging, long despawnDuration, long pickupDelay, boolean prioritizePlayer, boolean fallbackToInventory, String note) {
+    public static Action addActionDropItem(RestrictionAction state, DropItemParams p) {
         if (!state.isAllowed(AddAction.DROP_ITEM)) throw new InterruptActionException("Cannot add action 'Drop Item' here.");
 
         return new ActionBuilder()
                 .addAction(AddAction.DROP_ITEM, state)
-                .onlyIf(!snbtData.isEmpty(), () -> new ActionBuilder()
+                .onlyIf(!p.snbtData.isEmpty(), () -> new ActionBuilder()
                         .search(DropItemInputs.ITEM)
-                        .customItem(snbtData)
+                        .customItem(p.snbtData)
                 )
-                .onlyIf(teleport != null && teleport != Teleport.CUSTOM, () -> new ActionBuilder()
+                .onlyIf(p.teleport != null && p.teleport != Teleport.CUSTOM, () -> new ActionBuilder()
                         .search(DropItemInputs.LOCATION)
-                        .search(teleport.displayName)
+                        .search(p.teleport.displayName)
                 )
-                .onlyIf(teleport == Teleport.CUSTOM, () -> new ActionBuilder()
+                .onlyIf(p.teleport == Teleport.CUSTOM, () -> new ActionBuilder()
                         .search(DropItemInputs.LOCATION)
-                        .searchForAnvil(Teleport.CUSTOM.displayName, customLocation)
+                        .searchForAnvil(Teleport.CUSTOM.displayName, p.customLocation)
                 )
-                .onlyIf(!dropNaturally, () -> new ActionBuilder()
+                .onlyIf(!p.dropNaturally, () -> new ActionBuilder()
                         .search(DropItemInputs.DROP_NATURALLY)
-               )
-                .onlyIf(disableItemMerging, () -> new ActionBuilder()
+                )
+                .onlyIf(p.disableItemMerging, () -> new ActionBuilder()
                         .search(DropItemInputs.PREVENT_MERGE)
-               )
-                .onlyIf(despawnDuration != 6000, () -> new ActionBuilder()
-                        .searchForAnvil(DropItemInputs.DESPAWN_DURATION, String.valueOf(despawnDuration))
                 )
-                .onlyIf(pickupDelay != 10, () -> new ActionBuilder()
-                        .searchForAnvil(DropItemInputs.PICKUP_DELAY, String.valueOf(pickupDelay))
+                .onlyIf(p.despawnDuration != 6000, () -> new ActionBuilder()
+                        .searchForAnvil(DropItemInputs.DESPAWN_DURATION, String.valueOf(p.despawnDuration))
                 )
-                .onlyIf(prioritizePlayer, () -> new ActionBuilder()
+                .onlyIf(p.pickupDelay != 10, () -> new ActionBuilder()
+                        .searchForAnvil(DropItemInputs.PICKUP_DELAY, String.valueOf(p.pickupDelay))
+                )
+                .onlyIf(p.prioritizePlayer, () -> new ActionBuilder()
                         .search(DropItemInputs.PRIORITIZE_PLAYER)
                 )
-                .onlyIf(fallbackToInventory, () -> new ActionBuilder()
+                .onlyIf(p.fallbackToInventory, () -> new ActionBuilder()
                         .search(DropItemInputs.FALLBACK_INVENTORY)
                 )
-                .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Others.GENERAL_NOTE_H4)
+                .onlyIf(p.note != null && !p.note.trim().isEmpty(), () -> new ActionBuilder()
+                        .chatInput(p.note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
@@ -745,6 +749,14 @@ public class ActionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .get();
+    }
+
+    public static Action addActionCloseMenu(RestrictionAction state) {
+        if (!state.isAllowed(AddAction.CLOSE_MENU)) throw new InterruptActionException("Cannot add action 'Close Menu' here.");
+
+        return new ActionBuilder()
+                .addAction(AddAction.CLOSE_MENU, state)
                 .get();
     }
 

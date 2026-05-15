@@ -71,7 +71,7 @@ public class LinkFunctionVisitor extends DefaultVisitor {
         String fname = call.functionName;
         VoidFunctionNode def = voidDefs.get(fname);
         if (def == null) {
-            throw new SemanticException(call.token, "Undefined global function '" + fname + "')");
+            throw new SemanticException(call.token, "Undefined global function '" + fname + "'");
         }
         ArgumentListNode newArgs = (ArgumentListNode) call.arguments.accept(this);
         return new GlobalFunctionCallNode(fname, newArgs, call.token);

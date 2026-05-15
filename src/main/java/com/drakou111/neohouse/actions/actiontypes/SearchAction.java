@@ -73,6 +73,12 @@ public class SearchAction extends Action {
     }
 
     @Override
+    public boolean requiresCreative() {
+        return (onFound != null && onFound.requiresCreative())
+                || (onNotFound != null && onNotFound.requiresCreative());
+    }
+
+    @Override
     public boolean run(Minecraft mc) {
         if (mc.player == null) return true;
         AbstractContainerMenu menu = mc.player.containerMenu;

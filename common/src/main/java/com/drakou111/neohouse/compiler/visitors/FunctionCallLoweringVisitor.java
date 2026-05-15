@@ -1,13 +1,16 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
+import com.drakou111.neohouse.compiler.ast.expr.BinaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.ExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.statement.ActionCallNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
 import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
@@ -51,6 +54,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     private ArgLowerResult lowerArgument(ExpressionNode expr) {
         if (expr instanceof FunctionCallNode tfc) {
             TypedFunctionNode def = typedFunctions.get(tfc.functionName);
+            if (def == null) throw new SemanticException(tfc.token, "Undefined typed function '" + tfc.functionName + "'");
             List<VariableNode> params = def.parameters.parameters;
             List<StatementNode> stmts = new ArrayList<>();
 
@@ -74,7 +78,38 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             return new ArgLowerResult(resultVar, stmts);
         }
 
+        if (expr instanceof BinaryExpressionNode bin) {
+            ArgLowerResult leftR  = lowerArgument(bin.left);
+            ArgLowerResult rightR = lowerArgument(bin.right);
+            List<StatementNode> stmts = new ArrayList<>();
+            stmts.addAll(leftR.stmts());
+            stmts.addAll(rightR.stmts());
+            return new ArgLowerResult(
+                new BinaryExpressionNode(leftR.simple, rightR.simple, bin.operator, bin.type, bin.token),
+                stmts);
+        }
+
+        if (expr instanceof UnaryExpressionNode un) {
+            ArgLowerResult inner = lowerArgument(un.operand);
+            return new ArgLowerResult(
+                new UnaryExpressionNode(un.operator, inner.simple, un.type, un.token),
+                inner.stmts());
+        }
+
         return new ArgLowerResult((NormalExpressionNode) expr, List.of());
+    }
+
+    @Override
+    public ASTNode visitActionCall(ActionCallNode call) {
+        List<StatementNode> stmts = new ArrayList<>();
+        List<NormalExpressionNode> newArgs = new ArrayList<>();
+        for (NormalExpressionNode arg : call.arguments.expressions) {
+            ArgLowerResult lowered = lowerArgument(arg);
+            stmts.addAll(lowered.stmts());
+            newArgs.add(lowered.simple);
+        }
+        stmts.add(new ActionCallNode(call.name, new ArgumentListNode(newArgs), call.token));
+        return new StatementListNode(stmts);
     }
 
     @Override

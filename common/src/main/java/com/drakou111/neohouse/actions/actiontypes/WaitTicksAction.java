@@ -13,6 +13,9 @@ public class WaitTicksAction extends Action {
     }
 
     @Override
+    public String getDebugName() { return "Wait " + ticks + " ticks"; }
+
+    @Override
     public boolean run(Minecraft mc) {
         if (ticksRemaining <= 0) return true;
         ticksRemaining--;

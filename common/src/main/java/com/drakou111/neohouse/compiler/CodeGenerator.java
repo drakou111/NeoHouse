@@ -2,6 +2,8 @@ package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.actions.actiontypes.ChatAction;
+import com.drakou111.neohouse.actions.actiontypes.WaitForChatAction;
 import com.drakou111.neohouse.actions.actiontypes.CheckSlotEmptyAction;
 import com.drakou111.neohouse.actions.actiontypes.ClientMessageAction;
 import com.drakou111.neohouse.actions.actiontypes.DeleteAllAction;
@@ -17,12 +19,19 @@ import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
+import com.drakou111.neohouse.compiler.enums.BinaryOperator;
 import com.drakou111.neohouse.compiler.enums.BooleanOperator;
+import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.compiler.enums.LogicalOperator;
+import com.drakou111.neohouse.compiler.enums.UnaryOperator;
 import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.factories.ActionFactory;
 import com.drakou111.neohouse.factories.ConditionFactory;
 import com.drakou111.neohouse.factories.MovementFactory;
+import com.drakou111.neohouse.factories.params.DropItemParams;
+import com.drakou111.neohouse.factories.params.PlaySoundParams;
+import com.drakou111.neohouse.factories.params.TitleParams;
+import com.drakou111.neohouse.factories.params.VariableParams;
 import com.drakou111.neohouse.utils.ActionBuilder;
 
 import java.util.ArrayList;
@@ -33,6 +42,15 @@ public class CodeGenerator {
     public Action generate(MainNode main) {
         List<Action> parts = new ArrayList<>();
         boolean override = NeoHouseConfig.get().overrideExisting;
+
+        // Pass 0: emit global/team variable initializers
+        for (MainStatementNode stmt : main.statements) {
+            if (stmt instanceof GlobalDeclarationNode decl && decl.initializer != null) {
+                parts.add(generateGlobalInitializer(decl));
+                // Wait for "variable" confirmation in chat, then an extra 1.5 s (30 ticks)
+                parts.add(new WaitForChatAction("variable", 30));
+            }
+        }
 
         if (override) {
             // Pass 1: create empty shells for forward-reference support
@@ -221,10 +239,72 @@ public class CodeGenerator {
         return new GroupAction(parts);
     }
 
+    private Action generateGlobalInitializer(GlobalDeclarationNode decl) {
+        if (!(decl.initializer instanceof ConstantPrimitiveNode c)) {
+            throw new IllegalStateException("Variable initializer must be a constant value (e.g. 0, 1.5, \"text\")");
+        }
+        String value = primitiveToInitString(c.value);
+        String cmd = switch (decl.variable.holder) {
+            case GLOBAL -> "/variable global set " + decl.variable.name + " " + value;
+            case TEAM   -> "/variable team set " + decl.variable.teamName + " " + decl.variable.name + " " + value;
+            case PLAYER -> throw new IllegalStateException("Player variables cannot have initializers");
+        };
+        return new ChatAction(cmd);
+    }
+
+    private String primitiveToInitString(ConstantPrimitive prim) {
+        return switch (prim) {
+            case StringValue s -> s.value;
+            case LongValue l   -> l.toString();
+            case DoubleValue d -> d.toString();
+            case BoolValue b   -> b.value ? "1" : "0";
+        };
+    }
+
+    private record RepeatPattern(int period, int count) {}
+
+    private RepeatPattern findRepeat(List<StatementNode> stmts, int startIdx) {
+        int n = stmts.size() - startIdx;
+        for (int period = 1; period <= n / 2; period++) {
+            int maxReps = n / period;
+            int count = 1;
+            for (int rep = 1; rep < maxReps; rep++) {
+                boolean match = true;
+                for (int j = 0; j < period; j++) {
+                    String a = stmts.get(startIdx + j).toShortString();
+                    String b = stmts.get(startIdx + rep * period + j).toShortString();
+                    if (!a.equals(b)) { match = false; break; }
+                }
+                if (match) count = rep + 1;
+                else break;
+            }
+            if (count > 1) return new RepeatPattern(period, count);
+        }
+        return null;
+    }
+
     private Action generateStatements(StatementListNode stmts, RestrictionAction ra, RestrictionCondition rc) {
+        List<StatementNode> list = stmts.statements;
         List<Action> actions = new ArrayList<>();
-        for (StatementNode stmt : stmts.statements) {
-            actions.add(generateStatement(stmt, ra, rc));
+        boolean containerEmpty = true;
+        int i = 0;
+        while (i < list.size()) {
+            if (containerEmpty) {
+                RepeatPattern rp = findRepeat(list, i);
+                if (rp != null) {
+                    for (int j = i; j < i + rp.period; j++)
+                        actions.add(generateStatement(list.get(j), ra, rc));
+                    actions.add(new ActionBuilder().copyContext().get());
+                    for (int k = 1; k < rp.count; k++)
+                        actions.add(new ActionBuilder().pasteContext().get());
+                    i += rp.period * rp.count;
+                    containerEmpty = false;
+                    continue;
+                }
+            }
+            actions.add(generateStatement(list.get(i), ra, rc));
+            containerEmpty = false;
+            i++;
         }
         return new GroupAction(actions);
     }
@@ -241,6 +321,7 @@ public class CodeGenerator {
             case VoidFunctionCallNode call -> ActionFactory.addActionTriggerFunction(ra, call.functionName, false, null);
             case GlobalFunctionCallNode call -> ActionFactory.addActionTriggerFunction(ra, call.functionName, false, null);
             case ActionCallNode call -> generateActionCall(call, ra);
+            case DeclarationNode ignored -> new GroupAction(List.of()); // type annotation only, no Housing action
             default -> throw new IllegalStateException("Unhandled statement in code generation: " + stmt.getClass().getSimpleName());
         };
     }
@@ -251,17 +332,23 @@ public class CodeGenerator {
         String teamName = assign.variable.teamName;
         Operator operator = toOperator(assign.operator);
         String value = exprToValue(assign.value);
-        return ActionFactory.addActionVariable(ra, holder, variable, teamName, operator, value, false, null);
+        return ActionFactory.addActionVariable(ra, new VariableParams()
+                .holder(holder)
+                .variable(variable)
+                .teamName(teamName)
+                .operator(operator)
+                .value(value));
     }
 
     private Action generateConditional(ConditionalNode cond, RestrictionAction ra, RestrictionCondition rc) {
+        RestrictionAction innerRa = ra.conditionalVariant();
         if (cond.condition == null) {
-            return generateStatements(cond.thenBlock, ra, rc);
+            Action thenAction = generateStatements(cond.thenBlock, innerRa, rc);
+            return ActionFactory.addActionConditional(ra, false, null, thenAction, null, null);
         }
         boolean matchAny = cond.condition instanceof LogicalExpressionNode log
                 && log.operator == LogicalOperator.OR;
         Action conditions = generateConditionExpr(cond.condition, rc);
-        RestrictionAction innerRa = ra.conditionalVariant();
         Action thenAction = generateStatements(cond.thenBlock, innerRa, rc);
         Action elseAction = cond.elseBlock != null && !cond.elseBlock.statements.isEmpty() ? generateStatements(cond.elseBlock, innerRa, rc) : null;
         return ActionFactory.addActionConditional(ra, matchAny, conditions, thenAction, elseAction, null);
@@ -270,8 +357,12 @@ public class CodeGenerator {
     private Action generateRandom(RandomNode rand, RestrictionAction ra, RestrictionCondition rc) {
         RestrictionAction innerRa = ra.conditionalVariant();
         List<Action> branches = new ArrayList<>();
-        for (StatementListNode branch : rand.statements) {
-            branches.add(generateStatements(branch, innerRa, rc));
+        for (int i = 0; i < rand.statements.size(); i++) {
+            long weight = rand.weights.get(i);
+            Action branchContent = generateStatements(rand.statements.get(i), innerRa, rc);
+            for (long k = 0; k < weight; k++) {
+                branches.add(branchContent);
+            }
         }
         return ActionFactory.addActionRandom(ra, new GroupAction(branches), null);
     }
@@ -370,7 +461,12 @@ public class CodeGenerator {
             case FULL_HEAL ->
                     ActionFactory.addActionFullHeal(ra);
             case TITLE ->
-                    ActionFactory.addActionTitle(ra, getString(args, 0), getString(args, 1), (int) getLong(args, 2), (int) getLong(args, 3), (int) getLong(args, 4), null);
+                    ActionFactory.addActionTitle(ra, new TitleParams()
+                            .title(getString(args, 0))
+                            .subtitle(getString(args, 1))
+                            .fadeIn((int) getLong(args, 2))
+                            .stay((int) getLong(args, 3))
+                            .fadeOut((int) getLong(args, 4)));
             case ACTION_BAR ->
                     ActionFactory.addActionActionBar(ra, getString(args, 0), null);
             case CLEAR_INVENTORY ->
@@ -407,7 +503,12 @@ public class CodeGenerator {
             case PLAY_SOUND -> {
                 String loc = getString(args, 3);
                 Teleport tp = parseTeleport(loc);
-                yield ActionFactory.addActionPlaySound(ra, Sound.valueOf(getString(args, 0)), getDouble(args, 1), getDouble(args, 2), tp, tp == Teleport.CUSTOM ? loc : null, null);
+                yield ActionFactory.addActionPlaySound(ra, new PlaySoundParams()
+                        .sound(Sound.valueOf(getString(args, 0)))
+                        .volume(getDouble(args, 1))
+                        .pitch(getDouble(args, 2))
+                        .teleport(tp)
+                        .customLocation(tp == Teleport.CUSTOM ? loc : null));
             }
             case COMPASS_TARGET -> {
                 String loc = getString(args, 0);
@@ -430,11 +531,22 @@ public class CodeGenerator {
                     ActionFactory.addActionTeam(ra, getString(args, 0), null);
             case DISPLAY_MENU ->
                     ActionFactory.addActionDisplayMenu(ra, getString(args, 0), null);
+            case CLOSE_MENU ->
+                    ActionFactory.addActionCloseMenu(ra);
             case DROP_ITEM -> {
                 String data = getString(args, 0);
                 String loc = getString(args, 1);
                 Teleport tp = parseTeleport(loc);
-                yield ActionFactory.addActionDropItem(ra, data, tp, tp == Teleport.CUSTOM ? loc : null, getBool(args, 2), getBool(args, 3), getLong(args, 4), getLong(args, 5), getBool(args, 6), getBool(args, 7), null);
+                yield ActionFactory.addActionDropItem(ra, new DropItemParams()
+                        .snbtData(data)
+                        .teleport(tp)
+                        .customLocation(tp == Teleport.CUSTOM ? loc : null)
+                        .dropNaturally(getBool(args, 2))
+                        .disableItemMerging(getBool(args, 3))
+                        .despawnDuration(getLong(args, 4))
+                        .pickupDelay(getLong(args, 5))
+                        .prioritizePlayer(getBool(args, 6))
+                        .fallbackToInventory(getBool(args, 7)));
             }
             case CHANGE_VELOCITY ->
                     ActionFactory.addActionChangeVelocity(ra, exprToValue(args.get(0)), exprToValue(args.get(1)), exprToValue(args.get(2)), null);
@@ -452,6 +564,8 @@ public class CodeGenerator {
             }
             case NAME_TAG_DISPLAY ->
                     ActionFactory.addActionNametag(ra, getBool(args, 0), null);
+            case CANCEL_EVENT ->
+                    ActionFactory.addActionCancelEvent(ra);
             default ->
                     throw new IllegalStateException("Unhandled action in code generation: " + kind);
         };
@@ -537,7 +651,21 @@ public class CodeGenerator {
     }
 
     private String getString(List<NormalExpressionNode> args, int idx) {
-        return ((StringValue) ((ConstantPrimitiveNode) args.get(idx)).value).value;
+        return exprToString(args.get(idx));
+    }
+
+    private String exprToString(NormalExpressionNode expr) {
+        return switch (expr) {
+            case ConstantPrimitiveNode c -> primitiveToString(c.value);
+            case VariableNode v -> variableToString(v);
+            case PlaceholderNode p -> placeholderToString(p);
+            case BinaryExpressionNode b when b.operator == BinaryOperator.ADD ->
+                exprToString(b.left) + exprToString(b.right);
+            case UnaryExpressionNode u when u.operator == UnaryOperator.STRING_CAST ->
+                exprToString(u.operand);
+            default -> throw new IllegalStateException("Cannot use expression of type "
+                + expr.getClass().getSimpleName() + " as a string value in this context");
+        };
     }
 
     private long getLong(List<NormalExpressionNode> args, int idx) {

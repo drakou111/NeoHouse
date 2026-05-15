@@ -15,6 +15,7 @@ import java.nio.file.Path;
 public class NeoHouseConfig {
     public static final NeoHouseConfig INSTANCE = new NeoHouseConfig();
 
+    public boolean verboseActions              = false;
     public int     clickDelay                 = 2;
     public boolean showArgumentHints          = true;
     public boolean showArgumentRecommendations = true;
@@ -44,6 +45,7 @@ public class NeoHouseConfig {
         try {
             String json = Files.readString(path, StandardCharsets.UTF_8);
             JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+            if (obj.has("verboseActions"))             INSTANCE.verboseActions             = obj.get("verboseActions").getAsBoolean();
             if (obj.has("clickDelay"))               INSTANCE.clickDelay                 = obj.get("clickDelay").getAsInt();
             if (obj.has("showArgumentHints"))          INSTANCE.showArgumentHints          = obj.get("showArgumentHints").getAsBoolean();
             if (obj.has("showArgumentRecommendations")) INSTANCE.showArgumentRecommendations = obj.get("showArgumentRecommendations").getAsBoolean();
@@ -59,6 +61,7 @@ public class NeoHouseConfig {
 
     public void save() {
         JsonObject obj = new JsonObject();
+        obj.addProperty("verboseActions",              verboseActions);
         obj.addProperty("clickDelay",                 clickDelay);
         obj.addProperty("showArgumentHints",          showArgumentHints);
         obj.addProperty("showArgumentRecommendations", showArgumentRecommendations);

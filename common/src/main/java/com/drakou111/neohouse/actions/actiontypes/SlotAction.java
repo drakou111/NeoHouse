@@ -21,6 +21,11 @@ public class SlotAction extends Action {
     }
 
     @Override
+    public String getDebugName() {
+        return "Click slot " + slotIndex + (leftClick ? " (left)" : " (right)") + (fromEnd ? " from end" : "");
+    }
+
+    @Override
     public boolean run(Minecraft mc) {
         if (mc == null || mc.gameMode == null || mc.player == null) {
             throw new InterruptActionException("An unexpected error occurred, could not click a slot.");

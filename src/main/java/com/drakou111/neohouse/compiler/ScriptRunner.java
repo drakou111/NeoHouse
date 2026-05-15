@@ -36,7 +36,7 @@ public class ScriptRunner {
         // Preprocess before the creative check so imported files are included in the scan
         String preprocessed = new Preprocessor(nhFile.getParent()).process(src);
         if (!isPlayerCreative() && sourceNeedsCreativeMode(preprocessed)) {
-            throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem). You must be in creative mode to run it.");
+            throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem / menus). You must be in creative mode to run it.");
         }
         Action scriptAction = compiler.compile(preprocessed);
         SequenceManager.startAction(new GroupAction(List.of(scriptAction)));
@@ -47,7 +47,7 @@ public class ScriptRunner {
             throw new PermissionException("You must be in Hypixel Housing to run scripts.");
         }
         if (!isPlayerCreative() && sourceNeedsCreativeMode(source)) {
-            throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem). You must be in creative mode to run it.");
+            throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem / menus). You must be in creative mode to run it.");
         }
         Action scriptAction = compiler.compile(source);
         SequenceManager.startAction(new GroupAction(List.of(scriptAction)));
@@ -66,6 +66,8 @@ public class ScriptRunner {
                 }
             }
         }
+        // menus always require items in their slots
+        if (source.matches("(?s).*slot\\d+\\s*:\\s*\\(.*")) return true;
         return false;
     }
 }

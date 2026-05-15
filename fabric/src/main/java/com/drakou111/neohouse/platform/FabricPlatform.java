@@ -22,4 +22,9 @@ public class FabricPlatform implements Platform {
     public void watchForScreen(WaitForAction action) {
         ScreenEvents.watch(action);
     }
+
+    @Override
+    public void unwatchForScreen(WaitForAction action) {
+        ScreenEvents.unwatch(action);
+    }
 }

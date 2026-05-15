@@ -14,15 +14,21 @@ public class ScreenEvents {
         waitingActions.add(action);
     }
 
+    public static void unwatch(WaitForAction action) {
+        waitingActions.remove(action);
+    }
+
     public static void onScreenOpened(Screen screen) {
-        for (WaitForAction action : waitingActions) {
+        waitingActions.removeIf(action -> {
             if (action.matchesScreen(screen, true)) action.markDone();
-        }
+            return action.isDone();
+        });
     }
 
     public static void onScreenClosed(Screen screen) {
-        for (WaitForAction action : waitingActions) {
+        waitingActions.removeIf(action -> {
             if (action.matchesScreen(screen, false)) action.markDone();
-        }
+            return action.isDone();
+        });
     }
 }

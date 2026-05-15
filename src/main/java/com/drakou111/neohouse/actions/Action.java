@@ -5,4 +5,8 @@ import net.minecraft.client.Minecraft;
 public abstract class Action {
 
     public abstract boolean run(Minecraft mc);
+
+    public boolean requiresCreative() {
+        return false;
+    }
 }

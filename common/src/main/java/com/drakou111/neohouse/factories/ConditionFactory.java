@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.factories;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.constants.conditions.*;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
@@ -26,6 +27,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -65,6 +67,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -84,6 +87,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -103,6 +107,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -132,6 +137,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -147,6 +153,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -166,6 +173,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -181,6 +189,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -196,6 +205,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -218,6 +228,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -240,6 +251,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -262,6 +274,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -289,6 +302,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -314,6 +328,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -333,6 +348,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -352,6 +368,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -367,6 +384,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -386,6 +404,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -408,6 +427,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -426,6 +446,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -448,6 +469,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 
@@ -477,6 +499,7 @@ public class ConditionFactory {
                         .chatInput(note, Others.GENERAL_NOTE_H4)
                 )
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
+                .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true)
                 .get();
     }
 }

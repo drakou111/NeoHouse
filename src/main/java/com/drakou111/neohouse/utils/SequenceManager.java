@@ -27,6 +27,12 @@ public class SequenceManager {
 
         Minecraft mc = Minecraft.getInstance();
 
+        if (mc.player != null && !mc.player.getAbilities().instabuild && currentAction.requiresCreative()) {
+            MessageUtils.errorToChat("Script stopped: creative mode is required for item actions.");
+            currentAction = null;
+            return;
+        }
+
         boolean finished;
         try {
             finished = currentAction.run(mc);

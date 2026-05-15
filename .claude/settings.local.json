@@ -72,7 +72,14 @@
       "Bash(./gradlew stonecutterSwitchTo1.21.11 --rerun-tasks)",
       "Bash(./gradlew :fabric:remapJar)",
       "Bash(xargs -I{} bash -c 'jar tf \"{}\" 2>/dev/null | grep -l \"ScreenEvent\" && echo {}')",
-      "Bash(xargs '-I{}' javap -p -classpath '{}' 'net.neoforged.neoforge.client.event.ScreenEvent$KeyPressed$Pre')"
+      "Bash(xargs '-I{}' javap -p -classpath '{}' 'net.neoforged.neoforge.client.event.ScreenEvent$KeyPressed$Pre')",
+      "Bash(Write-Output \"Deleted 4 jars\")",
+      "Bash(grep -r \"ClientChatReceivedEvent\\\\|ClientReceiveMessageEvents\\\\|chat.*event\\\\|ChatEvent\" \"D:/code/mc mods/NeoHouse\" --include=\"*.java\" -not -path \"*/build/*\" -not -path \"*/generated/*\")",
+      "Bash(./gradlew :common:compileJava :neoforge:compileJava :fabric:compileJava)",
+      "Bash(./gradlew :neoforge:compileJava :fabric:compileJava)",
+      "Bash(grep -n \"toLowerCase\\\\|nameToken.text$\" \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\compiler\\\\parser\\\\Parser.java\")",
+      "Bash(sed -n '308,318p' \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\compiler\\\\parser\\\\Parser.java\")",
+      "Bash(sed -n '343,352p' \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\compiler\\\\CodeGenerator.java\")"
     ]
   }
 }

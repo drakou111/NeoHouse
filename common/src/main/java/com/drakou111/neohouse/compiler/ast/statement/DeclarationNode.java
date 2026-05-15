@@ -6,7 +6,7 @@ import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class DeclarationNode extends StatementNode {
-    public VariableNode variable;
+    public final VariableNode variable;
 
     public DeclarationNode(final VariableNode variable, final Token token) {
         this.variable = variable;

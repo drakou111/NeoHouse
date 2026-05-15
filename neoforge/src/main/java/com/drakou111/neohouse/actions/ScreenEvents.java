@@ -18,21 +18,23 @@ public class ScreenEvents {
         waitingActions.add(action);
     }
 
+    public static void unwatch(WaitForAction action) {
+        waitingActions.remove(action);
+    }
+
     @SubscribeEvent
     public static void onOpening(ScreenEvent.Opening event) {
-        for (WaitForAction action : waitingActions) {
-            if (action.matchesScreen(event.getNewScreen(), true)) {
-                action.markDone();
-            }
-        }
+        waitingActions.removeIf(action -> {
+            if (action.matchesScreen(event.getNewScreen(), true)) action.markDone();
+            return action.isDone();
+        });
     }
 
     @SubscribeEvent
     public static void onClosing(ScreenEvent.Closing event) {
-        for (WaitForAction action : waitingActions) {
-            if (action.matchesScreen(event.getScreen(), false)) {
-                action.markDone();
-            }
-        }
+        waitingActions.removeIf(action -> {
+            if (action.matchesScreen(event.getScreen(), false)) action.markDone();
+            return action.isDone();
+        });
     }
 }

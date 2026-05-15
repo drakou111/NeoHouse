@@ -1,10 +1,8 @@
 package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.NeoHouseConfig;
-import com.drakou111.neohouse.SyntaxTheme;
 import com.drakou111.neohouse.UITheme;
 import com.drakou111.neohouse.compiler.enums.Param;
-import com.drakou111.neohouse.compiler.lexer.TokenType;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
@@ -37,10 +35,9 @@ public class SyntaxEditorWidget extends WidgetBase {
     private int  lastClickPos  = -1;
 
     // ── Error state ───────────────────────────────────────────────────────────
-    private int    errorLine     = -1;
-    private int    errorColStart = -1;
-    private int    errorTokenLen = 0;
-    private String errorMsg      = null;
+    private record ErrorSpan(int line, int colStart, int tokenLen, String message) {}
+    private List<ErrorSpan> errorSpans = new ArrayList<>();
+    private String errorMsg = null; // always the first error's message
 
     // ── Callbacks ─────────────────────────────────────────────────────────────
     private Runnable onChange;
@@ -56,26 +53,38 @@ public class SyntaxEditorWidget extends WidgetBase {
     private static final int SB_PAD          = 2;
 
     // ── Vertical scrollbar drag state ─────────────────────────────────────────
-    private boolean sbDragging           = false;
-    private int     sbDragStartY         = 0;
+    private boolean sbDragging            = false;
+    private int     sbDragStartY          = 0;
     private int     sbDragStartScrollLine = 0;
 
+    // ── Find / Replace bar ────────────────────────────────────────────────────
+    private int  findMode          = 0; // 0=off, 1=find-only, 2=find+replace
+    private final StringBuilder findQuery    = new StringBuilder();
+    private final StringBuilder replaceQuery = new StringBuilder();
+    private int  findCursor        = 0;
+    private int  findSelAnchor     = 0;
+    private int  replaceCursor     = 0;
+    private int  replaceSelAnchor  = 0;
+    private int  findFocused       = 0; // 0=find field, 1=replace field
+    private int  findMatchIndex    = -1;
+    private List<Integer> findMatches = new ArrayList<>();
+    // cached button bounds for click detection
+    private int findBtnReplaceX = -1, findBtnReplaceY = -1;
+    private int findBtnReplaceAllX = -1, findBtnReplaceAllY = -1;
+    private static final int FIND_BAR_W   = 260;
+    private static final int FIND_FIELD_H = 12;
+    private static final int FIND_BTN_W   = 60;
+
     // ── Highlight spans ───────────────────────────────────────────────────────
-    private record Span(int start, int end, int color) {}
-    private final List<Span> spans = new ArrayList<>();
+    private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
+    private List<SyntaxHighlighter.Span> spans = new ArrayList<>();
 
     // ── Inline hints ──────────────────────────────────────────────────────────
     /** charOffset is position within the line string where the hint is injected. */
     private record InlineHint(int charOffset, String displayText, boolean isActive) {}
 
-    // ── Tokenizer helper (for 2-pass span coloring) ───────────────────────────
-    private record Tok(TokenType type, String text, int pos) {}
-
     // ── Undo / Redo ───────────────────────────────────────────────────────────
-    private record UndoEntry(String text, int cursor) {}
-    private final List<UndoEntry> undoStack = new ArrayList<>();
-    private final List<UndoEntry> redoStack = new ArrayList<>();
-    private static final int UNDO_LIMIT = 200;
+    private final EditorUndoManager undoManager = new EditorUndoManager();
 
     // ── Enum suggestions ──────────────────────────────────────────────────────
     private String[] activeSuggestions     = null;
@@ -131,17 +140,50 @@ public class SyntaxEditorWidget extends WidgetBase {
     }
 
     public void setError(int line0, int colStart0, int tokenLen, String msg) {
-        this.errorLine     = line0;
-        this.errorColStart = colStart0;
-        this.errorTokenLen = tokenLen;
-        this.errorMsg      = msg;
+        this.errorSpans = new ArrayList<>();
+        if (line0 >= 0) errorSpans.add(new ErrorSpan(line0, colStart0, tokenLen, msg));
+        this.errorMsg = msg;
+    }
+
+    public void setErrors(List<int[]> spans, List<String> messages, String firstMsg) {
+        this.errorSpans = new ArrayList<>();
+        for (int i = 0; i < spans.size(); i++) {
+            int[] s = spans.get(i);
+            String msg = i < messages.size() ? messages.get(i) : firstMsg;
+            if (s[0] >= 0) errorSpans.add(new ErrorSpan(s[0], s[1], s[2], msg));
+        }
+        this.errorMsg = firstMsg;
     }
 
     public void clearError() {
-        this.errorLine     = -1;
-        this.errorColStart = -1;
-        this.errorTokenLen = 0;
-        this.errorMsg      = null;
+        this.errorSpans = new ArrayList<>();
+        this.errorMsg   = null;
+    }
+
+    private boolean isErrorLine(int li) {
+        for (ErrorSpan es : errorSpans) if (es.line() == li) return true;
+        return false;
+    }
+
+    /** Returns the message of the error span that the cursor/selection overlaps, or null. */
+    private String getActiveErrorMsg() {
+        if (errorSpans.isEmpty()) return null;
+        int selLo = Math.min(cursor, selAnchor);
+        int selHi = Math.max(cursor, selAnchor);
+        List<String> lines = getLines();
+        int[] offs = buildLineOffsets(lines);
+        for (ErrorSpan es : errorSpans) {
+            if (es.line() < 0 || es.line() >= lines.size()) continue;
+            int spanStart = offs[es.line()] + es.colStart();
+            int spanEnd   = spanStart + Math.max(1, es.tokenLen());
+            if (selLo < spanEnd && selHi >= spanStart) return es.message();
+        }
+        // also show if cursor is simply on the error line
+        int[] curLC = offsetToLC(Math.max(selLo, cursor - 1), lines);
+        for (ErrorSpan es : errorSpans) {
+            if (es.line() == curLC[0]) return es.message();
+        }
+        return null;
     }
 
     // ── Error bar height (dynamic word-wrap) ──────────────────────────────────
@@ -149,12 +191,12 @@ public class SyntaxEditorWidget extends WidgetBase {
     private int errorBarH() {
         if (errorMsg == null) return 0;
         Font font = Minecraft.getInstance().font;
-        List<String> wrapped = wrapErrorMsg(font, width - 8);
+        List<String> wrapped = wrapErrorMsg(font, width - 8, errorMsg);
         return Math.max(ERROR_BAR_H_MIN, wrapped.size() * 10 + 4);
     }
 
-    private List<String> wrapErrorMsg(Font font, int maxW) {
-        String line = firstMeaningfulLine(errorMsg);
+    private List<String> wrapErrorMsg(Font font, int maxW, String msg) {
+        String line = firstMeaningfulLine(msg);
         List<String> result = new ArrayList<>();
         String[] words = line.split(" ", -1);
         StringBuilder current = new StringBuilder();
@@ -213,8 +255,25 @@ public class SyntaxEditorWidget extends WidgetBase {
             int    activeIdx  = (isFocused() && li == curLC[0]) ? paramHintIndex : -1;
             List<InlineHint> lineHints = computeLineHints(lines, li, activeFunc, activeIdx);
 
-            if (li == errorLine) {
+            if (isErrorLine(li)) {
                 g.fill(x0 + GUTTER_W + 1, ry - 1, x0 + width, ry + LINE_H - 1, 0x44FF3333);
+            }
+
+            // Find match highlights
+            if (findMode > 0 && !findMatches.isEmpty() && findQuery.length() > 0) {
+                int qLen = findQuery.length();
+                for (int mi = 0; mi < findMatches.size(); mi++) {
+                    int matchOff = findMatches.get(mi);
+                    int matchEnd = matchOff + qLen;
+                    int rowEnd   = lineStart + line.length();
+                    if (matchEnd <= lineStart || matchOff >= rowEnd) continue;
+                    int hi0 = Math.max(matchOff, lineStart);
+                    int hi1 = Math.min(matchEnd, rowEnd);
+                    int sx = codeX() + lineColToPixelX(font, line, hi0 - lineStart, lineHints) - scrollX;
+                    int ex = codeX() + lineColToPixelX(font, line, hi1 - lineStart, lineHints) - scrollX;
+                    int color = (mi == findMatchIndex) ? 0x88FFAA00 : 0x55CCAA00;
+                    g.fill(sx, ry - 1, ex, ry + LINE_H - 1, color);
+                }
             }
 
             if (hasSel) {
@@ -232,15 +291,17 @@ public class SyntaxEditorWidget extends WidgetBase {
 
             renderHighlightedLine(g, font, line, lineStart, codeX() - scrollX, ry, lineHints);
 
-            if (li == errorLine && errorColStart >= 0 && errorTokenLen > 0) {
-                int uLo = Math.min(errorColStart, line.length());
-                int uHi = Math.min(errorColStart + errorTokenLen, line.length());
-                if (uHi > uLo) {
-                    int ux0 = codeX() + lineColToPixelX(font, line, uLo, lineHints) - scrollX;
-                    int ux1 = codeX() + lineColToPixelX(font, line, uHi, lineHints) - scrollX;
-                    int uy  = ry + LINE_H - 2;
-                    for (int wx = ux0; wx < ux1; wx++) {
-                        g.fill(wx, uy + (wx % 2), wx + 1, uy + (wx % 2) + 1, 0xFFFF4444);
+            for (ErrorSpan es : errorSpans) {
+                if (es.line() == li && es.colStart() >= 0 && es.tokenLen() > 0) {
+                    int uLo = Math.min(es.colStart(), line.length());
+                    int uHi = Math.min(es.colStart() + es.tokenLen(), line.length());
+                    if (uHi > uLo) {
+                        int ux0 = codeX() + lineColToPixelX(font, line, uLo, lineHints) - scrollX;
+                        int ux1 = codeX() + lineColToPixelX(font, line, uHi, lineHints) - scrollX;
+                        int uy  = ry + LINE_H - 2;
+                        for (int wx = ux0; wx < ux1; wx++) {
+                            g.fill(wx, uy + (wx % 2), wx + 1, uy + (wx % 2) + 1, 0xFFFF4444);
+                        }
                     }
                 }
             }
@@ -261,16 +322,18 @@ public class SyntaxEditorWidget extends WidgetBase {
             String num = String.valueOf(li + 1);
             g.drawString(font, num,
                     x0 + GUTTER_W - font.width(num) - 3, ry,
-                    li == errorLine ? 0xFFFF6666 : 0xFF636363, false);
+                    isErrorLine(li) ? 0xFFFF6666 : 0xFF636363, false);
         }
 
         renderScrollbar(g, x0, y0, codeH, lines.size(), visLines, t);
 
         if (errorMsg != null) {
+            String displayMsg = getActiveErrorMsg();
+            if (displayMsg == null) displayMsg = errorMsg;
             int ey = y0 + codeH;
-            g.fill(x0, ey,     x0 + width, ey + errorH, 0xEE3B1111);
-            g.fill(x0, ey,     x0 + width, ey + 1,      0xFFAA3333);
-            List<String> wrapped = wrapErrorMsg(font, width - 8);
+            g.fill(x0, ey, x0 + width, ey + errorH, 0xEE3B1111);
+            g.fill(x0, ey, x0 + width, ey + 1,      0xFFAA3333);
+            List<String> wrapped = wrapErrorMsg(font, width - 8, displayMsg);
             for (int wi = 0; wi < wrapped.size(); wi++) {
                 g.drawString(font, wrapped.get(wi), x0 + 4, ey + 3 + wi * 10, 0xFFFF8888, false);
             }
@@ -282,6 +345,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         g.fill(x0,             y0,              x0 + 1,         y0 + height,    border);
         g.fill(x0 + width - 1, y0,              x0 + width,     y0 + height,    border);
 
+        renderFindBar(g, font);
         renderSuggestions(g, font, x0, y0, lines);
     }
 
@@ -579,7 +643,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         int charDrawn = 0;
         int hintPtr   = 0;
 
-        for (Span sp : spans) {
+        for (SyntaxHighlighter.Span sp : spans) {
             if (sp.end() <= lineStart) continue;
             if (sp.start() >= lineEnd)  break;
 
@@ -645,118 +709,8 @@ public class SyntaxEditorWidget extends WidgetBase {
         return new int[]{curX, to, hintPtr};
     }
 
-    // Active theme, set at the start of each rebuildSpans call
-    private SyntaxTheme activeTheme = SyntaxTheme.VSCODE_DARK;
-
     private void rebuildSpans() {
-        spans.clear();
-        activeTheme = SyntaxTheme.byId(NeoHouseConfig.get().syntaxTheme);
-        String src = text.toString();
-        int pos = 0;
-        List<Tok> toks = new ArrayList<>();
-        while (pos < src.length()) {
-            String  rest    = src.substring(pos);
-            boolean matched = false;
-            for (TokenType tt : TokenType.values()) {
-                if (tt.pattern == null) continue;
-                Matcher m = tt.pattern.matcher(rest);
-                if (!m.lookingAt()) continue;
-                String s = m.group();
-                toks.add(new Tok(tt, s, pos));
-                pos += s.length();
-                matched = true;
-                break;
-            }
-            if (!matched) pos++;
-        }
-        for (int i = 0; i < toks.size(); i++) {
-            Tok tok = toks.get(i);
-            int color = contextualColor(toks, i);
-            spans.add(new Span(tok.pos(), tok.pos() + tok.text().length(), color));
-        }
-    }
-
-    private int contextualColor(List<Tok> toks, int i) {
-        SyntaxTheme th = activeTheme;
-        Tok tok = toks.get(i);
-        if (tok.type() == TokenType.WHITESPACE) return 0;
-        if (tok.type() != TokenType.IDENT) return baseTokenColor(tok.type(), tok.text());
-
-        Tok next   = nextNonWsTok(toks, i + 1);
-        int prevI  = prevNonWsIdx(toks, i - 1);
-        Tok prev   = prevI >= 0 ? toks.get(prevI) : null;
-
-        // Scope prefix letters (color the letter itself)
-        if ("p".equals(tok.text())  && next != null && next.type() == TokenType.DOT)    return th.playerVar;
-        if ("g".equals(tok.text())  && next != null && next.type() == TokenType.DOT)    return th.globalVar;
-        if ("t".equals(tok.text())  && next != null && next.type() == TokenType.LBRACK) return th.teamVar;
-        if ("ph".equals(tok.text()) && next != null && next.type() == TokenType.DOT)    return th.phVar;
-
-        // Identifier that follows a scope dot (p.name, g.name, ph.name)
-        if (prev != null && prev.type() == TokenType.DOT) {
-            int prevPrevI = prevNonWsIdx(toks, prevI - 1);
-            Tok prevPrev  = prevPrevI >= 0 ? toks.get(prevPrevI) : null;
-
-            if (prevPrev != null && "ph".equals(prevPrev.text())) {
-                return Placeholder.searchByName(tok.text()) != null ? th.phNameValid : th.plain;
-            }
-            if (prevPrev != null && "p".equals(prevPrev.text())) return th.playerVar;
-            if (prevPrev != null && "g".equals(prevPrev.text())) return th.globalVar;
-
-            // t[...].fieldName — walk back to find matching '[' and verify 't' precedes it
-            if (prevPrev != null && prevPrev.type() == TokenType.RBRACK) {
-                int depth = 1;
-                int k = prevPrevI - 1;
-                while (k >= 0 && depth > 0) {
-                    TokenType tt = toks.get(k).type();
-                    if (tt == TokenType.RBRACK)      depth++;
-                    else if (tt == TokenType.LBRACK) depth--;
-                    k--;
-                }
-                // k is now one before the LBRACK; find the non-ws token before the bracket
-                Tok beforeBrack = prevNonWsTok(toks, k);
-                if (beforeBrack != null && "t".equals(beforeBrack.text())) return th.teamVar;
-            }
-        }
-
-        return baseTokenColor(tok.type(), tok.text());
-    }
-
-    private int baseTokenColor(TokenType t, String text) {
-        SyntaxTheme th = activeTheme;
-        return switch (t) {
-            case FUNCTION, RETURN, CANCEL, LOOP, GLOBAL,
-                 IF, ELSE, REPEAT, EVENT, RANDOM, COMMAND, IMPORT, MENU -> th.keyword;
-            case LONG, DOUBLE, STRING, BOOL, VAR          -> th.type;
-            case TRUE, FALSE                               -> th.keyword;
-            case LONG_CAST, DOUBLE_CAST, STRING_CAST       -> th.type;
-            case LONG_VALUE, DOUBLE_VALUE                  -> th.number;
-            case STRING_VALUE                              -> th.string;
-            case COMMENT_LINE, COMMENT_BLOCK               -> th.comment;
-            case NOTE                                      -> th.note;
-            case CONST_IDENT                               -> th.phVar;
-            case IDENT -> AddAction.searchByName(text) != null ? th.action : th.plain;
-            case WHITESPACE                                -> 0;
-            default                                        -> th.plain;
-        };
-    }
-
-    private static Tok nextNonWsTok(List<Tok> toks, int from) {
-        for (int j = from; j < toks.size(); j++)
-            if (toks.get(j).type() != TokenType.WHITESPACE) return toks.get(j);
-        return null;
-    }
-
-    private static Tok prevNonWsTok(List<Tok> toks, int from) {
-        for (int j = from; j >= 0; j--)
-            if (toks.get(j).type() != TokenType.WHITESPACE) return toks.get(j);
-        return null;
-    }
-
-    private static int prevNonWsIdx(List<Tok> toks, int from) {
-        for (int j = from; j >= 0; j--)
-            if (toks.get(j).type() != TokenType.WHITESPACE) return j;
-        return -1;
+        spans = highlighter.buildSpans(text.toString());
     }
 
     // ── Input handling ────────────────────────────────────────────────────────
@@ -765,6 +719,11 @@ public class SyntaxEditorWidget extends WidgetBase {
     protected boolean onKeyPressed(int key, int scan, int mods) {
         boolean ctrl  = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
         boolean shift = (mods & GLFW.GLFW_MOD_SHIFT)   != 0;
+
+        if (findMode > 0 && handleFindBarKey(key, mods)) return true;
+
+        if (ctrl && key == GLFW.GLFW_KEY_F) { openFind(); return true; }
+        if (ctrl && key == GLFW.GLFW_KEY_R) { openReplace(); return true; }
 
         if (!ctrl && !shift && activeSuggestions != null && activeSuggestions.length > 0) {
             if (key == GLFW.GLFW_KEY_TAB)    { applySuggestion(); return true; }
@@ -816,6 +775,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     @Override
     protected boolean onCharTyped(char c, int mods) {
         if (c < 32 || c == 127) return false;
+        if (findMode > 0) return handleFindBarChar(c);
         insertChar(c);
         return true;
     }
@@ -823,6 +783,49 @@ public class SyntaxEditorWidget extends WidgetBase {
     @Override
     protected boolean onMouseClicked(double mx, double my, int btn) {
         if (!isMouseOver(mx, my)) { setFocused(false); activeSuggestions = null; return false; }
+
+        // Find bar button clicks
+        if (findMode == 2 && btn == 0) {
+            int btnH = 11;
+            if (findBtnReplaceX >= 0 && mx >= findBtnReplaceX && mx < findBtnReplaceX + FIND_BTN_W
+                    && my >= findBtnReplaceY && my < findBtnReplaceY + btnH) {
+                replaceOne(); return true;
+            }
+            if (findBtnReplaceAllX >= 0 && mx >= findBtnReplaceAllX && mx < findBtnReplaceAllX + FIND_BTN_W + 10
+                    && my >= findBtnReplaceAllY && my < findBtnReplaceAllY + btnH) {
+                replaceAll(); return true;
+            }
+        }
+
+        // Find bar field click to focus and position cursor
+        if (findMode > 0 && btn == 0) {
+            Font font = Minecraft.getInstance().font;
+            int x0 = getX(), y0 = getY();
+            int bx = x0 + width - FIND_BAR_W - 2;
+            int by = y0 + 2;
+            String countLabel = findQuery.length() == 0 ? "" :
+                    findMatches.isEmpty() ? "no matches" : (findMatchIndex + 1) + "/" + findMatches.size();
+            int labelW = countLabel.isEmpty() ? 0 : font.width(countLabel) + 4;
+            int fieldW = FIND_BAR_W - 12 - labelW;
+            int fy = by + 4;
+            int fx = bx + 4;
+            // Find field click
+            if (mx >= fx && mx < fx + fieldW && my >= fy && my < fy + FIND_FIELD_H) {
+                findFocused = 0;
+                int col = findFieldClickToCol(font, findQuery, (int)(mx - fx - 2), findCursor);
+                findCursor = col; findSelAnchor = col;
+                return true;
+            }
+            if (findMode == 2) {
+                int ry = fy + FIND_FIELD_H + 4;
+                if (mx >= fx && mx < fx + fieldW && my >= ry && my < ry + FIND_FIELD_H) {
+                    findFocused = 1;
+                    int col = findFieldClickToCol(font, replaceQuery, (int)(mx - fx - 2), replaceCursor);
+                    replaceCursor = col; replaceSelAnchor = col;
+                    return true;
+                }
+            }
+        }
 
         // Vertical scrollbar click
         int x0 = getX(), y0 = getY();
@@ -1245,31 +1248,28 @@ public class SyntaxEditorWidget extends WidgetBase {
     // ── Undo / Redo ───────────────────────────────────────────────────────────
 
     private void pushUndo() {
-        if (undoStack.size() >= UNDO_LIMIT) undoStack.remove(0);
-        undoStack.add(new UndoEntry(text.toString(), cursor));
-        redoStack.clear();
+        undoManager.push(text.toString(), cursor);
     }
 
     private void undo() {
-        if (undoStack.isEmpty()) return;
-        UndoEntry e = undoStack.remove(undoStack.size() - 1);
-        redoStack.add(new UndoEntry(text.toString(), cursor));
+        EditorUndoManager.EditorState state = undoManager.undo(text.toString(), cursor);
+        if (state == null) return;
         text.setLength(0);
-        text.append(e.text());
-        cursor    = Math.min(e.cursor(), text.length());
+        text.append(state.text());
+        cursor    = Math.min(state.cursor(), text.length());
         selAnchor = cursor;
+        ensureCursorVisible();
         onTextChanged();
     }
 
     private void redo() {
-        if (redoStack.isEmpty()) return;
-        UndoEntry e = redoStack.remove(redoStack.size() - 1);
-        if (undoStack.size() >= UNDO_LIMIT) undoStack.remove(0);
-        undoStack.add(new UndoEntry(text.toString(), cursor));
+        EditorUndoManager.EditorState state = undoManager.redo(text.toString(), cursor);
+        if (state == null) return;
         text.setLength(0);
-        text.append(e.text());
-        cursor    = Math.min(e.cursor(), text.length());
+        text.append(state.text());
+        cursor    = Math.min(state.cursor(), text.length());
         selAnchor = cursor;
+        ensureCursorVisible();
         onTextChanged();
     }
 
@@ -1638,6 +1638,359 @@ public class SyntaxEditorWidget extends WidgetBase {
             if (end < activeSuggestions.length)
                 g.drawString(font, "▼", px + panelW - 9, py + panelH - LINE_H, 0xFF888888, false);
         }
+    }
+
+    // ── Find / Replace bar ────────────────────────────────────────────────────
+
+    public void openFind() {
+        findMode = 1;
+        findFocused = 0;
+        findSelAnchor = 0; findCursor = findQuery.length();
+        updateFindMatches();
+    }
+
+    public void openReplace() {
+        findMode = 2;
+        findFocused = 0;
+        findSelAnchor = 0; findCursor = findQuery.length();
+        updateFindMatches();
+    }
+
+    public void closeFindBar() {
+        findMode = 0;
+        findMatches.clear();
+        findMatchIndex = -1;
+        findBtnReplaceX = -1; findBtnReplaceAllX = -1;
+    }
+
+    public boolean isFindOpen() { return findMode > 0; }
+
+    private void updateFindMatches() {
+        findMatches.clear();
+        findMatchIndex = -1;
+        if (findQuery.length() == 0) return;
+        String src = text.toString().toLowerCase();
+        String q   = findQuery.toString().toLowerCase();
+        int i = 0;
+        while (i <= src.length() - q.length()) {
+            int found = src.indexOf(q, i);
+            if (found < 0) break;
+            findMatches.add(found);
+            i = found + 1;
+        }
+        if (!findMatches.isEmpty()) {
+            // Set index to match closest to cursor
+            findMatchIndex = 0;
+            for (int k = 0; k < findMatches.size(); k++) {
+                if (findMatches.get(k) >= cursor) { findMatchIndex = k; break; }
+            }
+        }
+    }
+
+    private void findNext() {
+        if (findMatches.isEmpty()) return;
+        findMatchIndex = (findMatchIndex + 1) % findMatches.size();
+        jumpToMatch(findMatchIndex);
+    }
+
+    private void findPrev() {
+        if (findMatches.isEmpty()) return;
+        findMatchIndex = (findMatchIndex - 1 + findMatches.size()) % findMatches.size();
+        jumpToMatch(findMatchIndex);
+    }
+
+    private void jumpToMatch(int idx) {
+        if (idx < 0 || idx >= findMatches.size()) return;
+        int offset = findMatches.get(idx);
+        int len    = findQuery.length();
+        selAnchor  = offset;
+        cursor     = offset + len;
+        ensureCursorVisible();
+    }
+
+    private void replaceOne() {
+        if (findMatchIndex < 0 || findMatchIndex >= findMatches.size()) return;
+        int offset = findMatches.get(findMatchIndex);
+        int len    = findQuery.length();
+        if (offset + len > text.length()) return;
+        pushUndo();
+        text.replace(offset, offset + len, replaceQuery.toString());
+        cursor    = offset + replaceQuery.length();
+        selAnchor = cursor;
+        onTextChanged();
+        updateFindMatches();
+        if (!findMatches.isEmpty()) {
+            findMatchIndex = Math.min(findMatchIndex, findMatches.size() - 1);
+            jumpToMatch(findMatchIndex);
+        }
+    }
+
+    private void replaceAll() {
+        if (findQuery.length() == 0) return;
+        updateFindMatches();
+        if (findMatches.isEmpty()) return;
+        pushUndo();
+        String src = text.toString();
+        String q   = findQuery.toString().toLowerCase();
+        String r   = replaceQuery.toString();
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < src.length()) {
+            int found = src.toLowerCase().indexOf(q, i);
+            if (found < 0) { sb.append(src, i, src.length()); break; }
+            sb.append(src, i, found);
+            sb.append(r);
+            i = found + q.length();
+        }
+        text.setLength(0);
+        text.append(sb);
+        cursor = Math.min(cursor, text.length());
+        selAnchor = cursor;
+        onTextChanged();
+        updateFindMatches();
+    }
+
+    /** Handle a key press inside the find/replace bar fields. Returns true if consumed. */
+    private boolean handleFindBarKey(int key, int mods) {
+        boolean shift = (mods & GLFW.GLFW_MOD_SHIFT)   != 0;
+        boolean ctrl  = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
+
+        if (key == GLFW.GLFW_KEY_ESCAPE) { closeFindBar(); return true; }
+
+        if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
+            if (findFocused == 1) { replaceOne(); return true; }
+            if (shift) findPrev(); else findNext();
+            return true;
+        }
+
+        if (key == GLFW.GLFW_KEY_TAB && findMode == 2) {
+            findFocused = 1 - findFocused;
+            return true;
+        }
+
+        if (ctrl && key == GLFW.GLFW_KEY_H) { replaceAll(); return true; }
+        if (ctrl && key == GLFW.GLFW_KEY_F) { findFocused = 0; findMode = Math.max(1, findMode); return true; }
+        if (ctrl && key == GLFW.GLFW_KEY_R) { findMode = 2; findFocused = 1; return true; }
+        if (ctrl && key == GLFW.GLFW_KEY_C) { copyFindField(); return true; }
+        if (ctrl && key == GLFW.GLFW_KEY_X) { cutFindField(); return true; }
+        if (ctrl && key == GLFW.GLFW_KEY_V) { pasteFindField(); return true; }
+        if (ctrl && key == GLFW.GLFW_KEY_A) { selectAllFindField(); return true; }
+
+        StringBuilder active  = findFocused == 0 ? findQuery    : replaceQuery;
+        int curVal             = findFocused == 0 ? findCursor    : replaceCursor;
+        int anchorVal          = findFocused == 0 ? findSelAnchor : replaceSelAnchor;
+        boolean hasSel         = curVal != anchorVal;
+        boolean changed        = false;
+
+        if (key == GLFW.GLFW_KEY_BACKSPACE) {
+            if (hasSel) {
+                int lo = Math.min(curVal, anchorVal), hi = Math.max(curVal, anchorVal);
+                active.delete(lo, hi); curVal = lo; anchorVal = lo; changed = true;
+            } else if (curVal > 0) {
+                active.deleteCharAt(curVal - 1); curVal--; anchorVal = curVal; changed = true;
+            }
+        } else if (key == GLFW.GLFW_KEY_DELETE) {
+            if (hasSel) {
+                int lo = Math.min(curVal, anchorVal), hi = Math.max(curVal, anchorVal);
+                active.delete(lo, hi); curVal = lo; anchorVal = lo; changed = true;
+            } else if (curVal < active.length()) {
+                active.deleteCharAt(curVal); changed = true;
+            }
+        } else if (key == GLFW.GLFW_KEY_LEFT) {
+            if (!shift && hasSel) { curVal = Math.min(curVal, anchorVal); anchorVal = curVal; }
+            else { curVal = ctrl ? findWordLeft(active, curVal) : Math.max(0, curVal - 1); if (!shift) anchorVal = curVal; }
+        } else if (key == GLFW.GLFW_KEY_RIGHT) {
+            if (!shift && hasSel) { curVal = Math.max(curVal, anchorVal); anchorVal = curVal; }
+            else { curVal = ctrl ? findWordRight(active, curVal) : Math.min(active.length(), curVal + 1); if (!shift) anchorVal = curVal; }
+        } else if (key == GLFW.GLFW_KEY_HOME) {
+            curVal = 0; if (!shift) anchorVal = 0;
+        } else if (key == GLFW.GLFW_KEY_END) {
+            curVal = active.length(); if (!shift) anchorVal = curVal;
+        } else return false;
+
+        if (findFocused == 0) { findCursor = curVal; findSelAnchor = anchorVal; }
+        else                   { replaceCursor = curVal; replaceSelAnchor = anchorVal; }
+        if (changed && findFocused == 0) updateFindMatches();
+        return true;
+    }
+
+    private int findFieldClickToCol(Font font, StringBuilder value, int relX, int cursorForScroll) {
+        String s     = value.toString();
+        int scrollOff = Math.max(0, font.width(s.substring(0, Math.min(cursorForScroll, s.length()))) - (FIND_BAR_W - 16) + 4);
+        int targetX  = relX + scrollOff;
+        int px = 0;
+        for (int i = 0; i < s.length(); i++) {
+            int cw = font.width(String.valueOf(s.charAt(i)));
+            if (px + (cw + 1) / 2 >= targetX) return i;
+            px += cw;
+        }
+        return s.length();
+    }
+
+    private int findWordLeft(StringBuilder s, int pos) {
+        if (pos <= 0) return 0;
+        pos--;
+        while (pos > 0 && !Character.isLetterOrDigit(s.charAt(pos - 1)) && s.charAt(pos - 1) != '_') pos--;
+        while (pos > 0 && (Character.isLetterOrDigit(s.charAt(pos - 1)) || s.charAt(pos - 1) == '_')) pos--;
+        return pos;
+    }
+
+    private int findWordRight(StringBuilder s, int pos) {
+        int len = s.length();
+        while (pos < len && !Character.isLetterOrDigit(s.charAt(pos)) && s.charAt(pos) != '_') pos++;
+        while (pos < len && (Character.isLetterOrDigit(s.charAt(pos)) || s.charAt(pos) == '_')) pos++;
+        return pos;
+    }
+
+    private void copyFindField() {
+        StringBuilder active = findFocused == 0 ? findQuery : replaceQuery;
+        int cur = findFocused == 0 ? findCursor : replaceCursor;
+        int anc = findFocused == 0 ? findSelAnchor : replaceSelAnchor;
+        if (cur == anc) return;
+        int lo = Math.min(cur, anc), hi = Math.max(cur, anc);
+        Minecraft.getInstance().keyboardHandler.setClipboard(active.substring(lo, hi));
+    }
+
+    private void cutFindField() {
+        copyFindField();
+        StringBuilder active = findFocused == 0 ? findQuery : replaceQuery;
+        int cur = findFocused == 0 ? findCursor : replaceCursor;
+        int anc = findFocused == 0 ? findSelAnchor : replaceSelAnchor;
+        if (cur == anc) return;
+        int lo = Math.min(cur, anc), hi = Math.max(cur, anc);
+        active.delete(lo, hi);
+        if (findFocused == 0) { findCursor = lo; findSelAnchor = lo; updateFindMatches(); }
+        else { replaceCursor = lo; replaceSelAnchor = lo; }
+    }
+
+    private void pasteFindField() {
+        String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
+        if (clip == null || clip.isEmpty()) return;
+        // delete selection first
+        StringBuilder active = findFocused == 0 ? findQuery : replaceQuery;
+        int cur = findFocused == 0 ? findCursor : replaceCursor;
+        int anc = findFocused == 0 ? findSelAnchor : replaceSelAnchor;
+        if (cur != anc) {
+            int lo = Math.min(cur, anc), hi = Math.max(cur, anc);
+            active.delete(lo, hi); cur = lo;
+        }
+        active.insert(cur, clip); cur += clip.length();
+        if (findFocused == 0) { findCursor = cur; findSelAnchor = cur; updateFindMatches(); }
+        else { replaceCursor = cur; replaceSelAnchor = cur; }
+    }
+
+    private void selectAllFindField() {
+        StringBuilder active = findFocused == 0 ? findQuery : replaceQuery;
+        if (findFocused == 0) { findSelAnchor = 0; findCursor = active.length(); }
+        else { replaceSelAnchor = 0; replaceCursor = active.length(); }
+    }
+
+    /** Handle a char typed into the active find/replace field. Returns true if consumed. */
+    private boolean handleFindBarChar(char c) {
+        if (c < 32 || c == 127) return false;
+        StringBuilder active = findFocused == 0 ? findQuery : replaceQuery;
+        int cur = findFocused == 0 ? findCursor : replaceCursor;
+        int anc = findFocused == 0 ? findSelAnchor : replaceSelAnchor;
+        if (cur != anc) {
+            int lo = Math.min(cur, anc), hi = Math.max(cur, anc);
+            active.delete(lo, hi); cur = lo;
+        }
+        active.insert(cur, c); cur++;
+        if (findFocused == 0) { findCursor = cur; findSelAnchor = cur; updateFindMatches(); }
+        else { replaceCursor = cur; replaceSelAnchor = cur; }
+        return true;
+    }
+
+    private void renderFindBar(GuiGraphics g, Font font) {
+        if (findMode == 0) return;
+        UITheme t = UITheme.byId(NeoHouseConfig.get().uiTheme);
+        int x0 = getX(), y0 = getY();
+        int rows = findMode == 2 ? 2 : 1;
+        int barH = 6 + rows * (FIND_FIELD_H + 4) + (findMode == 2 ? 16 : 0);
+
+        int bx = x0 + width - FIND_BAR_W - 2;
+        int by = y0 + 2;
+
+        g.fill(bx, by, bx + FIND_BAR_W, by + barH, t.dialog(0xF2));
+        g.fill(bx, by, bx + FIND_BAR_W, by + 1, t.accent());
+        g.fill(bx, by, bx + 1, by + barH, t.accent());
+        g.fill(bx + FIND_BAR_W - 1, by, bx + FIND_BAR_W, by + barH, t.accent());
+        g.fill(bx, by + barH - 1, bx + FIND_BAR_W, by + barH, t.accent());
+
+        String countLabel = findQuery.length() == 0 ? "" :
+                findMatches.isEmpty() ? "no matches" :
+                (findMatchIndex + 1) + "/" + findMatches.size();
+        int labelW = countLabel.isEmpty() ? 0 : font.width(countLabel) + 4;
+        int fieldW = FIND_BAR_W - 12 - labelW;
+
+        int fy = by + 4;
+        renderFindField(g, font, t, bx + 4, fy, fieldW, findQuery, findCursor, findSelAnchor, findFocused == 0, "Find");
+        if (!countLabel.isEmpty()) {
+            int countColor = findMatches.isEmpty() ? 0xFFFF6666 : 0xFF88CC88;
+            g.drawString(font, countLabel, bx + FIND_BAR_W - labelW - 2, fy + 2, countColor, false);
+        }
+
+        if (findMode == 2) {
+            int ry = fy + FIND_FIELD_H + 4;
+            renderFindField(g, font, t, bx + 4, ry, fieldW, replaceQuery, replaceCursor, replaceSelAnchor, findFocused == 1, "Replace");
+
+            // Replace / Replace All buttons
+            int btnY = ry + FIND_FIELD_H + 3;
+            int btn1X = bx + 4;
+            int btn2X = btn1X + FIND_BTN_W + 3;
+            renderFindButton(g, font, t, btn1X, btnY, FIND_BTN_W, "Replace");
+            renderFindButton(g, font, t, btn2X, btnY, FIND_BTN_W + 10, "Replace All");
+            findBtnReplaceX    = btn1X; findBtnReplaceY    = btnY;
+            findBtnReplaceAllX = btn2X; findBtnReplaceAllY = btnY;
+        } else {
+            findBtnReplaceX = -1; findBtnReplaceAllX = -1;
+        }
+    }
+
+    private void renderFindButton(GuiGraphics g, Font font, UITheme t, int bx, int by, int bw, String label) {
+        int bh = 11;
+        g.fill(bx, by, bx + bw, by + bh, t.panel(0xFF));
+        g.fill(bx, by, bx + bw, by + 1, t.accent());
+        g.fill(bx, by, bx + 1, by + bh, t.accent());
+        g.fill(bx + bw - 1, by, bx + bw, by + bh, t.accent());
+        g.fill(bx, by + bh - 1, bx + bw, by + bh, t.accent());
+        int lw = font.width(label);
+        g.drawString(font, label, bx + (bw - lw) / 2, by + 2, 0xFFCCCCCC, false);
+    }
+
+    private void renderFindField(GuiGraphics g, Font font, UITheme t,
+                                  int fx, int fy, int fieldW,
+                                  StringBuilder value, int cur, int anchor, boolean focused, String placeholder) {
+        g.fill(fx, fy, fx + fieldW, fy + FIND_FIELD_H, focused ? 0xFF2A2A3A : 0xFF222222);
+        g.fill(fx, fy, fx + fieldW, fy + 1, focused ? t.accent() : t.divider());
+
+        String display = value.toString();
+        if (display.isEmpty()) {
+            g.drawString(font, placeholder, fx + 2, fy + 2, 0xFF555555, false);
+            return;
+        }
+
+        int maxW    = fieldW - 4;
+        int curPx   = font.width(display.substring(0, Math.min(cur, display.length())));
+        int scrollOff = Math.max(0, curPx - maxW + 4);
+
+        g.enableScissor(fx, fy, fx + fieldW, fy + FIND_FIELD_H);
+
+        // Selection highlight
+        if (focused && cur != anchor) {
+            int lo = Math.min(cur, anchor), hi = Math.max(cur, anchor);
+            int sx = fx + 2 + font.width(display.substring(0, Math.min(lo, display.length()))) - scrollOff;
+            int ex = fx + 2 + font.width(display.substring(0, Math.min(hi, display.length()))) - scrollOff;
+            g.fill(sx, fy + 1, ex, fy + FIND_FIELD_H - 1, 0x664477AA);
+        }
+
+        g.drawString(font, display, fx + 2 - scrollOff, fy + 2, 0xFFDDDDDD, false);
+
+        if (focused && (System.currentTimeMillis() / 530) % 2 == 0) {
+            int cx = fx + 2 + curPx - scrollOff;
+            g.fill(cx, fy + 1, cx + 1, fy + FIND_FIELD_H - 1, 0xFFCCCCCC);
+        }
+        g.disableScissor();
     }
 
     @Override

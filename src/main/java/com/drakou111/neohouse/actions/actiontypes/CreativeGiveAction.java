@@ -19,6 +19,11 @@ public class CreativeGiveAction extends Action {
     }
 
     @Override
+    public boolean requiresCreative() {
+        return true;
+    }
+
+    @Override
     public boolean run(Minecraft mc) {
         if (mc.player == null || mc.getConnection() == null || mc.level == null) return true;
 

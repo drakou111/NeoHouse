@@ -30,8 +30,8 @@ public class HelpScreen extends ScreenBase {
     private static final int HEADER_H  = 28;
     private static final int TAB_BTN_H = 20;
     private static final int CONTENT_Y = HEADER_H + TAB_BTN_H + 2;
-    private static final int LINE_H    = 11;
-    private static final int ICON_SIZE = 8;
+    private static final int LINE_H    = 13;
+    private static final int ICON_SIZE = 12;
     private static final int ICON_PAD  = ICON_SIZE + 3;
     private static final int SB_W      = 4;
     private static final int SB_PAD    = 3;
@@ -43,6 +43,7 @@ public class HelpScreen extends ScreenBase {
 
     private enum Tab {
         OVERVIEW("Overview"),
+        EXAMPLES("Examples"),
         ACTIONS("Actions"),
         CONDITIONS("Conditions"),
         EVENTS("Events"),
@@ -62,6 +63,7 @@ public class HelpScreen extends ScreenBase {
     static {
         Map<Tab, List<HelpLine>> m = new EnumMap<>(Tab.class);
         m.put(Tab.OVERVIEW,     buildOverview());
+        m.put(Tab.EXAMPLES,     buildExamples());
         m.put(Tab.ACTIONS,      buildActions());
         m.put(Tab.CONDITIONS,   buildConditions());
         m.put(Tab.EVENTS,       buildEvents());
@@ -71,49 +73,339 @@ public class HelpScreen extends ScreenBase {
 
     private static List<HelpLine> buildOverview() {
         List<HelpLine> l = new ArrayList<>();
+
         l.add(new HelpLine(COL_H, "Overview"));
-        l.add(new HelpLine(COL_T, "NeoHouse is a scripting language that compiles to Hypixel Housing actions."));
-        l.add(new HelpLine(COL_T, "Write scripts in .nh files, then run them with the file browser or /neohouse run."));
+        l.add(new HelpLine(COL_T, "NeoHouse compiles .nh scripts into Hypixel Housing actions."));
+        l.add(new HelpLine(COL_T, "Open scripts via the file browser or run them with /neohouse run."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Commands"));
-        l.add(new HelpLine(COL_C, "  /neohouse                        — open home screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse help                   — open this help screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse files                  — open file browser"));
-        l.add(new HelpLine(COL_C, "  /neohouse run <file>             — compile & run a script"));
-        l.add(new HelpLine(COL_C, "  /neohouse run latest             — re-run last script"));
-        l.add(new HelpLine(COL_C, "  /neohouse config                 — open config screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete functions       — delete all functions"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete events          — delete all event actions"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete commands        — delete all commands"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete menus           — delete all custom menus"));
-        l.add(new HelpLine(COL_C, "  /neohouse nuke                   — delete everything"));
+        l.add(new HelpLine(COL_C, "  /neohouse                  — open home screen"));
+        l.add(new HelpLine(COL_C, "  /neohouse help             — open this help screen"));
+        l.add(new HelpLine(COL_C, "  /neohouse files            — open file browser"));
+        l.add(new HelpLine(COL_C, "  /neohouse run <file>       — compile & run a script"));
+        l.add(new HelpLine(COL_C, "  /neohouse run latest       — re-run last script"));
+        l.add(new HelpLine(COL_C, "  /neohouse config           — open config screen"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete functions — delete all functions"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete events    — delete all event actions"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete commands  — delete all commands"));
+        l.add(new HelpLine(COL_C, "  /neohouse delete menus     — delete all custom menus"));
+        l.add(new HelpLine(COL_C, "  /neohouse nuke             — delete everything"));
         l.add(new HelpLine(COL_D, ""));
 
-        l.add(new HelpLine(COL_H, "Variable Types"));
-        l.add(new HelpLine(COL_C, "  long   — whole numbers"));
-        l.add(new HelpLine(COL_C, "  double — decimal numbers"));
-        l.add(new HelpLine(COL_C, "  string — text"));
+        l.add(new HelpLine(COL_H, "Types"));
+        l.add(new HelpLine(COL_C, "  long   — whole numbers (e.g. 42)"));
+        l.add(new HelpLine(COL_C, "  double — decimal numbers (e.g. 3.14d)"));
+        l.add(new HelpLine(COL_C, "  string — text (e.g. \"hello\")"));
+        l.add(new HelpLine(COL_C, "  bool   — true or false"));
+        l.add(new HelpLine(COL_C, "  var    — untyped, no compile-time checking"));
         l.add(new HelpLine(COL_D, ""));
 
-        l.add(new HelpLine(COL_H, "Language Basics"));
-        l.add(new HelpLine(COL_T, "  Define variables:"));
-        l.add(new HelpLine(COL_C, "    long counter;"));
-        l.add(new HelpLine(COL_T, "  Conditions:"));
-        l.add(new HelpLine(COL_C, "    if (playerHealth < 5.0) { kill(); }"));
-        l.add(new HelpLine(COL_C, "    if (isPvpEnabled(true)) { ... } else { ... }"));
-        l.add(new HelpLine(COL_T, "  Random blocks:"));
-        l.add(new HelpLine(COL_C, "    random [ { kill(); }  { heal(); } ]"));
-        l.add(new HelpLine(COL_T, "  Actions called directly:"));
-        l.add(new HelpLine(COL_C, "    message(\"Hello\");"));
+        l.add(new HelpLine(COL_H, "Variables & Holders"));
+        l.add(new HelpLine(COL_T, "  Variables are scoped to a holder:"));
+        l.add(new HelpLine(COL_C, "    p.name        — player variable"));
+        l.add(new HelpLine(COL_C, "    g.name        — global variable (shared)"));
+        l.add(new HelpLine(COL_C, "    t[team].name  — team variable"));
+        l.add(new HelpLine(COL_T, "  Declare at the top of your file:"));
+        l.add(new HelpLine(COL_C, "    string g.word = \"N/A\";"));
+        l.add(new HelpLine(COL_C, "    long g.count;"));
+        l.add(new HelpLine(COL_D, "  Only g. and t[]. variables can have initializers."));
+        l.add(new HelpLine(COL_D, "  Undeclared variables are treated as global var."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Placeholders"));
+        l.add(new HelpLine(COL_T, "  Read-only values from the housing or player:"));
+        l.add(new HelpLine(COL_C, "    ph.placeholderName"));
+        l.add(new HelpLine(COL_C, "    ph.placeholderName(arg1, arg2)"));
+        l.add(new HelpLine(COL_T, "  See the Placeholders tab for the full list."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "String Concatenation"));
+        l.add(new HelpLine(COL_T, "  Use + to join strings, variables, and placeholders:"));
+        l.add(new HelpLine(COL_C, "    message(\"Score: \" + g.score + \"!\");"));
+        l.add(new HelpLine(COL_T, "  Compiled into Housing placeholder format at build time."));
+        l.add(new HelpLine(COL_T, "  Result must be at most 256 characters."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Casting"));
+        l.add(new HelpLine(COL_C, "  (long)x     — truncate to whole number"));
+        l.add(new HelpLine(COL_C, "  (double)x   — convert to decimal"));
+        l.add(new HelpLine(COL_C, "  (string)x   — convert to string"));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Operators"));
-        l.add(new HelpLine(COL_C, "  + - * /   arithmetic"));
-        l.add(new HelpLine(COL_C, "  == != < <= > >=   comparison"));
-        l.add(new HelpLine(COL_C, "  && ||   logical"));
-        l.add(new HelpLine(COL_C, "  = += -= *= /=   assignment"));
-        l.add(new HelpLine(COL_C, "  (long) (double) (string)   casts"));
+        l.add(new HelpLine(COL_C, "  Arithmetic:   + - * /"));
+        l.add(new HelpLine(COL_C, "  Bitwise:      & | ^ << >> >>>"));
+        l.add(new HelpLine(COL_C, "  Unary:        a++  a--  -a  !a"));
+        l.add(new HelpLine(COL_C, "  Comparison:   == != < <= > >="));
+        l.add(new HelpLine(COL_C, "  Logical:      && ||"));
+        l.add(new HelpLine(COL_C, "  Assignment:   = += -= *= /= &= |= ^= <<= >>= >>>="));
+        l.add(new HelpLine(COL_D, "  Constants:    PI  E  HALF_PI  TWO_PI  PHI  SQRT_TWO"));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Functions"));
+        l.add(new HelpLine(COL_T, "  Void function (no return value):"));
+        l.add(new HelpLine(COL_C, "    function greet() { message(\"Hi!\"); }"));
+        l.add(new HelpLine(COL_T, "  Typed function (returns a value):"));
+        l.add(new HelpLine(COL_C, "    function long add(long a, long b) {"));
+        l.add(new HelpLine(COL_C, "      return a + b;"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_C, "    long result = add(1, 2);"));
+        l.add(new HelpLine(COL_T, "  Parameters are passed by value — changes inside"));
+        l.add(new HelpLine(COL_T, "  the function do not affect the original variable."));
+        l.add(new HelpLine(COL_D, "  Function names cannot clash with built-in actions."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Loops"));
+        l.add(new HelpLine(COL_T, "  Repeats on a fixed tick interval (minimum 4):"));
+        l.add(new HelpLine(COL_C, "    loop myLoop(10) { ... }"));
+        l.add(new HelpLine(COL_D, "  Cannot be typed or have parameters."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Conditionals"));
+        l.add(new HelpLine(COL_C, "    if (p.score >= 100 && isSneaking(false)) {"));
+        l.add(new HelpLine(COL_C, "      message(\"Done!\");"));
+        l.add(new HelpLine(COL_C, "    } else { ... }"));
+        l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) — not both in one expression."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Random"));
+        l.add(new HelpLine(COL_T, "  Executes one block at random:"));
+        l.add(new HelpLine(COL_C, "    random [ { kill(); }  { heal(); } ]"));
+        l.add(new HelpLine(COL_T, "  Use N* to weight an option:"));
+        l.add(new HelpLine(COL_C, "    random [ 3*{ message(\"Common\"); }  { kill(); } ]"));
+        l.add(new HelpLine(COL_D, "  Weights are reduced by their GCD before compiling."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Repeat"));
+        l.add(new HelpLine(COL_T, "  Unrolls its body N times at compile time:"));
+        l.add(new HelpLine(COL_C, "    repeat(3) { message(\"tick\"); }"));
+        l.add(new HelpLine(COL_D, "  Not a runtime loop — the actions are literally copied."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Events"));
+        l.add(new HelpLine(COL_T, "  Triggered automatically by in-game events:"));
+        l.add(new HelpLine(COL_C, "    event onJoin { message(\"Welcome!\"); }"));
+        l.add(new HelpLine(COL_T, "  See the Events tab for the full list."));
+        l.add(new HelpLine(COL_D, "  Some events have restricted action counts."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Commands"));
+        l.add(new HelpLine(COL_C, "    command myCmd(priority: 5, listed: false) {"));
+        l.add(new HelpLine(COL_C, "      kill();"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_D, "  Options: priority (0-20), listed, targeted."));
+        l.add(new HelpLine(COL_D, "  Name must be at least 3 characters."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Menus"));
+        l.add(new HelpLine(COL_C, "    menu myMenu(3) {"));
+        l.add(new HelpLine(COL_C, "      slot0: ({count:1,id:\"minecraft:diamond\"}) {"));
+        l.add(new HelpLine(COL_C, "        message(\"Clicked!\");"));
+        l.add(new HelpLine(COL_C, "      }"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_D, "  The number is the row count (1-6). Slots are 0-indexed."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Import"));
+        l.add(new HelpLine(COL_T, "  Include another .nh file inline:"));
+        l.add(new HelpLine(COL_C, "    import \"path/to/other.nh\";"));
+        l.add(new HelpLine(COL_D, ""));
+
+        return l;
+    }
+
+    private static List<HelpLine> buildExamples() {
+        List<HelpLine> l = new ArrayList<>();
+
+        // ── 1. Hello World ────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "1. Hello World"));
+        l.add(new HelpLine(COL_T, "  Send a message to the player when they join."));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    message(\"Welcome to my house!\");"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  The event block runs automatically on the trigger."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 2. Variables ──────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "2. Variables"));
+        l.add(new HelpLine(COL_T, "  Count how many times each player has joined."));
+        l.add(new HelpLine(COL_C, "  long p.joins;"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    p.joins += 1;"));
+        l.add(new HelpLine(COL_C, "    message(\"You have joined \" + p.joins + \" time(s)!\");"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  p. variables are per-player. g. variables are shared."));
+        l.add(new HelpLine(COL_D, "  Declare without a holder at the top of the file."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 3. Global Counter ─────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "3. Global Counter"));
+        l.add(new HelpLine(COL_T, "  Track total joins across all players."));
+        l.add(new HelpLine(COL_C, "  long g.totalJoins = 0;"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    g.totalJoins += 1;"));
+        l.add(new HelpLine(COL_C, "    message(\"Total joins: \" + g.totalJoins);"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  g. variables persist until the housing resets."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 4. Conditionals ───────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "4. Conditionals"));
+        l.add(new HelpLine(COL_T, "  Reward players who reach a score threshold."));
+        l.add(new HelpLine(COL_C, "  long p.score;"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  function checkScore() {"));
+        l.add(new HelpLine(COL_C, "    if (p.score >= 100) {"));
+        l.add(new HelpLine(COL_C, "      message(\"You reached 100 points!\");"));
+        l.add(new HelpLine(COL_C, "      heal();"));
+        l.add(new HelpLine(COL_C, "    } else {"));
+        l.add(new HelpLine(COL_C, "      message(\"Keep going: \" + p.score + \" / 100\");"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) in conditions, not both at once."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 5. Functions ──────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "5. Functions"));
+        l.add(new HelpLine(COL_T, "  Reusable logic — void and typed."));
+        l.add(new HelpLine(COL_C, "  function greet() {"));
+        l.add(new HelpLine(COL_C, "    message(\"Hello, player!\");"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  function long double(long n) {"));
+        l.add(new HelpLine(COL_C, "    return n * 2;"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    greet();"));
+        l.add(new HelpLine(COL_C, "    long result = double(5);"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  Parameters are copied — changes inside don't affect callers."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 6. Custom Command ─────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "6. Custom Command"));
+        l.add(new HelpLine(COL_T, "  Let players type /heal to restore themselves."));
+        l.add(new HelpLine(COL_C, "  command heal(listed: true, priority: 5) {"));
+        l.add(new HelpLine(COL_C, "    heal();"));
+        l.add(new HelpLine(COL_C, "    message(\"You have been healed!\");"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  priority: 0-20. listed: appears in /. targeted: per-player."));
+        l.add(new HelpLine(COL_D, "  Name must be at least 3 characters."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 7. Loops ──────────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "7. Loops"));
+        l.add(new HelpLine(COL_T, "  Run code on a fixed tick interval (minimum 4 ticks)."));
+        l.add(new HelpLine(COL_C, "  long g.seconds = 0;"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  loop clock(20) {"));
+        l.add(new HelpLine(COL_C, "    g.seconds += 1;"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  20 ticks = 1 second. Loops cannot have parameters."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 8. Random ─────────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "8. Random"));
+        l.add(new HelpLine(COL_T, "  Execute one outcome at random. Weight with N*."));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    random ["));
+        l.add(new HelpLine(COL_C, "      3*{ message(\"Common outcome\"); }"));
+        l.add(new HelpLine(COL_C, "         { message(\"Rare outcome A\"); }"));
+        l.add(new HelpLine(COL_C, "         { message(\"Rare outcome B\"); }"));
+        l.add(new HelpLine(COL_C, "    ]"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  Weights are reduced by GCD. 3:1:1 above means 60%:20%:20%."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 9. Menus ──────────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "9. Menus"));
+        l.add(new HelpLine(COL_T, "  A 3-row inventory GUI with clickable slots."));
+        l.add(new HelpLine(COL_C, "  menu shop(3) {"));
+        l.add(new HelpLine(COL_C, "    slot0: ({count:1,id:\"minecraft:diamond\"}) {"));
+        l.add(new HelpLine(COL_C, "      message(\"You clicked the diamond!\");"));
+        l.add(new HelpLine(COL_C, "      closeMenu();"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_C, "    slot8: ({count:1,id:\"minecraft:barrier\"}) {"));
+        l.add(new HelpLine(COL_C, "      closeMenu();"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  event onJoin { displayMenu(\"shop\"); }"));
+        l.add(new HelpLine(COL_D, "  Rows: 1-6. Slots are 0-indexed left to right, top to bottom."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 10. Repeat ────────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "10. Repeat"));
+        l.add(new HelpLine(COL_T, "  Unrolls a block N times at compile time (not runtime)."));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    repeat(3) {"));
+        l.add(new HelpLine(COL_C, "      message(\"Spam!\");"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  Equivalent to writing the same action 3 times manually."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 11. String Building ───────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "11. String Building"));
+        l.add(new HelpLine(COL_T, "  Join text, variables, and placeholders with +."));
+        l.add(new HelpLine(COL_C, "  long p.score;"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    message(\"Hi \" + ph.playerName + \"! Score: \" + p.score);"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  Folded into a single Housing placeholder string at compile time."));
+        l.add(new HelpLine(COL_D, "  Result must be at most 256 characters."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 12. Events & Cancel ───────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "12. Events & Cancel"));
+        l.add(new HelpLine(COL_T, "  Cancel an event to prevent its default behavior."));
+        l.add(new HelpLine(COL_C, "  event onDeath {"));
+        l.add(new HelpLine(COL_C, "    message(\"You died!\");"));
+        l.add(new HelpLine(COL_C, "    cancel;"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  cancel; is a statement, not a function call."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 13. Import ────────────────────────────────────────────────────────
+        l.add(new HelpLine(COL_H, "13. Import"));
+        l.add(new HelpLine(COL_T, "  Split large scripts across multiple .nh files."));
+        l.add(new HelpLine(COL_C, "  // main.nh"));
+        l.add(new HelpLine(COL_C, "  import \"lib/utils.nh\";"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  event onJoin {"));
+        l.add(new HelpLine(COL_C, "    greet();  // defined in lib/utils.nh"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_D, "  The imported file's contents are inlined before compiling."));
+        l.add(new HelpLine(COL_D, ""));
+
+        // ── 14. Putting it all together ───────────────────────────────────────
+        l.add(new HelpLine(COL_H, "14. Full Example"));
+        l.add(new HelpLine(COL_T, "  A score system with a command and win condition."));
+        l.add(new HelpLine(COL_C, "  long p.score;"));
+        l.add(new HelpLine(COL_C, "  long g.highScore = 0;"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  function addScore(long n) {"));
+        l.add(new HelpLine(COL_C, "    p.score += n;"));
+        l.add(new HelpLine(COL_C, "    if (p.score > g.highScore) {"));
+        l.add(new HelpLine(COL_C, "      g.highScore = p.score;"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_C, "    if (p.score >= 1000) {"));
+        l.add(new HelpLine(COL_C, "      message(\"You won with score \" + p.score + \"!\");"));
+        l.add(new HelpLine(COL_C, "      p.score = 0;"));
+        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  command score(listed: true) {"));
+        l.add(new HelpLine(COL_C, "    message(\"Score: \" + p.score + \" | Best: \" + g.highScore);"));
+        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_C, ""));
+        l.add(new HelpLine(COL_C, "  event onKill { addScore(10); }"));
+        l.add(new HelpLine(COL_C, "  event onDeath { addScore(-5); }"));
         l.add(new HelpLine(COL_D, ""));
 
         return l;
@@ -322,7 +614,7 @@ public class HelpScreen extends ScreenBase {
         if (item == Items.AIR) return;
         PoseHelper.push(g);
         PoseHelper.translate(g, x, y);
-        PoseHelper.scale(g, 0.5f, 0.5f);
+        PoseHelper.scale(g, 0.75f, 0.75f);
         g.renderItem(new ItemStack(item), 0, 0);
         PoseHelper.pop(g);
     }

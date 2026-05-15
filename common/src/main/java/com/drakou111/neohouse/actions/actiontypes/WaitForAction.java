@@ -37,6 +37,10 @@ public class WaitForAction extends Action {
         return isOpening == waitForOpen && screen != null && screenClass.isAssignableFrom(screen.getClass());
     }
 
+    public boolean isDone() {
+        return done;
+    }
+
     public void markDone() {
         this.done = true;
     }

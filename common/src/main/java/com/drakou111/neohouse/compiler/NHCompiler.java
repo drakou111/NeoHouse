@@ -48,6 +48,12 @@ public class NHCompiler implements Compiler {
         DeadCodeCheckVisitor deadCodeCheck = new DeadCodeCheckVisitor();
         deadCodeCheck.analyze(node);
 
+        TypeInferringVisitor typeInferring = new TypeInferringVisitor();
+        node = typeInferring.analyze(node);
+
+        StringLengthCheckVisitor stringLengthCheck = new StringLengthCheckVisitor();
+        stringLengthCheck.analyze(node);
+
         ReturnContextChecker returnContextChecker = new ReturnContextChecker();
         returnContextChecker.analyze(node);
 
@@ -68,9 +74,6 @@ public class NHCompiler implements Compiler {
 
         ActionCountSplittingVisitor actionCountSplittingVisitor = new ActionCountSplittingVisitor();
         node = actionCountSplittingVisitor.analyze(node);
-
-        ConditionCountCheckVisitor conditionCountCheckVisitor = new ConditionCountCheckVisitor();
-        conditionCountCheckVisitor.analyze(node);
 
         ActionRestrictionVisitor actionRestrictionVisitor = new ActionRestrictionVisitor();
         node = actionRestrictionVisitor.analyze(node);

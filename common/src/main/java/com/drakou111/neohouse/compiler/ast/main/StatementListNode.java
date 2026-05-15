@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StatementListNode extends StatementNode {
-    public List<StatementNode> statements;
+    public final List<StatementNode> statements;
 
     public StatementListNode(final List<StatementNode> statements) {
         this.statements = new ArrayList<>();

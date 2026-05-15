@@ -6,6 +6,7 @@ import com.drakou111.neohouse.compiler.ast.expr.BooleanExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
+import com.drakou111.neohouse.compiler.enums.BinaryOperator;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
@@ -27,7 +28,13 @@ public class TypeInferringVisitor extends DefaultVisitor {
     @Override
     public ASTNode visitUnaryExpr(UnaryExpressionNode node) {
         NormalExpressionNode expr = (NormalExpressionNode) node.operand.accept(this);
-        return new UnaryExpressionNode(node.operator, expr, expr.type, node.token);
+        VariableType type = switch (node.operator) {
+            case STRING_CAST -> VariableType.STRING;
+            case LONG_CAST   -> VariableType.LONG;
+            case DOUBLE_CAST -> VariableType.DOUBLE;
+            default          -> expr.type;
+        };
+        return new UnaryExpressionNode(node.operator, expr, type, node.token);
     }
 
     @Override
@@ -36,7 +43,10 @@ public class TypeInferringVisitor extends DefaultVisitor {
         NormalExpressionNode right = (NormalExpressionNode) node.right.accept(this);
 
         VariableType resultType;
-        if (left.type == VariableType.VAR || right.type == VariableType.VAR) {
+        if (node.operator == BinaryOperator.ADD
+                && (left.type == VariableType.STRING || right.type == VariableType.STRING)) {
+            resultType = VariableType.STRING;
+        } else if (left.type == VariableType.VAR || right.type == VariableType.VAR) {
             resultType = VariableType.VAR;
         } else if (left.type == right.type) {
             resultType = left.type;

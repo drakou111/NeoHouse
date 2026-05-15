@@ -7,7 +7,7 @@ import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class VoidFunctionCallNode extends StatementNode {
     public final String functionName;
-    public ArgumentListNode arguments;
+    public final ArgumentListNode arguments;
 
     public VoidFunctionCallNode(final String functionName, final ArgumentListNode arguments, final Token token) {
         this.functionName = functionName;

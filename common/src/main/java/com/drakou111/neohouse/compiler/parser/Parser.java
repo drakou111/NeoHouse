@@ -78,7 +78,7 @@ public class Parser {
 
     private boolean isType(Token token) {
         return switch (token.type) {
-            case LONG, DOUBLE, STRING, VAR -> true;
+            case LONG, DOUBLE, STRING, BOOL, VAR -> true;
             default -> false;
         };
     }
@@ -137,13 +137,19 @@ public class Parser {
         String functionName;
 
         // Peek ahead: if it's a type, it's a typed function
+        Token functionNameToken;
         if (isType(peek())) {
             Token typeToken = advance();
             returnType = parseVariableFromToken(typeToken);
-            functionName = consume(TokenType.IDENT, "Expected function name").text;
+            functionNameToken = consume(TokenType.IDENT, "Expected function name");
         } else {
             // No return type: next must be function name
-            functionName = consume(TokenType.IDENT, "Expected function name").text;
+            functionNameToken = consume(TokenType.IDENT, "Expected function name");
+        }
+        functionName = functionNameToken.text;
+        if (AddAction.searchByName(functionName) != null) {
+            throw new ParsingException(functionNameToken,
+                    "'" + functionName + "' is a built-in action name and cannot be used as a function name");
         }
 
         consume(TokenType.LPAREN, "Expected '(' after function name");
@@ -185,12 +191,6 @@ public class Parser {
         }
     }
 
-    public CancelNode parseCancel() {
-        Token cancelToken = consume(TokenType.CANCEL, "Expected 'cancel' keyword");
-        consume(TokenType.SEMI, "Expected ';' after cancel statement");
-        return new CancelNode(cancelToken);
-    }
-
     public ReturnNode parseReturn() {
         Token returnToken = consume(TokenType.RETURN, "Expected 'return'");
 
@@ -228,7 +228,7 @@ public class Parser {
     public ConditionalNode parseIf() {
         Token token = consume(TokenType.IF, "Expected 'if' keyword");
         consume(TokenType.LPAREN, "Expected '(' after 'if'");
-        ExpressionNode condition = parseCondition();
+        ExpressionNode condition = check(TokenType.RPAREN) ? null : parseCondition();
         consume(TokenType.RPAREN, "Expected ')' after if condition");
 
         consume(TokenType.LBRACE, "Expected '{' to begin 'if' block");
@@ -257,22 +257,50 @@ public class Parser {
         consume(TokenType.LBRACK, "Expected '[' after 'random'");
 
         List<StatementListNode> options = new ArrayList<>();
+        List<Long> weights = new ArrayList<>();
 
         while (!check(TokenType.RBRACK) && !isAtEnd()) {
-            consume(TokenType.LBRACE, "Expected '{' to begin a random block");
+            long weight = 1;
+            if (check(TokenType.LONG_VALUE) && checkTwo(TokenType.STAR)) {
+                Token weightToken = advance();
+                try {
+                    weight = Long.parseLong(weightToken.text);
+                } catch (NumberFormatException e) {
+                    throw new ParsingException(weightToken, "Random weight is too large: " + weightToken.text);
+                }
+                if (weight <= 0)
+                    throw new ParsingException(weightToken, "Random weight must be a positive integer, got " + weight);
+                advance(); // consume '*'
+            }
 
+            consume(TokenType.LBRACE, "Expected '{' to begin a random block");
             List<StatementNode> block = new ArrayList<>();
             while (!check(TokenType.RBRACE) && !isAtEnd()) {
                 block.add(parseStatement());
             }
+            Token rbrace = consume(TokenType.RBRACE, "Expected '}' to close a random block");
+            if (block.isEmpty())
+                throw new ParsingException(rbrace, "Random block cannot be empty.");
 
-            consume(TokenType.RBRACE, "Expected '}' to close a random block");
             options.add(new StatementListNode(block));
+            weights.add(weight);
         }
 
         consume(TokenType.RBRACK, "Expected ']' to close random options");
 
-        return new RandomNode(options, randomToken);
+        // Reduce all weights by their GCD
+        long divisor = weights.get(0);
+        for (long w : weights) divisor = gcd(divisor, w);
+        if (divisor > 1) {
+            for (int i = 0; i < weights.size(); i++) weights.set(i, weights.get(i) / divisor);
+        }
+
+        return new RandomNode(options, weights, randomToken);
+    }
+
+    private static long gcd(long a, long b) {
+        while (b != 0) { long t = b; b = a % b; a = t; }
+        return a;
     }
 
     public LoopNode parseLoop() {
@@ -312,26 +340,15 @@ public class Parser {
             throw new ParsingException(nameToken, "Command name must be at least 3 characters long (got '" + nameToken.text + "')");
         if (ReservedCommands.NAMES.contains(nameToken.text.toLowerCase()))
             throw new ParsingException(nameToken, "'" + nameToken.text + "' is a reserved server command and cannot be used as a command name");
-        String name = nameToken.text;
+        String name = nameToken.text.toLowerCase();
 
         boolean targeted = false;
-        if (check(TokenType.IDENT)) {
-            String kw = peek().text;
-            if (kw.equals("target") || kw.equals("targeted")) {
-                advance();
-                targeted = true;
-            } else if (kw.equals("self")) {
-                advance();
-            }
-            // anything else is left for '(' or '{' parsing below
-        }
-
         int priority = 0;
         boolean listed = true;
         if (check(TokenType.LPAREN)) {
             advance(); // consume '('
             while (!check(TokenType.RPAREN) && !isAtEnd()) {
-                Token nToken = consume(TokenType.IDENT, "Expected parameter name ('priority' or 'listed')");
+                Token nToken = consume(TokenType.IDENT, "Expected parameter name ('priority', 'listed' or 'targeted')");
                 consume(TokenType.EQ, "Expected '=' after parameter name '" + nToken.text + "'");
                 switch (nToken.text) {
                     case "priority" -> {
@@ -345,7 +362,12 @@ public class Parser {
                         else if (match(TokenType.FALSE)) listed = false;
                         else throw new ParsingException(peek(), "Expected 'true' or 'false' for 'listed'");
                     }
-                    default -> throw new ParsingException(nToken, "Unknown command parameter '" + nToken.text + "'; expected 'priority' or 'listed'");
+                    case "targeted" -> {
+                        if (match(TokenType.TRUE))       targeted = true;
+                        else if (match(TokenType.FALSE)) targeted = false;
+                        else throw new ParsingException(peek(), "Expected 'true' or 'false' for 'targeted'");
+                    }
+                    default -> throw new ParsingException(nToken, "Unknown command parameter '" + nToken.text + "'; expected 'priority', 'listed' or 'targeted'");
                 }
                 if (!check(TokenType.RPAREN)) consume(TokenType.COMMA, "Expected ',' between command parameters");
             }
@@ -414,27 +436,12 @@ public class Parser {
 
         if (check(TokenType.RANDOM)) return parseRandom();
         if (check(TokenType.REPEAT)) return parseRepeat();
-        if (check(TokenType.CANCEL)) return parseCancel();
         if (check(TokenType.RETURN)) return parseReturn();
         if (check(TokenType.IF)) return parseIf();
         if (isType(peek())) return parseDeclaration();
 
         if (check(TokenType.IDENT) && AddAction.searchByName(peek().text) != null && checkTwo(TokenType.LPAREN)) {
             return parseAction();
-        }
-
-        if (match(TokenType.GLOBAL)) {
-            Token nameToken = consume(TokenType.IDENT, "Expect function name after 'global'");
-            consume(TokenType.LPAREN, "Expect '(' after function name");
-            List<NormalExpressionNode> args = new ArrayList<>();
-            if (!check(TokenType.RPAREN)) {
-                do {
-                    args.add(parseExpression());
-                } while (match(TokenType.COMMA));
-            }
-            consume(TokenType.RPAREN, "Expect ')' after arguments");
-            consume(TokenType.SEMI, "Expect ';' after call");
-            return new GlobalFunctionCallNode(nameToken.text, new ArgumentListNode(args), nameToken);
         }
 
         if (check(TokenType.IDENT) && checkTwo(TokenType.LPAREN)) {
@@ -470,11 +477,15 @@ public class Parser {
 
             switch (param.kind()) {
                 case STRING_LITERAL -> {
-                    Token t = consume(TokenType.STRING_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a STRING literal");
-                    String stripped = t.text.substring(1, t.text.length() - 1);
-                    if (param.hasEnumConstraint() && !param.isValidEnum(stripped)) throw new ParsingException(t,
-                        "'" + stripped + "' is not a valid value for '" + actionName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
-                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, nameToken));
+                    if (param.hasEnumConstraint()) {
+                        Token t = consume(TokenType.STRING_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a STRING literal");
+                        String stripped = t.text.substring(1, t.text.length() - 1);
+                        if (!param.isValidEnum(stripped)) throw new ParsingException(t,
+                            "'" + stripped + "' is not a valid value for '" + actionName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
+                        parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, nameToken));
+                    } else {
+                        parsedArgs.add(parseExpression());
+                    }
                 }
                 case LONG_LITERAL -> {
                     Token t = consume(TokenType.LONG_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a LONG literal");
@@ -576,6 +587,8 @@ public class Parser {
 
     private NormalExpressionNode parsePrefix(Token token) {
         switch (token.type) {
+            case NOT:
+                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), null, token);
             case MINUS:
                 if (check(TokenType.LONG_VALUE)) {
                     Token numTok = advance();
@@ -718,11 +731,15 @@ public class Parser {
 
             switch (param.kind()) {
                 case STRING_LITERAL -> {
-                    Token t = consume(TokenType.STRING_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a STRING");
-                    String stripped = t.text.substring(1, t.text.length() - 1);
-                    if (param.hasEnumConstraint() && !param.isValidEnum(stripped)) throw new ParsingException(t,
-                        "'" + stripped + "' is not a valid value for '" + condName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
-                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, t));
+                    if (param.hasEnumConstraint()) {
+                        Token t = consume(TokenType.STRING_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a STRING");
+                        String stripped = t.text.substring(1, t.text.length() - 1);
+                        if (!param.isValidEnum(stripped)) throw new ParsingException(t,
+                            "'" + stripped + "' is not a valid value for '" + condName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
+                        parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, t));
+                    } else {
+                        parsedArgs.add(parseExpression());
+                    }
                 }
                 case LONG_LITERAL -> {
                     Token t = consume(TokenType.LONG_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a LONG");
@@ -871,8 +888,16 @@ public class Parser {
     }
 
     GlobalDeclarationNode parseGlobalDeclaration() {
-        DeclarationNode declarationNode = parseDeclaration();
-        return new GlobalDeclarationNode(declarationNode.variable, declarationNode.token);
+        VariableNode var = parseTypedVariable();
+        NormalExpressionNode initializer = null;
+        if (match(TokenType.EQ)) {
+            if (var.holder == Holder.PLAYER) {
+                throw new ParsingException(previous(), "Player variables (p.) cannot have initializers; only global (g.) and team (t[...]) variables can.");
+            }
+            initializer = parseExpression();
+        }
+        consume(TokenType.SEMI, "Expect ';' after declaration");
+        return new GlobalDeclarationNode(var, initializer, var.token);
     }
 
     private ConstantPrimitive parseConstantPrimitive() {
@@ -974,6 +999,7 @@ public class Parser {
     UnaryOperator parseUnaryOperatorFromToken(Token operator) {
         return switch (operator.type) {
             case MINUS -> UnaryOperator.NEGATE;
+            case NOT -> UnaryOperator.NOT;
             case PLUS_PLUS -> UnaryOperator.INC;
             case MINUS_MINUS -> UnaryOperator.DEC;
             case LONG_CAST -> UnaryOperator.LONG_CAST;

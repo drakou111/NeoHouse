@@ -63,7 +63,10 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         scopeStack.peek().put(fullname, node.variable.type);
 
         VariableNode varCopy = new VariableNode(node.variable.type, node.variable.holder, node.variable.name, null, node.variable.token);
-        return new GlobalDeclarationNode(varCopy, node.token);
+        NormalExpressionNode newInit = node.initializer != null
+                ? (NormalExpressionNode) node.initializer.accept(this)
+                : null;
+        return new GlobalDeclarationNode(varCopy, newInit, node.token);
     }
 
     @Override
@@ -166,12 +169,11 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         inFunction = true;
 
         scopeStack.push(new HashMap<>());
-
-        event.statements.accept(this);
-
+        StatementListNode newBody = (StatementListNode) event.statements.accept(this);
         scopeStack.pop();
+
         inFunction = saved;
-        return new EventNode(event.event, event.statements, event.token);
+        return new EventNode(event.event, newBody, event.token);
     }
 
     @Override
@@ -216,6 +218,6 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
             scopeStack.pop();
             newOptions.add(rewritten);
         }
-        return new RandomNode(newOptions, random.token);
+        return new RandomNode(newOptions, random.weights, random.token);
     }
 }

@@ -10,7 +10,7 @@ import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 public class AssignationNode extends StatementNode {
     public final VariableNode variable;
     public final AssignmentOperator operator;
-    public NormalExpressionNode value;
+    public final NormalExpressionNode value;
 
     public AssignationNode(final VariableNode variable, final AssignmentOperator operator, final NormalExpressionNode value, final Token token) {
         this.variable = variable;

@@ -11,9 +11,11 @@ import java.util.List;
 
 public class RandomNode extends StatementNode {
     public final List<StatementListNode> statements;
+    public final List<Long> weights;
 
-    public RandomNode(final List<StatementListNode> statements, final Token token) {
+    public RandomNode(final List<StatementListNode> statements, final List<Long> weights, final Token token) {
         this.statements = new ArrayList<>(statements);
+        this.weights = new ArrayList<>(weights);
         this.token = token;
     }
 
@@ -24,13 +26,11 @@ public class RandomNode extends StatementNode {
 
     @Override
     public String toString() {
-        return "RandomNode[statements=" + statements + "]";
+        return "RandomNode[weights=" + weights + ", statements=" + statements + "]";
     }
 
     @Override
     public String toShortString() {
-
-
-        return "Rand[stmts=" + StringHelper.nodeListToString(statements) + "]";
+        return "Rand[w=" + weights + ", stmts=" + StringHelper.nodeListToString(statements) + "]";
     }
 }

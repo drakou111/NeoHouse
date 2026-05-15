@@ -20,8 +20,17 @@ public class SearchAction extends Action {
     private final Action onFound;
     private final Action onNotFound;
     private final boolean paged;
-    private int searchMissTicks = 0;
-    private static final int SEARCH_GRACE_TICKS = 6;
+
+    // Slot-stability tracking: only consider "not on this page" once the container's
+    // non-empty slot count has been the same for STABLE_TICKS consecutive ticks.
+    // This ensures we don't page before the server has finished sending slot data.
+    private static final int STABLE_TICKS   = 3;   // ticks the count must hold steady
+    private static final int TIMEOUT_TICKS  = 40;  // absolute bail-out (2 s at 20 TPS)
+    private static final int MAX_RECHECKS   = 1;   // one extra stability cycle before paging
+    private int lastNonEmptyCount = -1;
+    private int stableTicks       = 0;
+    private int totalSearchTicks  = 0;
+    private int recheckCount      = 0;
 
     private final WaitForAction waitForUI;
     private final WaitForAction waitForFound;
@@ -64,13 +73,16 @@ public class SearchAction extends Action {
         this(primarySlots, targetName, itemType, leftClick, false, true, ContainerScreen.class, true, onFound, onNotFound);
     }
 
-    public SearchAction(String targetName, Item itemType, boolean leftClick, boolean includePlayerInventory, boolean paged,  Action onFound, Action onNotFound) {
+    public SearchAction(String targetName, Item itemType, boolean leftClick, boolean includePlayerInventory, boolean paged, Action onFound, Action onNotFound) {
         this(null, targetName, itemType, leftClick, includePlayerInventory, paged, ContainerScreen.class, true, onFound, onNotFound);
     }
 
     public SearchAction(String targetName, Item itemType, boolean leftClick, Action onFound, Action onNotFound) {
         this(null, targetName, itemType, leftClick, false, true, ContainerScreen.class, true, onFound, onNotFound);
     }
+
+    @Override
+    public String getDebugName() { return "Search: " + (targetName != null ? targetName : "(item type)"); }
 
     @Override
     public boolean run(Minecraft mc) {
@@ -87,37 +99,54 @@ public class SearchAction extends Action {
         }
 
         if (step == Step.STEP_SEARCH) {
-            boolean found = false;
+            // Count how many container slots currently have items.
+            int nonEmpty = 0;
+            for (int idx : slots) {
+                if (idx >= 0 && idx < menu.slots.size() && menu.getSlot(idx).hasItem()) nonEmpty++;
+            }
 
+            // Track stability: reset counter whenever the count changes.
+            if (nonEmpty != lastNonEmptyCount) {
+                lastNonEmptyCount = nonEmpty;
+                stableTicks = 0;
+            } else {
+                stableTicks++;
+            }
+
+            totalSearchTicks++;
+
+            // Scan for the target item.
+            boolean found = false;
             for (int idx : slots) {
                 if (idx < 0 || idx >= menu.slots.size()) continue;
-
                 Slot s = menu.getSlot(idx);
                 if (s.hasItem()
-                    && s.getItem().getHoverName().getString().equals(targetName)
-                    && (itemType == null || s.getItem().getItem() == itemType)
-                    && mc.gameMode != null) {
+                        && s.getItem().getHoverName().getString().equals(targetName)
+                        && (itemType == null || s.getItem().getItem() == itemType)
+                        && mc.gameMode != null) {
 
                     mc.gameMode.handleInventoryMouseClick(
-                            menu.containerId,
-                            idx,
-                            leftClick ? 0 : 1,
-                            ClickType.PICKUP,
-                            mc.player
-                                                         );
+                            menu.containerId, idx,
+                            leftClick ? 0 : 1, ClickType.PICKUP, mc.player);
 
                     step = Step.STEP_WAIT_FOUND;
-                    searchMissTicks = 0;
+                    resetStability();
                     found = true;
                     break;
                 }
             }
 
             if (!found) {
-                searchMissTicks++;
-                if (searchMissTicks >= SEARCH_GRACE_TICKS) {
-                    searchMissTicks = 0;
-                    step = Step.STEP_CLICK_BACKUP;
+                boolean settled  = stableTicks >= STABLE_TICKS;
+                boolean timedOut = totalSearchTicks >= TIMEOUT_TICKS;
+                if (settled || timedOut) {
+                    recheckCount++;
+                    resetStability();
+                    // Re-scan up to MAX_RECHECKS times before committing to a page turn.
+                    if (recheckCount > MAX_RECHECKS || timedOut) {
+                        recheckCount = 0;
+                        step = Step.STEP_CLICK_BACKUP;
+                    }
                 }
             }
         }
@@ -133,7 +162,7 @@ public class SearchAction extends Action {
         else if (step == Step.STEP_WAIT_UI) {
             if (waitForUI.run(mc) && waitTick.run(mc)) {
                 step = Step.STEP_SEARCH;
-                searchMissTicks = 0;
+                recheckCount = 0;
                 waitForUI.reset();
                 waitTick.reset();
             }
@@ -156,5 +185,17 @@ public class SearchAction extends Action {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean requiresCreative() {
+        return (onFound != null && onFound.requiresCreative())
+                || (onNotFound != null && onNotFound.requiresCreative());
+    }
+
+    private void resetStability() {
+        lastNonEmptyCount = -1;
+        stableTicks      = 0;
+        totalSearchTicks = 0;
     }
 }

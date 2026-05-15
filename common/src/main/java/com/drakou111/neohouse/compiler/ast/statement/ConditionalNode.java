@@ -7,9 +7,9 @@ import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class ConditionalNode extends StatementNode {
-    public ExpressionNode condition;
-    public StatementListNode thenBlock;
-    public StatementListNode elseBlock;
+    public final ExpressionNode condition;
+    public final StatementListNode thenBlock;
+    public final StatementListNode elseBlock;
 
     public ConditionalNode(final ExpressionNode condition, final StatementListNode thenBlock, final StatementListNode elseBlock, final Token token) {
         this.condition = condition;
@@ -30,6 +30,8 @@ public class ConditionalNode extends StatementNode {
 
     @Override
     public String toShortString() {
-        return "Cond[cond=" + condition.toShortString() + ", then=" + thenBlock.toShortString() + ", else=" + elseBlock.toShortString() + "]";
+        return "Cond[cond=" + (condition != null ? condition.toShortString() : "null") +
+               ", then=" + thenBlock.toShortString() +
+               ", else=" + (elseBlock != null ? elseBlock.toShortString() : "null") + "]";
     }
 }

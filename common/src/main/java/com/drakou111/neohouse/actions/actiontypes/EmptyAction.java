@@ -8,4 +8,10 @@ public class EmptyAction extends Action {
     public boolean run(Minecraft mc) {
         return true;
     }
+
+    @Override
+    public int countSteps() { return 0; }
+
+    @Override
+    public boolean isContainer() { return true; }
 }

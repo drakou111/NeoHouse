@@ -74,7 +74,8 @@ public class FileBrowserScreen extends ScreenBase {
     private void loadEntries() {
         entries.clear();
         try (Stream<Path> stream = Files.list(currentPath)) {
-            stream.sorted(Comparator.<Path, Boolean>comparing(p -> !Files.isDirectory(p))
+            stream.filter(p -> Files.isDirectory(p) || p.getFileName().toString().endsWith(".nh"))
+                  .sorted(Comparator.<Path, Boolean>comparing(p -> !Files.isDirectory(p))
                                     .thenComparing(p -> p.getFileName().toString().toLowerCase()))
                   .forEach(entries::add);
         } catch (IOException ignored) {}

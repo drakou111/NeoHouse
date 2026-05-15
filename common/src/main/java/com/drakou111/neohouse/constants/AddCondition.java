@@ -27,7 +27,7 @@ public enum AddCondition {
                   "True if the damage amount matches the comparator.", "golden_sword", "Damage Amount"),
     BLOCK_TYPE(true, "isBlockType",
                List.of(Param.BOOL.withName(BlockTypeInputs.INVERT), Param.ITEM.withName(BlockTypeInputs.ITEM), Param.BOOL.withName(BlockTypeInputs.MATCH_TYPE_ONLY)),
-               "True if the broken block matches the given type.", "grass_block", "Block Type"),
+               "True if the block matches the given type.", "grass_block", "Block Type"),
     IS_ITEM(true, "isItem",
             List.of(Param.BOOL.withName(IsItemInputs.INVERT), Param.ITEM.withName(IsItemInputs.ITEM), Param.enumOf(WhatCheck.class).withName(IsItemInputs.WHAT_TO_CHECK), Param.enumOf(WhereCheck.class).withName(IsItemInputs.WHERE_TO_CHECK), Param.enumOf(AmountCheck.class).withName(IsItemInputs.REQUIRED_AMOUNT)),
             "True if the item matches the criteria.", "chest", "Is Item"),

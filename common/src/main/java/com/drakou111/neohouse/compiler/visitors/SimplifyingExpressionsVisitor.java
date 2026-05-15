@@ -14,6 +14,8 @@ import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.enums.*;
 import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.constants.Placeholder;
+import com.drakou111.neohouse.constants.StringLimits;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;
@@ -31,6 +33,18 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         }
 
         if (expr instanceof BinaryExpressionNode bin) {
+            // String concatenation: fold the entire tree to a compile-time template string
+            if (bin.type == VariableType.STRING && bin.operator == BinaryOperator.ADD) {
+                FoldResult fold = foldStringConcat(bin);
+                if (fold.template().length() > StringLimits.CHAT_TEXT) {
+                    throw new SemanticException(bin.token,
+                            "String is too long (" + fold.template().length() + " characters). Maximum is " + StringLimits.CHAT_TEXT + ".");
+                }
+                return new LowerResult(
+                        new ConstantPrimitiveNode(new StringValue(fold.template()), VariableType.STRING, bin.token),
+                        fold.stmts());
+            }
+
             LowerResult leftRes  = lowerExpr(bin.left);
             LowerResult rightRes = lowerExpr(bin.right);
 
@@ -61,10 +75,16 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             }
 
             AssignmentOperator opAssign = switch (bin.operator) {
-                case ADD      -> AssignmentOperator.ADD_ASSIGN;
-                case SUBTRACT -> AssignmentOperator.SUB_ASSIGN;
-                case MULTIPLY -> AssignmentOperator.MUL_ASSIGN;
-                case DIVIDE   -> AssignmentOperator.DIV_ASSIGN;
+                case ADD                -> AssignmentOperator.ADD_ASSIGN;
+                case SUBTRACT           -> AssignmentOperator.SUB_ASSIGN;
+                case MULTIPLY           -> AssignmentOperator.MUL_ASSIGN;
+                case DIVIDE             -> AssignmentOperator.DIV_ASSIGN;
+                case BITWISE_OR         -> AssignmentOperator.BITWISE_OR_ASSIGN;
+                case BITWISE_AND        -> AssignmentOperator.BITWISE_AND_ASSIGN;
+                case BITWISE_XOR        -> AssignmentOperator.BITWISE_XOR_ASSIGN;
+                case LEFT_SHIFT         -> AssignmentOperator.LEFT_SHIFT_ASSIGN;
+                case RIGHT_SHIFT        -> AssignmentOperator.RIGHT_SHIFT_ASSIGN;
+                case UNSIGNED_RIGHT_SHIFT -> AssignmentOperator.UNSIGNED_RIGHT_SHIFT_ASSIGN;
                 default -> throw new SemanticException(bin.token, "Unsupported binary operator: " + bin.operator);
             };
 
@@ -79,6 +99,17 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             List<StatementNode> stmts = new ArrayList<>(opRes.stmts());
 
             switch (un.operator) {
+                case NOT -> {
+                    // !expr → expr == false/0  (Housing has no native boolean NOT)
+                    ConstantPrimitiveNode falsy = switch (un.operand.type) {
+                        case BOOL   -> new ConstantPrimitiveNode(new BoolValue(false), VariableType.BOOL, un.token);
+                        case DOUBLE -> new ConstantPrimitiveNode(new DoubleValue(0.0), VariableType.DOUBLE, un.token);
+                        default     -> new ConstantPrimitiveNode(new LongValue(0L), VariableType.LONG, un.token);
+                    };
+                    return new LowerResult(
+                            new BooleanExpressionNode((NormalExpressionNode) opRes.simple(), falsy, BooleanOperator.EQUALS, un.token),
+                            stmts);
+                }
                 case LONG_CAST, DOUBLE_CAST -> {
                     VariableType fromType = un.operand.type;
                     VariableType toType = un.operator == UnaryOperator.LONG_CAST
@@ -251,13 +282,19 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 if (simple instanceof BooleanExpressionNode) {
                     newConds.add(simple);
 
-                } else if (simple instanceof VariableNode || simple instanceof ConstantPrimitiveNode || simple instanceof PlaceholderNode) {
-                    ConstantPrimitiveNode zero = switch (simple.type) {
+                } else if (simple instanceof ConditionCallNode) {
+                    newConds.add(simple);
+                } else if (simple instanceof ConstantPrimitiveNode) {
+                    throw new SemanticException(simple.token, "Cannot use a constant directly as a condition");
+                } else if (simple instanceof VariableNode || simple instanceof PlaceholderNode) {
+                    ConstantPrimitiveNode truthy = switch (simple.type) {
+                        case BOOL   -> new ConstantPrimitiveNode(new BoolValue(true), VariableType.BOOL, simple.token);
                         case LONG   -> new ConstantPrimitiveNode(new LongValue(0L), VariableType.LONG, simple.token);
                         case DOUBLE -> new ConstantPrimitiveNode(new DoubleValue(0.0), VariableType.DOUBLE, simple.token);
                         default -> throw new SemanticException(simple.token, "Cannot use a variable of type " + simple.type + " directly in a logical condition");
                     };
-                    newConds.add(new BooleanExpressionNode((NormalExpressionNode)simple, zero, BooleanOperator.GREATER_THAN, simple.token));
+                    BooleanOperator op = simple.type == VariableType.BOOL ? BooleanOperator.EQUALS : BooleanOperator.GREATER_THAN;
+                    newConds.add(new BooleanExpressionNode((NormalExpressionNode)simple, truthy, op, simple.token));
                 }
                 else {
                     throw new SemanticException(le.token, "Cannot lower logical condition of type " + simple.getClass().getSimpleName());
@@ -282,6 +319,69 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         }
 
         return new LowerResult(expr, List.of());
+    }
+
+    private record FoldResult(String template, List<StatementNode> stmts) {}
+
+    private FoldResult foldStringConcat(NormalExpressionNode expr) {
+        String simple = tryFoldToTemplate(expr);
+        if (simple != null) return new FoldResult(simple, List.of());
+
+        if (expr instanceof BinaryExpressionNode b && b.type == VariableType.STRING && b.operator == BinaryOperator.ADD) {
+            FoldResult left  = foldStringConcat(b.left);
+            FoldResult right = foldStringConcat(b.right);
+            List<StatementNode> stmts = new ArrayList<>();
+            stmts.addAll(left.stmts());
+            stmts.addAll(right.stmts());
+            return new FoldResult(left.template() + right.template(), stmts);
+        }
+
+        // Complex sub-expression: lower it, store in a temp var, use var in template
+        LowerResult lr = lowerExpr(expr);
+        VariableNode tmp = makeTemp(expr.token, VariableType.STRING);
+        List<StatementNode> stmts = new ArrayList<>(lr.stmts());
+        stmts.add(new AssignationNode(tmp, AssignmentOperator.ASSIGN, (NormalExpressionNode) lr.simple(), expr.token));
+        return new FoldResult(tryFoldToTemplate(tmp), stmts);
+    }
+
+    private String tryFoldToTemplate(NormalExpressionNode expr) {
+        return switch (expr) {
+            case ConstantPrimitiveNode c -> switch (c.value) {
+                case StringValue s -> s.value;
+                case LongValue l   -> l.toString();
+                case DoubleValue d -> d.toString();
+                case BoolValue b   -> b.toString();
+            };
+            case VariableNode v -> switch (v.holder) {
+                case PLAYER -> "%var.player/" + v.name + "%";
+                case GLOBAL -> "%var.global/" + v.name + "%";
+                case TEAM   -> "%var.team/" + v.name + " " + v.teamName + "%";
+            };
+            case PlaceholderNode p -> {
+                Placeholder ph = Placeholder.requireByName(p.placeholder);
+                StringBuilder sb = new StringBuilder("%").append(ph.inGameName);
+                List<ConstantPrimitiveNode> consts = p.constants.constants;
+                if (!consts.isEmpty()) {
+                    sb.append("/");
+                    for (int i = 0; i < consts.size(); i++) {
+                        if (i > 0) sb.append(" ");
+                        sb.append(tryFoldToTemplate(consts.get(i)));
+                    }
+                }
+                sb.append("%");
+                yield sb.toString();
+            }
+            case UnaryExpressionNode u when u.operator == UnaryOperator.STRING_CAST ->
+                tryFoldToTemplate(u.operand);
+            case BinaryExpressionNode b when b.type == VariableType.STRING && b.operator == BinaryOperator.ADD -> {
+                String left = tryFoldToTemplate(b.left);
+                if (left == null) yield null;
+                String right = tryFoldToTemplate(b.right);
+                if (right == null) yield null;
+                yield left + right;
+            }
+            default -> null;
+        };
     }
 
     private VariableNode makeTemp(Token basedOn, VariableType type) {
@@ -331,13 +431,38 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         VariableType lhsType = lhsVar.type;
         VariableType rhsType = lr.simple.type;
 
+        // BooleanExpressionNode result (e.g. from `!boolVar`) — emit if/else to set true or false
+        if (lr.simple instanceof BooleanExpressionNode be) {
+            LogicalExpressionNode cond = new LogicalExpressionNode(List.of(be), LogicalOperator.AND, be.token);
+            ConstantPrimitiveNode trueVal  = new ConstantPrimitiveNode(new BoolValue(true),  VariableType.BOOL, be.token);
+            ConstantPrimitiveNode falseVal = new ConstantPrimitiveNode(new BoolValue(false), VariableType.BOOL, be.token);
+            stmts.add(new ConditionalNode(cond,
+                    new StatementListNode(List.of(new AssignationNode(lhsVar, AssignmentOperator.ASSIGN, trueVal,  be.token))),
+                    new StatementListNode(List.of(new AssignationNode(lhsVar, AssignmentOperator.ASSIGN, falseVal, be.token))),
+                    be.token));
+            return new StatementListNode(stmts);
+        }
+
         if (lhsType != VariableType.VAR && rhsType != VariableType.VAR && lhsType != rhsType) {
             throw new SemanticException(assignation.token, "Cannot assign a " + rhsType + " into a " + lhsType + " variable '" + lhsVar.name + "'");
         }
 
-        stmts.add(new AssignationNode(lhsVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) lr.simple, assignation.token));
+        stmts.add(new AssignationNode(lhsVar, assignation.operator, (NormalExpressionNode) lr.simple, assignation.token));
 
         return new StatementListNode(stmts);
+    }
+
+    @Override
+    public ASTNode visitActionCall(ActionCallNode actionCall) {
+        List<StatementNode> preStmts = new ArrayList<>();
+        List<NormalExpressionNode> newArgs = new ArrayList<>();
+        for (NormalExpressionNode arg : actionCall.arguments.expressions) {
+            LowerResult lr = lowerExpr(arg);
+            preStmts.addAll(lr.stmts());
+            newArgs.add((NormalExpressionNode) lr.simple());
+        }
+        preStmts.add(new ActionCallNode(actionCall.name, new ArgumentListNode(newArgs), actionCall.token));
+        return new StatementListNode(preStmts);
     }
 
     @Override
@@ -415,7 +540,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         for (StatementListNode opt : random.statements) {
             newOptions.add((StatementListNode)visitStatements(opt));
         }
-        return new RandomNode(newOptions, random.token);
+        return new RandomNode(newOptions, random.weights, random.token);
     }
 
     @Override

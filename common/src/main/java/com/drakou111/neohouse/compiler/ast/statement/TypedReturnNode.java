@@ -5,7 +5,7 @@ import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class TypedReturnNode extends ReturnNode {
-    public NormalExpressionNode expression;
+    public final NormalExpressionNode expression;
 
     public TypedReturnNode(final NormalExpressionNode expression, final Token token) {
         super(token);

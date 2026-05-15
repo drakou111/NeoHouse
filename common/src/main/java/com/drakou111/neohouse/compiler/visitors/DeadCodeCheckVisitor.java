@@ -34,7 +34,7 @@ public class DeadCodeCheckVisitor extends EmptyVisitor<Void> {
                 throw new SemanticException(stmt.token,
                         "Unreachable code — this statement can never be executed.");
             }
-            if (stmt instanceof ReturnNode || stmt instanceof CancelNode) {
+            if (stmt instanceof ReturnNode) {
                 terminated = true;
             } else if (stmt instanceof ConditionalNode cond) {
                 boolean thenTerminates = checkBlockTerminates(cond.thenBlock);

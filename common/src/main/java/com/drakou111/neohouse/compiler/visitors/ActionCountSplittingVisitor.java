@@ -5,6 +5,7 @@ import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.constants.AddAction;
+import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,6 +79,26 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         StatementListNode stmts = (StatementListNode) slot.statements.accept(this);
         StatementListNode body = splitIfNeeded(stmts, false);
         return new SlotNode(slot.slotId, slot.item, body, slot.token);
+    }
+
+    @Override
+    public ASTNode visitRandom(RandomNode rand) {
+        for (int i = 0; i < rand.statements.size(); i++) {
+            StatementListNode branch = rand.statements.get(i);
+            long weight = rand.weights.get(i);
+            if (weight <= 1) continue;
+
+            // Every branch has exactly 1 statement after RandomUnfoldingVisitor
+            if (branch.statements.isEmpty()) continue;
+            StatementNode stmt = branch.statements.get(0);
+            AddAction action = extractAction(stmt);
+            if (action != null && weight > action.maxCount) {
+                throw new SemanticException(stmt.token,
+                        "Random branch weight " + weight + " exceeds the maximum of " + action.maxCount
+                        + " for '" + action.displayName + "'. Reduce the weight to at most " + action.maxCount + ".");
+            }
+        }
+        return super.visitRandom(rand);
     }
 
     private StatementListNode splitIfNeeded(StatementListNode stmts, boolean inCondition) {

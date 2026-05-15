@@ -13,6 +13,9 @@ public class ChatAction extends Action {
     }
 
     @Override
+    public String getDebugName() { return "Send chat: " + message; }
+
+    @Override
     public boolean run(Minecraft mc) {
         LocalPlayer player = mc.player;
         if (player != null) {

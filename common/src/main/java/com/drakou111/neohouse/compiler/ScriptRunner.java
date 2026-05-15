@@ -44,13 +44,43 @@ public class ScriptRunner {
 
         // Preprocess before the creative check so imported files are included in the scan
         String preprocessed = new Preprocessor(nhFile.getParent()).process(src);
-        Action scriptAction = compiler.compile(preprocessed);
 
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null && !mc.player.isCreative() && scriptAction.requiresCreative()) {
-            throw new PermissionException("This script uses item actions. You must be in creative mode to run it.");
+        // Fast pre-compile check: scan source text before spending time on compilation
+        if (!isPlayerCreative() && sourceNeedsCreativeMode(preprocessed)) {
+            throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem / menus). You must be in creative mode to run it.");
         }
 
+        Action scriptAction = compiler.compile(preprocessed);
+
+        // Post-compile safety check using the fully-built action tree
+        if (!isPlayerCreative() && scriptAction.requiresCreative()) {
+            throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem / menus). You must be in creative mode to run it.");
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen != null) mc.setScreen(null);
         SequenceManager.startAction(new GroupAction(List.of(scriptAction)));
     }
+
+    private static boolean isPlayerCreative() {
+        Minecraft mc = Minecraft.getInstance();
+        // Use instabuild (not isCreative()) — on Hypixel Housing, LocalPlayer.isCreative()
+        // checks the server-reported GameType (always CREATIVE for the owner) rather than
+        // the actual ability flag. instabuild is what determines whether the player can
+        // actually use creative-mode actions and is correctly set to false in survival.
+        return mc.player != null && mc.player.getAbilities().instabuild;
+    }
+
+    private static boolean sourceNeedsCreativeMode(String source) {
+        for (AddAction action : AddAction.values()) {
+            if (action.params.stream().anyMatch(p -> p.kind() == ActionParamKind.ITEM_LITERAL)) {
+                if (source.contains(action.name + "(")) {
+                    return true;
+                }
+            }
+        }
+        // Menu slot declarations always require creative (items must be placed in the menu grid)
+        return source.matches("(?s).*slot\\d+\\s*:\\s*\\(.*");
+    }
+
 }

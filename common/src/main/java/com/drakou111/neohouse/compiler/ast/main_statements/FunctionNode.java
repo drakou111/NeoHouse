@@ -9,7 +9,7 @@ import com.drakou111.neohouse.exceptions.SemanticException;
 public abstract class FunctionNode extends MainStatementNode {
     public final String name;
     public final String description;
-    public StatementListNode statements;
+    public final StatementListNode statements;
 
     public FunctionNode(final String name, final String description, final StatementListNode statements, final Token token) {
         this.name = name;

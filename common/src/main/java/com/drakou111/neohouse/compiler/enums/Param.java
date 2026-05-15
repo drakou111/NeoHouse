@@ -1,10 +1,12 @@
 package com.drakou111.neohouse.compiler.enums;
 
+import com.drakou111.neohouse.constants.StringLimits;
 import java.util.Arrays;
 
 public record Param(String name, ActionParamKind kind, String[] enumValues, Long rangeMin, Long rangeMax, Double decimalMin, Double decimalMax) {
 
-    public static final Param STRING = new Param(null, ActionParamKind.STRING_LITERAL,    null, null, null, null, null);
+
+    public static final Param STRING = new Param(null, ActionParamKind.STRING_LITERAL, null, null, null, null, null);
     public static final Param BOOL   = new Param(null, ActionParamKind.BOOL_LITERAL,      null, null, null, null, null);
     public static final Param LONG   = new Param(null, ActionParamKind.LONG_LITERAL,      null, null, null, null, null);
     public static final Param DOUBLE = new Param(null, ActionParamKind.DOUBLE_LITERAL,    null, null, null, null, null);
@@ -17,7 +19,7 @@ public record Param(String name, ActionParamKind kind, String[] enumValues, Long
 
     public String typeName() {
         return switch (kind) {
-            case STRING_LITERAL    -> "string";
+            case STRING_LITERAL -> "string";
             case BOOL_LITERAL      -> "bool";
             case LONG_LITERAL      -> "long";
             case DOUBLE_LITERAL    -> "double";
@@ -56,7 +58,7 @@ public record Param(String name, ActionParamKind kind, String[] enumValues, Long
     }
 
     public static Param doubleRange(double min, double max) {
-        return new Param(null, ActionParamKind.LONG_LITERAL, null, null, null, min, max);
+        return new Param(null, ActionParamKind.DOUBLE_LITERAL, null, null, null, min, max);
     }
 
     public boolean hasEnumConstraint()       { return enumValues != null; }
