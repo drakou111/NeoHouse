@@ -22,7 +22,7 @@ public class GroupAction extends Action {
         while (index < actions.size()) {
             Action child = actions.get(index);
             if (!child.isContainer() && NeoHouseConfig.get().verboseActions && index != loggedUpTo) {
-                MessageUtils.debugToChat("[action] " + child.getDebugName());
+                MessageUtils.debugToChat("[DEBUG] " + child.getDebugName());
                 loggedUpTo = index;
             }
             if (!child.run(mc)) return false;

@@ -2,15 +2,12 @@ package com.drakou111.neohouse.constants;
 
 import com.drakou111.neohouse.compiler.enums.Param;
 import com.drakou111.neohouse.constants.actions.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-/******************\
- *   ADD ACTION   *
-\******************/
 
 public enum AddAction {
     CONDITIONAL(25, false, "_", List.of(), "", "redstone", "Conditional"),
@@ -58,7 +55,7 @@ public enum AddAction {
     VARIABLE(25, false, "_", List.of(), "", "feather", "Change Variable"),
     TELEPORT(5, true, "teleport",
             List.of(Param.enumOf(Teleport.class).withName(TeleportInputs.LOCATION), Param.BOOL.withName(TeleportInputs.PREVENT_TELEPORT_INSIDE_BLOCKS)),
-            "Teleports the player to a named location or custom coords.", "ender_pearl", "Teleport Player"),
+            "Teleports the player to a named location or custom coords. Either set 'Location' to coordinates or to a type like CURRENT.", "ender_pearl", "Teleport Player"),
     FAIL_PARKOUR(1, true, "failParkour",
             List.of(Param.STRING.withName(FailParkourInputs.REASON)),
             "Fails the player's current parkour run with a reason message.", "light_weighted_pressure_plate", "Fail Parkour"),

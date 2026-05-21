@@ -8,7 +8,7 @@ public class CloseScreenAction extends Action {
 
     @Override
     public boolean run(Minecraft mc) {
-        if (mc.screen != null) mc.setScreen(null);
+        if (mc.screen != null) mc.screen.onClose();
         return true;
     }
 }

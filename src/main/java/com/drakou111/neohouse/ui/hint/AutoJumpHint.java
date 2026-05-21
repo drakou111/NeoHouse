@@ -2,8 +2,6 @@ package com.drakou111.neohouse.ui.hint;
 
 import net.minecraft.client.Minecraft;
 
-import java.time.LocalTime;
-
 public class AutoJumpHint implements HintProvider {
     private final String text;
 

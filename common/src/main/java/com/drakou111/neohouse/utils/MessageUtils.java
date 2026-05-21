@@ -32,7 +32,7 @@ public class MessageUtils {
     }
 
     public static void debugToChat(Object message) {
-        sendPrefixedMultiline(message, "[NEO_HOUSE] ", ChatFormatting.AQUA, ChatFormatting.GRAY);
+        sendPrefixedMultiline(message, "[NEOHOUSE] ", ChatFormatting.AQUA, ChatFormatting.GRAY);
     }
 
     public static void errorToChat(Object message) {

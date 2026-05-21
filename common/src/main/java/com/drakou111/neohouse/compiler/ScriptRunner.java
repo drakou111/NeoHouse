@@ -7,6 +7,7 @@ import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.exceptions.PermissionException;
 import com.drakou111.neohouse.utils.HousingCheck;
+import com.drakou111.neohouse.utils.MessageUtils;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 
@@ -19,10 +20,10 @@ import java.util.List;
 public class ScriptRunner {
     public static final ScriptRunner INSTANCE = new ScriptRunner(new NHCompiler());
 
-    private final Compiler compiler;
+    private final NHCompiler compiler;
     private Path lastScript;
 
-    public ScriptRunner(Compiler compiler) {
+    public ScriptRunner(NHCompiler compiler) {
         this.compiler = compiler;
     }
 
@@ -52,6 +53,11 @@ public class ScriptRunner {
 
         Action scriptAction = compiler.compile(preprocessed);
 
+        int helpers = compiler.getLastHelperCount();
+        if (helpers > 0) {
+            MessageUtils.warningToChat(helpers + " extra helper function" + (helpers == 1 ? " was" : "s were") + " created to stay within Hypixel's action limits.");
+        }
+
         // Post-compile safety check using the fully-built action tree
         if (!isPlayerCreative() && scriptAction.requiresCreative()) {
             throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem / menus). You must be in creative mode to run it.");
@@ -64,10 +70,6 @@ public class ScriptRunner {
 
     private static boolean isPlayerCreative() {
         Minecraft mc = Minecraft.getInstance();
-        // Use instabuild (not isCreative()) — on Hypixel Housing, LocalPlayer.isCreative()
-        // checks the server-reported GameType (always CREATIVE for the owner) rather than
-        // the actual ability flag. instabuild is what determines whether the player can
-        // actually use creative-mode actions and is correctly set to false in survival.
         return mc.player != null && mc.player.getAbilities().instabuild;
     }
 

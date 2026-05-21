@@ -79,7 +79,17 @@
       "Bash(./gradlew :neoforge:compileJava :fabric:compileJava)",
       "Bash(grep -n \"toLowerCase\\\\|nameToken.text$\" \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\compiler\\\\parser\\\\Parser.java\")",
       "Bash(sed -n '308,318p' \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\compiler\\\\parser\\\\Parser.java\")",
-      "Bash(sed -n '343,352p' \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\compiler\\\\CodeGenerator.java\")"
+      "Bash(sed -n '343,352p' \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\java\\\\com\\\\drakou111\\\\neohouse\\\\compiler\\\\CodeGenerator.java\")",
+      "Bash(./gradlew :fabric:compileJava)",
+      "Bash(python -c \"import cairosvg; print\\('cairosvg ok'\\)\")",
+      "Bash(python -c \"from PIL import Image; print\\('pillow ok'\\)\")",
+      "Bash(python *)",
+      "Bash(Get-Item \"D:\\\\code\\\\mc mods\\\\NeoHouse\\\\common\\\\src\\\\main\\\\resources\\\\assets\\\\neohouse\\\\textures\\\\logo.png\")",
+      "Bash(Select-Object Length, Name)",
+      "Bash(python3 *)",
+      "Bash(./gradlew \"build-1.21.11\")",
+      "Bash(./gradlew :common:compileJava :neoforge:compileJava)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\code\\\\mc mods\\\\NeoHouse\" -Recurse -Directory | Select-Object -First 30 | ForEach-Object { $_.FullName })"
     ]
   }
 }

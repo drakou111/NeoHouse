@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.compiler.enums;
 
-import com.drakou111.neohouse.constants.StringLimits;
 import java.util.Arrays;
 
 public record Param(String name, ActionParamKind kind, String[] enumValues, Long rangeMin, Long rangeMax, Double decimalMin, Double decimalMax) {

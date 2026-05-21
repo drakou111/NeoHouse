@@ -12,17 +12,11 @@ import java.util.regex.Matcher;
 
 public class SyntaxHighlighter {
 
-    // ── Records ───────────────────────────────────────────────────────────────
-
     record Span(int start, int end, int color) {}
 
     private record Tok(TokenType type, String text, int pos) {}
 
-    // ── State ─────────────────────────────────────────────────────────────────
-
     private SyntaxTheme activeTheme = SyntaxTheme.VSCODE_DARK;
-
-    // ── Main API ──────────────────────────────────────────────────────────────
 
     public List<Span> buildSpans(String src) {
         List<Span> spans = new ArrayList<>();
@@ -54,8 +48,6 @@ public class SyntaxHighlighter {
 
         return spans;
     }
-
-    // ── Color logic ───────────────────────────────────────────────────────────
 
     private int contextualColor(List<Tok> toks, int i) {
         SyntaxTheme th = activeTheme;
@@ -107,7 +99,7 @@ public class SyntaxHighlighter {
         SyntaxTheme th = activeTheme;
         return switch (t) {
             case FUNCTION, RETURN, LOOP,
-                 IF, ELSE, REPEAT, EVENT, RANDOM, COMMAND, IMPORT, MENU -> th.keyword;
+                 IF, ELSE, REPEAT, EVENT, RANDOM, COMMAND, IMPORT, MENU, GLOBAL, CONST -> th.keyword;
             case LONG, DOUBLE, STRING, BOOL, VAR          -> th.type;
             case TRUE, FALSE                               -> th.keyword;
             case LONG_CAST, DOUBLE_CAST, STRING_CAST       -> th.type;
@@ -121,8 +113,6 @@ public class SyntaxHighlighter {
             default                                        -> th.plain;
         };
     }
-
-    // ── Static helpers ────────────────────────────────────────────────────────
 
     private static Tok nextNonWsTok(List<Tok> toks, int from) {
         for (int j = from; j < toks.size(); j++)

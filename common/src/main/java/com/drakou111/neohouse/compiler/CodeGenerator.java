@@ -2,12 +2,7 @@ package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.actions.actiontypes.ChatAction;
-import com.drakou111.neohouse.actions.actiontypes.WaitForChatAction;
-import com.drakou111.neohouse.actions.actiontypes.CheckSlotEmptyAction;
-import com.drakou111.neohouse.actions.actiontypes.ClientMessageAction;
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllAction;
-import com.drakou111.neohouse.actions.actiontypes.GroupAction;
+import com.drakou111.neohouse.actions.actiontypes.*;
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.constants.*;
 import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
@@ -18,12 +13,7 @@ import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
-import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
-import com.drakou111.neohouse.compiler.enums.BinaryOperator;
-import com.drakou111.neohouse.compiler.enums.BooleanOperator;
-import com.drakou111.neohouse.compiler.enums.Holder;
-import com.drakou111.neohouse.compiler.enums.LogicalOperator;
-import com.drakou111.neohouse.compiler.enums.UnaryOperator;
+import com.drakou111.neohouse.compiler.enums.*;
 import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.factories.ActionFactory;
 import com.drakou111.neohouse.factories.ConditionFactory;
@@ -319,7 +309,7 @@ public class CodeGenerator {
                     ? new GroupAction(List.of())
                     : ActionFactory.addActionExit(ra);
             case VoidFunctionCallNode call -> ActionFactory.addActionTriggerFunction(ra, call.functionName, false, null);
-            case GlobalFunctionCallNode call -> ActionFactory.addActionTriggerFunction(ra, call.functionName, false, null);
+            case GlobalFunctionCallNode call -> ActionFactory.addActionTriggerFunction(ra, call.functionName, true, null);
             case ActionCallNode call -> generateActionCall(call, ra);
             case DeclarationNode ignored -> new GroupAction(List.of()); // type annotation only, no Housing action
             default -> throw new IllegalStateException("Unhandled statement in code generation: " + stmt.getClass().getSimpleName());

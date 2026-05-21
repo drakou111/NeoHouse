@@ -12,6 +12,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class NHCompiler implements Compiler {
+    private int lastHelperCount = 0;
+
+    public int getLastHelperCount() { return lastHelperCount; }
+
     @Override
     public Action compile(String source) throws CompilingException {
         return compile(source, null);
@@ -74,6 +78,7 @@ public class NHCompiler implements Compiler {
 
         ActionCountSplittingVisitor actionCountSplittingVisitor = new ActionCountSplittingVisitor();
         node = actionCountSplittingVisitor.analyze(node);
+        lastHelperCount = actionCountSplittingVisitor.getHelpersCreated();
 
         ActionRestrictionVisitor actionRestrictionVisitor = new ActionRestrictionVisitor();
         node = actionRestrictionVisitor.analyze(node);

@@ -3,15 +3,16 @@ package com.drakou111.neohouse.ui;
 import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.UIOpacity;
 import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import com.drakou111.neohouse.compat.RenderHelper;
-import com.drakou111.neohouse.compat.ScreenBase;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -92,7 +93,7 @@ public class InputDialogScreen extends ScreenBase {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         int x  = (this.width  - dialogW) / 2;
         int y  = (this.height - dialogH) / 2;
         int cx = x + dialogW / 2;
@@ -102,17 +103,14 @@ public class InputDialogScreen extends ScreenBase {
         UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
         g.fill(0, 0, this.width, this.height, o.dimAlpha << 24);
 
-        // Dialog body
         g.fill(x, y, x + dialogW, y + dialogH, t.dialog(o.panelAlpha));
         RenderHelper.renderOutline(g, x, y, dialogW, dialogH, t.accent());
 
-        // Title bar
         String titleLabel = confirmOnly ? "Confirm" : "Input";
         g.fill(x, y, x + dialogW, y + TITLE_H, t.panel(0xFF));
         g.fill(x, y + TITLE_H - 1, x + dialogW, y + TITLE_H, t.accent());
         g.drawCenteredString(this.font, titleLabel, cx, y + (TITLE_H - 8) / 2, t.muted());
 
-        // Prompt lines
         String[] lines = promptLines();
         for (int i = 0; i < lines.length; i++) {
             g.drawCenteredString(this.font, lines[i], cx, y + TITLE_H + PAD + i * LINE_H, 0xFFCCCCCC);
@@ -122,7 +120,7 @@ public class InputDialogScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     protected boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="glowBrace" x="-55%" y="-30%" width="210%" height="160%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="chimneyClip">
+      <!-- Trapezoid following the roof's right slope at chimney edges (with stroke margin) -->
+      <polygon points="288,0 366,0 366,168 288,83"/>
+    </clipPath>
+  </defs>
+
+  <!-- Chimney -->
+  <rect x="304" y="41" width="46" height="225" rx="4"
+        fill="rgba(255,255,255,0.08)" stroke="white" stroke-width="16"
+        clip-path="url(#chimneyClip)"/>
+
+  <!-- Roof -->
+  <polygon points="58,264 256,48 454,264"
+           fill="rgba(255,255,255,0.08)" stroke="white" stroke-width="24" stroke-linejoin="round"/>
+
+  <!-- House walls -->
+  <rect x="88" y="265" width="336" height="219" rx="5"
+        fill="rgba(255,255,255,0.08)" stroke="white" stroke-width="24"/>
+
+  <!-- Left curly brace { -->
+  <path d="
+    M 215,295
+    C 182,295 180,311 180,332
+    L 180,352
+    C 180,369 173,375 143,375
+    C 173,375 180,382 180,398
+    L 180,433
+    C 180,440 182,456 215,456
+  " fill="none" stroke="white" stroke-width="21"
+    stroke-linecap="round" stroke-linejoin="round"
+    filter="url(#glowBrace)"/>
+
+  <!-- Right curly brace } -->
+  <path d="
+    M 297,295
+    C 330,295 332,311 332,332
+    L 332,352
+    C 332,369 339,375 369,375
+    C 339,375 332,382 332,398
+    L 332,433
+    C 332,440 330,456 297,456
+  " fill="none" stroke="white" stroke-width="21"
+    stroke-linecap="round" stroke-linejoin="round"
+    filter="url(#glowBrace)"/>
+</svg>

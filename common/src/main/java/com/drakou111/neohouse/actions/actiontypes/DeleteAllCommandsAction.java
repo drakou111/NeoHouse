@@ -2,6 +2,7 @@ package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.utils.ActionBuilder;
+import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
@@ -20,6 +21,7 @@ public class DeleteAllCommandsAction extends Action {
             // Command items in the list are shown as "/commandName"; strip the slash for removeCommandIfPresent
             String name = fullName.startsWith("/") ? fullName.substring(1) : fullName;
             current = new ActionBuilder().removeCommandIfPresent(name).get();
+            SequenceManager.addSteps(current.countSteps());
         }
 
         if (current.run(mc)) current = null;

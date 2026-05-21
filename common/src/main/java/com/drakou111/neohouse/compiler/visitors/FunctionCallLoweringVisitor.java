@@ -10,11 +10,7 @@ import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
-import com.drakou111.neohouse.compiler.ast.statement.ActionCallNode;
-import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
-import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
-import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
-import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.exceptions.SemanticException;
@@ -171,9 +167,9 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitGlobalFunctionCall(GlobalFunctionCallNode call) {
-        TypedFunctionNode def = typedFunctions.get(call.functionName);
+        VoidFunctionNode def = voidFunctions.get(call.functionName);
         if (def == null) {
-            throw new SemanticException(call.token, "Undefined function '" + call.functionName + "'");
+            throw new SemanticException(call.token, "Undefined void function '" + call.functionName + "'");
         }
 
         List<NormalExpressionNode> rawArgs = call.arguments.expressions;
@@ -194,7 +190,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }
 
-        stmts.add(new GlobalFunctionCallNode(call.functionName,new ArgumentListNode(List.of()),call.token));
+        stmts.add(new GlobalFunctionCallNode(call.functionName, new ArgumentListNode(List.of()), call.token));
         return new StatementListNode(stmts);
     }
 

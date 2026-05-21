@@ -17,14 +17,12 @@ import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.ReservedCommands;
 import com.drakou111.neohouse.exceptions.ParsingException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Parser {
     private final List<Token> tokens;
     private int pos = 0;
+    private final HashMap<String, ConstantPrimitiveNode> constTable = new HashMap<>();
 
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
@@ -97,6 +95,8 @@ public class Parser {
                 nodes.add(parseCommand());
             } else if (check(TokenType.MENU)) {
                 nodes.add(parseMenu());
+            } else if (check(TokenType.CONST)) {
+                parseConstDeclaration();
             } else if (isType(peek())) {
                 nodes.add(parseGlobalDeclaration());
             } else {
@@ -349,7 +349,7 @@ public class Parser {
             advance(); // consume '('
             while (!check(TokenType.RPAREN) && !isAtEnd()) {
                 Token nToken = consume(TokenType.IDENT, "Expected parameter name ('priority', 'listed' or 'targeted')");
-                consume(TokenType.EQ, "Expected '=' after parameter name '" + nToken.text + "'");
+                consume(TokenType.COLON, "Expected ':' after parameter name '" + nToken.text + "'");
                 switch (nToken.text) {
                     case "priority" -> {
                         Token priorityToken = consume(TokenType.LONG_VALUE, "Expected integer (0-20) for 'priority'");
@@ -442,6 +442,21 @@ public class Parser {
 
         if (check(TokenType.IDENT) && AddAction.searchByName(peek().text) != null && checkTwo(TokenType.LPAREN)) {
             return parseAction();
+        }
+
+        if (check(TokenType.GLOBAL)) {
+            Token globalToken = advance();
+            Token nameToken = consume(TokenType.IDENT, "Expected function name after 'global'");
+            consume(TokenType.LPAREN, "Expected '(' after function name");
+            List<NormalExpressionNode> args = new ArrayList<>();
+            if (!check(TokenType.RPAREN)) {
+                do {
+                    args.add(parseExpression());
+                } while (match(TokenType.COMMA));
+            }
+            consume(TokenType.RPAREN, "Expected ')' after arguments");
+            consume(TokenType.SEMI, "Expected ';' after global call");
+            return new GlobalFunctionCallNode(nameToken.text, new ArgumentListNode(args), globalToken);
         }
 
         if (check(TokenType.IDENT) && checkTwo(TokenType.LPAREN)) {
@@ -630,6 +645,10 @@ public class Parser {
                 consume(TokenType.RPAREN, "Expect ')' after expression.");
                 return expr;
             case IDENT: {
+                ConstantPrimitiveNode constNode = constTable.get(token.text);
+                if (constNode != null)
+                    return new ConstantPrimitiveNode(constNode.value, constNode.type, token);
+
                 if (check(TokenType.LPAREN)) {
                     advance();
                     List<NormalExpressionNode> args = new ArrayList<>();
@@ -798,6 +817,8 @@ public class Parser {
     }
 
     public AssignationNode parseAssignment() {
+        if (check(TokenType.IDENT) && constTable.containsKey(peek().text))
+            throw new ParsingException(peek(), "Cannot assign to constant '" + peek().text + "'");
         VariableNode variableNode = parseVariable();
         Token operatorToken = advance();
 
@@ -885,6 +906,28 @@ public class Parser {
 
         consume(TokenType.RPAREN, "Expected ')' after placeholder parameters");
         return new PlaceholderNode(placeholderName.text, new ConstantPrimitiveList(args), null, placeholderName);
+    }
+
+    private void parseConstDeclaration() {
+        consume(TokenType.CONST, "Expected 'const'");
+        if (peek().type == TokenType.VAR)
+            throw new ParsingException(peek(), "Constants cannot use type 'var'; use an explicit type instead");
+        if (!isType(peek()))
+            throw new ParsingException(peek(), "Expected a type (long, double, string, bool) after 'const'");
+        Token typeToken = advance();
+        VariableType declaredType = parseVariableFromToken(typeToken);
+        Token nameTok = consume(TokenType.IDENT, "Expected constant name after type");
+        String name = nameTok.text;
+        if (constTable.containsKey(name))
+            throw new ParsingException(nameTok, "Constant '" + name + "' is already declared");
+        consume(TokenType.EQ, "Expected '=' in constant declaration");
+        NormalExpressionNode valueExpr = parseExpression();
+        if (!(valueExpr instanceof ConstantPrimitiveNode constNode))
+            throw new ParsingException(nameTok, "Constant '" + name + "' value must be a literal or a reference to another constant");
+        if (constNode.type != declaredType)
+            throw new ParsingException(nameTok, "Constant '" + name + "' declared as " + declaredType + " but value is " + constNode.type);
+        consume(TokenType.SEMI, "Expected ';' after constant declaration");
+        constTable.put(name, new ConstantPrimitiveNode(constNode.value, declaredType, nameTok));
     }
 
     GlobalDeclarationNode parseGlobalDeclaration() {

@@ -2,6 +2,7 @@ package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.utils.ActionBuilder;
+import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 
@@ -18,6 +19,7 @@ public class DeleteAllFunctionsAction extends Action {
             if (menu.slots.size() <= 10 || !menu.slots.get(10).hasItem()) return true;
             String name = menu.slots.get(10).getItem().getHoverName().getString();
             current = new ActionBuilder().removeFunctionIfPresent(name).get();
+            SequenceManager.addSteps(current.countSteps());
         }
 
         if (current.run(mc)) current = null;

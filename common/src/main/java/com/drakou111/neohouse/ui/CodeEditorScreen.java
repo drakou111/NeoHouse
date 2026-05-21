@@ -3,20 +3,21 @@ package com.drakou111.neohouse.ui;
 import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.UIOpacity;
 import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.CompilerSession;
 import com.drakou111.neohouse.compiler.ScriptRunner;
+import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import com.drakou111.neohouse.compat.ScreenBase;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
-
-import com.drakou111.neohouse.compiler.lexer.Token;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,8 +34,12 @@ public class CodeEditorScreen extends ScreenBase {
     private final Path   filePath;
     private final Screen parent;
 
-    private String  savedContent  = null; // null = not yet loaded
-    private String  pendingContent = null; // set before showing confirm dialog
+    private String  savedContent  = null;
+    private String  pendingContent = null;
+
+    private long    lastChangeMs   = 0;
+    private boolean checkPending   = false;
+    private static final long CHECK_DELAY_MS = 400;
 
     private SyntaxEditorWidget editor;
     private Button             saveBtn;
@@ -60,10 +65,10 @@ public class CodeEditorScreen extends ScreenBase {
                 .bounds(rx - 56, by, 56, bh).build());
         addRenderableWidget(Button.builder(Component.literal("(i)").withStyle(ChatFormatting.AQUA), btn ->
                         Minecraft.getInstance().setScreen(new HelpScreen(this)))
-                .bounds(6, by, 24, bh).build());
+                .bounds(22, by, 24, bh).build());
 
         editor = new SyntaxEditorWidget(4, HEADER_H + 2, this.width - 8, this.height - HEADER_H - 5);
-        editor.setOnChange(() -> { checkErrors(); updateSaveBtn(); });
+        editor.setOnChange(() -> { scheduleCheck(); updateSaveBtn(); });
 
         String content;
         if (pendingContent != null) {
@@ -80,7 +85,7 @@ public class CodeEditorScreen extends ScreenBase {
         editor.setValue(content);
 
         if (savedContent == null) {
-            savedContent = editor.getValue(); // first load
+            savedContent = editor.getValue();
         }
 
         addRenderableWidget(editor);
@@ -95,6 +100,20 @@ public class CodeEditorScreen extends ScreenBase {
 
     private void updateSaveBtn() {
         if (saveBtn != null) saveBtn.active = isDirty();
+    }
+
+    private void scheduleCheck() {
+        lastChangeMs = System.currentTimeMillis();
+        checkPending = true;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (checkPending && System.currentTimeMillis() - lastChangeMs >= CHECK_DELAY_MS) {
+            checkPending = false;
+            checkErrors();
+        }
     }
 
     private void checkErrors() {
@@ -130,7 +149,7 @@ public class CodeEditorScreen extends ScreenBase {
                     spans.add(new int[]{-1, -1, 0});
                 }
             }
-            editor.setErrors(spans, messages, collected.get(0).getMessage());
+            editor.setErrors(spans, messages, collected.getFirst().getMessage());
         }
     }
 
@@ -211,11 +230,13 @@ public class CodeEditorScreen extends ScreenBase {
         g.fill(0, 0, this.width, HEADER_H,    t.panel(o.panelAlpha));
         g.fill(0, HEADER_H, this.width, HEADER_H + 1, t.accent());
 
+        RenderHelper.renderLogo(g, 4, (HEADER_H - 14) / 2, 14, t.accent());
+
         boolean dirty = isDirty();
         String indicator = dirty ? "● " : "";
         int indicatorColor = dirty ? 0xFFFF9944 : t.accent();
-        g.drawString(this.font, indicator, 36, (HEADER_H - 8) / 2, indicatorColor, false);
-        int nameX = 36 + (dirty ? font.width("● ") : 0);
+        g.drawString(this.font, indicator, 52, (HEADER_H - 8) / 2, indicatorColor, false);
+        int nameX = 52 + (dirty ? font.width("● ") : 0);
         g.drawString(this.font, filePath.getFileName().toString(), nameX, (HEADER_H - 8) / 2,
                 dirty ? 0xFFDDCCBB : 0xFFCCCCCC, false);
 
@@ -223,7 +244,7 @@ public class CodeEditorScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     public boolean isPauseScreen() { return false; }

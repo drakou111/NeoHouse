@@ -10,4 +10,8 @@ public class KeyMappingCompat extends KeyMapping {
     public KeyMappingCompat(String name, int key) {
         super(name, key, CATEGORY);
     }
+
+    public int getKeyCode() {
+        return this.key.getValue();
+    }
 }

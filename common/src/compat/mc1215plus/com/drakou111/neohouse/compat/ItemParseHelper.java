@@ -3,8 +3,8 @@ package com.drakou111.neohouse.compat;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
 

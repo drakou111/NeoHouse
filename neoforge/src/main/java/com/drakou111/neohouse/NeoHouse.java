@@ -12,5 +12,6 @@ public class NeoHouse
     public NeoHouse(IEventBus modEventBus, ModContainer modContainer)
     {
         Platforms.init(new NeoForgePlatform());
+        CancelKeybind.register(modEventBus);
     }
 }

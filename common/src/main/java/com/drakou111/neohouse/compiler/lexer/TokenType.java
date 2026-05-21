@@ -10,7 +10,7 @@ public enum TokenType {
     FUNCTION("function(?![a-zA-Z0-9_])"), RETURN("return(?![a-zA-Z0-9_])"), LOOP("loop(?![a-zA-Z0-9_])"),
     IF("if(?![a-zA-Z0-9_])"), ELSE("else(?![a-zA-Z0-9_])"), REPEAT("repeat(?![a-zA-Z0-9_])"), EVENT("event(?![a-zA-Z0-9_])"), MENU("menu(?![a-zA-Z0-9_])"),
     LONG_CAST("\\(long\\)"), DOUBLE_CAST("\\(double\\)"), STRING_CAST("\\(string\\)"),
-    RANDOM("random(?![a-zA-Z0-9_])"), COMMAND("command(?![a-zA-Z0-9_])"), IMPORT("import(?![a-zA-Z0-9_])"),
+    RANDOM("random(?![a-zA-Z0-9_])"), COMMAND("command(?![a-zA-Z0-9_])"), IMPORT("import(?![a-zA-Z0-9_])"), GLOBAL("global(?![a-zA-Z0-9_])"), CONST("const(?![a-zA-Z0-9_])"),
     TRUE("true(?![a-zA-Z0-9_])"), FALSE("false(?![a-zA-Z0-9_])"),
     LONG("long(?![a-zA-Z0-9_])"), DOUBLE("double(?![a-zA-Z0-9_])"), STRING("string(?![a-zA-Z0-9_])"), BOOL("bool(?![a-zA-Z0-9_])"), VAR("var(?![a-zA-Z0-9_])"),
 

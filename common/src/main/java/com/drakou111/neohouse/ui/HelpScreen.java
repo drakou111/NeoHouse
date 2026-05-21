@@ -1,48 +1,55 @@
 package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.SyntaxTheme;
 import com.drakou111.neohouse.UIOpacity;
 import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.compat.PoseHelper;
+import com.drakou111.neohouse.compat.RegistryHelper;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.enums.ActionParamKind;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Placeholder;
-import com.drakou111.neohouse.compat.PoseHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import com.drakou111.neohouse.compat.ScreenBase;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import com.drakou111.neohouse.compat.RegistryHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
 public class HelpScreen extends ScreenBase {
 
-    private static final int PAD       = 8;
+    private static final int PAD       = 16;
     private static final int HEADER_H  = 28;
     private static final int TAB_BTN_H = 20;
     private static final int CONTENT_Y = HEADER_H + TAB_BTN_H + 2;
-    private static final int LINE_H    = 13;
-    private static final int ICON_SIZE = 12;
+    private static final int LINE_H    = 16;
+    private static final int ICON_SIZE = 16;
     private static final int ICON_PAD  = ICON_SIZE + 3;
-    private static final int SB_W      = 4;
-    private static final int SB_PAD    = 3;
+    private static final int SB_W          = 4;
+    private static final int SB_PAD        = 3;
+    private static final int HEADER_LINE_H = 22;
+    private static final int SPACER_H      = 14;
 
-    private static final int COL_H = 0xFFFFCC55; // header
-    private static final int COL_C = 0xFF88CCFF; // signature / code
-    private static final int COL_T = 0xFFCCCCCC; // normal text
-    private static final int COL_D = 0xFF888888; // dim
+    private static final int COL_H    = 0xFFFFCC55;
+    private static final int COL_C    = 0xFF88CCFF;
+    private static final int COL_CODE = 0xFF88CCFE;
+    private static final int COL_T    = 0xFFCCCCCC;
+    private static final int COL_D    = 0xFF888888;
 
     private enum Tab {
-        OVERVIEW("Overview"),
+        GENERAL("General"),
+        SYNTAX("Syntax"),
         EXAMPLES("Examples"),
         ACTIONS("Actions"),
         CONDITIONS("Conditions"),
@@ -62,7 +69,8 @@ public class HelpScreen extends ScreenBase {
     private static final Map<Tab, List<HelpLine>> TAB_LINES;
     static {
         Map<Tab, List<HelpLine>> m = new EnumMap<>(Tab.class);
-        m.put(Tab.OVERVIEW,     buildOverview());
+        m.put(Tab.GENERAL,      buildGeneral());
+        m.put(Tab.SYNTAX,       buildSyntax());
         m.put(Tab.EXAMPLES,     buildExamples());
         m.put(Tab.ACTIONS,      buildActions());
         m.put(Tab.CONDITIONS,   buildConditions());
@@ -71,27 +79,32 @@ public class HelpScreen extends ScreenBase {
         TAB_LINES = Collections.unmodifiableMap(m);
     }
 
-    private static List<HelpLine> buildOverview() {
+    private static List<HelpLine> buildGeneral() {
         List<HelpLine> l = new ArrayList<>();
 
-        l.add(new HelpLine(COL_H, "Overview"));
+        l.add(new HelpLine(COL_H, "About"));
         l.add(new HelpLine(COL_T, "NeoHouse compiles .nh scripts into Hypixel Housing actions."));
-        l.add(new HelpLine(COL_T, "Open scripts via the file browser or run them with /neohouse run."));
+        l.add(new HelpLine(COL_T, "Open scripts via the file browser or run them with /nh run."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Commands"));
-        l.add(new HelpLine(COL_C, "  /neohouse                  — open home screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse help             — open this help screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse files            — open file browser"));
-        l.add(new HelpLine(COL_C, "  /neohouse run <file>       — compile & run a script"));
-        l.add(new HelpLine(COL_C, "  /neohouse run latest       — re-run last script"));
-        l.add(new HelpLine(COL_C, "  /neohouse config           — open config screen"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete functions — delete all functions"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete events    — delete all event actions"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete commands  — delete all commands"));
-        l.add(new HelpLine(COL_C, "  /neohouse delete menus     — delete all custom menus"));
-        l.add(new HelpLine(COL_C, "  /neohouse nuke             — delete everything"));
+        l.add(new HelpLine(COL_C, "  /nh                    — open home screen"));
+        l.add(new HelpLine(COL_C, "  /nh help               — open this help screen"));
+        l.add(new HelpLine(COL_C, "  /nh copyitem           — copies the data of the held item"));
+        l.add(new HelpLine(COL_C, "  /nh giveitem           — gives the item with the given data"));
+        l.add(new HelpLine(COL_C, "  /nh files              — open file browser"));
+        l.add(new HelpLine(COL_C, "  /nh run <file>         — compile & run a script"));
+        l.add(new HelpLine(COL_C, "  /nh rerun              — re-run last script"));
+        l.add(new HelpLine(COL_C, "  /nh config             — open config screen"));
+        l.add(new HelpLine(COL_C, "  /nh delete <section>   — deletes a specific section"));
+        l.add(new HelpLine(COL_C, "  /nh nuke               — delete everything"));
         l.add(new HelpLine(COL_D, ""));
+
+        return l;
+    }
+
+    private static List<HelpLine> buildSyntax() {
+        List<HelpLine> l = new ArrayList<>();
 
         l.add(new HelpLine(COL_H, "Types"));
         l.add(new HelpLine(COL_C, "  long   — whole numbers (e.g. 42)"));
@@ -107,30 +120,21 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_C, "    g.name        — global variable (shared)"));
         l.add(new HelpLine(COL_C, "    t[team].name  — team variable"));
         l.add(new HelpLine(COL_T, "  Declare at the top of your file:"));
-        l.add(new HelpLine(COL_C, "    string g.word = \"N/A\";"));
-        l.add(new HelpLine(COL_C, "    long g.count;"));
+        l.add(new HelpLine(COL_CODE, "    string g.word = \"N/A\";"));
+        l.add(new HelpLine(COL_CODE, "    long g.count;"));
         l.add(new HelpLine(COL_D, "  Only g. and t[]. variables can have initializers."));
         l.add(new HelpLine(COL_D, "  Undeclared variables are treated as global var."));
         l.add(new HelpLine(COL_D, ""));
 
-        l.add(new HelpLine(COL_H, "Placeholders"));
-        l.add(new HelpLine(COL_T, "  Read-only values from the housing or player:"));
-        l.add(new HelpLine(COL_C, "    ph.placeholderName"));
-        l.add(new HelpLine(COL_C, "    ph.placeholderName(arg1, arg2)"));
-        l.add(new HelpLine(COL_T, "  See the Placeholders tab for the full list."));
-        l.add(new HelpLine(COL_D, ""));
-
-        l.add(new HelpLine(COL_H, "String Concatenation"));
-        l.add(new HelpLine(COL_T, "  Use + to join strings, variables, and placeholders:"));
-        l.add(new HelpLine(COL_C, "    message(\"Score: \" + g.score + \"!\");"));
-        l.add(new HelpLine(COL_T, "  Compiled into Housing placeholder format at build time."));
-        l.add(new HelpLine(COL_T, "  Result must be at most 256 characters."));
-        l.add(new HelpLine(COL_D, ""));
-
-        l.add(new HelpLine(COL_H, "Casting"));
-        l.add(new HelpLine(COL_C, "  (long)x     — truncate to whole number"));
-        l.add(new HelpLine(COL_C, "  (double)x   — convert to decimal"));
-        l.add(new HelpLine(COL_C, "  (string)x   — convert to string"));
+        l.add(new HelpLine(COL_H, "Constants"));
+        l.add(new HelpLine(COL_T, "  Named compile-time values — inlined with no runtime cost:"));
+        l.add(new HelpLine(COL_CODE, "    const long MAX_SCORE = 100;"));
+        l.add(new HelpLine(COL_CODE, "    const string PREFIX = \"[Game]\";"));
+        l.add(new HelpLine(COL_T, "  Use the name anywhere a literal is valid:"));
+        l.add(new HelpLine(COL_CODE, "    if (p.score >= MAX_SCORE) { ... }"));
+        l.add(new HelpLine(COL_D, "  Types: long, double, string, bool (not var)."));
+        l.add(new HelpLine(COL_D, "  Value must be a literal or another constant."));
+        l.add(new HelpLine(COL_D, "  Declare at the top of the file, before functions."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Operators"));
@@ -143,73 +147,100 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, "  Constants:    PI  E  HALF_PI  TWO_PI  PHI  SQRT_TWO"));
         l.add(new HelpLine(COL_D, ""));
 
+        l.add(new HelpLine(COL_H, "Casting"));
+        l.add(new HelpLine(COL_C, "  (long)x     — truncate to whole number"));
+        l.add(new HelpLine(COL_C, "  (double)x   — convert to decimal"));
+        l.add(new HelpLine(COL_C, "  (string)x   — convert to string"));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "String Concatenation"));
+        l.add(new HelpLine(COL_T, "  Use + to join strings, variables, and placeholders:"));
+        l.add(new HelpLine(COL_CODE, "    message(\"Score: \" + g.score + \"!\");"));
+        l.add(new HelpLine(COL_T, "  Compiled into Housing placeholder format at build time."));
+        l.add(new HelpLine(COL_T, "  Result must be at most 256 characters."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Placeholders"));
+        l.add(new HelpLine(COL_T, "  Read-only values from the housing or player:"));
+        l.add(new HelpLine(COL_C, "    ph.placeholderName"));
+        l.add(new HelpLine(COL_C, "    ph.placeholderName(arg1, arg2)"));
+        l.add(new HelpLine(COL_T, "  See the Placeholders tab for the full list."));
+        l.add(new HelpLine(COL_D, ""));
+
         l.add(new HelpLine(COL_H, "Functions"));
         l.add(new HelpLine(COL_T, "  Void function (no return value):"));
-        l.add(new HelpLine(COL_C, "    function greet() { message(\"Hi!\"); }"));
+        l.add(new HelpLine(COL_CODE, "    function greet() { message(\"Hi!\"); }"));
         l.add(new HelpLine(COL_T, "  Typed function (returns a value):"));
-        l.add(new HelpLine(COL_C, "    function long add(long a, long b) {"));
-        l.add(new HelpLine(COL_C, "      return a + b;"));
-        l.add(new HelpLine(COL_C, "    }"));
-        l.add(new HelpLine(COL_C, "    long result = add(1, 2);"));
+        l.add(new HelpLine(COL_CODE, "    function long add(long a, long b) {"));
+        l.add(new HelpLine(COL_CODE, "      return a + b;"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_CODE, "    long result = add(1, 2);"));
         l.add(new HelpLine(COL_T, "  Parameters are passed by value — changes inside"));
         l.add(new HelpLine(COL_T, "  the function do not affect the original variable."));
         l.add(new HelpLine(COL_D, "  Function names cannot clash with built-in actions."));
         l.add(new HelpLine(COL_D, ""));
 
-        l.add(new HelpLine(COL_H, "Loops"));
-        l.add(new HelpLine(COL_T, "  Repeats on a fixed tick interval (minimum 4):"));
-        l.add(new HelpLine(COL_C, "    loop myLoop(10) { ... }"));
-        l.add(new HelpLine(COL_D, "  Cannot be typed or have parameters."));
+        l.add(new HelpLine(COL_H, "Global Function Call"));
+        l.add(new HelpLine(COL_T, "  Triggers a void function for ALL players in the housing:"));
+        l.add(new HelpLine(COL_CODE, "    global greet();"));
+        l.add(new HelpLine(COL_D, "  Only void functions can be called globally."));
+        l.add(new HelpLine(COL_D, "  This maps to Hypixel's \"Trigger Function (for all)\" action."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Conditionals"));
-        l.add(new HelpLine(COL_C, "    if (p.score >= 100 && isSneaking(false)) {"));
-        l.add(new HelpLine(COL_C, "      message(\"Done!\");"));
-        l.add(new HelpLine(COL_C, "    } else { ... }"));
+        l.add(new HelpLine(COL_CODE, "    if (p.score >= 100 && isSneaking(false)) {"));
+        l.add(new HelpLine(COL_CODE, "      message(\"Done!\");"));
+        l.add(new HelpLine(COL_CODE, "    } else { ... }"));
         l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) — not both in one expression."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Loops"));
+        l.add(new HelpLine(COL_T, "  Repeats on a fixed tick interval (minimum 4):"));
+        l.add(new HelpLine(COL_CODE, "    loop myLoop(10) { ... }"));
+        l.add(new HelpLine(COL_D, "  Cannot be typed or have parameters."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Random"));
         l.add(new HelpLine(COL_T, "  Executes one block at random:"));
-        l.add(new HelpLine(COL_C, "    random [ { kill(); }  { heal(); } ]"));
+        l.add(new HelpLine(COL_CODE, "    random [ { kill(); }  { heal(); } ]"));
         l.add(new HelpLine(COL_T, "  Use N* to weight an option:"));
-        l.add(new HelpLine(COL_C, "    random [ 3*{ message(\"Common\"); }  { kill(); } ]"));
+        l.add(new HelpLine(COL_CODE, "    random [ 3*{ message(\"Common\"); }  { kill(); } ]"));
         l.add(new HelpLine(COL_D, "  Weights are reduced by their GCD before compiling."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Repeat"));
         l.add(new HelpLine(COL_T, "  Unrolls its body N times at compile time:"));
-        l.add(new HelpLine(COL_C, "    repeat(3) { message(\"tick\"); }"));
+        l.add(new HelpLine(COL_CODE, "    repeat(3) { message(\"tick\"); }"));
         l.add(new HelpLine(COL_D, "  Not a runtime loop — the actions are literally copied."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Events"));
         l.add(new HelpLine(COL_T, "  Triggered automatically by in-game events:"));
-        l.add(new HelpLine(COL_C, "    event onJoin { message(\"Welcome!\"); }"));
+        l.add(new HelpLine(COL_CODE, "    event onJoin { message(\"Welcome!\"); }"));
         l.add(new HelpLine(COL_T, "  See the Events tab for the full list."));
         l.add(new HelpLine(COL_D, "  Some events have restricted action counts."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Commands"));
-        l.add(new HelpLine(COL_C, "    command myCmd(priority: 5, listed: false) {"));
-        l.add(new HelpLine(COL_C, "      kill();"));
-        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_CODE, "    command myCmd(priority: 5, listed: false) {"));
+        l.add(new HelpLine(COL_CODE, "      kill();"));
+        l.add(new HelpLine(COL_CODE, "    }"));
         l.add(new HelpLine(COL_D, "  Options: priority (0-20), listed, targeted."));
         l.add(new HelpLine(COL_D, "  Name must be at least 3 characters."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Menus"));
-        l.add(new HelpLine(COL_C, "    menu myMenu(3) {"));
-        l.add(new HelpLine(COL_C, "      slot0: ({count:1,id:\"minecraft:diamond\"}) {"));
-        l.add(new HelpLine(COL_C, "        message(\"Clicked!\");"));
-        l.add(new HelpLine(COL_C, "      }"));
-        l.add(new HelpLine(COL_C, "    }"));
+        l.add(new HelpLine(COL_CODE, "    menu myMenu(3) {"));
+        l.add(new HelpLine(COL_CODE, "      slot0: ({count:1,id:\"minecraft:diamond\"}) {"));
+        l.add(new HelpLine(COL_CODE, "        message(\"Clicked!\");"));
+        l.add(new HelpLine(COL_CODE, "      }"));
+        l.add(new HelpLine(COL_CODE, "    }"));
         l.add(new HelpLine(COL_D, "  The number is the row count (1-6). Slots are 0-indexed."));
         l.add(new HelpLine(COL_D, ""));
 
-        l.add(new HelpLine(COL_H, "Import"));
+        l.add(new HelpLine(COL_H, "File Import"));
         l.add(new HelpLine(COL_T, "  Include another .nh file inline:"));
-        l.add(new HelpLine(COL_C, "    import \"path/to/other.nh\";"));
+        l.add(new HelpLine(COL_CODE, "    import \"path/to/other.nh\";"));
         l.add(new HelpLine(COL_D, ""));
 
         return l;
@@ -221,21 +252,21 @@ public class HelpScreen extends ScreenBase {
         // ── 1. Hello World ────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "1. Hello World"));
         l.add(new HelpLine(COL_T, "  Send a message to the player when they join."));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    message(\"Welcome to my house!\");"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    message(\"Welcome to my house!\");"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  The event block runs automatically on the trigger."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 2. Variables ──────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "2. Variables"));
         l.add(new HelpLine(COL_T, "  Count how many times each player has joined."));
-        l.add(new HelpLine(COL_C, "  long p.joins;"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    p.joins += 1;"));
-        l.add(new HelpLine(COL_C, "    message(\"You have joined \" + p.joins + \" time(s)!\");"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  long p.joins;"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    p.joins += 1;"));
+        l.add(new HelpLine(COL_CODE, "    message(\"You have joined \" + p.joins + \" time(s)!\");"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  p. variables are per-player. g. variables are shared."));
         l.add(new HelpLine(COL_D, "  Declare without a holder at the top of the file."));
         l.add(new HelpLine(COL_D, ""));
@@ -243,56 +274,56 @@ public class HelpScreen extends ScreenBase {
         // ── 3. Global Counter ─────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "3. Global Counter"));
         l.add(new HelpLine(COL_T, "  Track total joins across all players."));
-        l.add(new HelpLine(COL_C, "  long g.totalJoins = 0;"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    g.totalJoins += 1;"));
-        l.add(new HelpLine(COL_C, "    message(\"Total joins: \" + g.totalJoins);"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  long g.totalJoins = 0;"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    g.totalJoins += 1;"));
+        l.add(new HelpLine(COL_CODE, "    message(\"Total joins: \" + g.totalJoins);"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  g. variables persist until the housing resets."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 4. Conditionals ───────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "4. Conditionals"));
         l.add(new HelpLine(COL_T, "  Reward players who reach a score threshold."));
-        l.add(new HelpLine(COL_C, "  long p.score;"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  function checkScore() {"));
-        l.add(new HelpLine(COL_C, "    if (p.score >= 100) {"));
-        l.add(new HelpLine(COL_C, "      message(\"You reached 100 points!\");"));
-        l.add(new HelpLine(COL_C, "      heal();"));
-        l.add(new HelpLine(COL_C, "    } else {"));
-        l.add(new HelpLine(COL_C, "      message(\"Keep going: \" + p.score + \" / 100\");"));
-        l.add(new HelpLine(COL_C, "    }"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  long p.score;"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  function checkScore() {"));
+        l.add(new HelpLine(COL_CODE, "    if (p.score >= 100) {"));
+        l.add(new HelpLine(COL_CODE, "      message(\"You reached 100 points!\");"));
+        l.add(new HelpLine(COL_CODE, "      heal();"));
+        l.add(new HelpLine(COL_CODE, "    } else {"));
+        l.add(new HelpLine(COL_CODE, "      message(\"Keep going: \" + p.score + \" / 100\");"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) in conditions, not both at once."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 5. Functions ──────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "5. Functions"));
         l.add(new HelpLine(COL_T, "  Reusable logic — void and typed."));
-        l.add(new HelpLine(COL_C, "  function greet() {"));
-        l.add(new HelpLine(COL_C, "    message(\"Hello, player!\");"));
-        l.add(new HelpLine(COL_C, "  }"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  function long double(long n) {"));
-        l.add(new HelpLine(COL_C, "    return n * 2;"));
-        l.add(new HelpLine(COL_C, "  }"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    greet();"));
-        l.add(new HelpLine(COL_C, "    long result = double(5);"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  function greet() {"));
+        l.add(new HelpLine(COL_CODE, "    message(\"Hello, player!\");"));
+        l.add(new HelpLine(COL_CODE, "  }"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  function long double(long n) {"));
+        l.add(new HelpLine(COL_CODE, "    return n * 2;"));
+        l.add(new HelpLine(COL_CODE, "  }"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    greet();"));
+        l.add(new HelpLine(COL_CODE, "    long result = double(5);"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  Parameters are copied — changes inside don't affect callers."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 6. Custom Command ─────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "6. Custom Command"));
         l.add(new HelpLine(COL_T, "  Let players type /heal to restore themselves."));
-        l.add(new HelpLine(COL_C, "  command heal(listed: true, priority: 5) {"));
-        l.add(new HelpLine(COL_C, "    heal();"));
-        l.add(new HelpLine(COL_C, "    message(\"You have been healed!\");"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  command heal(listed: true, priority: 5) {"));
+        l.add(new HelpLine(COL_CODE, "    heal();"));
+        l.add(new HelpLine(COL_CODE, "    message(\"You have been healed!\");"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  priority: 0-20. listed: appears in /. targeted: per-player."));
         l.add(new HelpLine(COL_D, "  Name must be at least 3 characters."));
         l.add(new HelpLine(COL_D, ""));
@@ -300,63 +331,63 @@ public class HelpScreen extends ScreenBase {
         // ── 7. Loops ──────────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "7. Loops"));
         l.add(new HelpLine(COL_T, "  Run code on a fixed tick interval (minimum 4 ticks)."));
-        l.add(new HelpLine(COL_C, "  long g.seconds = 0;"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  loop clock(20) {"));
-        l.add(new HelpLine(COL_C, "    g.seconds += 1;"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  long g.seconds = 0;"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  loop clock(20) {"));
+        l.add(new HelpLine(COL_CODE, "    g.seconds += 1;"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  20 ticks = 1 second. Loops cannot have parameters."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 8. Random ─────────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "8. Random"));
         l.add(new HelpLine(COL_T, "  Execute one outcome at random. Weight with N*."));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    random ["));
-        l.add(new HelpLine(COL_C, "      3*{ message(\"Common outcome\"); }"));
-        l.add(new HelpLine(COL_C, "         { message(\"Rare outcome A\"); }"));
-        l.add(new HelpLine(COL_C, "         { message(\"Rare outcome B\"); }"));
-        l.add(new HelpLine(COL_C, "    ]"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    random ["));
+        l.add(new HelpLine(COL_CODE, "      3*{ message(\"Common outcome\"); }"));
+        l.add(new HelpLine(COL_CODE, "         { message(\"Rare outcome A\"); }"));
+        l.add(new HelpLine(COL_CODE, "         { message(\"Rare outcome B\"); }"));
+        l.add(new HelpLine(COL_CODE, "    ]"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  Weights are reduced by GCD. 3:1:1 above means 60%:20%:20%."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 9. Menus ──────────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "9. Menus"));
         l.add(new HelpLine(COL_T, "  A 3-row inventory GUI with clickable slots."));
-        l.add(new HelpLine(COL_C, "  menu shop(3) {"));
-        l.add(new HelpLine(COL_C, "    slot0: ({count:1,id:\"minecraft:diamond\"}) {"));
-        l.add(new HelpLine(COL_C, "      message(\"You clicked the diamond!\");"));
-        l.add(new HelpLine(COL_C, "      closeMenu();"));
-        l.add(new HelpLine(COL_C, "    }"));
-        l.add(new HelpLine(COL_C, "    slot8: ({count:1,id:\"minecraft:barrier\"}) {"));
-        l.add(new HelpLine(COL_C, "      closeMenu();"));
-        l.add(new HelpLine(COL_C, "    }"));
-        l.add(new HelpLine(COL_C, "  }"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  event onJoin { displayMenu(\"shop\"); }"));
+        l.add(new HelpLine(COL_CODE, "  menu shop(3) {"));
+        l.add(new HelpLine(COL_CODE, "    slot0: ({count:1,id:\"minecraft:diamond\"}) {"));
+        l.add(new HelpLine(COL_CODE, "      message(\"You clicked the diamond!\");"));
+        l.add(new HelpLine(COL_CODE, "      closeMenu();"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_CODE, "    slot8: ({count:1,id:\"minecraft:barrier\"}) {"));
+        l.add(new HelpLine(COL_CODE, "      closeMenu();"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_CODE, "  }"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  event onJoin { displayMenu(\"shop\"); }"));
         l.add(new HelpLine(COL_D, "  Rows: 1-6. Slots are 0-indexed left to right, top to bottom."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 10. Repeat ────────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "10. Repeat"));
         l.add(new HelpLine(COL_T, "  Unrolls a block N times at compile time (not runtime)."));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    repeat(3) {"));
-        l.add(new HelpLine(COL_C, "      message(\"Spam!\");"));
-        l.add(new HelpLine(COL_C, "    }"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    repeat(3) {"));
+        l.add(new HelpLine(COL_CODE, "      message(\"Spam!\");"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  Equivalent to writing the same action 3 times manually."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 11. String Building ───────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "11. String Building"));
         l.add(new HelpLine(COL_T, "  Join text, variables, and placeholders with +."));
-        l.add(new HelpLine(COL_C, "  long p.score;"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    message(\"Hi \" + ph.playerName + \"! Score: \" + p.score);"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  long p.score;"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    message(\"Hi \" + ph.playerName + \"! Score: \" + p.score);"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  Folded into a single Housing placeholder string at compile time."));
         l.add(new HelpLine(COL_D, "  Result must be at most 256 characters."));
         l.add(new HelpLine(COL_D, ""));
@@ -364,48 +395,48 @@ public class HelpScreen extends ScreenBase {
         // ── 12. Events & Cancel ───────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "12. Events & Cancel"));
         l.add(new HelpLine(COL_T, "  Cancel an event to prevent its default behavior."));
-        l.add(new HelpLine(COL_C, "  event onDeath {"));
-        l.add(new HelpLine(COL_C, "    message(\"You died!\");"));
-        l.add(new HelpLine(COL_C, "    cancel;"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  event onDeath {"));
+        l.add(new HelpLine(COL_CODE, "    message(\"You died!\");"));
+        l.add(new HelpLine(COL_CODE, "    cancel;"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  cancel; is a statement, not a function call."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 13. Import ────────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "13. Import"));
         l.add(new HelpLine(COL_T, "  Split large scripts across multiple .nh files."));
-        l.add(new HelpLine(COL_C, "  // main.nh"));
-        l.add(new HelpLine(COL_C, "  import \"lib/utils.nh\";"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  event onJoin {"));
-        l.add(new HelpLine(COL_C, "    greet();  // defined in lib/utils.nh"));
-        l.add(new HelpLine(COL_C, "  }"));
+        l.add(new HelpLine(COL_CODE, "  // main.nh"));
+        l.add(new HelpLine(COL_CODE, "  import \"lib/utils.nh\";"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  event onJoin {"));
+        l.add(new HelpLine(COL_CODE, "    greet();  // defined in lib/utils.nh"));
+        l.add(new HelpLine(COL_CODE, "  }"));
         l.add(new HelpLine(COL_D, "  The imported file's contents are inlined before compiling."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 14. Putting it all together ───────────────────────────────────────
         l.add(new HelpLine(COL_H, "14. Full Example"));
         l.add(new HelpLine(COL_T, "  A score system with a command and win condition."));
-        l.add(new HelpLine(COL_C, "  long p.score;"));
-        l.add(new HelpLine(COL_C, "  long g.highScore = 0;"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  function addScore(long n) {"));
-        l.add(new HelpLine(COL_C, "    p.score += n;"));
-        l.add(new HelpLine(COL_C, "    if (p.score > g.highScore) {"));
-        l.add(new HelpLine(COL_C, "      g.highScore = p.score;"));
-        l.add(new HelpLine(COL_C, "    }"));
-        l.add(new HelpLine(COL_C, "    if (p.score >= 1000) {"));
-        l.add(new HelpLine(COL_C, "      message(\"You won with score \" + p.score + \"!\");"));
-        l.add(new HelpLine(COL_C, "      p.score = 0;"));
-        l.add(new HelpLine(COL_C, "    }"));
-        l.add(new HelpLine(COL_C, "  }"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  command score(listed: true) {"));
-        l.add(new HelpLine(COL_C, "    message(\"Score: \" + p.score + \" | Best: \" + g.highScore);"));
-        l.add(new HelpLine(COL_C, "  }"));
-        l.add(new HelpLine(COL_C, ""));
-        l.add(new HelpLine(COL_C, "  event onKill { addScore(10); }"));
-        l.add(new HelpLine(COL_C, "  event onDeath { addScore(-5); }"));
+        l.add(new HelpLine(COL_CODE, "  long p.score;"));
+        l.add(new HelpLine(COL_CODE, "  long g.highScore = 0;"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  function addScore(long n) {"));
+        l.add(new HelpLine(COL_CODE, "    p.score += n;"));
+        l.add(new HelpLine(COL_CODE, "    if (p.score > g.highScore) {"));
+        l.add(new HelpLine(COL_CODE, "      g.highScore = p.score;"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_CODE, "    if (p.score >= 1000) {"));
+        l.add(new HelpLine(COL_CODE, "      message(\"You won with score \" + p.score + \"!\");"));
+        l.add(new HelpLine(COL_CODE, "      p.score = 0;"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_CODE, "  }"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  command score(listed: true) {"));
+        l.add(new HelpLine(COL_CODE, "    message(\"Score: \" + p.score + \" | Best: \" + g.highScore);"));
+        l.add(new HelpLine(COL_CODE, "  }"));
+        l.add(new HelpLine(COL_CODE, ""));
+        l.add(new HelpLine(COL_CODE, "  event onKill { addScore(10); }"));
+        l.add(new HelpLine(COL_CODE, "  event onDeath { addScore(-5); }"));
         l.add(new HelpLine(COL_D, ""));
 
         return l;
@@ -415,8 +446,8 @@ public class HelpScreen extends ScreenBase {
         return switch (k) {
             case STRING_LITERAL    -> "string";
             case BOOL_LITERAL      -> "bool";
-            case LONG_LITERAL      -> "int";
-            case DOUBLE_LITERAL    -> "float";
+            case LONG_LITERAL      -> "long";
+            case DOUBLE_LITERAL    -> "double";
             case NORMAL_EXPRESSION -> "expr";
             case ITEM_LITERAL      -> "item";
         };
@@ -425,8 +456,8 @@ public class HelpScreen extends ScreenBase {
     private static String typeStr(VariableType t) {
         return switch (t) {
             case STRING -> "string";
-            case LONG   -> "int";
-            case DOUBLE -> "float";
+            case LONG   -> "long";
+            case DOUBLE -> "double";
             case BOOL   -> "bool";
             case VAR    -> "var";
         };
@@ -442,7 +473,7 @@ public class HelpScreen extends ScreenBase {
                 sig.append(kindStr(a.params.get(i).kind()));
             }
             sig.append(")");
-            l.add(new HelpLine(COL_C, sig.toString(), a.texture));
+            l.add(new HelpLine(COL_CODE, sig.toString(), a.texture));
             if (!a.description.isEmpty())
                 l.add(new HelpLine(COL_D, "    " + a.description));
             l.add(new HelpLine(COL_D, ""));
@@ -460,7 +491,7 @@ public class HelpScreen extends ScreenBase {
                 sig.append(kindStr(c.params.get(i).kind()));
             }
             sig.append(")");
-            l.add(new HelpLine(COL_C, sig.toString(), c.texture));
+            l.add(new HelpLine(COL_CODE, sig.toString(), c.texture));
             if (!c.description.isEmpty())
                 l.add(new HelpLine(COL_D, "    " + c.description));
             l.add(new HelpLine(COL_D, ""));
@@ -471,7 +502,7 @@ public class HelpScreen extends ScreenBase {
     private static List<HelpLine> buildEvents() {
         List<HelpLine> l = new ArrayList<>();
         for (Event e : Event.values()) {
-            l.add(new HelpLine(COL_C, e.name, e.texture));
+            l.add(new HelpLine(COL_CODE, "event " + e.name, e.texture));
             if (!e.description.isEmpty())
                 l.add(new HelpLine(COL_D, "    " + e.description));
             l.add(new HelpLine(COL_D, ""));
@@ -482,7 +513,7 @@ public class HelpScreen extends ScreenBase {
     private static List<HelpLine> buildPlaceholders() {
         List<HelpLine> l = new ArrayList<>();
         for (Placeholder p : Placeholder.values()) {
-            StringBuilder sig = new StringBuilder(p.name);
+            StringBuilder sig = new StringBuilder("ph.").append(p.name);
             if (!p.constTypes.isEmpty()) {
                 sig.append("(");
                 for (int i = 0; i < p.constTypes.size(); i++) {
@@ -492,7 +523,7 @@ public class HelpScreen extends ScreenBase {
                 sig.append(")");
             }
             sig.append(" : ").append(typeStr(p.type));
-            l.add(new HelpLine(COL_C, sig.toString()));
+            l.add(new HelpLine(COL_CODE, sig.toString()));
             if (!p.description.isEmpty())
                 l.add(new HelpLine(COL_D, "    " + p.description));
             l.add(new HelpLine(COL_D, ""));
@@ -500,13 +531,34 @@ public class HelpScreen extends ScreenBase {
         return l;
     }
 
-    private Tab activeTab = Tab.OVERVIEW;
+    private static int lineH(HelpLine line) {
+        if (line.color() == COL_H)                          return HEADER_LINE_H;
+        if (line.color() == COL_D && line.text().isEmpty()) return SPACER_H;
+        return LINE_H;
+    }
+
+    private static int totalH(List<HelpLine> lines) {
+        int h = 0;
+        for (HelpLine l : lines) h += lineH(l);
+        return h;
+    }
+
+    private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
+
+    private Tab activeTab = Tab.GENERAL;
     private final Map<Tab, Integer> scrollPos = new EnumMap<>(Tab.class);
     private List<TabButton> tabButtons = Collections.emptyList();
 
     private boolean sbDragging = false;
     private int sbDragStartY;
     private int sbDragStartScroll;
+
+    private int selAnchorLine = -1;
+    private int selAnchorChar = -1;
+    private int selHeadLine   = -1;
+    private int selHeadChar   = -1;
+    private boolean selecting  = false;
+    private Tab selTab         = null;
 
     private final Screen parent;
 
@@ -539,7 +591,8 @@ public class HelpScreen extends ScreenBase {
         UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
         g.fillGradient(0, 0, this.width, this.height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
         g.fill(0, 0, this.width, HEADER_H, t.panel(o.panelAlpha));
-        g.drawString(this.font, "NeoHouse — Help", PAD + 56, 9, 0xFFFFFFFF);
+        RenderHelper.renderLogo(g, PAD + 56, 4, 18, t.accent());
+        g.drawString(this.font, "NeoHouse — Help", PAD + 56 + 22, 9, 0xFFFFFFFF);
         g.fill(0, HEADER_H, this.width, HEADER_H + 1, t.accent());
 
         int tabY = HEADER_H + 1;
@@ -561,49 +614,126 @@ public class HelpScreen extends ScreenBase {
         super.render(g, mouseX, mouseY, partialTick);
 
         List<HelpLine> lines = TAB_LINES.get(activeTab);
-        int scroll  = clampScroll(lines);
-        int listH   = this.height - CONTENT_Y - 4;
-        int maxRows = listH / LINE_H;
-        int end     = Math.min(scroll + maxRows, lines.size());
-
+        int scrollPx     = clampScroll(lines);
+        int listH        = this.height - CONTENT_Y - 4;
+        int totalHpx     = totalH(lines);
         int contentRight = this.width - SB_W - SB_PAD - 2;
+
+        g.fill(0, CONTENT_Y, contentRight, this.height - 4, t.panel(0x33));
+
+        int[] sel   = (selTab == activeTab && selAnchorLine >= 0 && selHeadLine >= 0) ? normalizedSel() : null;
+        boolean hasSel = sel != null && (sel[0] != sel[2] || sel[1] != sel[3]);
+
         g.enableScissor(0, CONTENT_Y, contentRight, this.height - 4);
-        for (int i = scroll; i < end; i++) {
+        int cumY = CONTENT_Y - scrollPx;
+        int cardTopY = -1;
+        for (int i = 0; i < lines.size(); i++) {
             HelpLine line = lines.get(i);
-            int y     = CONTENT_Y + (i - scroll) * LINE_H;
+            int lh    = lineH(line);
+            int nextY = cumY + lh;
+            if (nextY <= CONTENT_Y) { cumY = nextY; continue; }
+            if (cumY  >= this.height - 4) break;
+
+            int y     = cumY;
             int textX = PAD;
-            if (line.icon() != null && !line.text().isEmpty()) {
-                renderIcon(g, line.icon(), PAD, y);
-                textX = PAD + ICON_PAD;
+            int textY = y + (lh - font.lineHeight) / 2;
+
+            if (line.color() == COL_H) {
+                if (cardTopY >= 0) {
+                    RenderHelper.renderOutline(g, 1, cardTopY, contentRight - 2, cumY - cardTopY, t.accentTint(0x44));
+                    cardTopY = -1;
+                }
+                g.fill(0, y, contentRight, y + lh, t.panel(0xEE));
+                g.fill(0, y, 3, y + lh, t.accent());
+                g.fill(3, y + lh - 1, contentRight, y + lh, t.accentTint(0x55));
+                g.drawString(font, line.text(), PAD + 5, textY, line.color(), false);
+
+            } else if (line.color() == COL_D && line.text().isEmpty()) {
+                if (cardTopY >= 0) {
+                    RenderHelper.renderOutline(g, 1, cardTopY, contentRight - 2, cumY - cardTopY, t.accentTint(0x44));
+                    cardTopY = -1;
+                }
+                boolean nextIsIcon = i < lines.size() - 1 && lines.get(i + 1).icon() != null;
+                if (nextIsIcon) {
+                    int divY = y + SPACER_H / 2;
+                    g.fill(PAD * 2, divY, contentRight - PAD * 2, divY + 1, t.accentTint(0x33));
+                }
+
+            } else {
+                boolean isCodeBg = line.color() == COL_C || line.color() == COL_CODE;
+                boolean isCodeHL = line.color() == COL_CODE;
+                boolean hasIcon  = line.icon() != null;
+                boolean prevCode = i > 0 && (lines.get(i-1).color() == COL_C || lines.get(i-1).color() == COL_CODE);
+                boolean nextCode = i < lines.size()-1 && (lines.get(i+1).color() == COL_C || lines.get(i+1).color() == COL_CODE);
+                boolean isEntryDesc = line.color() == COL_D && !line.text().isEmpty()
+                        && i > 0 && lines.get(i-1).icon() != null;
+
+                if (isCodeBg) {
+                    g.fill(0, y, contentRight, y + lh, t.surface(0xAA));
+                    if (!hasIcon) g.fill(0, y, 2, y + lh, t.accentTint(0xCC));
+                    if (!prevCode) g.fill(0, y, contentRight, y + 1, t.accentTint(0x55));
+                    if (!nextCode) g.fill(0, y + lh - 1, contentRight, y + lh, t.accentTint(0x55));
+                } else if (isEntryDesc) {
+                    g.fill(0, y, contentRight, y + lh, t.surface(0x55));
+                }
+
+                if (hasIcon && !line.text().isEmpty()) {
+                    if (cardTopY < 0) cardTopY = y;
+                    int iconY = y + (lh - ICON_SIZE) / 2;
+                    renderIcon(g, line.icon(), PAD, iconY);
+                    textX = PAD + ICON_PAD;
+                }
+
+                if (isCodeHL && !line.text().isEmpty()) {
+                    renderSyntaxLine(g, line.text(), textX, textY);
+                } else {
+                    g.drawString(font, line.text(), textX, textY, line.color(), false);
+                }
             }
-            g.drawString(this.font, line.text(), textX, y, line.color(), false);
+
+            if (hasSel && i >= sel[0] && i <= sel[2]) {
+                String txt = line.text();
+                int txX = textXForLine(line);
+                int hiL, hiR;
+                if (i == sel[0] && i == sel[2]) {
+                    hiL = txX + font.width(txt.substring(0, Math.min(sel[1], txt.length())));
+                    hiR = txX + font.width(txt.substring(0, Math.min(sel[3], txt.length())));
+                } else if (i == sel[0]) {
+                    hiL = txX + font.width(txt.substring(0, Math.min(sel[1], txt.length())));
+                    hiR = contentRight;
+                } else if (i == sel[2]) {
+                    hiL = 0;
+                    hiR = txX + font.width(txt.substring(0, Math.min(sel[3], txt.length())));
+                } else {
+                    hiL = 0; hiR = contentRight;
+                }
+                if (hiR > hiL) g.fill(hiL, y, hiR, y + lh, 0x664488FF);
+            }
+            cumY = nextY;
         }
+        if (cardTopY >= 0)
+            RenderHelper.renderOutline(g, 1, cardTopY, contentRight - 2, cumY - cardTopY, t.accentTint(0x44));
         g.disableScissor();
 
-        renderScrollbar(g, lines, scroll, maxRows, t);
+        renderScrollbar(g, totalHpx, scrollPx, listH, t);
     }
 
-    private void renderScrollbar(GuiGraphics g, List<HelpLine> lines, int scroll, int maxRows, UITheme t) {
-        int total = lines.size();
-        if (total <= maxRows) return;
-
+    private void renderScrollbar(GuiGraphics g, int totalHpx, int scrollPx, int trackH, UITheme t) {
+        if (totalHpx <= trackH) return;
         int trackX = this.width - SB_W - SB_PAD;
         int trackY = CONTENT_Y;
-        int trackH = this.height - CONTENT_Y - 4;
         g.fill(trackX, trackY, trackX + SB_W, trackY + trackH, 0x33FFFFFF);
-
-        int maxOff = total - maxRows;
-        int thumbH = Math.max(16, trackH * maxRows / total);
-        int thumbY = trackY + (maxOff > 0 ? (trackH - thumbH) * scroll / maxOff : 0);
+        int maxOff = totalHpx - trackH;
+        int thumbH = Math.max(16, trackH * trackH / totalHpx);
+        int thumbY = trackY + (maxOff > 0 ? (trackH - thumbH) * scrollPx / maxOff : 0);
         int thumbColor = sbDragging ? 0xCCDDDDDD : (0x99000000 | (t.muted() & 0xFFFFFF));
         g.fill(trackX, thumbY, trackX + SB_W, thumbY + thumbH, thumbColor);
     }
 
     private int clampScroll(List<HelpLine> lines) {
-        int listH   = this.height - CONTENT_Y - 4;
-        int maxRows = Math.max(1, listH / LINE_H);
-        int max     = Math.max(0, lines.size() - maxRows);
-        int cur     = scrollPos.get(activeTab);
+        int listH = this.height - CONTENT_Y - 4;
+        int max   = Math.max(0, totalH(lines) - listH);
+        int cur   = scrollPos.get(activeTab);
         if (cur > max) { scrollPos.put(activeTab, max); return max; }
         if (cur < 0)   { scrollPos.put(activeTab, 0);   return 0; }
         return cur;
@@ -614,35 +744,105 @@ public class HelpScreen extends ScreenBase {
         if (item == Items.AIR) return;
         PoseHelper.push(g);
         PoseHelper.translate(g, x, y);
-        PoseHelper.scale(g, 0.75f, 0.75f);
+        PoseHelper.scale(g, 1.0f, 1.0f);
         g.renderItem(new ItemStack(item), 0, 0);
         PoseHelper.pop(g);
     }
 
+    private void renderSyntaxLine(GuiGraphics g, String text, int x, int y) {
+        SyntaxTheme st = SyntaxTheme.byId(NeoHouseConfig.get().syntaxTheme);
+        List<SyntaxHighlighter.Span> spList = highlighter.buildSpans(text);
+        int curX = x;
+        int drawn = 0;
+        for (SyntaxHighlighter.Span sp : spList) {
+            int lo = Math.max(drawn, sp.start());
+            int hi = Math.min(text.length(), sp.end());
+            if (lo >= hi) continue;
+            if (lo > drawn) {
+                String gap = text.substring(drawn, lo);
+                g.drawString(font, gap, curX, y, st.plain, false);
+                curX += font.width(gap);
+                drawn = lo;
+            }
+            String seg = text.substring(drawn, hi);
+            int col = sp.color() == 0 ? st.plain : sp.color();
+            g.drawString(font, seg, curX, y, col, false);
+            curX += font.width(seg);
+            drawn = hi;
+        }
+        if (drawn < text.length()) {
+            g.drawString(font, text.substring(drawn), curX, y, st.plain, false);
+        }
+    }
+
+    private int lineAtMouseY(List<HelpLine> lines, int scrollPx, double mouseY) {
+        if (mouseY < CONTENT_Y || mouseY >= this.height - 4) return -1;
+        int cumY = CONTENT_Y - scrollPx;
+        for (int i = 0; i < lines.size(); i++) {
+            int lh = lineH(lines.get(i));
+            if (mouseY >= cumY && mouseY < cumY + lh) return i;
+            cumY += lh;
+        }
+        return -1;
+    }
+
+    private int charAtX(String text, int textX, int clickX) {
+        int relX = Math.max(0, clickX - textX);
+        for (int i = 1; i <= text.length(); i++) {
+            int wPrev = font.width(text.substring(0, i - 1));
+            int wCur  = font.width(text.substring(0, i));
+            if (relX < (wPrev + wCur) / 2) return i - 1;
+        }
+        return text.length();
+    }
+
+    private static int textXForLine(HelpLine line) {
+        if (line.color() == COL_H) return PAD + 5;
+        return (line.icon() != null && !line.text().isEmpty()) ? PAD + ICON_PAD : PAD;
+    }
+
+    private int[] normalizedSel() {
+        if (selAnchorLine < selHeadLine ||
+                (selAnchorLine == selHeadLine && selAnchorChar <= selHeadChar))
+            return new int[]{selAnchorLine, selAnchorChar, selHeadLine, selHeadChar};
+        return new int[]{selHeadLine, selHeadChar, selAnchorLine, selAnchorChar};
+    }
+
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             List<HelpLine> lines = TAB_LINES.get(activeTab);
-            int scroll  = scrollPos.get(activeTab);
-            int listH   = this.height - CONTENT_Y - 4;
-            int maxRows = Math.max(1, listH / LINE_H);
-            if (lines.size() > maxRows) {
+            int scrollPx    = scrollPos.get(activeTab);
+            int listH       = this.height - CONTENT_Y - 4;
+            int totalHpx    = totalH(lines);
+            int contentRight = this.width - SB_W - SB_PAD - 2;
+            if (mouseX >= 0 && mouseX < contentRight && mouseY >= CONTENT_Y && mouseY < this.height - 4) {
+                int idx = lineAtMouseY(lines, scrollPx, mouseY);
+                if (idx >= 0) {
+                    int ch = charAtX(lines.get(idx).text(), textXForLine(lines.get(idx)), (int) mouseX);
+                    selAnchorLine = selHeadLine = idx;
+                    selAnchorChar = selHeadChar = ch;
+                    selTab = activeTab;
+                    selecting = true;
+                    return true;
+                }
+            }
+            if (totalHpx > listH) {
                 int trackX = this.width - SB_W - SB_PAD;
                 int trackY = CONTENT_Y;
-                int trackH = this.height - CONTENT_Y - 4;
                 if (mouseX >= trackX - 2 && mouseX <= trackX + SB_W + 2) {
-                    int maxOff = lines.size() - maxRows;
-                    int thumbH = Math.max(16, trackH * maxRows / lines.size());
-                    int thumbY = trackY + (maxOff > 0 ? (trackH - thumbH) * scroll / maxOff : 0);
+                    int maxOff = totalHpx - listH;
+                    int thumbH = Math.max(16, listH * listH / totalHpx);
+                    int thumbY = trackY + (maxOff > 0 ? (listH - thumbH) * scrollPx / maxOff : 0);
                     if (mouseY >= thumbY && mouseY < thumbY + thumbH) {
                         sbDragging = true;
                         sbDragStartY = (int) mouseY;
-                        sbDragStartScroll = scroll;
-                    } else if (mouseY >= trackY && mouseY < trackY + trackH) {
-                        int newScroll = (int) ((mouseY - trackY - thumbH / 2.0) * maxOff / (trackH - thumbH));
+                        sbDragStartScroll = scrollPx;
+                    } else if (mouseY >= trackY && mouseY < trackY + listH) {
+                        int newScroll = (int) ((mouseY - trackY - thumbH / 2.0) * maxOff / (listH - thumbH));
                         scrollPos.put(activeTab, Math.max(0, Math.min(maxOff, newScroll)));
                     }
                     return true;
@@ -654,6 +854,8 @@ public class HelpScreen extends ScreenBase {
             for (TabButton tb : tabButtons) {
                 if (mouseX >= tb.x() && mouseX < tb.x() + tb.w()) {
                     activeTab = tb.tab();
+                    selAnchorLine = selHeadLine = -1;
+                    selTab = null;
                     return true;
                 }
             }
@@ -663,14 +865,23 @@ public class HelpScreen extends ScreenBase {
 
     @Override
     protected boolean onMouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        if (selecting && button == 0) {
+            List<HelpLine> lines = TAB_LINES.get(activeTab);
+            int scrollPx = scrollPos.get(activeTab);
+            int lineIdx  = lineAtMouseY(lines, scrollPx, mouseY);
+            if (lineIdx < 0) lineIdx = mouseY < CONTENT_Y ? 0 : lines.size() - 1;
+            lineIdx = Math.max(0, Math.min(lines.size() - 1, lineIdx));
+            selHeadLine = lineIdx;
+            selHeadChar = charAtX(lines.get(lineIdx).text(), textXForLine(lines.get(lineIdx)), (int) mouseX);
+            return true;
+        }
         if (sbDragging && button == 0) {
             List<HelpLine> lines = TAB_LINES.get(activeTab);
-            int listH   = this.height - CONTENT_Y - 4;
-            int maxRows = Math.max(1, listH / LINE_H);
-            int trackH  = listH;
-            int thumbH  = Math.max(16, trackH * maxRows / lines.size());
-            int maxOff  = lines.size() - maxRows;
-            int slideH  = trackH - thumbH;
+            int listH    = this.height - CONTENT_Y - 4;
+            int totalHpx = totalH(lines);
+            int thumbH   = Math.max(16, listH * listH / totalHpx);
+            int maxOff   = totalHpx - listH;
+            int slideH   = listH - thumbH;
             if (slideH > 0) {
                 int delta = (int) (mouseY - sbDragStartY);
                 scrollPos.put(activeTab, Math.max(0, Math.min(maxOff, sbDragStartScroll + delta * maxOff / slideH)));
@@ -682,29 +893,52 @@ public class HelpScreen extends ScreenBase {
 
     @Override
     protected boolean onMouseReleased(double mouseX, double mouseY, int button) {
+        if (selecting && button == 0) selecting = false;
         if (sbDragging && button == 0) { sbDragging = false; return true; }
         return superMouseReleased(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int cur = scrollPos.get(activeTab);
-        if (scrollY > 0 && cur > 0) scrollPos.put(activeTab, cur - 1);
-        else if (scrollY < 0)       scrollPos.put(activeTab, cur + 1);
+        scrollPos.put(activeTab, scrollPos.get(activeTab) - (int)(scrollY * LINE_H * 3));
         return true;
     }
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
+        if (key == GLFW.GLFW_KEY_C && (mods & GLFW.GLFW_MOD_CONTROL) != 0) {
+            if (selTab == activeTab && selAnchorLine >= 0 && selHeadLine >= 0) {
+                int[] sel = normalizedSel();
+                if (sel[0] != sel[2] || sel[1] != sel[3]) {
+                    List<HelpLine> all = TAB_LINES.get(activeTab);
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = sel[0]; i <= sel[2]; i++) {
+                        if (i > sel[0]) sb.append('\n');
+                        String txt = all.get(i).text();
+                        int s = (i == sel[0]) ? Math.min(sel[1], txt.length()) : 0;
+                        int e = (i == sel[2]) ? Math.min(sel[3], txt.length()) : txt.length();
+                        sb.append(txt, s, e);
+                    }
+                    minecraft.keyboardHandler.setClipboard(sb.toString());
+                    return true;
+                }
+            }
+        }
+        if (key == GLFW.GLFW_KEY_ESCAPE && selAnchorLine >= 0) {
+            selAnchorLine = selHeadLine = -1;
+            selTab = null;
+            return true;
+        }
         int cur   = scrollPos.get(activeTab);
         List<HelpLine> lines = TAB_LINES.get(activeTab);
+        int listH = this.height - CONTENT_Y - 4;
         switch (key) {
-            case GLFW.GLFW_KEY_UP        -> { if (cur > 0) scrollPos.put(activeTab, cur - 1); return true; }
-            case GLFW.GLFW_KEY_DOWN      -> { scrollPos.put(activeTab, cur + 1); return true; }
-            case GLFW.GLFW_KEY_PAGE_UP   -> { scrollPos.put(activeTab, Math.max(0, cur - 10)); return true; }
-            case GLFW.GLFW_KEY_PAGE_DOWN -> { scrollPos.put(activeTab, cur + 10); return true; }
-            case GLFW.GLFW_KEY_HOME      -> { scrollPos.put(activeTab, 0); return true; }
-            case GLFW.GLFW_KEY_END       -> { scrollPos.put(activeTab, lines.size()); return true; }
+            case GLFW.GLFW_KEY_UP        -> { scrollPos.put(activeTab, cur - LINE_H);            return true; }
+            case GLFW.GLFW_KEY_DOWN      -> { scrollPos.put(activeTab, cur + LINE_H);            return true; }
+            case GLFW.GLFW_KEY_PAGE_UP   -> { scrollPos.put(activeTab, cur - listH);             return true; }
+            case GLFW.GLFW_KEY_PAGE_DOWN -> { scrollPos.put(activeTab, cur + listH);             return true; }
+            case GLFW.GLFW_KEY_HOME      -> { scrollPos.put(activeTab, 0);                       return true; }
+            case GLFW.GLFW_KEY_END       -> { scrollPos.put(activeTab, totalH(lines));           return true; }
         }
         return superKeyPressed(key, scan, mods);
     }

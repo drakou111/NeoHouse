@@ -8,20 +8,28 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class CreativeGiveAction extends Action {
     private final String rawItemData;
+    private final Integer slot;
 
     public CreativeGiveAction(String rawItemData) {
         this.rawItemData = rawItemData;
+        this.slot = null;
+    }
+
+    public CreativeGiveAction(String rawItemData, int slot) {
+        this.rawItemData = rawItemData;
+        this.slot = slot;
     }
 
     @Override
     public boolean run(Minecraft mc) {
         if (mc.player == null || mc.getConnection() == null || mc.level == null) return true;
 
-        if (!mc.player.isCreative()) {
+        if (!mc.player.getAbilities().instabuild) {
             throw new InterruptActionException("Player must be in creative mode to give items.");
         }
 
@@ -36,7 +44,7 @@ public class CreativeGiveAction extends Action {
             }
         }
 
-        int creativeSlot = mc.player.containerMenu.slots.size() - 29; // hotbar 8th slot
+        int creativeSlot = Objects.requireNonNullElseGet(this.slot, () -> mc.player.containerMenu.slots.size() - 29);
         mc.getConnection().send(new ServerboundSetCreativeModeSlotPacket(creativeSlot, finalStack.copy()));
         return true;
     }

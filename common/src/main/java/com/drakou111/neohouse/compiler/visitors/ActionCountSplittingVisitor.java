@@ -16,6 +16,8 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
     private final List<VoidFunctionNode> all = new ArrayList<>();
     private int nextHelperId = 0;
 
+    public int getHelpersCreated() { return all.size(); }
+
     @Override
     public MainNode analyze(MainNode main) {
         MainNode rewritten = (MainNode) main.accept(this);

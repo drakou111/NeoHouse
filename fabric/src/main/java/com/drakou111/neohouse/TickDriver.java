@@ -1,15 +1,16 @@
 package com.drakou111.neohouse;
 
-import com.drakou111.neohouse.actions.ScreenEvents;
+import com.drakou111.neohouse.utils.MessageUtils;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.lwjgl.glfw.GLFW;
 
 public class TickDriver {
 
-    private static Screen previousScreen = null;
     private static Screen pendingScreen = null;
+    private static boolean cancelKeyWasDown = false;
 
     public static void openScreenNextTick(Screen screen) {
         pendingScreen = screen;
@@ -25,12 +26,15 @@ public class TickDriver {
             pendingScreen = null;
         }
 
-        Screen current = client.screen;
-        if (current != previousScreen) {
-            if (previousScreen != null) ScreenEvents.onScreenClosed(previousScreen);
-            if (current != null) ScreenEvents.onScreenOpened(current);
-            previousScreen = current;
+        int boundKey = CancelKeybind.CANCEL_KEY.getKeyCode();
+        long windowHandle = GLFW.glfwGetCurrentContext();
+        boolean cancelKeyDown = windowHandle != 0L && boundKey >= 0
+                && GLFW.glfwGetKey(windowHandle, boundKey) == GLFW.GLFW_PRESS;
+        if (cancelKeyDown && !cancelKeyWasDown && SequenceManager.isRunning()) {
+            SequenceManager.cancelAction();
+            MessageUtils.debugToChat("Script cancelled.");
         }
+        cancelKeyWasDown = cancelKeyDown;
         SequenceManager.tick(client);
     }
 }

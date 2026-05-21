@@ -17,6 +17,7 @@ public class NeoHouseConfig {
 
     public boolean verboseActions              = false;
     public int     clickDelay                 = 2;
+    public int     actionTimeoutTicks         = 200;
     public boolean showArgumentHints          = true;
     public boolean showArgumentRecommendations = true;
     public boolean autoIndent                  = true;
@@ -47,6 +48,7 @@ public class NeoHouseConfig {
             JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
             if (obj.has("verboseActions"))             INSTANCE.verboseActions             = obj.get("verboseActions").getAsBoolean();
             if (obj.has("clickDelay"))               INSTANCE.clickDelay                 = obj.get("clickDelay").getAsInt();
+            if (obj.has("actionTimeoutTicks"))        INSTANCE.actionTimeoutTicks         = obj.get("actionTimeoutTicks").getAsInt();
             if (obj.has("showArgumentHints"))          INSTANCE.showArgumentHints          = obj.get("showArgumentHints").getAsBoolean();
             if (obj.has("showArgumentRecommendations")) INSTANCE.showArgumentRecommendations = obj.get("showArgumentRecommendations").getAsBoolean();
             if (obj.has("autoIndent"))                 INSTANCE.autoIndent                  = obj.get("autoIndent").getAsBoolean();
@@ -63,6 +65,7 @@ public class NeoHouseConfig {
         JsonObject obj = new JsonObject();
         obj.addProperty("verboseActions",              verboseActions);
         obj.addProperty("clickDelay",                 clickDelay);
+        obj.addProperty("actionTimeoutTicks",         actionTimeoutTicks);
         obj.addProperty("showArgumentHints",          showArgumentHints);
         obj.addProperty("showArgumentRecommendations", showArgumentRecommendations);
         obj.addProperty("autoIndent",                  autoIndent);

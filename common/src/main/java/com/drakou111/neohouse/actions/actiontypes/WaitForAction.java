@@ -1,18 +1,17 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
+import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
-import com.drakou111.neohouse.platform.Platforms;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
 public class WaitForAction extends Action {
-    private static final int TIMEOUT_TICKS = 200;
 
     private final Class<? extends Screen> screenClass;
     private final boolean waitForOpen;
-    private boolean done = false;
-    private boolean registered = false;
+    private Screen screenAtStart = null;
+    private boolean initialized = false;
     private int ticksWaited = 0;
 
     public WaitForAction(Class<? extends Screen> screenClass, boolean waitForOpen) {
@@ -22,32 +21,29 @@ public class WaitForAction extends Action {
 
     @Override
     public boolean run(Minecraft mc) {
-        if (!registered) {
-            Platforms.get().watchForScreen(this);
-            registered = true;
+        if (!initialized) {
+            screenAtStart = mc.screen;
+            initialized = true;
         }
-        if (done) return true;
-        if (++ticksWaited > TIMEOUT_TICKS) {
-            throw new InterruptActionException("Timed out waiting for UI screen to " + (waitForOpen ? "open" : "close") + ".");
+        if (++ticksWaited > NeoHouseConfig.get().actionTimeoutTicks) {
+            throw new InterruptActionException("Timed out waiting for screen to " + (waitForOpen ? "open" : "close") + ".");
         }
-        return false;
+        Screen current = mc.screen;
+        if (waitForOpen) {
+            return current != null && current != screenAtStart && screenClass.isAssignableFrom(current.getClass());
+        } else {
+            return current == null || !screenClass.isAssignableFrom(current.getClass());
+        }
     }
 
-    public boolean matchesScreen(Screen screen, boolean isOpening) {
-        return isOpening == waitForOpen && screen != null && screenClass.isAssignableFrom(screen.getClass());
-    }
-
-    public boolean isDone() {
-        return done;
-    }
-
-    public void markDone() {
-        this.done = true;
+    @Override
+    public String getDebugName() {
+        return "Wait for screen to " + (waitForOpen ? "open" : "close") + ": " + screenClass.getSimpleName();
     }
 
     public void reset() {
-        this.done = false;
-        this.registered = false;
+        this.initialized = false;
+        this.screenAtStart = null;
         this.ticksWaited = 0;
     }
 }

@@ -2,15 +2,12 @@ package com.drakou111.neohouse.constants;
 
 import com.drakou111.neohouse.compiler.enums.Param;
 import com.drakou111.neohouse.constants.conditions.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-/*********************\
- *   ADD CONDITION   *
- \********************/
 
 public enum AddCondition {
     PORTAL_TYPE(true, "inPortalType",

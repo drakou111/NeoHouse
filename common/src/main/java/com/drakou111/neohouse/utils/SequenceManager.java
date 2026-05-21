@@ -29,6 +29,10 @@ public class SequenceManager {
         completedSteps++;
     }
 
+    public static void addSteps(int n) {
+        totalSteps += n;
+    }
+
     public static long getElapsedMs() { return System.currentTimeMillis() - startTimeMs; }
     public static int getTotalSteps()     { return totalSteps; }
     public static int getCompletedSteps() { return completedSteps; }
@@ -37,7 +41,7 @@ public class SequenceManager {
         if (currentAction == null) return;
 
         if (!HousingCheck.isInHousing()) {
-            MessageUtils.errorToChat("Script stopped: no longer in Housing.");
+            MessageUtils.errorToChat("Script stopped: not in Housing.");
             currentAction = null;
             return;
         }

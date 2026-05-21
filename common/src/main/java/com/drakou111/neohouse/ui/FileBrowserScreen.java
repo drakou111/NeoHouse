@@ -3,17 +3,19 @@ package com.drakou111.neohouse.ui;
 import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.UIOpacity;
 import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import com.drakou111.neohouse.compat.ScreenBase;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,8 +65,6 @@ public class FileBrowserScreen extends ScreenBase {
         this.currentPath = rootPath;
     }
 
-    // ── lifecycle ─────────────────────────────────────────────────────────────
-
     @Override
     protected void init() {
         loadEntries();
@@ -86,7 +86,6 @@ public class FileBrowserScreen extends ScreenBase {
     private void rebuildAll() {
         clearWidgets();
 
-        // ── Header row 1: title area + Config + X ──────────────────────────
         addRenderableWidget(Button.builder(
                 Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
                 .bounds(this.width - PAD - 18, 5, 18, 18).build());
@@ -94,7 +93,6 @@ public class FileBrowserScreen extends ScreenBase {
         addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig())
                 .bounds(this.width - PAD - 18 - 4 - 54, 5, 54, 18).build());
 
-        // ── Header row 2: Back + create buttons ────────────────────────────
         if (currentPath.equals(rootPath)) {
             addRenderableWidget(Button.builder(Component.literal("< Back"), b -> goBack())
                     .bounds(PAD, 28, 60, 16).build());
@@ -107,7 +105,6 @@ public class FileBrowserScreen extends ScreenBase {
         addRenderableWidget(Button.builder(Component.literal("+ Folder"), b -> newFolder())
                 .bounds(PAD + 64 + 64, 28, 80, 16).build());
 
-        // ── Footer: action buttons for selected entry ───────────────────────
         if (selectedIdx >= 0 && selectedIdx < entries.size()) {
             Path    entry  = entries.get(selectedIdx);
             boolean isDir  = Files.isDirectory(entry);
@@ -128,10 +125,8 @@ public class FileBrowserScreen extends ScreenBase {
         }
     }
 
-    // ── rendering ─────────────────────────────────────────────────────────────
-
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
@@ -139,17 +134,19 @@ public class FileBrowserScreen extends ScreenBase {
         UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
 
-        // Header panel
         g.fill(0, 0, width, HEADER_H, t.panel(o.panelAlpha));
         g.fill(0, HEADER_H - 1, width, HEADER_H, t.accent());
 
-        g.drawString(font, "NeoHouse  File Browser", PAD, 8, 0xFFFFFFFF);
+        int logoSize = 18;
+        int logoX = PAD;
+        int textX = logoX + logoSize + 4;
+        RenderHelper.renderLogo(g, logoX, (8 + 28 - logoSize) / 2, logoSize, t.accent());
+        g.drawString(font, "NeoHouse — File Browser", textX, 8, 0xFFFFFFFF);
         String rel = rootPath.equals(currentPath)
                 ? "/"
                 : "/" + rootPath.relativize(currentPath).toString().replace('\\', '/') + "/";
-        g.drawString(font, rel, PAD, 19, t.muted());
+        g.drawString(font, rel, textX, 20, t.muted());
 
-        // Footer panel
         g.fill(0, height - FOOTER_H, width, height, t.panel(o.bgAlpha));
         g.fill(0, height - FOOTER_H, width, height - FOOTER_H + 1, t.accent());
         renderFooterInfo(g, t);
@@ -236,8 +233,6 @@ public class FileBrowserScreen extends ScreenBase {
         }
     }
 
-    // ── input ─────────────────────────────────────────────────────────────────
-
     @Override
     protected boolean onMouseClicked(double mx, double my, int button) {
         // Scrollbar interaction
@@ -265,10 +260,8 @@ public class FileBrowserScreen extends ScreenBase {
             }
         }
 
-        // Delegate to registered widgets (header + footer buttons)
         if (superMouseClicked(mx, my, button)) return true;
 
-        // Row click (list area only)
         if (my >= HEADER_H && my < height - FOOTER_H) {
             int maxRows = maxVisibleRows();
             int end     = Math.min(scrollOffset + maxRows, entries.size());
@@ -294,7 +287,6 @@ public class FileBrowserScreen extends ScreenBase {
                 return true;
             }
 
-            // Clicked empty list space — deselect
             if (selectedIdx != -1) {
                 selectedIdx = -1;
                 rebuildAll();
@@ -337,8 +329,6 @@ public class FileBrowserScreen extends ScreenBase {
         else if (scrollY < 0 && scrollOffset < maxOff) scrollOffset++;
         return true;
     }
-
-    // ── actions ───────────────────────────────────────────────────────────────
 
     private void handleBtnClick(Path entry, boolean isDir, int idx) {
         if (isDir) {
@@ -442,14 +432,23 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     private void openInExplorer(Path file) {
-        try { new ProcessBuilder("explorer", file.getParent().toString()).start(); }
-        catch (IOException e) { MessageUtils.errorToChat("Explorer failed: " + e.getMessage()); }
+        Path folder = Files.isDirectory(file) ? file : file.getParent();
+        try {
+            if (java.awt.Desktop.isDesktopSupported()) {
+                java.awt.Desktop.getDesktop().open(folder.toFile());
+            } else {
+                MessageUtils.errorToChat("Opening folders is not supported on this system.");
+            }
+        } catch (IOException e) {
+            MessageUtils.errorToChat("Could not open folder: " + e.getMessage());
+        }
     }
 
     private void newFile() {
         Minecraft.getInstance().setScreen(new InputDialogScreen(
                 "New file name:", "new.nh", this,
                 name -> {
+                    if (!name.endsWith(".nh")) name += ".nh";
                     Path target = currentPath.resolve(name);
                     if (Files.exists(target)) { MessageUtils.errorToChat("\"" + name + "\" already exists."); return; }
                     try { Files.createFile(target); }

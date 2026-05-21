@@ -1,10 +1,6 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.BuildConstants;
-import com.drakou111.neohouse.NeoHouseConfig;
-import com.drakou111.neohouse.UIOpacity;
-import com.drakou111.neohouse.UITheme;
-import com.drakou111.neohouse.NeoHouse;
+import com.drakou111.neohouse.*;
 import com.drakou111.neohouse.ui.hint.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

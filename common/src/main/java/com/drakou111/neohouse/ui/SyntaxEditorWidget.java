@@ -2,6 +2,8 @@ package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.WidgetBase;
 import com.drakou111.neohouse.compiler.enums.Param;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
@@ -10,12 +12,9 @@ import com.drakou111.neohouse.constants.Placeholder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import com.drakou111.neohouse.compat.RenderHelper;
-import com.drakou111.neohouse.compat.WidgetBase;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -24,7 +23,6 @@ import java.util.regex.Pattern;
 
 public class SyntaxEditorWidget extends WidgetBase {
 
-    // ── Text state ────────────────────────────────────────────────────────────
     private final StringBuilder text = new StringBuilder();
     private int cursor    = 0;
     private int selAnchor = 0;
@@ -34,15 +32,15 @@ public class SyntaxEditorWidget extends WidgetBase {
     private long lastClickTime = 0;
     private int  lastClickPos  = -1;
 
-    // ── Error state ───────────────────────────────────────────────────────────
+    private List<String> lineCache   = null;
+    private int[]        offsetCache = null;
+
     private record ErrorSpan(int line, int colStart, int tokenLen, String message) {}
     private List<ErrorSpan> errorSpans = new ArrayList<>();
     private String errorMsg = null; // always the first error's message
 
-    // ── Callbacks ─────────────────────────────────────────────────────────────
     private Runnable onChange;
 
-    // ── Layout ────────────────────────────────────────────────────────────────
     private static final int LINE_H          = 10;
     private static final int GUTTER_W        = 30;
     private static final int PAD_X           = 4;
@@ -52,12 +50,10 @@ public class SyntaxEditorWidget extends WidgetBase {
     private static final int SB_W            = 4;
     private static final int SB_PAD          = 2;
 
-    // ── Vertical scrollbar drag state ─────────────────────────────────────────
     private boolean sbDragging            = false;
     private int     sbDragStartY          = 0;
     private int     sbDragStartScrollLine = 0;
 
-    // ── Find / Replace bar ────────────────────────────────────────────────────
     private int  findMode          = 0; // 0=off, 1=find-only, 2=find+replace
     private final StringBuilder findQuery    = new StringBuilder();
     private final StringBuilder replaceQuery = new StringBuilder();
@@ -67,43 +63,34 @@ public class SyntaxEditorWidget extends WidgetBase {
     private int  replaceSelAnchor  = 0;
     private int  findFocused       = 0; // 0=find field, 1=replace field
     private int  findMatchIndex    = -1;
-    private List<Integer> findMatches = new ArrayList<>();
-    // cached button bounds for click detection
+    private final List<Integer> findMatches = new ArrayList<>();
     private int findBtnReplaceX = -1, findBtnReplaceY = -1;
     private int findBtnReplaceAllX = -1, findBtnReplaceAllY = -1;
     private static final int FIND_BAR_W   = 260;
     private static final int FIND_FIELD_H = 12;
     private static final int FIND_BTN_W   = 60;
 
-    // ── Highlight spans ───────────────────────────────────────────────────────
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
     private List<SyntaxHighlighter.Span> spans = new ArrayList<>();
 
-    // ── Inline hints ──────────────────────────────────────────────────────────
-    /** charOffset is position within the line string where the hint is injected. */
     private record InlineHint(int charOffset, String displayText, boolean isActive) {}
 
-    // ── Undo / Redo ───────────────────────────────────────────────────────────
     private final EditorUndoManager undoManager = new EditorUndoManager();
 
-    // ── Enum suggestions ──────────────────────────────────────────────────────
     private String[] activeSuggestions     = null;
     private int      suggestionIndex       = 0;
     private int      suggestionScrollOffset = 0;
     private int      suggestionTypedLen    = 0;
     private boolean  suggestionIsString    = false;
     private static final int MAX_VISIBLE_SUGGESTIONS = 8;
-    // Cached panel bounds for mouse-over detection in mouseScrolled
     private int suggPanelX = -1, suggPanelY = -1, suggPanelW = 0, suggPanelH = 0;
 
-    // ── Parameter hints (cursor tracking) ────────────────────────────────────
     private int    paramHintIndex = -1;
     private String paramHintFunc  = null;
     private static final Pattern USER_FUNC_PAT =
             Pattern.compile("\\bfunction\\b\\s+(?:\\w+\\s+)?(\\w+)\\s*\\(([^)]*)\\)");
     private static final Pattern PH_SUGGEST_PAT = Pattern.compile("ph\\.(\\w*)$");
 
-    // Inline-hint labels for placeholder parameters (names not stored in the enum)
     private static final Map<String, String[]> PH_PARAM_HINTS = Map.ofEntries(
         Map.entry("playerTeamPlayers",   new String[]{"teamName: string"}),
         Map.entry("dateDayTimezone",     new String[]{"timezone: string"}),
@@ -132,10 +119,12 @@ public class SyntaxEditorWidget extends WidgetBase {
                 .replace("\r\n", "\n").replace("\r", "\n")
                 .replace("\t", " ".repeat(SPACES_PER_TAB));
         text.append(normalized);
-        cursor    = 0;
-        selAnchor = 0;
-        scrollLine = 0;
-        scrollX    = 0;
+        cursor      = 0;
+        selAnchor   = 0;
+        scrollLine  = 0;
+        scrollX     = 0;
+        lineCache   = null;
+        offsetCache = null;
         rebuildSpans();
     }
 
@@ -165,7 +154,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         return false;
     }
 
-    /** Returns the message of the error span that the cursor/selection overlaps, or null. */
     private String getActiveErrorMsg() {
         if (errorSpans.isEmpty()) return null;
         int selLo = Math.min(cursor, selAnchor);
@@ -186,8 +174,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         return null;
     }
 
-    // ── Error bar height (dynamic word-wrap) ──────────────────────────────────
-
     private int errorBarH() {
         if (errorMsg == null) return 0;
         Font font = Minecraft.getInstance().font;
@@ -201,7 +187,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         String[] words = line.split(" ", -1);
         StringBuilder current = new StringBuilder();
         for (String word : words) {
-            if (current.length() == 0) {
+            if (current.isEmpty()) {
                 current.append(word);
             } else {
                 String candidate = current + " " + word;
@@ -213,12 +199,10 @@ public class SyntaxEditorWidget extends WidgetBase {
                 }
             }
         }
-        if (current.length() > 0) result.add(current.toString());
+        if (!current.isEmpty()) result.add(current.toString());
         if (result.isEmpty()) result.add("");
         return result;
     }
-
-    // ── Rendering ─────────────────────────────────────────────────────────────
 
     @Override
     public void renderWidget(GuiGraphics g, int mouseX, int mouseY, float pt) {
@@ -250,7 +234,6 @@ public class SyntaxEditorWidget extends WidgetBase {
             String line      = lines.get(li);
             int    lineStart = lineOffsets[li];
 
-            // Compute inline hints for this line
             String activeFunc = (isFocused() && li == curLC[0]) ? paramHintFunc : null;
             int    activeIdx  = (isFocused() && li == curLC[0]) ? paramHintIndex : -1;
             List<InlineHint> lineHints = computeLineHints(lines, li, activeFunc, activeIdx);
@@ -259,8 +242,7 @@ public class SyntaxEditorWidget extends WidgetBase {
                 g.fill(x0 + GUTTER_W + 1, ry - 1, x0 + width, ry + LINE_H - 1, 0x44FF3333);
             }
 
-            // Find match highlights
-            if (findMode > 0 && !findMatches.isEmpty() && findQuery.length() > 0) {
+            if (findMode > 0 && !findMatches.isEmpty() && !findQuery.isEmpty()) {
                 int qLen = findQuery.length();
                 for (int mi = 0; mi < findMatches.size(); mi++) {
                     int matchOff = findMatches.get(mi);
@@ -352,12 +334,10 @@ public class SyntaxEditorWidget extends WidgetBase {
     private void renderScrollbar(GuiGraphics g, int x0, int y0, int codeH, int totalLines, int visLines, UITheme t) {
         if (totalLines <= visLines) return;
         int trackX = x0 + width - SB_W - SB_PAD;
-        int trackY = y0;
-        int trackH = codeH;
-        g.fill(trackX, trackY, trackX + SB_W, trackY + trackH, 0x33FFFFFF);
+        g.fill(trackX, y0, trackX + SB_W, y0 + codeH, 0x33FFFFFF);
         int maxOff  = totalLines - visLines;
-        int thumbH  = Math.max(8, trackH * visLines / totalLines);
-        int thumbY  = trackY + (maxOff > 0 ? (trackH - thumbH) * scrollLine / maxOff : 0);
+        int thumbH  = Math.max(8, codeH * visLines / totalLines);
+        int thumbY  = y0 + (maxOff > 0 ? (codeH - thumbH) * scrollLine / maxOff : 0);
         int color   = sbDragging ? 0xCCDDDDDD : (0x99000000 | (t.muted() & 0xFFFFFF));
         g.fill(trackX, thumbY, trackX + SB_W, thumbY + thumbH, color);
     }
@@ -371,8 +351,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
         return s.trim();
     }
-
-    // ── Inline hint computation ───────────────────────────────────────────────
 
     private List<InlineHint> computeLineHints(List<String> allLines, int lineIndex, String activeFuncName, int activeParamIdx) {
         if (!NeoHouseConfig.get().showArgumentHints) return List.of();
@@ -432,8 +410,7 @@ public class SyntaxEditorWidget extends WidgetBase {
             i++;
         }
 
-        // Merge with continuation hints (args from calls that started on a previous line)
-        List<InlineHint> contHints = computeContinuationHints(allLines, lineIndex, activeFuncName, activeParamIdx);
+        List<InlineHint> contHints = computeContinuationHints(allLines, lineIndex, getCachedOffsets(), activeFuncName, activeParamIdx);
         if (!contHints.isEmpty()) {
             hints.addAll(contHints);
             hints.sort(Comparator.comparingInt(InlineHint::charOffset));
@@ -442,10 +419,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         return hints;
     }
 
-    /** For a line that is a continuation of a multi-line function call started on a previous line,
-     *  returns inline hints for the argument positions that appear on this line. */
-    private List<InlineHint> computeContinuationHints(List<String> allLines, int lineIndex, String activeFuncName, int activeParamIdx) {
-        int[] offs = buildLineOffsets(allLines);
+    private List<InlineHint> computeContinuationHints(List<String> allLines, int lineIndex, int[] offs, String activeFuncName, int activeParamIdx) {
         int lineStart = offs[lineIndex];
         if (lineStart == 0) return List.of();
 
@@ -470,7 +444,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
         if (funcParenPos < 0) return List.of();
 
-        // Extract the function name immediately before the '('
         int nameEnd = funcParenPos;
         while (nameEnd > 0 && fullText.charAt(nameEnd - 1) == ' ') nameEnd--;
         int nameStart = nameEnd;
@@ -482,10 +455,9 @@ public class SyntaxEditorWidget extends WidgetBase {
         List<String> paramLabels = resolveParamNames(funcName);
         if (paramLabels == null || paramLabels.isEmpty()) return List.of();
 
-        // Forward scan from '(' to lineStart to determine current argIndex and atArgStart state
         int argIndex = 0;
         int scanDepth = 0;
-        boolean atArgStart = true; // immediately after '(' is a potential arg start
+        boolean atArgStart = true;
 
         for (int i = funcParenPos + 1; i < lineStart; i++) {
             char c = fullText.charAt(i);
@@ -497,9 +469,8 @@ public class SyntaxEditorWidget extends WidgetBase {
                 scanDepth++;
                 atArgStart = false;
             } else if (c == ')' || c == ']' || c == '}') {
-                if (scanDepth == 0) return List.of(); // call ended before this line
+                if (scanDepth == 0) return List.of();
                 scanDepth--;
-                atArgStart = false;
             } else if (c == ',' && scanDepth == 0) {
                 argIndex++;
                 atArgStart = true;
@@ -508,15 +479,12 @@ public class SyntaxEditorWidget extends WidgetBase {
             }
         }
 
-        // Now scan the current line to add hints
         List<InlineHint> hints = new ArrayList<>();
         String curLine = allLines.get(lineIndex);
         int col = 0;
 
-        // Skip leading whitespace
         while (col < curLine.length() && curLine.charAt(col) == ' ') col++;
 
-        // If we're at the start of an arg on this line, emit a hint
         if (atArgStart && col < curLine.length() && curLine.charAt(col) != ')' && argIndex < paramLabels.size()) {
             String label = paramLabels.get(argIndex);
             int colon = label.indexOf(':');
@@ -525,7 +493,6 @@ public class SyntaxEditorWidget extends WidgetBase {
             hints.add(new InlineHint(col, name + ": ", isActive));
         }
 
-        // Continue scanning for additional comma-separated args on this line
         while (col < curLine.length()) {
             char c = curLine.charAt(col);
             if (c == '"') {
@@ -586,10 +553,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         return result;
     }
 
-    /**
-     * Returns pixel width from the left edge of the line to character column {@code col},
-     * accounting for any inline hints injected before that column.
-     */
     private int lineColToPixelX(Font font, String line, int col, List<InlineHint> hints) {
         int charPos = 0;
         int pixW    = 0;
@@ -607,10 +570,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         return pixW;
     }
 
-    /**
-     * Maps a pixel X offset (relative to codeX()) on a line back to a character column,
-     * accounting for inline hints.
-     */
     private int pixelXToLineCol(Font font, String line, int relX, List<InlineHint> hints) {
         int charPos = 0;
         int pixConsumed = 0;
@@ -668,11 +627,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
     }
 
-    /**
-     * Draws line[from..to) with the given color, injecting any inline hints whose
-     * charOffset falls in [from, to).
-     * Returns {newCurX, to, newHintPtr}.
-     */
     private int[] drawSegment(GuiGraphics g, Font font, String line,
                                int from, int to, int color,
                                List<InlineHint> hints, int hintPtr,
@@ -713,8 +667,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         spans = highlighter.buildSpans(text.toString());
     }
 
-    // ── Input handling ────────────────────────────────────────────────────────
-
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
         boolean ctrl  = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
@@ -742,8 +694,9 @@ public class SyntaxEditorWidget extends WidgetBase {
                 case GLFW.GLFW_KEY_Y -> { redo();                return true; }
                 case GLFW.GLFW_KEY_HOME  -> { moveCursor(0,             shift); return true; }
                 case GLFW.GLFW_KEY_END   -> { moveCursor(text.length(), shift); return true; }
-                case GLFW.GLFW_KEY_LEFT  -> { moveWordLeft(shift);       return true; }
-                case GLFW.GLFW_KEY_RIGHT -> { moveWordRight(shift);      return true; }
+                case GLFW.GLFW_KEY_LEFT      -> { moveWordLeft(shift);       return true; }
+                case GLFW.GLFW_KEY_RIGHT     -> { moveWordRight(shift);      return true; }
+                case GLFW.GLFW_KEY_BACKSPACE -> { deleteWordBackward();       return true; }
             }
         }
 
@@ -784,7 +737,6 @@ public class SyntaxEditorWidget extends WidgetBase {
     protected boolean onMouseClicked(double mx, double my, int btn) {
         if (!isMouseOver(mx, my)) { setFocused(false); activeSuggestions = null; return false; }
 
-        // Find bar button clicks
         if (findMode == 2 && btn == 0) {
             int btnH = 11;
             if (findBtnReplaceX >= 0 && mx >= findBtnReplaceX && mx < findBtnReplaceX + FIND_BTN_W
@@ -797,19 +749,17 @@ public class SyntaxEditorWidget extends WidgetBase {
             }
         }
 
-        // Find bar field click to focus and position cursor
         if (findMode > 0 && btn == 0) {
             Font font = Minecraft.getInstance().font;
             int x0 = getX(), y0 = getY();
             int bx = x0 + width - FIND_BAR_W - 2;
             int by = y0 + 2;
-            String countLabel = findQuery.length() == 0 ? "" :
+            String countLabel = findQuery.isEmpty() ? "" :
                     findMatches.isEmpty() ? "no matches" : (findMatchIndex + 1) + "/" + findMatches.size();
             int labelW = countLabel.isEmpty() ? 0 : font.width(countLabel) + 4;
             int fieldW = FIND_BAR_W - 12 - labelW;
             int fy = by + 4;
             int fx = bx + 4;
-            // Find field click
             if (mx >= fx && mx < fx + fieldW && my >= fy && my < fy + FIND_FIELD_H) {
                 findFocused = 0;
                 int col = findFieldClickToCol(font, findQuery, (int)(mx - fx - 2), findCursor);
@@ -827,7 +777,6 @@ public class SyntaxEditorWidget extends WidgetBase {
             }
         }
 
-        // Vertical scrollbar click
         int x0 = getX(), y0 = getY();
         int errorH = errorBarH();
         int codeH  = height - errorH;
@@ -835,24 +784,22 @@ public class SyntaxEditorWidget extends WidgetBase {
         int visLines = Math.max(1, (codeH - PAD_Y * 2) / LINE_H);
         if (lines.size() > visLines) {
             int trackX = x0 + width - SB_W - SB_PAD;
-            int trackH = codeH;
-            if (mx >= trackX - 2 && mx <= trackX + SB_W + 2 && my >= y0 && my < y0 + trackH) {
+            if (mx >= trackX - 2 && mx <= trackX + SB_W + 2 && my >= y0 && my < y0 + codeH) {
                 int maxOff = lines.size() - visLines;
-                int thumbH = Math.max(8, trackH * visLines / lines.size());
-                int thumbY = y0 + (maxOff > 0 ? (trackH - thumbH) * scrollLine / maxOff : 0);
+                int thumbH = Math.max(8, codeH * visLines / lines.size());
+                int thumbY = y0 + (codeH - thumbH) * scrollLine / maxOff;
                 if (my >= thumbY && my < thumbY + thumbH) {
                     sbDragging            = true;
                     sbDragStartY          = (int) my;
                     sbDragStartScrollLine = scrollLine;
                 } else {
-                    int newScroll = (int) ((my - y0 - thumbH / 2.0) * maxOff / Math.max(1, trackH - thumbH));
+                    int newScroll = (int) ((my - y0 - thumbH / 2.0) * maxOff / Math.max(1, codeH - thumbH));
                     scrollLine = Math.max(0, Math.min(maxOff, newScroll));
                 }
                 return true;
             }
         }
 
-        // Suggestion panel click — single selects, double applies
         if (activeSuggestions != null && suggPanelX >= 0
                 && mx >= suggPanelX && mx < suggPanelX + suggPanelW
                 && my >= suggPanelY && my < suggPanelY + suggPanelH) {
@@ -898,10 +845,9 @@ public class SyntaxEditorWidget extends WidgetBase {
             int codeH  = height - errorH;
             List<String> lines = getLines();
             int visLines = Math.max(1, (codeH - PAD_Y * 2) / LINE_H);
-            int trackH   = codeH;
-            int thumbH   = Math.max(8, trackH * visLines / lines.size());
+            int thumbH   = Math.max(8, codeH * visLines / lines.size());
             int maxOff   = Math.max(0, lines.size() - visLines);
-            int slideH   = trackH - thumbH;
+            int slideH   = codeH - thumbH;
             if (slideH > 0) {
                 int delta = (int) (my - sbDragStartY);
                 scrollLine = Math.max(0, Math.min(maxOff, sbDragStartScrollLine + delta * maxOff / slideH));
@@ -946,10 +892,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         return true;
     }
 
-    // ── Text editing ──────────────────────────────────────────────────────────
-
     private void insertChar(char c) {
-        // Capture auto-indent info before mutating the text
         String autoIndentStr = "";
         if (c == '\n' && NeoHouseConfig.get().autoIndent) {
             List<String> lines = getLines();
@@ -1092,6 +1035,34 @@ public class SyntaxEditorWidget extends WidgetBase {
         onTextChanged();
     }
 
+    private void deleteWordBackward() {
+        if (hasSelection()) { pushUndo(); deleteSelectionInternal(); onTextChanged(); return; }
+        if (cursor <= 0) return;
+        int start = wordLeftPos(cursor);
+        if (start == cursor) return;
+        pushUndo();
+        text.delete(start, cursor);
+        cursor    = start;
+        selAnchor = cursor;
+        onTextChanged();
+    }
+
+    private int wordLeftPos(int from) {
+        int pos = from;
+        if (pos <= 0) return 0;
+        pos--;
+        while (pos > 0 && isWordSeparator(text.charAt(pos))) pos--;
+        if (Character.isLetterOrDigit(text.charAt(pos)) || text.charAt(pos) == '_') {
+            while (pos > 0 && (Character.isLetterOrDigit(text.charAt(pos - 1)) || text.charAt(pos - 1) == '_'))
+                pos--;
+        } else {
+            while (pos > 0 && !Character.isLetterOrDigit(text.charAt(pos - 1))
+                   && !isWordSeparator(text.charAt(pos - 1)))
+                pos--;
+        }
+        return pos;
+    }
+
     private void deleteForward() {
         if (hasSelection()) { pushUndo(); deleteSelectionInternal(); onTextChanged(); return; }
         if (cursor >= text.length()) return;
@@ -1111,12 +1082,12 @@ public class SyntaxEditorWidget extends WidgetBase {
     private boolean hasSelection() { return cursor != selAnchor; }
 
     private void onTextChanged() {
+        lineCache   = null;
+        offsetCache = null;
         rebuildSpans();
         updateSuggestions();
         if (onChange != null) onChange.run();
     }
-
-    // ── Cursor movement ───────────────────────────────────────────────────────
 
     private void moveCursor(int pos, boolean select) {
         pos    = Math.max(0, Math.min(pos, text.length()));
@@ -1154,19 +1125,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     }
 
     private void moveWordLeft(boolean select) {
-        int pos = cursor;
-        if (pos <= 0) { moveCursor(0, select); return; }
-        pos--;
-        while (pos > 0 && isWordSeparator(text.charAt(pos))) pos--;
-        if (Character.isLetterOrDigit(text.charAt(pos)) || text.charAt(pos) == '_') {
-            while (pos > 0 && (Character.isLetterOrDigit(text.charAt(pos - 1)) || text.charAt(pos - 1) == '_'))
-                pos--;
-        } else {
-            while (pos > 0 && !Character.isLetterOrDigit(text.charAt(pos - 1))
-                   && !isWordSeparator(text.charAt(pos - 1)))
-                pos--;
-        }
-        moveCursor(pos, select);
+        moveCursor(wordLeftPos(cursor), select);
     }
 
     private void moveWordRight(boolean select) {
@@ -1221,7 +1180,6 @@ public class SyntaxEditorWidget extends WidgetBase {
 
     private void cutSelection() {
         if (!hasSelection()) {
-            // Select the entire current line (including trailing newline) and copy it
             List<String> lines = getLines();
             int[] lc   = offsetToLC(cursor, lines);
             int[] offs = buildLineOffsets(lines);
@@ -1239,13 +1197,11 @@ public class SyntaxEditorWidget extends WidgetBase {
 
     private void pasteClipboard() {
         String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
-        if (clip == null || clip.isEmpty()) return;
+        if (clip.isEmpty()) return;
         clip = clip.replace("\r\n", "\n").replace("\r", "\n")
                    .replace("\t", " ".repeat(SPACES_PER_TAB));
         insertString(clip);
     }
-
-    // ── Undo / Redo ───────────────────────────────────────────────────────────
 
     private void pushUndo() {
         undoManager.push(text.toString(), cursor);
@@ -1273,8 +1229,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         onTextChanged();
     }
 
-    // ── Scroll management ─────────────────────────────────────────────────────
-
     private void ensureCursorVisible() {
         List<String> lines = getLines();
         int[] lc  = offsetToLC(cursor, lines);
@@ -1283,7 +1237,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         if (lc[0] >= scrollLine + vis) scrollLine = lc[0] - vis + 1;
         scrollLine = clampScrollLine(scrollLine, lines.size(), vis);
 
-        // Horizontal scroll
         Font font = Minecraft.getInstance().font;
         String line = lines.get(lc[0]);
         List<InlineHint> hints = computeLineHints(lines, lc[0], null, -1);
@@ -1318,9 +1271,8 @@ public class SyntaxEditorWidget extends WidgetBase {
         return offs[li] + col;
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
-
     private List<String> getLines() {
+        if (lineCache != null) return lineCache;
         List<String> out   = new ArrayList<>();
         String       s     = text.toString();
         int          start = 0;
@@ -1331,6 +1283,7 @@ public class SyntaxEditorWidget extends WidgetBase {
             }
         }
         if (out.isEmpty()) out.add("");
+        lineCache = out;
         return out;
     }
 
@@ -1344,6 +1297,12 @@ public class SyntaxEditorWidget extends WidgetBase {
         return offs;
     }
 
+    private int[] getCachedOffsets() {
+        if (offsetCache != null) return offsetCache;
+        offsetCache = buildLineOffsets(getLines());
+        return offsetCache;
+    }
+
     private int[] offsetToLC(int offset, List<String> lines) {
         int[] offs = buildLineOffsets(lines);
         for (int i = lines.size() - 1; i >= 0; i--) {
@@ -1353,8 +1312,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
         return new int[]{0, 0};
     }
-
-    // ── Suggestions ───────────────────────────────────────────────────────────
 
     public boolean hasSuggestions() {
         return activeSuggestions != null && activeSuggestions.length > 0;
@@ -1394,7 +1351,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         String lineText     = lines.get(lc[0]);
         String beforeCursor = lineText.substring(0, lc[1]);
 
-        // ── Event name context: "event <partial>" ─────────────────────────────
         {
             String trimmed  = beforeCursor.trim();
             int    lastSpace = trimmed.lastIndexOf(' ');
@@ -1412,7 +1368,6 @@ public class SyntaxEditorWidget extends WidgetBase {
             }
         }
 
-        // ── Placeholder name context: "ph.<partial>" ──────────────────────────
         {
             Matcher phm = PH_SUGGEST_PAT.matcher(beforeCursor);
             if (phm.find()) {
@@ -1428,7 +1383,6 @@ public class SyntaxEditorWidget extends WidgetBase {
             }
         }
 
-        // ── Enum suggestions inside string literals ────────────────────────────
         int quoteCount = 0;
         for (int i = 0; i < beforeCursor.length(); i++) if (beforeCursor.charAt(i) == '"') quoteCount++;
         if (quoteCount % 2 == 0) return null;
@@ -1640,8 +1594,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
     }
 
-    // ── Find / Replace bar ────────────────────────────────────────────────────
-
     public void openFind() {
         findMode = 1;
         findFocused = 0;
@@ -1668,7 +1620,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     private void updateFindMatches() {
         findMatches.clear();
         findMatchIndex = -1;
-        if (findQuery.length() == 0) return;
+        if (findQuery.isEmpty()) return;
         String src = text.toString().toLowerCase();
         String q   = findQuery.toString().toLowerCase();
         int i = 0;
@@ -1679,7 +1631,6 @@ public class SyntaxEditorWidget extends WidgetBase {
             i = found + 1;
         }
         if (!findMatches.isEmpty()) {
-            // Set index to match closest to cursor
             findMatchIndex = 0;
             for (int k = 0; k < findMatches.size(); k++) {
                 if (findMatches.get(k) >= cursor) { findMatchIndex = k; break; }
@@ -1726,7 +1677,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     }
 
     private void replaceAll() {
-        if (findQuery.length() == 0) return;
+        if (findQuery.isEmpty()) return;
         updateFindMatches();
         if (findMatches.isEmpty()) return;
         pushUndo();
@@ -1750,7 +1701,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         updateFindMatches();
     }
 
-    /** Handle a key press inside the find/replace bar fields. Returns true if consumed. */
     private boolean handleFindBarKey(int key, int mods) {
         boolean shift = (mods & GLFW.GLFW_MOD_SHIFT)   != 0;
         boolean ctrl  = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
@@ -1866,7 +1816,6 @@ public class SyntaxEditorWidget extends WidgetBase {
     private void pasteFindField() {
         String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
         if (clip == null || clip.isEmpty()) return;
-        // delete selection first
         StringBuilder active = findFocused == 0 ? findQuery : replaceQuery;
         int cur = findFocused == 0 ? findCursor : replaceCursor;
         int anc = findFocused == 0 ? findSelAnchor : replaceSelAnchor;
@@ -1885,7 +1834,6 @@ public class SyntaxEditorWidget extends WidgetBase {
         else { replaceSelAnchor = 0; replaceCursor = active.length(); }
     }
 
-    /** Handle a char typed into the active find/replace field. Returns true if consumed. */
     private boolean handleFindBarChar(char c) {
         if (c < 32 || c == 127) return false;
         StringBuilder active = findFocused == 0 ? findQuery : replaceQuery;
@@ -1934,7 +1882,6 @@ public class SyntaxEditorWidget extends WidgetBase {
             int ry = fy + FIND_FIELD_H + 4;
             renderFindField(g, font, t, bx + 4, ry, fieldW, replaceQuery, replaceCursor, replaceSelAnchor, findFocused == 1, "Replace");
 
-            // Replace / Replace All buttons
             int btnY = ry + FIND_FIELD_H + 3;
             int btn1X = bx + 4;
             int btn2X = btn1X + FIND_BTN_W + 3;
@@ -1976,7 +1923,6 @@ public class SyntaxEditorWidget extends WidgetBase {
 
         g.enableScissor(fx, fy, fx + fieldW, fy + FIND_FIELD_H);
 
-        // Selection highlight
         if (focused && cur != anchor) {
             int lo = Math.min(cur, anchor), hi = Math.max(cur, anchor);
             int sx = fx + 2 + font.width(display.substring(0, Math.min(lo, display.length()))) - scrollOff;
@@ -1994,5 +1940,5 @@ public class SyntaxEditorWidget extends WidgetBase {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput out) {}
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput out) {}
 }

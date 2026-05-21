@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
+import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
@@ -8,8 +9,7 @@ import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.world.inventory.ClickType;
 
 public class AnvilAction extends Action {
-    private static final int STABLE_TICKS  = 3;
-    private static final int TIMEOUT_TICKS = 100;
+    private static final int STABLE_TICKS = 3;
 
     private final String name;
     private String  lastValue   = null;
@@ -26,7 +26,7 @@ public class AnvilAction extends Action {
 
     public boolean run(Minecraft mc) {
         if (!(mc.screen instanceof AnvilScreen anvil)) throw new InterruptActionException("Not in anvil screen.");
-        if (++ticks > TIMEOUT_TICKS) throw new InterruptActionException("Timed out waiting for anvil.");
+        if (++ticks > NeoHouseConfig.get().actionTimeoutTicks) throw new InterruptActionException("Timed out waiting for anvil.");
 
         EditBox edit = anvil.children().stream()
                 .filter(c -> c instanceof EditBox)

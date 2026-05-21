@@ -25,5 +25,13 @@ public class ChatEvents {
             SequenceManager.cancelAction();
             MessageUtils.errorToChat("Script stopped: Team not found.");
         }
+        if (SequenceManager.isRunning() && plainText.contains("You do not have permission")) {
+            SequenceManager.cancelAction();
+            MessageUtils.errorToChat("Script stopped: No permission.");
+        }
+        if (SequenceManager.isRunning() && plainText.contains("Cannot paste action")) {
+            SequenceManager.cancelAction();
+            MessageUtils.errorToChat("Export stopped: Tried to paste an action that cannot get copied over.");
+        }
     }
 }

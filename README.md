@@ -101,6 +101,33 @@ Variables referenced anywhere in the file without a declaration are treated as u
 
 ---
 
+## Constants
+
+Named compile-time values. The name is substituted for the literal at every use site — no runtime variable is created.
+
+```java
+const long MAX_SCORE = 100;
+const double TICK_RATE = 0.05d;
+const string PREFIX = "[Game]";
+const bool DEBUG = false;
+```
+
+Use the name anywhere a literal is valid:
+
+```java
+if (p.score >= MAX_SCORE) {
+    message(PREFIX + " You win!");
+}
+```
+
+Rules:
+- Must be declared at the top of the file, before any `function`, `event`, `loop`, `command`, or `menu`.
+- The value must be a primitive literal or a reference to another already-declared constant.
+- The `var` type is not allowed.
+- Cannot be assigned to (`MAX_SCORE = 5;` is a compile error).
+
+---
+
 ## Placeholders
 
 Placeholders fetch read-only values from the housing or player state. They cannot be assigned to.
@@ -223,6 +250,22 @@ function test() {
 Parameters have no holder prefix — they are implicitly player variables with compiler-generated names.
 
 Functions cannot be named after built-in actions (e.g. `message`, `kill`, `teleport`).
+
+### Global Function Call
+
+Void functions can be triggered for **all players** in the housing using the `global` keyword:
+
+```java
+function announce() {
+    message("A new round has started!");
+}
+
+event onJoin {
+    global announce();
+}
+```
+
+This maps to Hypixel's *Trigger Function (for all players)* action. Only void functions can be called globally — typed functions are not supported.
 
 ---
 

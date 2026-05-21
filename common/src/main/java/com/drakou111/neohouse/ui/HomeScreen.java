@@ -4,18 +4,18 @@ import com.drakou111.neohouse.*;
 import com.drakou111.neohouse.compat.PoseHelper;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.platform.Platforms;
-import com.drakou111.neohouse.ui.hint.*;
+import com.drakou111.neohouse.ui.hint.AlwaysShowHint;
+import com.drakou111.neohouse.ui.hint.HintProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Supplier;
 
 public class HomeScreen extends Screen {
@@ -68,7 +68,7 @@ public class HomeScreen extends Screen {
         int gap = 10;
         int totalW = 3 * btnW + 2 * gap;
         int startX = cx - totalW / 2;
-        int btnY = midY + 18;
+        int btnY = midY + 48;
         addRenderableWidget(Button.builder(Component.literal("Files"), b -> openFiles()).bounds(startX, btnY, btnW, btnH).build());
         addRenderableWidget(Button.builder(Component.literal("Help"), b -> openHelp()).bounds(startX + btnW + gap, btnY, btnW, btnH).build());
         addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig()).bounds(startX + 2 * (btnW + gap), btnY, btnW, btnH).build());
@@ -89,30 +89,37 @@ public class HomeScreen extends Screen {
         int cx = width / 2;
         int midY = height / 2;
         int cardW = Math.min(width - 60, 390);
-        int cardH = 130;
+        int cardH = 160;
         int cardX = cx - cardW / 2;
-        int cardY = midY - 62;
+        int cardY = midY - 88;
         g.fill(cardX, cardY, cardX + cardW, cardY + cardH, 0x18FFFFFF);
         RenderHelper.renderOutline(g, cardX, cardY, cardW, cardH, t.accentTint(0x44));
         g.fill(cardX + 28, cardY, cardX + cardW - 28, cardY + 2, t.accent());
+        int logoSize = 56;
+        RenderHelper.renderLogo(g, cx - logoSize / 2, cardY + 10, logoSize, t.accent());
         int titleScale = 2;
         String title = "NeoHouse";
         int titleW = font.width(title) * titleScale;
+        int titleY = cardY + 10 + logoSize + 8;
         PoseHelper.push(g);
         PoseHelper.scale(g, titleScale, titleScale);
-        g.drawString(font, title, (cx - titleW / 2) / titleScale, (midY - 46) / titleScale, 0xFFFFFFFF, false);
+        g.drawString(font, title, (cx - titleW / 2) / titleScale, titleY / titleScale, 0xFFFFFFFF, false);
         PoseHelper.pop(g);
-        g.drawCenteredString(font, "Housing Script Compiler", cx, midY - 24, t.muted());
+        int subtitleY = titleY + font.lineHeight * titleScale + 4;
+        g.drawCenteredString(font, "Housing Script Compiler", cx, subtitleY, t.muted());
         int divW = cardW - 48;
-        g.fill(cx - divW / 2, midY - 10, cx + divW / 2, midY - 9, t.divider());
+        int divY = subtitleY + font.lineHeight + 8;
+        g.fill(cx - divW / 2, divY, cx + divW / 2, divY + 1, t.divider());
         String meta = getVersion() + " · by Drakou111 · " + BuildConstants.BUILD_DATE;
-        g.drawCenteredString(font, meta, cx, midY - 4, t.accent());
+        g.drawCenteredString(font, meta, cx, divY + 4, t.accent());
         super.render(g, mouseX, mouseY, partialTick);
+        String disclaimer = "Not affiliated with Hypixel, Mojang, or Microsoft.";
+        g.drawCenteredString(font, disclaimer, cx, cardY + cardH + 6, t.divider());
         g.drawCenteredString(font, currentHint.getText(minecraft), cx, height - 14, t.divider());
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
     }
 
     private void openFiles() {

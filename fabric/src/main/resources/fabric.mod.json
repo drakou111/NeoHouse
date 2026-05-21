@@ -2,10 +2,11 @@
   "schemaVersion": 1,
   "id": "${mod_id}",
   "version": "${version}",
-  "name": "Neo House",
-  "description": "TODO",
+  "name": "NeoHouse",
+  "description": "A client-side mod that lets you write, compile and run scripts for Hypixel Housing directly from inside Minecraft.",
   "authors": ["Drakou111"],
   "license": "All Rights Reserved",
+  "icon": "neohouse_icon.png",
   "environment": "client",
   "entrypoints": {
     "client": ["com.drakou111.neohouse.NeoHouseFabric"]

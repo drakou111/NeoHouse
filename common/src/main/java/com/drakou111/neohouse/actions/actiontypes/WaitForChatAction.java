@@ -1,11 +1,11 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
+import com.drakou111.neohouse.NeoHouseConfig;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.ChatEvents;
 import net.minecraft.client.Minecraft;
 
 public class WaitForChatAction extends Action {
-    private static final int TIMEOUT_TICKS = 200;
 
     private final String keyword;
     private final int extraDelayTicks;
@@ -28,7 +28,7 @@ public class WaitForChatAction extends Action {
         if (matched) {
             return ++extraWait >= extraDelayTicks;
         }
-        if (++ticksWaited > TIMEOUT_TICKS) return true; // timed out — proceed anyway
+        if (++ticksWaited > NeoHouseConfig.get().actionTimeoutTicks) return true; // timed out — proceed anyway
         return false;
     }
 

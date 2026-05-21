@@ -13,6 +13,7 @@ public class NeoHouseFabric implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         Platforms.init(new FabricPlatform());
+        CancelKeybind.register();
         ClientCommandHandler.register();
         TickDriver.register();
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {

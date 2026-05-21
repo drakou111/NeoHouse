@@ -1,9 +1,6 @@
 package com.drakou111.neohouse;
 
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllAction;
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllCommandsAction;
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllFunctionsAction;
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllMenusAction;
+import com.drakou111.neohouse.actions.actiontypes.*;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Others;
@@ -134,8 +131,37 @@ public class ClientCommandHandler {
                    return 0;
                }
            }))
+           .then(ClientCommandManager.literal("giveitem")
+                 .executes(ctx -> {
+                     if (Minecraft.getInstance().player == null) return 0;
+                     TickDriver.openScreenNextTick(new InputDialogScreen(
+                             "Enter item data (SNBT format):",
+                             "", null,
+                             itemData -> handleGiveItem(itemData.trim())
+                     ));
+                     return 1;
+                 })
+                 .then(ClientCommandManager.argument("item", StringArgumentType.greedyString())
+                       .executes(ctx -> {
+                           if (Minecraft.getInstance().player == null) return 0;
+                           handleGiveItem(StringArgumentType.getString(ctx, "item").trim());
+                           return 1;
+                       })
+                 )
+            )
            .then(ClientCommandManager.literal("run")
                  .then(ClientCommandManager.argument("path", StringArgumentType.greedyString())
+                       .suggests((ctx, builder) -> {
+                           Path root = getScriptsDir();
+                           try (var walk = Files.walk(root)) {
+                               walk.filter(p -> p.toString().endsWith(".nh"))
+                                   .map(p -> root.relativize(p).toString().replace('\\', '/'))
+                                   .map(s -> s.endsWith(".nh") ? s.substring(0, s.length() - 3) : s)
+                                   .filter(s -> s.startsWith(builder.getRemaining()))
+                                   .forEach(builder::suggest);
+                           } catch (IOException ignored) {}
+                           return builder.buildFuture();
+                       })
                        .executes(ctx -> {
                            if (Minecraft.getInstance().player == null) {
                                MessageUtils.errorToChat("No player context!");
@@ -288,15 +314,85 @@ public class ClientCommandHandler {
         return 1;
     }
 
+    private static void handleGiveItem(String itemData) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        if (!mc.player.getAbilities().instabuild) {
+            MessageUtils.errorToChat("You must be in creative mode to give items.");
+            return;
+        }
+        SequenceManager.startAction(new CreativeGiveAction(itemData, 8));
+        MessageUtils.debugToChat("Item placed in hotbar slot 8.");
+    }
+
     public static Path getScriptsDir() {
         Path dir = Minecraft.getInstance().gameDirectory.toPath().resolve("neohouse-scripts");
-        if (!Files.exists(dir)) {
-            try {
-                Files.createDirectories(dir);
-            } catch (IOException ignored) {
+        try {
+            if (!Files.exists(dir)) Files.createDirectories(dir);
+            Path marker = dir.resolve(".initialized");
+            if (!Files.exists(marker)) {
+                writeDefaultExample(dir.resolve("example.nh"));
+                Files.createFile(marker);
             }
+        } catch (IOException ignored) {
         }
         return dir;
+    }
+
+    private static void writeDefaultExample(Path example) {
+        String content =
+                "// ────────────────────────────\n" +
+                "//   NeoHouse example script\n" +
+                "// ────────────────────────────\n" +
+                "\n" +
+                "const long KILL_REWARD = 10;\n" +
+                "const long VETERAN_THRESHOLD = 50;\n" +
+                "\n" +
+                "long g.totalJoins = 0;\n" +
+                "long p.coins;\n" +
+                "\n" +
+                "// Functions\n" +
+                "function greet() {\n" +
+                "    message(\"Welcome, \" + ph.playerName() + \"! Coins: \" + p.coins);\n" +
+                "}\n" +
+                "\n" +
+                "// Events\n" +
+                "event onJoin {\n" +
+                "    g.totalJoins += 1;\n" +
+                "    greet();\n" +
+                "    message(\"Total visits: \" + g.totalJoins);\n" +
+                "}\n" +
+                "\n" +
+                "event onKill {\n" +
+                "    p.coins += KILL_REWARD;\n" +
+                "    message(\"Kill! Coins: \" + p.coins);\n" +
+                "}\n" +
+                "\n" +
+                "// Commands\n" +
+                "command coins(listed: true) {\n" +
+                "    if (p.coins >= VETERAN_THRESHOLD) {\n" +
+                "        message(\"&aYou are a veteran with \" + p.coins + \" coins!\");\n" +
+                "    } else {\n" +
+                "        message(\"&cNot yet veteran. Coins: \" + p.coins);\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "// Menus\n" +
+                "menu shop(4) {\n" +
+                "    slot0: ({count:1,id:\"minecraft:diamond\"}) {" +
+                "       message(\"You clicked the diamond!\");" +
+                "       closeMenu();" +
+                "    }" +
+                "}\n" +
+                "\n" +
+                "command resetcoins(listed: false) {\n" +
+                "    p.coins = 0;\n" +
+                "    message(\"&cCoins reset.\");\n" +
+                "}\n";
+        try {
+            Files.writeString(example, content, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+        }
     }
 
     private static Path resolveScriptPath(String raw) {
