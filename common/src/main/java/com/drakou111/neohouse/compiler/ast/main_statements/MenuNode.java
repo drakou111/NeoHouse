@@ -10,11 +10,13 @@ public class MenuNode extends MainStatementNode {
     public final String name;
     public final int rows;
     public final List<SlotNode> slots;
+    public final boolean isConst;
 
-    public MenuNode(String name, int rows, List<SlotNode> slots, Token token) {
+    public MenuNode(String name, int rows, List<SlotNode> slots, boolean isConst, Token token) {
         this.name = name;
         this.rows = rows;
         this.slots = slots;
+        this.isConst = isConst;
         this.token = token;
     }
 

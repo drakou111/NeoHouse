@@ -82,20 +82,20 @@ public class MovementFactory {
     }
 
     // Goes to and deletes the function (if any) and recreates it.
-    public static Action goAndRecreateFunction(String functionName, String description, Integer iconItemID, boolean automaticExecution, int loopTime) {
+    public static Action goAndRecreateFunction(String functionName, String description, String iconSNBT, boolean automaticExecution, int loopTime) {
         return new ActionBuilder()
                 .closeAll()
                 .sendChatAndWait(Commands.FUNCTIONS)
                 .removeFunctionIfPresent(functionName)
                 .anvilInput(functionName, Others.GENERAL_ADD_H6)
-                .onlyIf((description != null && !description.trim().isEmpty()) || iconItemID != null || automaticExecution, () -> new ActionBuilder()
+                .onlyIf((description != null && !description.trim().isEmpty()) || iconSNBT != null || automaticExecution, () -> new ActionBuilder()
                         .gotoFunction(true, functionName, false)
                         .onlyIf(description != null && !description.trim().isEmpty(), () -> new ActionBuilder()
                                 .searchForChat(FunctionInputs.DESCRIPTION, description)
                         )
-                        .onlyIf(iconItemID != null, () -> new ActionBuilder()
+                        .onlyIf(iconSNBT != null, () -> new ActionBuilder()
                                 .search(FunctionInputs.ICON)
-                                .clickSlotAndWait(iconItemID, true)
+                                .customItem(iconSNBT)
                         )
                         .onlyIf(automaticExecution, () -> new ActionBuilder()
                                 .searchForAnvil(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loopTime))

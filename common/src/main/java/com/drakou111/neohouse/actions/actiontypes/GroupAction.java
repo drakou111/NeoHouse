@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.utils.MessageUtils;
 import com.drakou111.neohouse.utils.SequenceManager;

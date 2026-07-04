@@ -24,3 +24,18 @@ runs
 run-data
 
 repo
+
+# stray build/editor artifacts
+*.tmp*
+*.class
+/net/
+
+# built distribution jars — published to Modrinth/Releases instead
+dist/
+
+# stonecutter-generated per-version projects
+versions/
+
+# others
+.claude
+.architectury-transformer

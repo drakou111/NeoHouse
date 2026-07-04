@@ -1,6 +1,8 @@
 package com.drakou111.neohouse.compiler;
 
-import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.OverrideMode;
+
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.*;
 import com.drakou111.neohouse.compiler.ast.expr.*;
@@ -15,6 +17,8 @@ import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.enums.*;
 import com.drakou111.neohouse.constants.*;
+import com.drakou111.neohouse.constants.Comparator;
+import com.drakou111.neohouse.constants.others.FunctionInputs;
 import com.drakou111.neohouse.factories.ActionFactory;
 import com.drakou111.neohouse.factories.ConditionFactory;
 import com.drakou111.neohouse.factories.MovementFactory;
@@ -24,14 +28,13 @@ import com.drakou111.neohouse.factories.params.TitleParams;
 import com.drakou111.neohouse.factories.params.VariableParams;
 import com.drakou111.neohouse.utils.ActionBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CodeGenerator {
 
     public Action generate(MainNode main) {
         List<Action> parts = new ArrayList<>();
-        boolean override = NeoHouseConfig.get().overrideExisting;
+        OverrideMode mode = NeoHouseConfig.get().overrideMode;
 
         // Pass 0: emit global/team variable initializers
         for (MainStatementNode stmt : main.statements) {
@@ -42,14 +45,16 @@ public class CodeGenerator {
             }
         }
 
-        if (override) {
-            // Pass 1: create empty shells for forward-reference support
+        // Pass 1: create empty shells for forward-reference support. ALWAYS does this for
+        // every item; SKIP_CONST does it only for non-const items; NEVER skips this pass.
+        if (mode == OverrideMode.ALWAYS || mode == OverrideMode.SKIP_CONST) {
             for (MainStatementNode stmt : main.statements) {
+                if (mode == OverrideMode.SKIP_CONST && stmtIsConst(stmt)) continue;
                 if (stmt instanceof VoidFunctionNode fn) {
-                    parts.add(MovementFactory.goAndRecreateFunction(fn.name, fn.description, null, false, 0));
+                    parts.add(MovementFactory.goAndRecreateFunction(fn.name, fn.description, fn.icon, false, 0));
                     parts.add(MovementFactory.exit(true));
                 } else if (stmt instanceof LoopNode loop) {
-                    parts.add(MovementFactory.goAndRecreateFunction(loop.name, loop.description, null, true, (int) loop.tickDelay));
+                    parts.add(MovementFactory.goAndRecreateFunction(loop.name, loop.description, loop.icon, false, 0));
                     parts.add(MovementFactory.exit(true));
                 } else if (stmt instanceof CommandNode cmd) {
                     parts.add(MovementFactory.goAndRecreateCommand(cmd.name, cmd.targeted, cmd.priority, cmd.listed));
@@ -61,21 +66,100 @@ public class CodeGenerator {
             }
         }
 
-        // Pass 2: fill in bodies
-        for (MainStatementNode stmt : main.statements) {
+        Map<String, VoidFunctionNode> fnByName = collectFunctions(main);
+        FunctionCopies fnCopies = findFunctionCopies(main, fnByName.keySet());
+        Map<String, List<String>> copiesOf = fnCopies.copiesOf();
+        Set<String> isCopy = fnCopies.isCopy();
+
+        // Pass 2: fill in bodies.
+        // In SKIP_CONST mode, const items are processed first so that every const
+        // definition is fully created before any non-const body is edited. Otherwise a
+        // non-const function defined earlier in the source could reference (Trigger Function)
+        // a const function that hasn't been created yet — const items are skipped in Pass 1's
+        // shell creation, so they only come into existence here.
+        List<MainStatementNode> pass2Order;
+        if (mode == OverrideMode.SKIP_CONST) {
+            pass2Order = new ArrayList<>(main.statements.size());
+            for (MainStatementNode s : main.statements) if (stmtIsConst(s)) pass2Order.add(s);
+            for (MainStatementNode s : main.statements) if (!stmtIsConst(s)) pass2Order.add(s);
+        } else {
+            pass2Order = main.statements;
+        }
+        for (MainStatementNode stmt : pass2Order) {
+            boolean doOverride = switch (mode) {
+                case ALWAYS     -> true;
+                case NEVER      -> false;
+                case SKIP_CONST -> !stmtIsConst(stmt);
+            };
             if (stmt instanceof VoidFunctionNode fn) {
-                parts.add(override ? generateFunction(fn) : generateFunctionIfAbsent(fn));
+                if (isCopy.contains(fn.name)) continue; // handled when original is processed
+                List<String> copies = copiesOf.getOrDefault(fn.name, List.of());
+                if (!copies.isEmpty() && doOverride) {
+                    parts.add(generateFunctionWithCopies(fn, copies));
+                } else if (doOverride) {
+                    parts.add(generateFunction(fn));
+                } else if (copies.isEmpty()) {
+                    parts.add(generateFunctionIfAbsent(fn));
+                } else {
+                    parts.add(generateFunctionAndCopiesIfAbsent(fn, fnByName, copies));
+                }
             } else if (stmt instanceof EventNode event) {
-                parts.add(override ? generateEvent(event) : generateEventIfEmpty(event));
+                parts.add(doOverride ? generateEvent(event) : generateEventIfEmpty(event));
             } else if (stmt instanceof LoopNode loop) {
-                parts.add(override ? generateLoop(loop) : generateLoopIfAbsent(loop));
+                parts.add(doOverride ? generateLoop(loop) : generateLoopIfAbsent(loop));
             } else if (stmt instanceof CommandNode cmd) {
-                parts.add(override ? generateCommand(cmd) : generateCommandIfAbsent(cmd));
+                parts.add(doOverride ? generateCommand(cmd) : generateCommandIfAbsent(cmd));
             } else if (stmt instanceof MenuNode menu) {
-                parts.add(override ? generateMenu(menu) : generateMenuIfAbsent(menu));
+                parts.add(doOverride ? generateMenu(menu) : generateMenuIfAbsent(menu));
             }
         }
         return new GroupAction(parts);
+    }
+
+    /** Collects all top-level void functions, keyed by name, preserving source order. */
+    private static Map<String, VoidFunctionNode> collectFunctions(MainNode main) {
+        Map<String, VoidFunctionNode> fnByName = new LinkedHashMap<>();
+        for (MainStatementNode s : main.statements) {
+            if (s instanceof VoidFunctionNode vf) fnByName.put(vf.name, vf);
+        }
+        return fnByName;
+    }
+
+    /** Result of {@link #findFunctionCopies}: which originals have copies, and which names are copies. */
+    private record FunctionCopies(Map<String, List<String>> copiesOf, Set<String> isCopy) {}
+
+    /**
+     * Detects compiler-created copies: functions named {@code baseName$N} where {@code baseName} is
+     * also a defined function. These should be paste-filled rather than manually rebuilt.
+     */
+    private static FunctionCopies findFunctionCopies(MainNode main, Set<String> definedFunctions) {
+        Map<String, List<String>> copiesOf = new LinkedHashMap<>();
+        Set<String> isCopy = new HashSet<>();
+        for (MainStatementNode s : main.statements) {
+            if (s instanceof VoidFunctionNode vf) {
+                int dollar = vf.name.lastIndexOf('$');
+                if (dollar > 0) {
+                    String tail = vf.name.substring(dollar + 1);
+                    String base = vf.name.substring(0, dollar);
+                    if (!tail.isEmpty() && tail.chars().allMatch(Character::isDigit) && definedFunctions.contains(base)) {
+                        copiesOf.computeIfAbsent(base, k -> new ArrayList<>()).add(vf.name);
+                        isCopy.add(vf.name);
+                    }
+                }
+            }
+        }
+        return new FunctionCopies(copiesOf, isCopy);
+    }
+
+    private static boolean stmtIsConst(MainStatementNode stmt) {
+        return switch (stmt) {
+            case VoidFunctionNode fn -> fn.isConst;
+            case EventNode ev        -> ev.isConst;
+            case LoopNode loop       -> loop.isConst;
+            case CommandNode cmd     -> cmd.isConst;
+            case MenuNode menu       -> menu.isConst;
+            default                  -> false;
+        };
     }
 
     private Action generateFunction(VoidFunctionNode fn) {
@@ -83,6 +167,21 @@ public class CodeGenerator {
         parts.add(MovementFactory.goToFunction(false, fn.name));
         parts.add(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
         parts.add(MovementFactory.exit(true));
+        return new GroupAction(parts);
+    }
+
+    private Action generateFunctionWithCopies(VoidFunctionNode fn, List<String> copyNames) {
+        List<Action> parts = new ArrayList<>();
+        parts.add(MovementFactory.goToFunction(false, fn.name));
+        parts.add(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
+        parts.add(new ActionBuilder().copyContext().get());
+        parts.add(MovementFactory.exit(true));
+        for (String copyName : copyNames) {
+            parts.add(MovementFactory.goToFunction(false, copyName));
+            parts.add(new ActionBuilder().append(new DeleteAllAction(10)).get());
+            parts.add(new ActionBuilder().pasteContext().get());
+            parts.add(MovementFactory.exit(true));
+        }
         return new GroupAction(parts);
     }
 
@@ -102,7 +201,11 @@ public class CodeGenerator {
         List<Action> parts = new ArrayList<>();
         parts.add(MovementFactory.goToFunction(false, loop.name));
         parts.add(generateStatements(loop.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
-        parts.add(MovementFactory.exit(true));
+        parts.add(new ActionBuilder()
+                .gotoFunction(true, loop.name, false)
+                .searchForAnvil(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay))
+                .closeAll()
+                .get());
         return new GroupAction(parts);
     }
 
@@ -142,6 +245,83 @@ public class CodeGenerator {
                 .get();
     }
 
+    private Action generateFunctionAndCopiesIfAbsent(VoidFunctionNode fn, Map<String, VoidFunctionNode> fnByName, List<String> copyNames) {
+        List<VoidFunctionNode> copyFns = copyNames.stream()
+                .map(fnByName::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        // Original exists: skip it, then process copies starting with no clipboard context.
+        Action foundBranch = new GroupAction(List.of(
+                new ActionBuilder().closeAll().get(),
+                new ClientMessageAction("Skipped function '" + fn.name + "' — already exists.", true),
+                generateCopiesChain(copyFns, 0, false)
+        ));
+
+        // Original missing: write it, copy its context, then process copies (can paste).
+        Action notFoundBranch = new ActionBuilder()
+                .anvilInput(fn.name, Others.GENERAL_ADD_H6)
+                .append(MovementFactory.goToFunction(true, fn.name))
+                .append(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
+                .copyContext()
+                .closeAll()
+                .append(generateCopiesChain(copyFns, 0, true))
+                .get();
+
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.FUNCTIONS)
+                .search(fn.name, null, false, new ActionBuilder().append(foundBranch), new ActionBuilder().append(notFoundBranch))
+                .get();
+    }
+
+    /**
+     * Builds a chain of SearchActions that writes each missing copy.
+     * hasContext=true means a function context is already in the clipboard (from a prior write),
+     * so missing copies can be paste-filled instead of written from scratch.
+     * Skipping an existing copy leaves the clipboard intact for later copies.
+     */
+    private Action generateCopiesChain(List<VoidFunctionNode> copyFns, int idx, boolean hasContext) {
+        if (idx >= copyFns.size()) return new GroupAction(List.of());
+        VoidFunctionNode copyFn = copyFns.get(idx);
+
+        // Found: skip this copy; clipboard state is unchanged for subsequent copies.
+        Action foundAction = new GroupAction(List.of(
+                new ActionBuilder().closeAll().get(),
+                new ClientMessageAction("Skipped function '" + copyFn.name + "' — already exists.", true),
+                generateCopiesChain(copyFns, idx + 1, hasContext)
+        ));
+
+        Action notFoundAction;
+        if (!hasContext) {
+            // No clipboard yet: write from scratch and copy context for subsequent copies.
+            notFoundAction = new ActionBuilder()
+                    .anvilInput(copyFn.name, Others.GENERAL_ADD_H6)
+                    .append(MovementFactory.goToFunction(true, copyFn.name))
+                    .append(generateStatements(copyFn.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
+                    .copyContext()
+                    .closeAll()
+                    .append(generateCopiesChain(copyFns, idx + 1, true))
+                    .get();
+        } else {
+            // Clipboard available: create empty function and paste instead of writing.
+            notFoundAction = new ActionBuilder()
+                    .anvilInput(copyFn.name, Others.GENERAL_ADD_H6)
+                    .append(MovementFactory.goToFunction(true, copyFn.name))
+                    .append(new ActionBuilder().append(new DeleteAllAction(10)).get())
+                    .pasteContext()
+                    .closeAll()
+                    .append(generateCopiesChain(copyFns, idx + 1, true))
+                    .get();
+        }
+
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.FUNCTIONS)
+                .search(copyFn.name, null, false, new ActionBuilder().append(foundAction), new ActionBuilder().append(notFoundAction))
+                .get();
+    }
+
     private Action generateLoopIfAbsent(LoopNode loop) {
         Action warn = new GroupAction(List.of(
             new ActionBuilder().closeAll().get(),
@@ -151,6 +331,13 @@ public class CodeGenerator {
                 .anvilInput(loop.name, Others.GENERAL_ADD_H6)
                 .append(MovementFactory.goToFunction(true, loop.name))
                 .append(generateStatements(loop.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
+                .gotoFunction(true, loop.name, false)
+                .onlyIf(loop.description != null && !loop.description.trim().isEmpty(), () -> new ActionBuilder()
+                        .searchForChat(FunctionInputs.DESCRIPTION, loop.description))
+                .onlyIf(loop.icon != null, () -> new ActionBuilder()
+                        .search(FunctionInputs.ICON)
+                        .customItem(loop.icon))
+                .searchForAnvil(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay))
                 .closeAll()
                 .get();
         return new ActionBuilder()
@@ -575,15 +762,18 @@ public class CodeGenerator {
             case StringValue s -> s.value;
             case LongValue l -> l.toString();
             case DoubleValue d -> d.toString();
-            case BoolValue b -> b.toString();
+            // Bools are stored in Housing as the number 1/0 — must match
+            // primitiveToInitString so declared and assigned/compared bools agree.
+            case BoolValue b -> b.value ? "1" : "0";
         };
     }
 
     private String variableToString(VariableNode v) {
+        String suffix = v.castSuffix != null ? v.castSuffix : "";
         return switch (v.holder) {
-            case PLAYER -> "%var.player/" + v.name + "%";
-            case GLOBAL -> "%var.global/" + v.name + "%";
-            case TEAM -> "%var.team/" + v.name + " " + v.teamName + "%";
+            case PLAYER -> "%var.player/" + v.name + v.fallbackToken() + "%" + suffix;
+            case GLOBAL -> "%var.global/" + v.name + v.fallbackToken() + "%" + suffix;
+            case TEAM -> "%var.team/" + v.name + " " + v.teamName + v.fallbackToken() + "%" + suffix;
         };
     }
 

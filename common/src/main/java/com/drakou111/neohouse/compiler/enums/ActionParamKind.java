@@ -6,5 +6,7 @@ public enum ActionParamKind {
     LONG_LITERAL,
     DOUBLE_LITERAL,
     NORMAL_EXPRESSION,
-    ITEM_LITERAL
+    ITEM_LITERAL,
+    /** Accepts a bare Teleport enum name (HOUSE_SPAWN / INVOKER / CURRENT) or any string expression for custom coordinates. */
+    LOCATION
 }

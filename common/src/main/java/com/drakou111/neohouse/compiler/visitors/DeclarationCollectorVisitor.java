@@ -39,6 +39,15 @@ public class DeclarationCollectorVisitor extends EmptyVisitor<Void> {
         return null;
     }
 
+    @Override public Void visitTupleFunction(TupleFunctionNode fn) {
+        boolean saved = inFunction;
+        inFunction = true;
+        fn.parameters.accept(this);
+        fn.statements.accept(this);
+        inFunction = saved;
+        return null;
+    }
+
     @Override public Void visitVoidFunction(VoidFunctionNode fn) {
         boolean saved = inFunction;
         inFunction = true;
@@ -98,4 +107,5 @@ public class DeclarationCollectorVisitor extends EmptyVisitor<Void> {
         allLocalNames.add(fullname);
         return null;
     }
+
 }

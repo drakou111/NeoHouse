@@ -10,6 +10,8 @@ import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
 
 public interface ASTVisitor<T> {
     T visitConstant(ConstantNode constant);
@@ -24,6 +26,7 @@ public interface ASTVisitor<T> {
     T visitFunctionCall(FunctionCallNode functionCall);
 
     T visitTypedFunction(TypedFunctionNode function);
+    T visitTupleFunction(TupleFunctionNode function);
     T visitVoidFunction(VoidFunctionNode function);
     T visitLoop(LoopNode function);
     T visitEvent(EventNode event);
@@ -33,6 +36,7 @@ public interface ASTVisitor<T> {
     T visitGlobalDeclaration(GlobalDeclarationNode declaration);
 
     T visitTypedReturn(TypedReturnNode returnNode);
+    T visitTupleReturn(TupleReturnNode returnNode);
     T visitVoidReturn(VoidReturnNode returnNode);
     T visitCancel(CancelNode cancelNode);
     T visitConditional(ConditionalNode conditional);
@@ -45,6 +49,7 @@ public interface ASTVisitor<T> {
     T visitRepeat(RepeatNode random);
     T visitConditionCall(ConditionCallNode condCall);
     T visitActionCall(ActionCallNode condCall);
+    T visitTupleDestructure(TupleDestructureNode node);
 
     T visitMain(MainNode main);
     T visitStatements(StatementListNode statements);

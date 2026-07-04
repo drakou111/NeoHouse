@@ -11,6 +11,8 @@ import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,28 +77,40 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
     @Override public ASTNode visitTypedFunction(TypedFunctionNode function) {
         ParameterListNode params = (ParameterListNode)function.parameters.accept(this);
         StatementListNode stmts = (StatementListNode)function.statements.accept(this);
-        return new TypedFunctionNode(function.name, function.description, function.returnType, params, stmts, function.token);
+        return new TypedFunctionNode(function.name, function.description, function.icon, function.returnType, params, stmts, function.isConst, function.token);
+    }
+
+    @Override public ASTNode visitTupleFunction(TupleFunctionNode function) {
+        ParameterListNode params = (ParameterListNode)function.parameters.accept(this);
+        StatementListNode stmts = (StatementListNode)function.statements.accept(this);
+        return new TupleFunctionNode(function.name, function.description, function.icon, function.returnTypes, params, stmts, function.isConst, function.token);
     }
 
     @Override public ASTNode visitVoidFunction(VoidFunctionNode function) {
         ParameterListNode params = (ParameterListNode)function.parameters.accept(this);
         StatementListNode stmts = (StatementListNode)function.statements.accept(this);
-        return new VoidFunctionNode(function.name, function.description, params, stmts, function.token);
+        return new VoidFunctionNode(function.name, function.description, function.icon, params, stmts, function.isConst, function.token);
+    }
+
+    @Override public ASTNode visitTupleReturn(TupleReturnNode ret) {
+        List<NormalExpressionNode> exprs = new ArrayList<>();
+        for (NormalExpressionNode e : ret.expressions) exprs.add((NormalExpressionNode)e.accept(this));
+        return new TupleReturnNode(exprs, ret.token);
     }
 
     @Override public ASTNode visitLoop(LoopNode loop) {
         StatementListNode stmts = (StatementListNode)loop.statements.accept(this);
-        return new LoopNode(loop.name, loop.description, stmts, loop.tickDelay, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, stmts, loop.tickDelay, loop.isConst, loop.token);
     }
 
     @Override public ASTNode visitEvent(EventNode event) {
         StatementListNode stmts = (StatementListNode)event.statements.accept(this);
-        return new EventNode(event.event, stmts, event.token);
+        return new EventNode(event.event, stmts, event.isConst, event.token);
     }
 
     @Override public ASTNode visitCommand(CommandNode command) {
         StatementListNode stmts = (StatementListNode)command.statements.accept(this);
-        return new CommandNode(command.name, command.targeted, command.priority, command.listed, stmts, command.token);
+        return new CommandNode(command.name, command.targeted, command.priority, command.listed, stmts, command.isConst, command.token);
     }
 
     @Override public ASTNode visitMenu(MenuNode menu) {
@@ -104,7 +118,7 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         for (SlotNode slot : menu.slots) {
             slots.add((SlotNode) slot.accept(this));
         }
-        return new MenuNode(menu.name, menu.rows, slots, menu.token);
+        return new MenuNode(menu.name, menu.rows, slots, menu.isConst, menu.token);
     }
 
     @Override public ASTNode visitSlot(SlotNode slot) {
@@ -190,6 +204,11 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
     @Override public ASTNode visitActionCall(ActionCallNode actionCall) {
         ArgumentListNode argList = (ArgumentListNode)actionCall.arguments.accept(this);
         return new ActionCallNode(actionCall.name, argList, actionCall.token);
+    }
+
+    @Override public ASTNode visitTupleDestructure(TupleDestructureNode node) {
+        ArgumentListNode args = (ArgumentListNode)node.arguments.accept(this);
+        return new TupleDestructureNode(node.targets, node.operator, node.functionName, args, node.token);
     }
 
     @Override public ASTNode visitMain(MainNode main) {

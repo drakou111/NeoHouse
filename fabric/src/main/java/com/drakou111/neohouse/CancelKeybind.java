@@ -10,6 +10,10 @@ public class CancelKeybind {
             new KeyMappingCompat("key.neohouse.cancel", GLFW.GLFW_KEY_K)
     );
 
+    public static final KeyMappingCompat OPEN_KEY = (KeyMappingCompat) KeyBindingHelper.registerKeyBinding(
+            new KeyMappingCompat("key.neohouse.open", GLFW.GLFW_KEY_N)
+    );
+
     public static void register() {
         // referenced to trigger class loading and registration
     }

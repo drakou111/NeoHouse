@@ -10,6 +10,8 @@ import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
 
 public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
 
@@ -69,6 +71,12 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
         return null;
     }
 
+    @Override public T visitTupleFunction(TupleFunctionNode function) {
+        function.parameters.accept(this);
+        function.statements.accept(this);
+        return null;
+    }
+
     @Override public T visitVoidFunction(VoidFunctionNode function) {
         function.parameters.accept(this);
         function.statements.accept(this);
@@ -110,6 +118,11 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
 
     @Override public T visitTypedReturn(TypedReturnNode returnNode) {
         returnNode.expression.accept(this);
+        return null;
+    }
+
+    @Override public T visitTupleReturn(TupleReturnNode returnNode) {
+        for (var expr : returnNode.expressions) expr.accept(this);
         return null;
     }
 
@@ -175,6 +188,11 @@ public abstract class EmptyVisitor<T> implements ASTVisitor<T> {
     @Override public T visitActionCall(ActionCallNode actionCall) {
       actionCall.arguments.accept(this);
       return null;
+    }
+
+    @Override public T visitTupleDestructure(TupleDestructureNode node) {
+        node.arguments.accept(this);
+        return null;
     }
 
 

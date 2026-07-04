@@ -16,17 +16,17 @@ public class ReturnPlacementVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitVoidFunction(VoidFunctionNode fn) {
-        return super.visitVoidFunction(new VoidFunctionNode(fn.name, fn.description, fn.parameters, stripReturn(fn.statements), fn.token));
+        return super.visitVoidFunction(new VoidFunctionNode(fn.name, fn.description, fn.icon, fn.parameters, stripReturn(fn.statements), fn.isConst, fn.token));
     }
 
     @Override
     public ASTNode visitEvent(EventNode event) {
-        return super.visitEvent(new EventNode(event.event, stripReturn(event.statements), event.token));
+        return super.visitEvent(new EventNode(event.event, stripReturn(event.statements), event.isConst, event.token));
     }
 
     @Override
     public ASTNode visitLoop(LoopNode loop) {
-        return super.visitLoop(new LoopNode(loop.name, loop.description, stripReturn(loop.statements), loop.tickDelay, loop.token));
+        return super.visitLoop(new LoopNode(loop.name, loop.description, loop.icon, stripReturn(loop.statements), loop.tickDelay, loop.isConst, loop.token));
     }
 
     private StatementListNode stripReturn(StatementListNode stmts) {

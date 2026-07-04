@@ -18,7 +18,9 @@ public class ReplaceVariableNamesVisitor extends DefaultVisitor {
         HolderAndName key = new HolderAndName(var.holder, var.name);
         if (nameMap.containsKey(key)) {
             HolderAndName newRef = nameMap.get(key);
-            return new VariableNode(var.type, newRef.holder, newRef.name, var.teamName, var.token);
+            VariableNode renamed = new VariableNode(var.type, newRef.holder, newRef.name, var.teamName, var.token);
+            renamed.fallback = var.fallback;
+            return renamed;
         }
         return var;
     }

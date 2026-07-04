@@ -7,8 +7,10 @@ import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.ParameterListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
+import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.exceptions.SemanticException;
@@ -85,7 +87,25 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
             newParams.add(new VariableNode(param.type, param.holder, param.name, param.teamName, param.token));
         }
         ParameterListNode newParamList = new ParameterListNode(newParams);
-        return new TypedFunctionNode(fn.name, fn.description, fn.returnType, newParamList, newBody, fn.token);
+        return new TypedFunctionNode(fn.name, fn.description, fn.icon, fn.returnType, newParamList, newBody, fn.isConst, fn.token);
+    }
+
+    @Override
+    public ASTNode visitTupleFunction(TupleFunctionNode fn) {
+        Map<String, VariableType> localScope = new HashMap<>();
+        for (VariableNode param : fn.parameters.parameters) {
+            String fullname = param.holder + "." + param.name;
+            localScope.put(fullname, param.type);
+        }
+        scopeStack.push(localScope);
+        StatementListNode newBody = (StatementListNode) fn.statements.accept(this);
+        scopeStack.pop();
+
+        List<VariableNode> newParams = new ArrayList<>();
+        for (VariableNode param : fn.parameters.parameters) {
+            newParams.add(new VariableNode(param.type, param.holder, param.name, param.teamName, param.token));
+        }
+        return new TupleFunctionNode(fn.name, fn.description, fn.icon, fn.returnTypes, new ParameterListNode(newParams), newBody, fn.isConst, fn.token);
     }
 
     @Override
@@ -106,7 +126,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         }
         ParameterListNode newParamList = new ParameterListNode(newParams);
 
-        return new VoidFunctionNode(fn.name, fn.description, newParamList, newBody, fn.token);
+        return new VoidFunctionNode(fn.name, fn.description, fn.icon, newParamList, newBody, fn.isConst, fn.token);
     }
 
     @Override public ASTNode visitDeclaration(DeclarationNode decl) {
@@ -132,8 +152,28 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
     @Override
     public ASTNode visitVariable(VariableNode var) {
         String fullname = var.holder + "." + var.name;
+        if (var.wasBare && !isDeclaredAnywhere(fullname)) {
+            throw new SemanticException(var.token,
+                    "Unknown identifier '" + var.name + "' — not a constant, function parameter, or declared variable. " +
+                    "If you meant a player variable, use 'p." + var.name + "' or declare it at the top of the file.");
+        }
         resolveOrDeclareGlobal(fullname, var.token, var);
-        return new VariableNode(var.type, var.holder, var.name, var.teamName, var.token);
+        if (var.fallback != null && var.type != VariableType.VAR && var.fallback.type != var.type) {
+            throw new SemanticException(var.token,
+                    "Fallback value is a " + var.fallback.type + " but variable '" + var.name +
+                    "' is a " + var.type + " — they must be the same type.");
+        }
+        VariableNode copy = new VariableNode(var.type, var.holder, var.name, var.teamName, var.token);
+        copy.fallback = var.fallback;
+        return copy;
+    }
+
+    /** Returns true if {@code fullname} is visible (param in any enclosing scope or top-level declaration). */
+    private boolean isDeclaredAnywhere(String fullname) {
+        for (Map<String, VariableType> scope : scopeStack) {
+            if (scope.containsKey(fullname)) return true;
+        }
+        return globalDecls.containsKey(fullname) || allLocalNames.contains(fullname);
     }
 
     @Override
@@ -160,7 +200,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         StatementListNode newBody = (StatementListNode) loop.statements.accept(this);
         scopeStack.pop();
 
-        return new LoopNode(loop.name, loop.description, newBody, loop.tickDelay, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, newBody, loop.tickDelay, loop.isConst, loop.token);
     }
 
     @Override
@@ -173,7 +213,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         scopeStack.pop();
 
         inFunction = saved;
-        return new EventNode(event.event, newBody, event.token);
+        return new EventNode(event.event, newBody, event.isConst, event.token);
     }
 
     @Override
@@ -181,7 +221,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         scopeStack.push(new HashMap<>());
         StatementListNode newBody = (StatementListNode) cmd.statements.accept(this);
         scopeStack.pop();
-        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, newBody, cmd.token);
+        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, newBody, cmd.isConst, cmd.token);
     }
 
     @Override
@@ -190,7 +230,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         for (SlotNode slot : menu.slots) {
             newSlots.add((SlotNode) slot.accept(this));
         }
-        return new MenuNode(menu.name, menu.rows, newSlots, menu.token);
+        return new MenuNode(menu.name, menu.rows, newSlots, menu.isConst, menu.token);
     }
 
     @Override
@@ -219,5 +259,21 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
             newOptions.add(rewritten);
         }
         return new RandomNode(newOptions, random.weights, random.token);
+    }
+
+    @Override
+    public ASTNode visitTupleDestructure(TupleDestructureNode node) {
+        for (VariableNode target : node.targets) {
+            VariableType expectedType = target.type; // set by LinkFunctionVisitor from function return type
+            String fullname = target.holder + "." + target.name;
+            VariableType resolvedType = resolveOrDeclareGlobal(fullname, target.token, null);
+            if (resolvedType != VariableType.VAR && expectedType != null && resolvedType != expectedType)
+                throw new SemanticException(target.token, "Type mismatch: '" + fullname + "' is declared as " +
+                        resolvedType + " but function returns " + expectedType);
+            // Keep the function's return type on the target variable
+            target.type = expectedType;
+        }
+        ArgumentListNode newArgs = (ArgumentListNode) node.arguments.accept(this);
+        return new TupleDestructureNode(node.targets, node.operator, node.functionName, newArgs, node.token);
     }
 }

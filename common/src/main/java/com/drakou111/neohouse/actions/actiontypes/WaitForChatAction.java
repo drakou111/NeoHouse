@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.ChatEvents;
 import net.minecraft.client.Minecraft;
@@ -26,9 +27,16 @@ public class WaitForChatAction extends Action {
             registered = true;
         }
         if (matched) {
-            return ++extraWait >= extraDelayTicks;
+            if (++extraWait >= extraDelayTicks) {
+                ChatEvents.unwatch(this);
+                return true;
+            }
+            return false;
         }
-        if (++ticksWaited > NeoHouseConfig.get().actionTimeoutTicks) return true; // timed out — proceed anyway
+        if (++ticksWaited > NeoHouseConfig.get().actionTimeoutTicks) {
+            ChatEvents.unwatch(this);
+            return true;
+        }
         return false;
     }
 
@@ -42,6 +50,7 @@ public class WaitForChatAction extends Action {
     }
 
     public void reset() {
+        ChatEvents.unwatch(this);
         matched = false;
         registered = false;
         ticksWaited = 0;

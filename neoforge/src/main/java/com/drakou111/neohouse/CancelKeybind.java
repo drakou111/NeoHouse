@@ -13,7 +13,15 @@ public class CancelKeybind {
             GLFW.GLFW_KEY_K
     );
 
+    public static final KeyMapping OPEN_KEY = new KeyMappingCompat(
+            "key.neohouse.open",
+            GLFW.GLFW_KEY_N
+    );
+
     public static void register(IEventBus modEventBus) {
-        modEventBus.addListener((RegisterKeyMappingsEvent e) -> e.register(CANCEL_KEY));
+        modEventBus.addListener((RegisterKeyMappingsEvent e) -> {
+            e.register(CANCEL_KEY);
+            e.register(OPEN_KEY);
+        });
     }
 }

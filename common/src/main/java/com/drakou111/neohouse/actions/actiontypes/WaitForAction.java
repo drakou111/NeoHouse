@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
@@ -10,13 +11,19 @@ public class WaitForAction extends Action {
 
     private final Class<? extends Screen> screenClass;
     private final boolean waitForOpen;
+    private final boolean acceptIfAlreadyPresent;
     private Screen screenAtStart = null;
     private boolean initialized = false;
     private int ticksWaited = 0;
 
     public WaitForAction(Class<? extends Screen> screenClass, boolean waitForOpen) {
+        this(screenClass, waitForOpen, false);
+    }
+
+    public WaitForAction(Class<? extends Screen> screenClass, boolean waitForOpen, boolean acceptIfAlreadyPresent) {
         this.screenClass = screenClass;
         this.waitForOpen = waitForOpen;
+        this.acceptIfAlreadyPresent = acceptIfAlreadyPresent;
     }
 
     @Override
@@ -30,7 +37,9 @@ public class WaitForAction extends Action {
         }
         Screen current = mc.screen;
         if (waitForOpen) {
-            return current != null && current != screenAtStart && screenClass.isAssignableFrom(current.getClass());
+            if (current == null || !screenClass.isAssignableFrom(current.getClass())) return false;
+            boolean alreadyAtTargetOnInit = screenAtStart != null && screenClass.isAssignableFrom(screenAtStart.getClass());
+            return current != screenAtStart || (acceptIfAlreadyPresent && alreadyAtTargetOnInit);
         } else {
             return current == null || !screenClass.isAssignableFrom(current.getClass());
         }

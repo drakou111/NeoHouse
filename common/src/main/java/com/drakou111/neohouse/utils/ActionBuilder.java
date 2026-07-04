@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.utils;
 
-import com.drakou111.neohouse.NeoHouseConfig;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.*;
 import com.drakou111.neohouse.constants.*;
@@ -20,20 +21,26 @@ import java.util.function.Supplier;
 public class ActionBuilder {
     private final List<Action> actions = new ArrayList<>();
 
+    /** A wait sized to the configured click delay. Reads config at build time, not at construction. */
+    private static WaitTicksAction clickDelay() {
+        return new WaitTicksAction(NeoHouseConfig.get().clickDelay);
+    }
+
     public ActionBuilder clickSlotAndWait(int s, boolean leftCLick) {
         actions.add(new SlotAction(s, leftCLick));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
     public ActionBuilder customItem(String itemId) {
-        assert Minecraft.getInstance().player != null;
+        if (Minecraft.getInstance().player == null)
+            throw new IllegalStateException("Cannot build a custom-item action with no player in the world.");
         actions.add(new CreativeGiveAction(itemId));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         actions.add(new SlotAction(1, true, true));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         actions.add(new CreativeGiveAction(null));
         return this;
     }
@@ -41,7 +48,7 @@ public class ActionBuilder {
     public ActionBuilder sendChatAndWait(String s) {
         actions.add(new ChatAction(s));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
@@ -50,22 +57,22 @@ public class ActionBuilder {
 
         actions.add(new SlotAction(slot, true));
         actions.add(new WaitForAction(ContainerScreen.class, false));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         actions.add(new ChatAction(capped));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
     public ActionBuilder anvilInput(String string, int slot) {
         String capped = string.length() > StringLimits.ANVIL_TEXT ? string.substring(0, StringLimits.ANVIL_TEXT) : string;
-        
+
         actions.add(new SlotAction(slot, true));
-        actions.add(new WaitForAction(AnvilScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(new WaitForAction(AnvilScreen.class, true, true));
+        actions.add(clickDelay());
         actions.add(new AnvilAction(capped));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
@@ -75,7 +82,7 @@ public class ActionBuilder {
 
     public ActionBuilder search(String text, Item itemType, boolean leftClick, ActionBuilder onFound, ActionBuilder onNotFound) {
         actions.add(new SearchAction(text, itemType, leftClick, onFound != null ? onFound.get() : null, onNotFound != null ? onNotFound.get() : null));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
@@ -84,10 +91,10 @@ public class ActionBuilder {
         actions.add(new SearchAction(null, text, null, true,
                                      AnvilScreen.class,
                                      new ActionBuilder()
-                    .append(new WaitTicksAction(NeoHouseConfig.get().clickDelay))
+                    .append(clickDelay())
                     .append(new AnvilAction(capped))
                     .append(new WaitForAction(ContainerScreen.class, true))
-                    .append(new WaitTicksAction(NeoHouseConfig.get().clickDelay))
+                    .append(clickDelay())
                     .get(),
                                      null));
         return this;
@@ -98,10 +105,10 @@ public class ActionBuilder {
         actions.add(new SearchAction(null, text, null, true,
                      ContainerScreen.class, false,
                      new ActionBuilder()
-                             .append(new WaitTicksAction(NeoHouseConfig.get().clickDelay))
+                             .append(clickDelay())
                              .append(new ChatAction(capped))
                              .append(new WaitForAction(ContainerScreen.class, true))
-                             .append(new WaitTicksAction(NeoHouseConfig.get().clickDelay))
+                             .append(clickDelay())
                              .get(),
                      null));
         return this;
@@ -112,10 +119,10 @@ public class ActionBuilder {
         actions.add(new SearchAction(null, searchText, null, true,
                                      AbstractSignEditScreen.class,
                                      new ActionBuilder()
-                             .append(new WaitTicksAction(NeoHouseConfig.get().clickDelay))
+                             .append(clickDelay())
                              .append(new SignAction(capped))
                              .append(new WaitForAction(ContainerScreen.class, true))
-                             .append(new WaitTicksAction(NeoHouseConfig.get().clickDelay))
+                             .append(clickDelay())
                              .get(),
                                      null));
         return this;
@@ -124,26 +131,26 @@ public class ActionBuilder {
     public ActionBuilder gotoFunction(boolean hasUIOpened, String name, boolean leftClick) {
         if (hasUIOpened) {
             actions.add(new CloseScreenAction());
-            actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+            actions.add(clickDelay());
         }
         actions.add(new ChatAction(Commands.FUNCTIONS));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         actions.add(new SearchAction(null, name, null, leftClick, null, null));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
     public ActionBuilder gotoCommand(boolean hasUIOpened, String name, boolean leftClick) {
         if (hasUIOpened) {
             actions.add(new CloseScreenAction());
-            actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+            actions.add(clickDelay());
         }
         actions.add(new ChatAction(Commands.COMMANDS));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         actions.add(new SearchAction("/" + name, null, leftClick, null, null));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
@@ -166,12 +173,12 @@ public class ActionBuilder {
         return this;
     }
 
-    public ActionBuilder addAction(AddAction action, RestrictionAction restriction) {
+    public ActionBuilder addAction(AddAction action) {
         return this.clickSlotAndWait(Others.GENERAL_ADD_H6, true)
                    .search(action.displayName);
     }
 
-    public ActionBuilder addCondition(AddCondition action, RestrictionCondition restriction) {
+    public ActionBuilder addCondition(AddCondition action) {
         return this.clickSlotAndWait(Others.GENERAL_ADD_H6, true)
                    .search(action.displayName);
     }
@@ -192,7 +199,7 @@ public class ActionBuilder {
                      .search(FunctionInputs.DELETE)
                      .clickSlotAndWait(Others.GENERAL_CONFIRM, true),
 
-             new ActionBuilder().empty() // Do nothing
+             new ActionBuilder().empty()
         );
     }
 
@@ -202,7 +209,7 @@ public class ActionBuilder {
                                    .search(CommandInputs.DELETE)
                                    .clickSlotAndWait(Others.GENERAL_CONFIRM, true),
 
-                           new ActionBuilder().empty() // Do nothing
+                           new ActionBuilder().empty()
                           );
     }
 
@@ -218,10 +225,10 @@ public class ActionBuilder {
 
     public ActionBuilder gotoCustomMenu(String name, boolean leftClick) {
         actions.add(new CloseScreenAction());
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         actions.add(new ChatAction(Commands.CUSTOM_MENUS));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         actions.add(new SearchAction(null, name, null, leftClick, null, null));
         return this;
     }
@@ -229,14 +236,14 @@ public class ActionBuilder {
     public ActionBuilder copyContext() {
         actions.add(new SlotAction(Others.GENERAL_GO_COPY_PASTE_H6, false));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 
     public ActionBuilder pasteContext() {
         actions.add(new SlotAction(Others.GENERAL_GO_COPY_PASTE_H6, true));
         actions.add(new WaitForAction(ContainerScreen.class, true));
-        actions.add(new WaitTicksAction(NeoHouseConfig.get().clickDelay));
+        actions.add(clickDelay());
         return this;
     }
 

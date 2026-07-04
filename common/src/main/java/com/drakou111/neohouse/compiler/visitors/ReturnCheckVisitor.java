@@ -3,10 +3,12 @@ package com.drakou111.neohouse.compiler.visitors;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.ConditionalNode;
 import com.drakou111.neohouse.compiler.ast.statement.RandomNode;
 import com.drakou111.neohouse.compiler.ast.statement.ReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 public class ReturnCheckVisitor extends EmptyVisitor<Void> {
@@ -18,6 +20,14 @@ public class ReturnCheckVisitor extends EmptyVisitor<Void> {
 
     @Override
     public Void visitTypedFunction(TypedFunctionNode function) {
+        if (!allPathsReturn(function.statements)) {
+            throw new SemanticException(function.token, "Function '" + function.name + "' may fall through without returning a value. Make sure the function will always return a value.");
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitTupleFunction(TupleFunctionNode function) {
         if (!allPathsReturn(function.statements)) {
             throw new SemanticException(function.token, "Function '" + function.name + "' may fall through without returning a value. Make sure the function will always return a value.");
         }

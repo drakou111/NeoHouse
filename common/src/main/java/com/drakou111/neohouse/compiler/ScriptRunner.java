@@ -22,6 +22,11 @@ public class ScriptRunner {
 
     private final NHCompiler compiler;
     private Path lastScript;
+    private List<String> lastHelperNames = List.of();
+    private List<String> lastExtraVariables = List.of();
+
+    public List<String> getLastHelperNames() { return lastHelperNames; }
+    public List<String> getLastExtraVariables() { return lastExtraVariables; }
 
     public ScriptRunner(NHCompiler compiler) {
         this.compiler = compiler;
@@ -53,9 +58,23 @@ public class ScriptRunner {
 
         Action scriptAction = compiler.compile(preprocessed);
 
+        for (var warning : compiler.getLastWarnings()) {
+            MessageUtils.warningToChat(warning.message());
+        }
+
         int helpers = compiler.getLastHelperCount();
+        lastHelperNames = compiler.getLastHelperNames();
+        lastExtraVariables = compiler.getLastExtraVariables();
+
         if (helpers > 0) {
-            MessageUtils.warningToChat(helpers + " extra helper function" + (helpers == 1 ? " was" : "s were") + " created to stay within Hypixel's action limits.");
+            MessageUtils.warningToChatWithLink(
+                    helpers + " extra helper function" + (helpers == 1 ? " was" : "s were") + " created to stay within Hypixel's action limits.",
+                    "CLICK HERE", "/nh list functions");
+        }
+        if (!lastExtraVariables.isEmpty()) {
+            MessageUtils.warningToChatWithLink(
+                    lastExtraVariables.size() + " extra compiler variable" + (lastExtraVariables.size() == 1 ? " was" : "s were") + " created.",
+                    "CLICK HERE", "/nh list variables");
         }
 
         // Post-compile safety check using the fully-built action tree

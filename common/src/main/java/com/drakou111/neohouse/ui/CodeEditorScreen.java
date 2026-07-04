@@ -1,8 +1,9 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.NeoHouseConfig;
-import com.drakou111.neohouse.UIOpacity;
-import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.UIOpacity;
+import com.drakou111.neohouse.config.UITheme;
+
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.CompilerSession;
@@ -39,7 +40,7 @@ public class CodeEditorScreen extends ScreenBase {
 
     private long    lastChangeMs   = 0;
     private boolean checkPending   = false;
-    private static final long CHECK_DELAY_MS = 400;
+    private static final long CHECK_DELAY_MS = 200;
 
     private SyntaxEditorWidget editor;
     private Button             saveBtn;
@@ -135,7 +136,7 @@ public class CodeEditorScreen extends ScreenBase {
             }
         }
         if (collected.isEmpty()) {
-            editor.clearError();
+            showWarningsOrClear();
         } else {
             List<int[]> spans    = new ArrayList<>();
             List<String> messages = new ArrayList<>();
@@ -151,6 +152,28 @@ public class CodeEditorScreen extends ScreenBase {
             }
             editor.setErrors(spans, messages, collected.getFirst().getMessage());
         }
+    }
+
+    /** After a clean compile, show any compiler warnings (yellow) or clear the bar entirely. */
+    private void showWarningsOrClear() {
+        var warnings = CHECKER.getLastWarnings();
+        if (warnings.isEmpty()) {
+            editor.clearError();
+            return;
+        }
+        List<int[]> spans     = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
+        for (var w : warnings) {
+            messages.add(w.message());
+            if (w.token() != null) {
+                int line0     = w.token().line - 1;
+                int colStart0 = Math.max(0, w.token().column - w.token().text.length() - 1);
+                spans.add(new int[]{line0, colStart0, w.token().text.length()});
+            } else {
+                spans.add(new int[]{-1, -1, 0});
+            }
+        }
+        editor.setWarnings(spans, messages, warnings.getFirst().message());
     }
 
     private static int tokenOffset(String source, Token t) {
@@ -188,6 +211,11 @@ public class CodeEditorScreen extends ScreenBase {
         Minecraft.getInstance().setScreen(parent);
     }
 
+    /** Exit the editor straight back to the game, without popping to the parent screen. */
+    private void closeToGame() {
+        Minecraft.getInstance().setScreen(null);
+    }
+
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
         if (key == GLFW.GLFW_KEY_ESCAPE && editor != null && editor.isFindOpen()) {
@@ -214,18 +242,18 @@ public class CodeEditorScreen extends ScreenBase {
                     this,
                     () -> {
                         pendingContent = null;
-                        discard();
+                        closeToGame();
                     }
             ));
         } else {
-            discard();
+            closeToGame();
         }
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
-        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        UITheme t   = NeoHouseConfig.get().uiTheme;
+        UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fill(0, 0, this.width, this.height, t.bgTop(o.bgAlpha));
         g.fill(0, 0, this.width, HEADER_H,    t.panel(o.panelAlpha));
         g.fill(0, HEADER_H, this.width, HEADER_H + 1, t.accent());

@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.utils;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.actions.ChatEvents;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 
@@ -11,6 +12,7 @@ public class SequenceManager {
     private static int completedSteps = 0;
 
     public static void startAction(Action action) {
+        ChatEvents.clear(); // drop any listeners left over from a previous run
         currentAction = action;
         startTimeMs = System.currentTimeMillis();
         totalSteps = action.countSteps();
@@ -19,6 +21,7 @@ public class SequenceManager {
 
     public static void cancelAction() {
         currentAction = null;
+        ChatEvents.clear();
     }
 
     public static boolean isRunning() {
@@ -68,6 +71,7 @@ public class SequenceManager {
         if (finished) {
             MessageUtils.debugToChat("Done!");
             currentAction = null;
+            ChatEvents.clear();
         }
     }
 }

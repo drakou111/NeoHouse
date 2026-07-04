@@ -41,6 +41,13 @@ tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 def itemApiVersions   = ['1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11'] as Set
 def mcVer = rootProject.ext.active_mc_version
 sourceSets.main.java.srcDir(itemApiVersions.contains(mcVer) ? 'src/compat/mc1215plus' : 'src/compat/mc1214')
+
+// In 1.21.5: ClickEvent became a sealed interface with record subtypes (ClickEvent.RunCommand),
+// and Inventory.selected went private in favor of the getSelectedSlot() getter.
+def mc1215plusApi = ['1.21.5','1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11'] as Set
+def newClickInv = mc1215plusApi.contains(mcVer)
+sourceSets.main.java.srcDir(newClickInv ? 'src/compat/click_new' : 'src/compat/click_old')
+sourceSets.main.java.srcDir(newClickInv ? 'src/compat/inv_getter' : 'src/compat/inv_field')
 sourceSets.main.java.srcDir(
     mcVer == '1.21.11'                               ? 'src/compat/mc12111plus' :
     mcVer in ['1.21.9', '1.21.10']                   ? 'src/compat/mc1219plus'  :
@@ -72,3 +79,24 @@ public final class BuildConstants {
 }
 
 tasks.named("compileJava").configure { dependsOn(generateBuildConstants) }
+
+// Generates assets/neohouse/library/index.txt listing all .nh files in the library directory.
+// LibraryManager reads this at runtime instead of trying to list the directory (unreliable in NeoForge).
+def libResourceDir = file("src/main/resources/assets/neohouse/library")
+def generatedLibraryDir = layout.buildDirectory.dir("generated/resources/library")
+
+def generateLibraryIndex = tasks.register("generateLibraryIndex") {
+    inputs.files(fileTree(libResourceDir).include("**/*.nh"))
+    def indexFile = generatedLibraryDir.get().file("assets/neohouse/library/index.txt").asFile
+    outputs.file(indexFile)
+    doLast {
+        indexFile.parentFile.mkdirs()
+        indexFile.text = fileTree(libResourceDir).include("**/*.nh")
+            .collect { libResourceDir.toURI().relativize(it.toURI()).toString().replace('\\', '/') }
+            .sort()
+            .join("\n")
+    }
+}
+
+sourceSets.main.resources.srcDir(generatedLibraryDir)
+tasks.named("processResources").configure { dependsOn(generateLibraryIndex) }

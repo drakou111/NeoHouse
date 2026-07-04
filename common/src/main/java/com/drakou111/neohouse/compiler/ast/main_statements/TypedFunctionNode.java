@@ -10,8 +10,8 @@ public class TypedFunctionNode extends FunctionNode {
     public final VariableType returnType;
     public final ParameterListNode parameters;
 
-    public TypedFunctionNode(final String name, final String description, final VariableType returnType, ParameterListNode parameters, final StatementListNode statements, final Token token) {
-        super(name, description, statements, token);
+    public TypedFunctionNode(final String name, final String description, final String icon, final VariableType returnType, ParameterListNode parameters, final StatementListNode statements, final boolean isConst, final Token token) {
+        super(name, description, icon, statements, isConst, token);
         this.returnType = returnType;
         this.parameters = parameters;
         this.token = token;

@@ -11,13 +11,15 @@ public class CommandNode extends MainStatementNode {
     public final int priority;
     public final boolean listed;
     public final StatementListNode statements;
+    public final boolean isConst;
 
-    public CommandNode(String name, boolean targeted, int priority, boolean listed, StatementListNode statements, Token token) {
+    public CommandNode(String name, boolean targeted, int priority, boolean listed, StatementListNode statements, boolean isConst, Token token) {
         this.name = name;
         this.targeted = targeted;
         this.priority = priority;
         this.listed = listed;
         this.statements = statements;
+        this.isConst = isConst;
         this.token = token;
     }
 

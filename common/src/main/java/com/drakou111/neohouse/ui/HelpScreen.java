@@ -1,9 +1,10 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.NeoHouseConfig;
-import com.drakou111.neohouse.SyntaxTheme;
-import com.drakou111.neohouse.UIOpacity;
-import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.SyntaxTheme;
+import com.drakou111.neohouse.config.UIOpacity;
+import com.drakou111.neohouse.config.UITheme;
+
 import com.drakou111.neohouse.compat.PoseHelper;
 import com.drakou111.neohouse.compat.RegistryHelper;
 import com.drakou111.neohouse.compat.RenderHelper;
@@ -96,6 +97,8 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_C, "  /nh run <file>         — compile & run a script"));
         l.add(new HelpLine(COL_C, "  /nh rerun              — re-run last script"));
         l.add(new HelpLine(COL_C, "  /nh config             — open config screen"));
+        l.add(new HelpLine(COL_C, "  /nh list functions     — list helper functions from last run"));
+        l.add(new HelpLine(COL_C, "  /nh list variables     — list extra variables from last run"));
         l.add(new HelpLine(COL_C, "  /nh delete <section>   — deletes a specific section"));
         l.add(new HelpLine(COL_C, "  /nh nuke               — delete everything"));
         l.add(new HelpLine(COL_D, ""));
@@ -126,6 +129,18 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, "  Undeclared variables are treated as global var."));
         l.add(new HelpLine(COL_D, ""));
 
+        l.add(new HelpLine(COL_H, "Fallback Values"));
+        l.add(new HelpLine(COL_T, "  When a variable is read, add ?value to supply a fallback"));
+        l.add(new HelpLine(COL_T, "  used when it hasn't been initialized yet:"));
+        l.add(new HelpLine(COL_CODE, "    p.apple = p.test?0 + 2;   // p.test defaults to 0"));
+        l.add(new HelpLine(COL_CODE, "    message(\"Name: \" + p.nick?\"none\");"));
+        l.add(new HelpLine(COL_D, "  Works on p., g. and t[]. reads (not ph. placeholders)."));
+        l.add(new HelpLine(COL_D, "  The fallback must be a constant of the SAME type as the"));
+        l.add(new HelpLine(COL_D, "  variable (any constant is allowed for var / undeclared)."));
+        l.add(new HelpLine(COL_D, "  Binds tightly: p.test?0 + 2 means (p.test?0) + 2."));
+        l.add(new HelpLine(COL_D, "  Compiles to Housing's %var.player/name fallback% form."));
+        l.add(new HelpLine(COL_D, ""));
+
         l.add(new HelpLine(COL_H, "Constants"));
         l.add(new HelpLine(COL_T, "  Named compile-time values — inlined with no runtime cost:"));
         l.add(new HelpLine(COL_CODE, "    const long MAX_SCORE = 100;"));
@@ -135,6 +150,21 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, "  Types: long, double, string, bool (not var)."));
         l.add(new HelpLine(COL_D, "  Value must be a literal or another constant."));
         l.add(new HelpLine(COL_D, "  Declare at the top of the file, before functions."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Enums"));
+        l.add(new HelpLine(COL_T, "  A named type whose members are numbered from 0:"));
+        l.add(new HelpLine(COL_CODE, "    enum Color { RED, GREEN, BLUE }"));
+        l.add(new HelpLine(COL_T, "  Use the enum name as a type; members are Enum.MEMBER:"));
+        l.add(new HelpLine(COL_CODE, "    Color p.fav;"));
+        l.add(new HelpLine(COL_CODE, "    p.fav = Color.GREEN;      // stored as 1"));
+        l.add(new HelpLine(COL_CODE, "    if (p.fav == Color.RED) { ... }"));
+        l.add(new HelpLine(COL_D, "  Stored as longs, but treated as their own type:"));
+        l.add(new HelpLine(COL_D, "  you can only compare a Color with a Color, and enums"));
+        l.add(new HelpLine(COL_D, "  cannot be used in arithmetic or other expressions."));
+        l.add(new HelpLine(COL_T, "  Usable as function parameter and return types:"));
+        l.add(new HelpLine(COL_CODE, "    function Color favColor() { return Color.RED; }"));
+        l.add(new HelpLine(COL_CODE, "    function paint(Color c) { ... }"));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Operators"));
@@ -178,6 +208,27 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_T, "  Parameters are passed by value — changes inside"));
         l.add(new HelpLine(COL_T, "  the function do not affect the original variable."));
         l.add(new HelpLine(COL_D, "  Function names cannot clash with built-in actions."));
+        l.add(new HelpLine(COL_T, "  Any function can be called as void (return discarded):"));
+        l.add(new HelpLine(COL_CODE, "    add(1, 2);"));
+        l.add(new HelpLine(COL_T, "  Optional named params (before regular params):"));
+        l.add(new HelpLine(COL_CODE, "    function greet(icon: {id:\"minecraft:diamond\"},"));
+        l.add(new HelpLine(COL_CODE, "                   description: \"Says hi\") {"));
+        l.add(new HelpLine(COL_CODE, "      message(\"Hi!\");"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Tuple Functions"));
+        l.add(new HelpLine(COL_T, "  Return multiple values from a single function:"));
+        l.add(new HelpLine(COL_CODE, "    function (double, double) getVec() {"));
+        l.add(new HelpLine(COL_CODE, "      return (2.0, 1.0);"));
+        l.add(new HelpLine(COL_CODE, "    }"));
+        l.add(new HelpLine(COL_T, "  Capture with a tuple destructure (vars must exist,"));
+        l.add(new HelpLine(COL_T, "  types must match the function's return types):"));
+        l.add(new HelpLine(COL_CODE, "    (p.x, p.y) = getVec();"));
+        l.add(new HelpLine(COL_T, "  Any assignment operator is allowed:"));
+        l.add(new HelpLine(COL_CODE, "    (p.x, p.y) += getVec();"));
+        l.add(new HelpLine(COL_T, "  Or call as void to discard the outputs:"));
+        l.add(new HelpLine(COL_CODE, "    getVec();"));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Global Function Call"));
@@ -194,10 +245,27 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) — not both in one expression."));
         l.add(new HelpLine(COL_D, ""));
 
+        l.add(new HelpLine(COL_H, "Const Modifier"));
+        l.add(new HelpLine(COL_T, "  Mark a function, event, loop, command or menu as"));
+        l.add(new HelpLine(COL_T, "  immutable when using 'Skip Const' override mode:"));
+        l.add(new HelpLine(COL_CODE, "    const function greet() { ... }"));
+        l.add(new HelpLine(COL_CODE, "    const event onJoin { ... }"));
+        l.add(new HelpLine(COL_CODE, "    const loop clock(20) { ... }"));
+        l.add(new HelpLine(COL_CODE, "    const command coins(listed: true) { ... }"));
+        l.add(new HelpLine(COL_CODE, "    const menu shop(3) { ... }"));
+        l.add(new HelpLine(COL_D, "  In 'Skip Const' mode, const items are never recreated."));
+        l.add(new HelpLine(COL_D, "  Non-const items are always recreated from scratch."));
+        l.add(new HelpLine(COL_D, "  Useful for protecting hand-crafted Housing functions"));
+        l.add(new HelpLine(COL_D, "  that should not be overwritten on each import."));
+        l.add(new HelpLine(COL_D, ""));
+
         l.add(new HelpLine(COL_H, "Loops"));
         l.add(new HelpLine(COL_T, "  Repeats on a fixed tick interval (minimum 4):"));
         l.add(new HelpLine(COL_CODE, "    loop myLoop(10) { ... }"));
         l.add(new HelpLine(COL_D, "  Cannot be typed or have parameters."));
+        l.add(new HelpLine(COL_T, "  Supports icon/description before the tick delay:"));
+        l.add(new HelpLine(COL_CODE, "    loop clock(icon: {id:\"minecraft:clock\"},"));
+        l.add(new HelpLine(COL_CODE, "              description: \"Fires every second\", 20) { ... }"));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Random"));
@@ -241,6 +309,42 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_H, "File Import"));
         l.add(new HelpLine(COL_T, "  Include another .nh file inline:"));
         l.add(new HelpLine(COL_CODE, "    import \"path/to/other.nh\";"));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Recursion"));
+        l.add(new HelpLine(COL_T, "  Functions that call themselves directly or indirectly."));
+        l.add(new HelpLine(COL_T, "  The compiler detects cycles in the call graph, e.g.:"));
+        l.add(new HelpLine(COL_T, "  \"Recursive call: a → b → a\". The recursionMode config"));
+        l.add(new HelpLine(COL_T, "  controls how it is handled:"));
+        l.add(new HelpLine(COL_C, "    Off   — allowed silently"));
+        l.add(new HelpLine(COL_C, "    Warn  — allowed, but reported (default)"));
+        l.add(new HelpLine(COL_C, "    Error — compilation fails"));
+        l.add(new HelpLine(COL_D, "  Hypixel Housing does not officially support recursive"));
+        l.add(new HelpLine(COL_D, "  functions — enable only if you know what you are doing."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Multi-call behavior"));
+        l.add(new HelpLine(COL_T, "  Calling the same function more than once in a single"));
+        l.add(new HelpLine(COL_T, "  execution context (directly or transitively) causes issues"));
+        l.add(new HelpLine(COL_T, "  in Hypixel Housing. The multiCallMode config controls this:"));
+        l.add(new HelpLine(COL_C, "    Off  — no check performed"));
+        l.add(new HelpLine(COL_C, "    Warn — compile error if a multi-call is detected"));
+        l.add(new HelpLine(COL_C, "    Fix  — auto-create copies (foo$0, foo$1, ...) so"));
+        l.add(new HelpLine(COL_C, "           each invocation uses a unique function name"));
+        l.add(new HelpLine(COL_D, "  Configure via /nh config or in neohouse-config.json."));
+        l.add(new HelpLine(COL_D, ""));
+
+        l.add(new HelpLine(COL_H, "Global call rules"));
+        l.add(new HelpLine(COL_T, "  Functions called via 'global foo()' are triggered for"));
+        l.add(new HelpLine(COL_T, "  every player. Two restrictions apply:"));
+        l.add(new HelpLine(COL_C, "    1. A globally-called function cannot itself contain"));
+        l.add(new HelpLine(COL_C, "       'global ...' calls — this would be doubly-global."));
+        l.add(new HelpLine(COL_C, "    2. Loops run for all players and cannot contain"));
+        l.add(new HelpLine(COL_C, "       'global ...' calls for the same reason."));
+        l.add(new HelpLine(COL_T, "  The globalCallMode config controls enforcement:"));
+        l.add(new HelpLine(COL_C, "    Off   — allowed silently"));
+        l.add(new HelpLine(COL_C, "    Warn  — allowed, but reported"));
+        l.add(new HelpLine(COL_C, "    Error — compilation fails (default)"));
         l.add(new HelpLine(COL_D, ""));
 
         return l;
@@ -450,6 +554,7 @@ public class HelpScreen extends ScreenBase {
             case DOUBLE_LITERAL    -> "double";
             case NORMAL_EXPRESSION -> "expr";
             case ITEM_LITERAL      -> "item";
+            case LOCATION          -> "location";
         };
     }
 
@@ -587,8 +692,8 @@ public class HelpScreen extends ScreenBase {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
-        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        UITheme t   = NeoHouseConfig.get().uiTheme;
+        UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, this.width, this.height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
         g.fill(0, 0, this.width, HEADER_H, t.panel(o.panelAlpha));
         RenderHelper.renderLogo(g, PAD + 56, 4, 18, t.accent());
@@ -750,7 +855,7 @@ public class HelpScreen extends ScreenBase {
     }
 
     private void renderSyntaxLine(GuiGraphics g, String text, int x, int y) {
-        SyntaxTheme st = SyntaxTheme.byId(NeoHouseConfig.get().syntaxTheme);
+        SyntaxTheme st = NeoHouseConfig.get().syntaxTheme;
         List<SyntaxHighlighter.Span> spList = highlighter.buildSpans(text);
         int curX = x;
         int drawn = 0;

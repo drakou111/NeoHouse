@@ -12,7 +12,7 @@ public class ConditionFactory {
     private static Action buildCondition(RestrictionCondition state, AddCondition condition, InputParam... params) {
         if (!state.isAllowed(condition))
             throw new InterruptActionException("Cannot add condition '" + condition.displayName + "' here.");
-        ActionBuilder b = new ActionBuilder().addCondition(condition, state);
+        ActionBuilder b = new ActionBuilder().addCondition(condition);
         for (InputParam p : params) p.apply(b);
         return b.clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();

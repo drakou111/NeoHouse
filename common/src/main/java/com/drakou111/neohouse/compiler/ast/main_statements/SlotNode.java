@@ -7,7 +7,7 @@ import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 
 public class SlotNode extends ASTNode {
     public final int slotId;
-    public final String item; // SNBT\0searchName format
+    public final String item;
     public final StatementListNode statements;
 
     public SlotNode(int slotId, String item, StatementListNode statements, Token token) {

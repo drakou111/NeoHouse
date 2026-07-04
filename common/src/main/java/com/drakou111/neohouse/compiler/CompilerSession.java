@@ -1,9 +1,11 @@
 package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
 import com.drakou111.neohouse.exceptions.CompilingException;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public class CompilerSession {
     private final NHCompiler compiler = new NHCompiler();
@@ -11,6 +13,10 @@ public class CompilerSession {
 
     public Action getLastGoodResult() {
         return lastGoodResult;
+    }
+
+    public List<CompileWarning> getLastWarnings() {
+        return compiler.getLastWarnings();
     }
 
     public Action compile(String source, Path scriptsRoot) throws CompilingException {

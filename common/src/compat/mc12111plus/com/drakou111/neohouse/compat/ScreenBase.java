@@ -1,11 +1,12 @@
 package com.drakou111.neohouse.compat;
 
+import com.drakou111.neohouse.ui.NeoHouseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
-public abstract class ScreenBase extends Screen {
+public abstract class ScreenBase extends Screen implements NeoHouseScreen {
     protected ScreenBase(Component title) { super(title); }
 
     private MouseButtonEvent _me; private boolean _mc;

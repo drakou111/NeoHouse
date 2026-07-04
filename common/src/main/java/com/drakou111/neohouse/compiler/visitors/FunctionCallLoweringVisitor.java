@@ -8,6 +8,7 @@ import com.drakou111.neohouse.compiler.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
+import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.*;
@@ -24,6 +25,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
 
     private final Map<String, VoidFunctionNode> voidFunctions = new HashMap<>();
     private final Map<String, TypedFunctionNode> typedFunctions = new HashMap<>();
+    private final Map<String, TupleFunctionNode> tupleFunctions = new HashMap<>();
 
 
     public FunctionCallLoweringVisitor(MainNode main) {
@@ -34,7 +36,12 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
                     throw new SemanticException(tf.token, "Duplicate function name '" + name + "'");
                 }
                 typedFunctions.put(name, tf);
-
+            } else if (top instanceof TupleFunctionNode tf) {
+                String name = tf.name;
+                if (tupleFunctions.containsKey(name) || voidFunctions.containsKey(name)) {
+                    throw new SemanticException(tf.token, "Duplicate function name '" + name + "'");
+                }
+                tupleFunctions.put(name, tf);
             } else if (top instanceof VoidFunctionNode vf) {
                 String name = vf.name;
                 if (typedFunctions.containsKey(name) || voidFunctions.containsKey(name)) {
@@ -46,6 +53,17 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     }
 
     private record ArgLowerResult(NormalExpressionNode simple, List<StatementNode> stmts) {}
+
+    /** Returns the base function name, stripping any compiler-added $N copy suffix. */
+    private static String baseName(String name) {
+        int idx = name.lastIndexOf('$');
+        if (idx > 0) {
+            String tail = name.substring(idx + 1);
+            if (!tail.isEmpty() && tail.chars().allMatch(Character::isDigit))
+                return name.substring(0, idx);
+        }
+        return name;
+    }
 
     private ArgLowerResult lowerArgument(ExpressionNode expr) {
         if (expr instanceof FunctionCallNode tfc) {
@@ -65,7 +83,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             for (int i = 0; i < realArgs.size(); i++) {
                 NormalExpressionNode argExpr = realArgs.get(i);
                 VariableNode param = params.get(i);
-                String newName = tfc.functionName + "_p$" + i;
+                String newName = baseName(tfc.functionName) + "_p$" + i;
                 VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, tfc.token);
                 stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, argExpr, tfc.token));
             }
@@ -112,12 +130,12 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     public ASTNode visitVoidFunctionCall(VoidFunctionCallNode call) {
         VoidFunctionNode def = voidFunctions.get(call.functionName);
 
-        // Allow calling a typed function as void (return value discarded)
+        // Allow calling typed/tuple functions as void (return value discarded)
         if (def == null) {
             TypedFunctionNode typedDef = typedFunctions.get(call.functionName);
-            if (typedDef != null) {
-                return lowerTypedCallAsVoid(call, typedDef);
-            }
+            if (typedDef != null) return lowerTypedCallAsVoid(call, typedDef);
+            TupleFunctionNode tupleDef = tupleFunctions.get(call.functionName);
+            if (tupleDef != null) return lowerTupleCallAsVoid(call, tupleDef);
             throw new SemanticException(call.token, "Undefined function '" + call.functionName + "'");
         }
 
@@ -133,13 +151,31 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             ArgLowerResult lowered = lowerArgument(rawArgs.get(i));
             stmts.addAll(lowered.stmts());
             VariableNode param = params.get(i);
-            String newName = call.functionName + "_p$" + i;
+            String newName = baseName(call.functionName) + "_p$" + i;
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }
 
         stmts.add(new VoidFunctionCallNode(call.functionName, new ArgumentListNode(List.of()), call.token));
 
+        return new StatementListNode(stmts);
+    }
+
+    private ASTNode lowerTupleCallAsVoid(VoidFunctionCallNode call, TupleFunctionNode def) {
+        List<NormalExpressionNode> rawArgs = call.arguments.expressions;
+        List<VariableNode> params = def.parameters.parameters;
+        if (rawArgs.size() != params.size())
+            throw new SemanticException(call.token, "Function " + call.functionName + " expects " + params.size() + " arguments but got " + rawArgs.size());
+        List<StatementNode> stmts = new ArrayList<>();
+        for (int i = 0; i < rawArgs.size(); i++) {
+            ArgLowerResult lowered = lowerArgument(rawArgs.get(i));
+            stmts.addAll(lowered.stmts());
+            VariableNode param = params.get(i);
+            String newName = baseName(call.functionName) + "_p$" + i;
+            VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
+            stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
+        }
+        stmts.add(new VoidFunctionCallNode(call.functionName, new ArgumentListNode(List.of()), call.token));
         return new StatementListNode(stmts);
     }
 
@@ -156,12 +192,51 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             ArgLowerResult lowered = lowerArgument(rawArgs.get(i));
             stmts.addAll(lowered.stmts());
             VariableNode param = params.get(i);
-            String newName = call.functionName + "_p$" + i;
+            String newName = baseName(call.functionName) + "_p$" + i;
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }
         // Call the function; the return value in o$ is simply discarded
         stmts.add(new VoidFunctionCallNode(call.functionName, new ArgumentListNode(List.of()), call.token));
+        return new StatementListNode(stmts);
+    }
+
+    @Override
+    public ASTNode visitTupleDestructure(TupleDestructureNode node) {
+        TupleFunctionNode def = tupleFunctions.get(node.functionName);
+        if (def == null) throw new SemanticException(node.token, "Undefined tuple function '" + node.functionName + "'");
+
+        List<VariableNode> params = def.parameters.parameters;
+        List<StatementNode> stmts = new ArrayList<>();
+
+        // Lower each argument (may contain nested typed function calls)
+        List<NormalExpressionNode> realArgs = new ArrayList<>();
+        for (ExpressionNode rawArg : node.arguments.expressions) {
+            ArgLowerResult sub = lowerArgument(rawArg);
+            stmts.addAll(sub.stmts());
+            realArgs.add(sub.simple);
+        }
+        if (realArgs.size() != params.size())
+            throw new SemanticException(node.token, "Function '" + node.functionName + "' expects " +
+                    params.size() + " arguments but got " + realArgs.size());
+
+        // Assign parameters
+        for (int i = 0; i < realArgs.size(); i++) {
+            VariableNode param = params.get(i);
+            String newName = baseName(node.functionName) + "_p$" + i;
+            VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, node.token);
+            stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, realArgs.get(i), node.token));
+        }
+
+        // Call the function
+        stmts.add(new VoidFunctionCallNode(node.functionName, new ArgumentListNode(List.of()), node.token));
+
+        // Read outputs o$0, o$1, ... into targets using the declared operator
+        for (int i = 0; i < node.targets.size(); i++) {
+            VariableNode outVar = new VariableNode(def.returnTypes.get(i), Holder.PLAYER, "o$" + i, null, node.token);
+            stmts.add(new AssignationNode(node.targets.get(i), node.operator, outVar, node.token));
+        }
+
         return new StatementListNode(stmts);
     }
 
@@ -185,7 +260,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             stmts.addAll(lowered.stmts());
 
             VariableNode param = params.get(i);
-            String newName = call.functionName + "_p$" + i;
+            String newName = baseName(call.functionName) + "_p$" + i;
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }

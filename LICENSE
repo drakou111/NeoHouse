@@ -1,0 +1,38 @@
+NeoHouse — All Rights Reserved
+
+Copyright (c) 2026 drakou111
+
+All rights reserved.
+
+This software and its source code are made publicly viewable for transparency
+and reference only. No license or right to use, copy, modify, merge, publish,
+distribute, sublicense, or sell copies of this software, in whole or in part,
+is granted by this publication.
+
+You MAY:
+  - View and read the source code.
+  - Download and use the official compiled releases of this mod for personal,
+    non-commercial use within Minecraft.
+
+You MAY NOT, without prior written permission from the copyright holder:
+  - Copy, reproduce, or redistribute the source code or compiled binaries.
+  - Modify the software or create derivative works based on it.
+  - Re-upload the mod to any platform (including but not limited to other mod
+    repositories) or bundle it in a modpack offered for download.
+  - Use the software or any part of it for commercial purposes.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+----------------------------------------------------------------------------
+
+Portions of the project's build scaffolding originate from the NeoForged MDK
+template (https://github.com/NeoForged/MDK), which is provided under the MIT
+License. See TEMPLATE_LICENSE.txt for that notice. The MIT License applies
+only to those template files, not to the NeoHouse source code, which is
+governed by the terms above.

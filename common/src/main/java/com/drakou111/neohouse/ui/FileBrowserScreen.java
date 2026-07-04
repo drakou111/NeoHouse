@@ -1,8 +1,9 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.NeoHouseConfig;
-import com.drakou111.neohouse.UIOpacity;
-import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.UIOpacity;
+import com.drakou111.neohouse.config.UITheme;
+
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.ScriptRunner;
@@ -130,8 +131,8 @@ public class FileBrowserScreen extends ScreenBase {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
-        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        UITheme t   = NeoHouseConfig.get().uiTheme;
+        UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
 
         g.fill(0, 0, width, HEADER_H, t.panel(o.panelAlpha));
@@ -202,7 +203,7 @@ public class FileBrowserScreen extends ScreenBase {
             boolean hover    = mouseY >= rowY && mouseY < rowY + ROW_H && mouseX < width - SB_W - SB_PAD - 1;
             boolean selected = (i == selectedIdx);
 
-            UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
+            UITheme t   = NeoHouseConfig.get().uiTheme;
             int bg = selected ? t.accentTint(0x44) : hover ? 0x22FFFFFF : (i % 2 == 0 ? 0x0BFFFFFF : 0);
             g.fill(0, rowY, width - SB_W - SB_PAD - 1, rowY + ROW_H, bg);
             g.fill(0, rowY + ROW_H - 1, width - SB_W - SB_PAD - 1, rowY + ROW_H, t.accentTint(0x18));
@@ -235,7 +236,6 @@ public class FileBrowserScreen extends ScreenBase {
 
     @Override
     protected boolean onMouseClicked(double mx, double my, int button) {
-        // Scrollbar interaction
         if (button == 0) {
             int total   = entries.size();
             int maxRows = maxVisibleRows();

@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.utils;
 
+import com.drakou111.neohouse.compat.ClickEventHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -41,5 +42,19 @@ public class MessageUtils {
 
     public static void warningToChat(Object message) {
         sendPrefixedMultiline(message, "[WARNING] ", ChatFormatting.YELLOW, ChatFormatting.YELLOW);
+    }
+
+    public static void warningToChatWithLink(String message, String linkText, String command) {
+        if (Minecraft.getInstance().player == null) return;
+        MutableComponent full = Component.empty();
+        full.append(Component.literal("[WARNING] ").withStyle(ChatFormatting.YELLOW));
+        full.append(Component.literal(message).withStyle(ChatFormatting.YELLOW));
+        full.append(Component.literal(" "));
+        full.append(Component.literal("[" + linkText + "]")
+                .withStyle(style -> style
+                        .withColor(ChatFormatting.GOLD)
+                        .withUnderlined(true)
+                        .withClickEvent(ClickEventHelper.runCommand(command))));
+        Minecraft.getInstance().player.displayClientMessage(full, false);
     }
 }

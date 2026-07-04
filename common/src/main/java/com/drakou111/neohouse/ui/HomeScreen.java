@@ -1,11 +1,14 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.UIOpacity;
+import com.drakou111.neohouse.config.UITheme;
+
 import com.drakou111.neohouse.*;
 import com.drakou111.neohouse.compat.PoseHelper;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.platform.Platforms;
-import com.drakou111.neohouse.ui.hint.AlwaysShowHint;
-import com.drakou111.neohouse.ui.hint.HintProvider;
+import com.drakou111.neohouse.ui.hint.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -18,36 +21,47 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
 
-public class HomeScreen extends Screen {
+public class HomeScreen extends Screen implements NeoHouseScreen {
     private final Supplier<Path> scriptsDir;
     private final Random random = new Random();
-    private HintProvider currentHint;
+    private String hintText = "";
 
     private static final List<HintProvider> HINTS = List.of(
-            new AlwaysShowHint("GG red."),
-            new AlwaysShowHint("GodTheHands."),
-            new AlwaysShowHint("There are no bugs. Only hidden features."),
-            new AlwaysShowHint("Yaaay!"),
-            new AlwaysShowHint("...!"),
-            new AlwaysShowHint("Subscribe to Drakou111"),
-            new AlwaysShowHint("NP is not in P."),
-            new AlwaysShowHint("Semicolons matter."),
-            new AlwaysShowHint("99 little bugs in the code..."),
-            new AlwaysShowHint("Off by one error."),
-            new AlwaysShowHint("Works on my machine."),
-            new AlwaysShowHint("Skill issue."),
-            new AlwaysShowHint("404: Hint not found."),
-            new AlwaysShowHint("git push"),
-            new AlwaysShowHint("Hello, World!"),
-            new AlwaysShowHint("Have you tried turning it off and on again?"),
-            new AlwaysShowHint("TODO: fix this later."),
-            new AlwaysShowHint("The answer is 42."),
-            new AlwaysShowHint("Don't dig straight down."),
-            new AlwaysShowHint("The cake is a lie."),
-            new AlwaysShowHint("Drink water."),
-            new AlwaysShowHint("This is fine."),
-            new AlwaysShowHint("To be continued...")
+            new TipHint("g. variables are shared by everyone, p. variables are per-player, t[team]. is per-team."),
+            new TipHint("Mark a function 'const' so it isn't overwritten when you re-run a script."),
+            new TipHint("random [ ... ] runs one block at random — weight an option with N*, like 3*{ ... }."),
+            new TipHint("repeat(N) { ... } copies its body N times at compile time."),
+            new TipHint("Split large scripts across files with: import \"lib/utils.nh\";"),
+            new TipHint("Functions can return several values at once using a tuple, like (double, double)."),
+            new TipHint("Build messages with +: \"Score: \" + p.score, works on any type."),
+            new TipHint("Open Help to browse every action, condition, event and placeholder."),
+            new TipHint("/nh rerun instantly recompiles and runs your last script."),
+            new TipHint("Hold an item and run /nh copyitem to grab its exact data for giveItem()."),
+            new TipHint("Change the editor theme and syntax colors in Config."),
+            new TipHint("global foo(); triggers a void function for every player at once."),
+            new TipHint("Define a value once with 'const long MAX = 100;' and reuse it everywhere."),
+            new TipHint("Drop .nh files in your neohouse-scripts folder to edit them outside Minecraft."),
+
+            new SeasonalHint(12, 24, 12, 26, "Merry Christmas!"),
+            new SeasonalHint(12, 31, 1, 1, "Happy New Year!"),
+            new SeasonalHint(10, 31, 10, 31, "Happy Halloween!"),
+            new SeasonalHint(7, 15, 7, 15, "JULY 15TH 7PM EST THE AWARDENING"),
+
+            new RareHint("GG red.", 1.0 / 4),
+            new RareHint("GodTheHands.", 1.0 / 4),
+            new RareHint("Coming to Terraria soon.", 1.0 / 4),
+            new RareHint("//TODO: remove this", 1.0 / 4), // Keep this, this is a joke hint!
+            new RareHint("You caught a shiny tip!", 1.0 / 8_192),
+            new RareHint("Is this Minceraft?", 1.0 / 10_000),
+
+            new RandomNumberHint("Here is a random number: $$$", "$$$"),
+
+            new RecurseHint(1.0 / 8, HomeScreen::hintPool)
     );
+
+    private static List<HintProvider> hintPool() {
+        return HINTS;
+    }
 
 
     public HomeScreen(Supplier<Path> scriptsDir) {
@@ -72,7 +86,7 @@ public class HomeScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("Files"), b -> openFiles()).bounds(startX, btnY, btnW, btnH).build());
         addRenderableWidget(Button.builder(Component.literal("Help"), b -> openHelp()).bounds(startX + btnW + gap, btnY, btnW, btnH).build());
         addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig()).bounds(startX + 2 * (btnW + gap), btnY, btnW, btnH).build());
-        currentHint = getRandomHint();
+        hintText = getRandomHint().getText(Minecraft.getInstance());
     }
 
     private HintProvider getRandomHint() {
@@ -83,8 +97,8 @@ public class HomeScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
-        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        UITheme t   = NeoHouseConfig.get().uiTheme;
+        UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
         int cx = width / 2;
         int midY = height / 2;
@@ -115,7 +129,7 @@ public class HomeScreen extends Screen {
         super.render(g, mouseX, mouseY, partialTick);
         String disclaimer = "Not affiliated with Hypixel, Mojang, or Microsoft.";
         g.drawCenteredString(font, disclaimer, cx, cardY + cardH + 6, t.divider());
-        g.drawCenteredString(font, currentHint.getText(minecraft), cx, height - 14, t.divider());
+        g.drawCenteredString(font, hintText, cx, height - 14, t.divider());
     }
 
     @Override

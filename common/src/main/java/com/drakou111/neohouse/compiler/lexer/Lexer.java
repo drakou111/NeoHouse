@@ -20,24 +20,37 @@ public class Lexer {
 
     public List<Token> tokenize() {
         List<Token> tokens = new ArrayList<>();
-        while (position < input.length()) {
-            String rest = input.substring(position);
+
+        // Reuse one Matcher per token type across the whole input (via Matcher.region),
+        // instead of allocating a fresh substring + matchers at every position. This keeps
+        // tokenization linear rather than O(n²) on large scripts.
+        TokenType[] types = TokenType.values();
+        Matcher[] matchers = new Matcher[types.length];
+        for (int i = 0; i < types.length; i++) {
+            if (types[i].pattern != null) matchers[i] = types[i].pattern.matcher(input);
+        }
+        int length = input.length();
+
+        while (position < length) {
             boolean matched = false;
 
-            for (TokenType tt : TokenType.values()) {
-                if (tt.pattern == null) continue;
+            for (int i = 0; i < types.length; i++) {
+                Matcher m = matchers[i];
+                if (m == null) continue;
 
-                Matcher m = tt.pattern.matcher(rest);
+                m.region(position, length);
                 if (!m.lookingAt()) continue;
 
+                TokenType tt = types[i];
                 String lexeme = m.group();
                 matched = true;
 
                 int tokenLine = line;
+                int tokenColumn = column;
 
                 // Track lines and columns
-                for (char c : lexeme.toCharArray()) {
-                    if (c == '\n') {
+                for (int c = 0; c < lexeme.length(); c++) {
+                    if (lexeme.charAt(c) == '\n') {
                         line++;
                         column = 1;
                     } else {
@@ -57,7 +70,7 @@ public class Lexer {
                     lineContent = lines[tokenLine - 1];
                 }
 
-                tokens.add(new Token(tt, lexeme, lineContent, tokenLine, column));
+                tokens.add(new Token(tt, lexeme, lineContent, tokenLine, tokenColumn));
                 break;
             }
 

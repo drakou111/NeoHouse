@@ -1,8 +1,9 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.NeoHouseConfig;
-import com.drakou111.neohouse.UIOpacity;
-import com.drakou111.neohouse.UITheme;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.UIOpacity;
+import com.drakou111.neohouse.config.UITheme;
+
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import net.minecraft.ChatFormatting;
@@ -99,8 +100,8 @@ public class InputDialogScreen extends ScreenBase {
         int cx = x + dialogW / 2;
 
         if (parent != null) parent.render(g, -1, -1, partialTick);
-        UITheme t   = UITheme.byId(NeoHouseConfig.get().uiTheme);
-        UIOpacity o = UIOpacity.byId(NeoHouseConfig.get().uiOpacity);
+        UITheme t   = NeoHouseConfig.get().uiTheme;
+        UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fill(0, 0, this.width, this.height, o.dimAlpha << 24);
 
         g.fill(x, y, x + dialogW, y + dialogH, t.dialog(o.panelAlpha));

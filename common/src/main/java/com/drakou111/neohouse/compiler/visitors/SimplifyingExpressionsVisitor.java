@@ -7,8 +7,11 @@ import com.drakou111.neohouse.compiler.ast.expr.constants.*;
 import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.*;
+import com.drakou111.neohouse.compiler.ast.main_statements.CommandNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.SlotNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.*;
@@ -22,8 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SimplifyingExpressionsVisitor extends DefaultVisitor {
-    private final String VAR_PREFIX = "t$";
+    private static final String TEMP_MARKER = "t$";
     private int tempCounter = 0;
+
+    private static boolean isTempVar(VariableNode v) {
+        return v.name.contains(TEMP_MARKER);
+    }
 
     private record LowerResult(ExpressionNode simple, List<StatementNode> stmts) {}
 
@@ -65,7 +72,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             }
 
             VariableNode accVar;
-            boolean reuseLeft = leftRes.simple instanceof VariableNode && ((VariableNode) leftRes.simple).name.startsWith(VAR_PREFIX);
+            boolean reuseLeft = leftRes.simple instanceof VariableNode lv0 && isTempVar(lv0);
 
             if (reuseLeft) {
                 accVar = (VariableNode) leftRes.simple;
@@ -110,24 +117,44 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                             new BooleanExpressionNode((NormalExpressionNode) opRes.simple(), falsy, BooleanOperator.EQUALS, un.token),
                             stmts);
                 }
-                case LONG_CAST, DOUBLE_CAST -> {
-                    VariableType fromType = un.operand.type;
-                    VariableType toType = un.operator == UnaryOperator.LONG_CAST
-                            ? VariableType.LONG : VariableType.DOUBLE;
-
-                    if (fromType == VariableType.STRING) {
-                        throw new SemanticException(un.token, "Cannot cast STRING to " + toType);
+                case LONG_CAST -> {
+                    if (un.operand.type == VariableType.STRING) {
+                        throw new SemanticException(un.token, "Cannot cast STRING to LONG");
                     }
-
-                    boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
+                    // Apply L suffix to the source so the assignment reads it as a long.
+                    // t$ temps are single-use and safe to mutate; user variables get a copy
+                    // to avoid polluting other references to the same VariableNode.
+                    NormalExpressionNode inner = (NormalExpressionNode) opRes.simple();
+                    NormalExpressionNode castSource;
+                    if (inner instanceof VariableNode v && isTempVar(v)) {
+                        v.castSuffix = "L";
+                        castSource = v;
+                    } else if (inner instanceof VariableNode v) {
+                        VariableNode copy = new VariableNode(v.type, v.holder, v.name, v.teamName, v.token);
+                        copy.castSuffix = "L";
+                        copy.fallback = v.fallback;
+                        castSource = copy;
+                    } else {
+                        castSource = inner; // constant — no suffix needed
+                    }
+                    VariableNode result = makeTemp(un.token, VariableType.LONG);
+                    stmts.add(new AssignationNode(result, AssignmentOperator.ASSIGN, castSource, un.token));
+                    return new LowerResult(result, stmts);
+                }
+                case DOUBLE_CAST -> {
+                    if (un.operand.type == VariableType.STRING) {
+                        throw new SemanticException(un.token, "Cannot cast STRING to DOUBLE");
+                    }
+                    boolean reuse = opRes.simple() instanceof VariableNode rv && isTempVar(rv);
                     VariableNode result;
                     if (reuse) {
                         result = (VariableNode) opRes.simple();
                     } else {
-                        result = makeTemp(un.token, toType);
+                        result = makeTemp(un.token, VariableType.DOUBLE);
                         stmts.add(new AssignationNode(result, AssignmentOperator.ASSIGN, (NormalExpressionNode) opRes.simple(), un.token));
                     }
-                    result.type = toType;
+                    result.type = VariableType.DOUBLE;
+                    if (result.castSuffix == null) result.castSuffix = "D";
                     return new LowerResult(result, stmts);
                 }
                 case STRING_CAST -> {
@@ -147,9 +174,9 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                     // Variable → embed as in-game placeholder reference (avoids broken string +=)
                     if (opRes.simple() instanceof VariableNode v) {
                         String ref = switch (v.holder) {
-                            case PLAYER -> "%var.player/" + v.name + "%";
-                            case GLOBAL -> "%var.global/" + v.name + "%";
-                            case TEAM   -> "%var.team/" + v.name + " " + v.teamName + "%";
+                            case PLAYER -> "%var.player/" + v.name + v.fallbackToken() + "%";
+                            case GLOBAL -> "%var.global/" + v.name + v.fallbackToken() + "%";
+                            case TEAM   -> "%var.team/" + v.name + " " + v.teamName + v.fallbackToken() + "%";
                         };
                         return new LowerResult(new ConstantPrimitiveNode(
                                 new StringValue(ref), VariableType.STRING, un.token), opRes.stmts());
@@ -189,7 +216,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             }
 
             VariableNode accVar;
-            boolean reuse = opRes.simple() instanceof VariableNode && ((VariableNode) opRes.simple()).name.startsWith(VAR_PREFIX);
+            boolean reuse = opRes.simple() instanceof VariableNode rv2 && isTempVar(rv2);
             if (reuse) {
                 accVar = (VariableNode) opRes.simple();
             } else {
@@ -254,7 +281,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             stmts.addAll(rightRes.stmts());
 
             VariableNode leftVar;
-            if (leftRes.simple instanceof VariableNode lv && lv.name.startsWith(VAR_PREFIX)) {
+            if (leftRes.simple instanceof VariableNode lv && isTempVar(lv)) {
                 leftVar = lv;
             } else if (leftRes.simple instanceof VariableNode v2) {
                 leftVar = v2;
@@ -353,9 +380,9 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 case BoolValue b   -> b.toString();
             };
             case VariableNode v -> switch (v.holder) {
-                case PLAYER -> "%var.player/" + v.name + "%";
-                case GLOBAL -> "%var.global/" + v.name + "%";
-                case TEAM   -> "%var.team/" + v.name + " " + v.teamName + "%";
+                case PLAYER -> "%var.player/" + v.name + v.fallbackToken() + "%";
+                case GLOBAL -> "%var.global/" + v.name + v.fallbackToken() + "%";
+                case TEAM   -> "%var.team/" + v.name + " " + v.teamName + v.fallbackToken() + "%";
             };
             case PlaceholderNode p -> {
                 Placeholder ph = Placeholder.requireByName(p.placeholder);
@@ -385,7 +412,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     }
 
     private VariableNode makeTemp(Token basedOn, VariableType type) {
-        String name = VAR_PREFIX + (tempCounter++);
+        String name = TEMP_MARKER + (tempCounter++);
         return new VariableNode(type, Holder.PLAYER, name, null, basedOn);
     }
 
@@ -409,6 +436,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     public ASTNode visitStatements(StatementListNode statements) {
         List<StatementNode> result = new ArrayList<>();
         for (StatementNode stmt : statements.statements) {
+            tempCounter = 0;
             ASTNode lowered = stmt.accept(this);
             if (lowered instanceof StatementListNode slab) {
                 result.addAll(slab.statements);
@@ -509,6 +537,19 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     }
 
     @Override
+    public ASTNode visitTupleReturn(TupleReturnNode returnNode) {
+        List<StatementNode> stmts = new ArrayList<>();
+        List<NormalExpressionNode> simpleExprs = new ArrayList<>();
+        for (NormalExpressionNode expr : returnNode.expressions) {
+            LowerResult lr = lowerExpr(expr);
+            stmts.addAll(lr.stmts());
+            simpleExprs.add((NormalExpressionNode) lr.simple);
+        }
+        stmts.add(new TupleReturnNode(simpleExprs, returnNode.token));
+        return new StatementListNode(stmts);
+    }
+
+    @Override
     public ASTNode visitConditional(ConditionalNode conditional) {
         LowerResult lr = lowerExpr(conditional.condition);
         List<StatementNode> beforeIf = new ArrayList<>(lr.stmts());
@@ -530,8 +571,23 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitLoop(LoopNode loop) {
+        tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(loop.statements);
-        return new LoopNode(loop.name, loop.description, newBody, loop.tickDelay, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, newBody, loop.tickDelay, loop.isConst, loop.token);
+    }
+
+    @Override
+    public ASTNode visitCommand(CommandNode command) {
+        tempCounter = 0;
+        StatementListNode newBody = (StatementListNode)visitStatements(command.statements);
+        return new CommandNode(command.name, command.targeted, command.priority, command.listed, newBody, command.isConst, command.token);
+    }
+
+    @Override
+    public ASTNode visitSlot(SlotNode slot) {
+        tempCounter = 0;
+        StatementListNode newBody = (StatementListNode)visitStatements(slot.statements);
+        return new SlotNode(slot.slotId, slot.item, newBody, slot.token);
     }
 
     @Override
@@ -545,20 +601,30 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitTypedFunction(TypedFunctionNode function) {
+        tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new TypedFunctionNode(function.name, function.description, function.returnType, function.parameters, newBody, function.token);
+        return new TypedFunctionNode(function.name, function.description, function.icon, function.returnType, function.parameters, newBody, function.isConst, function.token);
+    }
+
+    @Override
+    public ASTNode visitTupleFunction(TupleFunctionNode function) {
+        tempCounter = 0;
+        StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
+        return new TupleFunctionNode(function.name, function.description, function.icon, function.returnTypes, function.parameters, newBody, function.isConst, function.token);
     }
 
     @Override
     public ASTNode visitVoidFunction(VoidFunctionNode function) {
+        tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new VoidFunctionNode(function.name, function.description, function.parameters, newBody, function.token);
+        return new VoidFunctionNode(function.name, function.description, function.icon, function.parameters, newBody, function.isConst, function.token);
     }
 
     @Override
     public ASTNode visitEvent(EventNode event) {
+        tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(event.statements);
-        return new EventNode(event.event, newBody, event.token);
+        return new EventNode(event.event, newBody, event.isConst, event.token);
     }
 }
 

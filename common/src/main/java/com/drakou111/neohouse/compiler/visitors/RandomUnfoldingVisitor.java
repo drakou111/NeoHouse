@@ -30,7 +30,7 @@ public class RandomUnfoldingVisitor extends DefaultVisitor {
             } else {
                 String fnName = "random$" + (nextId++);
                 StatementListNode bodyClone = new StatementListNode(new ArrayList<>(arm.statements));
-                VoidFunctionNode helper = new VoidFunctionNode(fnName, "", new ParameterListNode(List.of()), bodyClone, random.token);
+                VoidFunctionNode helper = new VoidFunctionNode(fnName, "", null, new ParameterListNode(List.of()), bodyClone, false, random.token);
                 generated.add(helper);
 
                 VoidFunctionCallNode call = new VoidFunctionCallNode(fnName, new ArgumentListNode(List.of()), random.token);

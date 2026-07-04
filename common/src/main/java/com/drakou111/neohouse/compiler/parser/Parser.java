@@ -15,6 +15,7 @@ import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.ReservedCommands;
+import com.drakou111.neohouse.constants.Teleport;
 import com.drakou111.neohouse.exceptions.ParsingException;
 
 import java.util.*;
@@ -23,6 +24,34 @@ public class Parser {
     private final List<Token> tokens;
     private int pos = 0;
     private final HashMap<String, ConstantPrimitiveNode> constTable = new HashMap<>();
+    /** enum name -> its members in declaration order (member index = ordinal value). */
+    private final Map<String, List<String>> enumDefs = new HashMap<>();
+    /** full variable name (holder + "." + name) -> enum type name, for enum-typed variables. */
+    private final Map<String, String> varEnumType = new HashMap<>();
+    /** function name -> per-parameter enum type name (null entry = non-enum parameter). */
+    private final Map<String, List<String>> functionParamEnums = new HashMap<>();
+    /** function name -> its enum return type name (absent/null = non-enum return). */
+    private final Map<String, String> functionReturnEnums = new HashMap<>();
+
+    public Map<String, List<String>> getFunctionParamEnums() { return functionParamEnums; }
+    public Map<String, String> getFunctionReturnEnums() { return functionReturnEnums; }
+    public Map<String, List<String>> getEnumDefs() { return enumDefs; }
+
+    // Built-in math constants. Single source of truth for the values; the names are
+    // also listed in the CONST_IDENT lexer pattern.
+    private static final Map<String, Double> MATH_CONSTANTS = Map.of(
+            "PI",         3.14159265358979,
+            "E",          2.71828182845904,
+            "HALF_PI",    1.57079632679489,
+            "TWO_PI",     6.28318530717958,
+            "SQRT_TWO",   1.41421356237309,
+            "SQRT_THREE", 1.73205080756887,
+            "SQRT_FIVE",  2.23606797749978,
+            "PHI",        1.61803398874989
+    );
+
+    /** Optional leading named parameters (`icon: {..}`, `description: "..."`) shared by functions and loops. */
+    private record IconDescription(String icon, String description) {}
 
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
@@ -48,8 +77,8 @@ public class Parser {
     }
 
     private boolean checkTwo(TokenType type) {
-        Token next = tokens.get(pos + 1);
-        return next.type != TokenType.EOF && next.type == type;
+        if (pos + 1 >= tokens.size()) return false;
+        return tokens.get(pos + 1).type == type;
     }
 
     private Token advance() {
@@ -86,18 +115,31 @@ public class Parser {
 
         while (!isAtEnd()) {
             if (check(TokenType.FUNCTION)) {
-                nodes.add(parseFunction());
+                nodes.add(parseFunction(false));
             } else if (check(TokenType.LOOP)) {
-                nodes.add(parseLoop());
+                nodes.add(parseLoop(false));
             } else if (check(TokenType.EVENT)) {
-                nodes.add(parseEvent());
+                nodes.add(parseEvent(false));
             } else if (check(TokenType.COMMAND)) {
-                nodes.add(parseCommand());
+                nodes.add(parseCommand(false));
             } else if (check(TokenType.MENU)) {
-                nodes.add(parseMenu());
+                nodes.add(parseMenu(false));
+            } else if (check(TokenType.ENUM)) {
+                parseEnumDeclaration();
             } else if (check(TokenType.CONST)) {
-                parseConstDeclaration();
-            } else if (isType(peek())) {
+                TokenType nextType = (pos + 1 < tokens.size()) ? tokens.get(pos + 1).type : TokenType.EOF;
+                if (nextType == TokenType.FUNCTION || nextType == TokenType.LOOP || nextType == TokenType.EVENT
+                        || nextType == TokenType.COMMAND || nextType == TokenType.MENU) {
+                    advance(); // consume 'const'
+                    if      (check(TokenType.FUNCTION)) nodes.add(parseFunction(true));
+                    else if (check(TokenType.LOOP))     nodes.add(parseLoop(true));
+                    else if (check(TokenType.EVENT))    nodes.add(parseEvent(true));
+                    else if (check(TokenType.COMMAND))  nodes.add(parseCommand(true));
+                    else                                nodes.add(parseMenu(true));
+                } else {
+                    parseConstDeclaration();
+                }
+            } else if (isType(peek()) || isEnumType(peek())) {
                 nodes.add(parseGlobalDeclaration());
             } else {
                 throw new ParsingException(peek(), "Unexpected token at top level: " + peek().text);
@@ -107,7 +149,7 @@ public class Parser {
         return new MainNode(nodes);
     }
 
-    public EventNode parseEvent() {
+    public EventNode parseEvent(boolean isConst) {
         Token eventToken = consume(TokenType.EVENT, "Expected 'event' keyword");
 
         Token nameToken = consume(TokenType.IDENT, "Expected event name");
@@ -127,23 +169,44 @@ public class Parser {
 
         consume(TokenType.RBRACE, "Expected '}' after event body");
 
-        return new EventNode(event, new StatementListNode(body), eventToken);
+        return new EventNode(event, new StatementListNode(body), isConst, eventToken);
     }
 
-    public FunctionNode parseFunction() {
+    public FunctionNode parseFunction(boolean isConst) {
         Token functionToken = consume(TokenType.FUNCTION, "Expected 'function' keyword");
 
         VariableType returnType = null;
+        List<VariableType> tupleReturnTypes = null;
+        String returnEnumName = null;
         String functionName;
 
-        // Peek ahead: if it's a type, it's a typed function
         Token functionNameToken;
-        if (isType(peek())) {
+        if (check(TokenType.LPAREN)) {
+            // Tuple return type: function (T, T, ...) name
+            advance(); // consume '('
+            tupleReturnTypes = new ArrayList<>();
+            if (!check(TokenType.RPAREN)) {
+                do {
+                    Token typeToken = advance();
+                    tupleReturnTypes.add(parseVariableFromToken(typeToken));
+                } while (match(TokenType.COMMA));
+            }
+            if (tupleReturnTypes.size() < 2)
+                throw new ParsingException(functionToken, "Tuple return type must have at least 2 types");
+            consume(TokenType.RPAREN, "Expected ')' after tuple return types");
+            functionNameToken = consume(TokenType.IDENT, "Expected function name");
+        } else if (isType(peek()) || isEnumType(peek())) {
+            // Single return type: function T name  (T may be an enum name)
             Token typeToken = advance();
-            returnType = parseVariableFromToken(typeToken);
+            if (isEnumType(typeToken)) {
+                returnType = VariableType.LONG;
+                returnEnumName = typeToken.text;
+            } else {
+                returnType = parseVariableFromToken(typeToken);
+            }
             functionNameToken = consume(TokenType.IDENT, "Expected function name");
         } else {
-            // No return type: next must be function name
+            // No return type: void function
             functionNameToken = consume(TokenType.IDENT, "Expected function name");
         }
         functionName = functionNameToken.text;
@@ -154,6 +217,10 @@ public class Parser {
 
         consume(TokenType.LPAREN, "Expected '(' after function name");
 
+        IconDescription meta = parseIconDescription();
+        String description = meta.description();
+        String icon = meta.icon();
+
         List<VariableNode> parameters = new ArrayList<>();
         if (!check(TokenType.RPAREN)) {
             do {
@@ -163,11 +230,31 @@ public class Parser {
 
         consume(TokenType.RPAREN, "Expected ')' after parameters");
 
+        // Record the enum signature so call sites can be checked later (functions may be forward-referenced).
+        List<String> paramEnumNames = new ArrayList<>();
+        for (VariableNode param : parameters) paramEnumNames.add(param.enumName);
+        functionParamEnums.put(functionName, paramEnumNames);
+        functionReturnEnums.put(functionName, returnEnumName);
+
         consume(TokenType.LBRACE, "Expected '{' to begin function body");
+
+        // Enum-typed params are only in scope inside this body; register them, then restore afterwards.
+        Map<String, String> savedEnumTypes = new HashMap<>();
+        for (VariableNode param : parameters) {
+            String fullname = param.holder + "." + param.name;
+            savedEnumTypes.put(fullname, varEnumType.get(fullname));
+            if (param.enumName != null) varEnumType.put(fullname, param.enumName);
+            else varEnumType.remove(fullname);
+        }
 
         List<StatementNode> body = new ArrayList<>();
         while (!check(TokenType.RBRACE) && !isAtEnd()) {
             body.add(parseStatement());
+        }
+
+        for (Map.Entry<String, String> e : savedEnumTypes.entrySet()) {
+            if (e.getValue() == null) varEnumType.remove(e.getKey());
+            else varEnumType.put(e.getKey(), e.getValue());
         }
 
         consume(TokenType.RBRACE, "Expected '}' after function body");
@@ -175,20 +262,112 @@ public class Parser {
         StatementListNode bodyList = new StatementListNode(body);
         ParameterListNode parameterList = new ParameterListNode(parameters);
 
-        if (returnType == null) {
-            // → build a VoidFunctionNode
-            return new VoidFunctionNode(functionName, "", parameterList, bodyList, functionToken);
+        if (tupleReturnTypes != null) {
+            return new TupleFunctionNode(functionName, description, icon, tupleReturnTypes, parameterList, bodyList, isConst, functionToken);
+        } else if (returnType == null) {
+            return new VoidFunctionNode(functionName, description, icon, parameterList, bodyList, isConst, functionToken);
         } else {
-            // → build a TypedFunctionNode
-            return new TypedFunctionNode(
-                    functionName,
-                    "",
-                    returnType,
-                    parameterList,
-                    bodyList,
-                    functionToken
-            );
+            return new TypedFunctionNode(functionName, description, icon, returnType, parameterList, bodyList, isConst, functionToken);
         }
+    }
+
+    /** Parses optional leading `icon: {..}` / `description: "..."` named params inside a `(...)` header. */
+    private IconDescription parseIconDescription() {
+        String description = "";
+        String icon = null;
+        while (check(TokenType.IDENT) && checkTwo(TokenType.COLON)
+                && (peek().text.equals("icon") || peek().text.equals("description"))) {
+            Token nToken = advance();
+            consume(TokenType.COLON, "Expected ':' after '" + nToken.text + "'");
+            if (nToken.text.equals("icon")) {
+                if (icon != null) throw new ParsingException(nToken, "Duplicate 'icon' parameter");
+                icon = parseItemLiteral();
+            } else {
+                if (!description.isEmpty()) throw new ParsingException(nToken, "Duplicate 'description' parameter");
+                Token descToken = consume(TokenType.STRING_VALUE, "Expected string literal for 'description'");
+                description = descToken.text.substring(1, descToken.text.length() - 1);
+            }
+            if (!check(TokenType.RPAREN)) consume(TokenType.COMMA, "Expected ',' after named parameter");
+        }
+        return new IconDescription(icon, description);
+    }
+
+    /**
+     * Parses a single action/condition argument according to its declared {@link Param} kind.
+     * {@code ctx} is a label like {@code "Action 'sendMessage'"} used in error messages.
+     */
+    /**
+     * If the next token is a {@code const} identifier whose type matches {@code expected},
+     * consumes it and returns its folded value node; otherwise returns {@code null} without consuming.
+     * Lets constants be used wherever a same-typed literal is required.
+     */
+    private ConstantPrimitiveNode tryConstArg(VariableType expected) {
+        if (check(TokenType.IDENT)) {
+            ConstantPrimitiveNode c = constTable.get(peek().text);
+            if (c != null && c.type == expected) {
+                Token t = advance();
+                return new ConstantPrimitiveNode(c.value, c.type, t);
+            }
+        }
+        return null;
+    }
+
+    private NormalExpressionNode parseLiteralArg(Param param, int paramNumber, String ctx) {
+        return switch (param.kind()) {
+            case STRING_LITERAL -> {
+                if (param.hasEnumConstraint()) {
+                    Token t = consume(TokenType.STRING_VALUE, ctx + " param #" + paramNumber + " must be a STRING literal");
+                    String stripped = t.text.substring(1, t.text.length() - 1);
+                    if (!param.isValidEnum(stripped)) throw new ParsingException(t,
+                            "'" + stripped + "' is not a valid value for " + ctx + " param #" + paramNumber + ".");
+                    yield new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, t);
+                }
+                yield parseExpression();
+            }
+            case LONG_LITERAL -> {
+                ConstantPrimitiveNode c = tryConstArg(VariableType.LONG);
+                Token t = c != null ? c.token : consume(TokenType.LONG_VALUE, ctx + " param #" + paramNumber + " must be a LONG literal");
+                long val = c != null ? ((LongValue) c.value).value : Long.parseLong(t.text);
+                if (!param.inRange(val)) throw new ParsingException(t,
+                        "Value " + val + " is out of range for " + ctx + " param #" + paramNumber + ". Must be between " + param.rangeMin() + " and " + param.rangeMax() + ".");
+                yield new ConstantPrimitiveNode(new LongValue(val), VariableType.LONG, t);
+            }
+            case DOUBLE_LITERAL -> {
+                ConstantPrimitiveNode c = tryConstArg(VariableType.DOUBLE);
+                Token t = c != null ? c.token : consume(TokenType.DOUBLE_VALUE, ctx + " param #" + paramNumber + " must be a DOUBLE literal");
+                double val = c != null ? ((DoubleValue) c.value).value : Double.parseDouble(t.text);
+                if (!param.inRange(val)) throw new ParsingException(t,
+                        "Value " + val + " is out of range for " + ctx + " param #" + paramNumber + ". Must be between " + param.decimalMin() + " and " + param.decimalMax() + ".");
+                yield new ConstantPrimitiveNode(new DoubleValue(val), VariableType.DOUBLE, t);
+            }
+            case BOOL_LITERAL -> {
+                ConstantPrimitiveNode c = tryConstArg(VariableType.BOOL);
+                if (c != null) yield new ConstantPrimitiveNode(c.value, VariableType.BOOL, c.token);
+                Token t;
+                if (match(TokenType.TRUE) || match(TokenType.FALSE)) t = previous();
+                else throw new ParsingException(peek(), ctx + " param #" + paramNumber + " must be a BOOL literal (true or false).");
+                yield new ConstantPrimitiveNode(new BoolValue(t.type == TokenType.TRUE), VariableType.BOOL, t);
+            }
+            case ITEM_LITERAL -> {
+                Token itemStart = peek();
+                String searchName = parseItemLiteral();
+                yield new ConstantPrimitiveNode(new StringValue(searchName), VariableType.STRING, itemStart);
+            }
+            case NORMAL_EXPRESSION -> parseExpression();
+            case LOCATION -> {
+                // Bare preset identifier (HOUSE_SPAWN / INVOKER / CURRENT), or any string expression for custom coords.
+                if (check(TokenType.IDENT)) {
+                    Token idTok = peek();
+                    Teleport preset = null;
+                    try { preset = Teleport.valueOf(idTok.text); } catch (IllegalArgumentException ignored) {}
+                    if (preset != null && preset != Teleport.CUSTOM) {
+                        advance();
+                        yield new ConstantPrimitiveNode(new StringValue(idTok.text), VariableType.STRING, idTok);
+                    }
+                }
+                yield parseExpression();
+            }
+        };
     }
 
     public ReturnNode parseReturn() {
@@ -197,6 +376,25 @@ public class Parser {
         if (check(TokenType.SEMI)) {
             advance();
             return new VoidReturnNode(returnToken);
+        }
+
+        // Tuple return: return (e0, e1, ...);
+        if (check(TokenType.LPAREN)) {
+            advance(); // consume '('
+            List<NormalExpressionNode> exprs = new ArrayList<>();
+            exprs.add(parseExpression());
+            if (check(TokenType.COMMA)) {
+                while (match(TokenType.COMMA)) {
+                    exprs.add(parseExpression());
+                }
+                consume(TokenType.RPAREN, "Expected ')' after tuple return expressions");
+                consume(TokenType.SEMI, "Expected ';' after return");
+                return new TupleReturnNode(exprs, returnToken);
+            }
+            // Single expression in parens — treat as normal return
+            consume(TokenType.RPAREN, "Expected ')'");
+            consume(TokenType.SEMI, "Expected ';' after return expression");
+            return new TypedReturnNode(exprs.get(0), returnToken);
         }
 
         NormalExpressionNode value = parseExpression();
@@ -286,7 +484,10 @@ public class Parser {
             weights.add(weight);
         }
 
-        consume(TokenType.RBRACK, "Expected ']' to close random options");
+        Token rbrack = consume(TokenType.RBRACK, "Expected ']' to close random options");
+
+        if (weights.isEmpty())
+            throw new ParsingException(rbrack, "Random must have at least one block.");
 
         // Reduce all weights by their GCD
         long divisor = weights.get(0);
@@ -303,19 +504,23 @@ public class Parser {
         return a;
     }
 
-    public LoopNode parseLoop() {
+    public LoopNode parseLoop(boolean isConst) {
         Token loopToken = consume(TokenType.LOOP, "Expected 'loop' keyword");
 
         String name = consume(TokenType.IDENT, "Expected loop name").text;
 
         consume(TokenType.LPAREN, "Expected '('");
 
+        IconDescription meta = parseIconDescription();
+        String description = meta.description();
+        String icon = meta.icon();
+
         long delay = 4;
         if (check(TokenType.LONG_VALUE)) {
-            String longText = advance().text;
-            delay = Long.parseLong(longText);
+            Token delayToken = advance();
+            delay = Long.parseLong(delayToken.text);
             if (delay < 4) {
-                throw new ParsingException(peek(), "Loops must have a delay of at least 4 ticks (currently set to " + delay + " ticks).");
+                throw new ParsingException(delayToken, "Loops must have a delay of at least 4 ticks (currently set to " + delay + " ticks).");
             }
         }
 
@@ -330,10 +535,10 @@ public class Parser {
 
         consume(TokenType.RBRACE, "Expected '}' after loop body");
 
-        return new LoopNode(name, "", new StatementListNode(body), delay, loopToken);
+        return new LoopNode(name, description, icon, new StatementListNode(body), delay, isConst, loopToken);
     }
 
-    public CommandNode parseCommand() {
+    public CommandNode parseCommand(boolean isConst) {
         Token cmdToken = consume(TokenType.COMMAND, "Expected 'command' keyword");
         Token nameToken = consume(TokenType.IDENT, "Expected command name");
         if (nameToken.text.length() < 3)
@@ -381,10 +586,10 @@ public class Parser {
         }
         consume(TokenType.RBRACE, "Expected '}' after command body");
 
-        return new CommandNode(name, targeted, priority, listed, new StatementListNode(body), cmdToken);
+        return new CommandNode(name, targeted, priority, listed, new StatementListNode(body), isConst, cmdToken);
     }
 
-    public MenuNode parseMenu() {
+    public MenuNode parseMenu(boolean isConst) {
         Token menuToken = consume(TokenType.MENU, "Expected 'menu' keyword");
         Token nameToken = consume(TokenType.IDENT, "Expected menu name");
         String name = nameToken.text;
@@ -429,7 +634,7 @@ public class Parser {
         }
 
         consume(TokenType.RBRACE, "Expected '}' after menu body");
-        return new MenuNode(name, rows, slots, menuToken);
+        return new MenuNode(name, rows, slots, isConst, menuToken);
     }
 
     public StatementNode parseStatement() {
@@ -438,7 +643,8 @@ public class Parser {
         if (check(TokenType.REPEAT)) return parseRepeat();
         if (check(TokenType.RETURN)) return parseReturn();
         if (check(TokenType.IF)) return parseIf();
-        if (isType(peek())) return parseDeclaration();
+        if (check(TokenType.LPAREN)) return parseTupleDestructure();
+        if (isType(peek()) || isEnumType(peek())) return parseDeclaration();
 
         if (check(TokenType.IDENT) && AddAction.searchByName(peek().text) != null && checkTwo(TokenType.LPAREN)) {
             return parseAction();
@@ -488,50 +694,7 @@ public class Parser {
         List<NormalExpressionNode> parsedArgs = new ArrayList<>();
 
         for (int i = 0; i < sig.params.size(); i++) {
-            Param param = sig.params.get(i);
-
-            switch (param.kind()) {
-                case STRING_LITERAL -> {
-                    if (param.hasEnumConstraint()) {
-                        Token t = consume(TokenType.STRING_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a STRING literal");
-                        String stripped = t.text.substring(1, t.text.length() - 1);
-                        if (!param.isValidEnum(stripped)) throw new ParsingException(t,
-                            "'" + stripped + "' is not a valid value for '" + actionName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
-                        parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, nameToken));
-                    } else {
-                        parsedArgs.add(parseExpression());
-                    }
-                }
-                case LONG_LITERAL -> {
-                    Token t = consume(TokenType.LONG_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a LONG literal");
-                    long val = Long.parseLong(t.text);
-                    if (!param.inRange(val)) throw new ParsingException(t,
-                        "Value " + val + " is out of range for '" + actionName + "' param #" + (i+1) + ". Must be between " + param.rangeMin() + " and " + param.rangeMax() + ".");
-                    parsedArgs.add(new ConstantPrimitiveNode(new LongValue(val), VariableType.STRING, nameToken));
-                }
-                case DOUBLE_LITERAL -> {
-                    Token t = consume(TokenType.DOUBLE_VALUE, "Action " + actionName + " param #" + (i+1) + " must be a DOUBLE literal");
-                    double val = Double.parseDouble(t.text);
-                    if (!param.inRange(val)) throw new ParsingException(t,
-                                                                        "Value " + val + " is out of range for '" + actionName + "' param #" + (i+1) + ". Must be between " + param.decimalMin() + " and " + param.decimalMax() + ".");
-                    parsedArgs.add(new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(t.text)), VariableType.STRING, nameToken));
-                }
-                case BOOL_LITERAL -> {
-                    Token t;
-                    if (match(TokenType.TRUE)) t = previous();
-                    else if (match(TokenType.FALSE)) t = previous();
-                    else throw new ParsingException(peek(), "Action " + actionName + " param #" + (i+1) + " must be a BOOL literal (true or false).");
-
-                    boolean v = t.type == TokenType.TRUE;
-                    parsedArgs.add(new ConstantPrimitiveNode(new BoolValue(v), VariableType.BOOL, t));
-                }
-                case NORMAL_EXPRESSION -> parsedArgs.add(parseExpression());
-                case ITEM_LITERAL -> {
-                    String searchName = parseItemLiteral();
-                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(searchName), VariableType.STRING, nameToken));
-                }
-            }
-
+            parsedArgs.add(parseLiteralArg(sig.params.get(i), i + 1, "Action '" + actionName + "'"));
             if (i < sig.params.size() - 1) consume(TokenType.COMMA, "Expected ',' between action parameters");
         }
 
@@ -556,7 +719,7 @@ public class Parser {
 
         String result = snbt.toString();
         if (result.replaceAll("\\s+", "").equals("{}")) {
-            throw new ParsingException(open, "A menu slot item cannot be empty — provide at least an id field.");
+            throw new ParsingException(open, "An item cannot be empty — provide at least an id field.");
         }
         return result;
     }
@@ -576,7 +739,7 @@ public class Parser {
             Token postfixToken = peek();
             if (postfixToken.type == TokenType.PLUS_PLUS || postfixToken.type == TokenType.MINUS_MINUS) {
                 advance();
-                left = new UnaryExpressionNode(parseUnaryOperatorFromToken(postfixToken), left, null, previous());
+                left = makeUnary(parseUnaryOperatorFromToken(postfixToken), left, previous());
             } else {
                 break;
             }
@@ -603,7 +766,7 @@ public class Parser {
     private NormalExpressionNode parsePrefix(Token token) {
         switch (token.type) {
             case NOT:
-                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), null, token);
+                return makeUnary(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), token);
             case MINUS:
                 if (check(TokenType.LONG_VALUE)) {
                     Token numTok = advance();
@@ -611,31 +774,24 @@ public class Parser {
                 }
                 if (check(TokenType.DOUBLE_VALUE)) {
                     Token numTok = advance();
-                    return new ConstantPrimitiveNode(new DoubleValue(-Double.parseDouble(numTok.text.replace("d", ""))), VariableType.DOUBLE, token);
+                    return new ConstantPrimitiveNode(new DoubleValue(-Double.parseDouble(numTok.text)), VariableType.DOUBLE, token);
                 }
-                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), null, token);
+                return makeUnary(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), token);
             case LONG_CAST:
             case DOUBLE_CAST:
             case STRING_CAST:
-                return new UnaryExpressionNode(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), null, token);
-            case CONST_IDENT:
-                return switch (token.text) {
-                    case "PI" -> new ConstantPrimitiveNode(new DoubleValue(3.14159265358979), VariableType.DOUBLE, token);
-                    case "E" -> new ConstantPrimitiveNode(new DoubleValue(2.71828182845904), VariableType.DOUBLE, token);
-                    case "HALF_PI" -> new ConstantPrimitiveNode(new DoubleValue(1.57079632679489), VariableType.DOUBLE, token);
-                    case "TWO_PI" -> new ConstantPrimitiveNode(new DoubleValue(6.28318530717958), VariableType.DOUBLE, token);
-                    case "SQRT_TWO" -> new ConstantPrimitiveNode(new DoubleValue(1.41421356237309), VariableType.DOUBLE, token);
-                    case "SQRT_THREE" -> new ConstantPrimitiveNode(new DoubleValue(1.73205080756887), VariableType.DOUBLE, token);
-                    case "SQRT_FIVE" -> new ConstantPrimitiveNode(new DoubleValue(2.23606797749978), VariableType.DOUBLE, token);
-                    case "PHI" -> new ConstantPrimitiveNode(new DoubleValue(1.61803398874989), VariableType.DOUBLE, token);
-                    default -> throw new ParsingException(token, "Unsupported constant: " + token.text);
-                };
+                return makeUnary(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), token);
+            case CONST_IDENT: {
+                Double constVal = MATH_CONSTANTS.get(token.text);
+                if (constVal == null) throw new ParsingException(token, "Unsupported constant: " + token.text);
+                return new ConstantPrimitiveNode(new DoubleValue(constVal), VariableType.DOUBLE, token);
+            }
             case STRING_VALUE:
                 return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)), VariableType.STRING, token);
             case LONG_VALUE:
                 return new ConstantPrimitiveNode(new LongValue(Long.parseLong(token.text)), VariableType.LONG, token);
             case DOUBLE_VALUE:
-                return new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(token.text.replace("d",""))), VariableType.DOUBLE, token);
+                return new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(token.text)), VariableType.DOUBLE, token);
             case TRUE:
                 return new ConstantPrimitiveNode(new BoolValue(true), VariableType.BOOL, token);
             case FALSE:
@@ -645,9 +801,26 @@ public class Parser {
                 consume(TokenType.RPAREN, "Expect ')' after expression.");
                 return expr;
             case IDENT: {
+                // Qualified enum access: Color.GREEN -> its ordinal, tagged with the enum name.
+                if (enumDefs.containsKey(token.text)) {
+                    if (!check(TokenType.DOT))
+                        throw new ParsingException(token, "Enum '" + token.text + "' must be used as '" + token.text + ".MEMBER'");
+                    advance(); // consume '.'
+                    Token memberTok = consume(TokenType.IDENT, "Expected an enum member after '" + token.text + ".'");
+                    int idx = enumDefs.get(token.text).indexOf(memberTok.text);
+                    if (idx < 0)
+                        throw new ParsingException(memberTok, "'" + memberTok.text + "' is not a member of enum '" + token.text + "'");
+                    ConstantPrimitiveNode node = new ConstantPrimitiveNode(new LongValue(idx), VariableType.LONG, memberTok);
+                    node.enumName = token.text;
+                    return node;
+                }
+
                 ConstantPrimitiveNode constNode = constTable.get(token.text);
-                if (constNode != null)
-                    return new ConstantPrimitiveNode(constNode.value, constNode.type, token);
+                if (constNode != null) {
+                    ConstantPrimitiveNode copy = new ConstantPrimitiveNode(constNode.value, constNode.type, token);
+                    copy.enumName = constNode.enumName; // preserve enum identity for bare member refs
+                    return copy;
+                }
 
                 if (check(TokenType.LPAREN)) {
                     advance();
@@ -664,7 +837,9 @@ public class Parser {
                 if (token.text.equals("ph")) return parsePlaceholder();
 
                 stepBack();
-                return parseVariable();
+                VariableNode readVar = parseVariable();
+                attachFallback(readVar);
+                return readVar;
             }
             default:
                 throw new ParsingException(token, "Expected an expression.");
@@ -714,11 +889,11 @@ public class Parser {
         }
 
         // attempt a normal “a < b” style clause
-        NormalExpressionNode left = parseNormalExpression();
+        NormalExpressionNode left = parseExpression();
         if (isNextBooleanOperator()) {
             Token opToken = advance();
             BooleanOperator op = parseBooleanOperatorFromToken(opToken);
-            NormalExpressionNode right = parseNormalExpression();
+            NormalExpressionNode right = parseExpression();
             return new BooleanExpressionNode(left, right, op, opToken);
         }
 
@@ -746,47 +921,7 @@ public class Parser {
         List<NormalExpressionNode> parsedArgs = new ArrayList<>();
 
         for (int i = 0; i < sig.params.size(); i++) {
-            Param param = sig.params.get(i);
-
-            switch (param.kind()) {
-                case STRING_LITERAL -> {
-                    if (param.hasEnumConstraint()) {
-                        Token t = consume(TokenType.STRING_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a STRING");
-                        String stripped = t.text.substring(1, t.text.length() - 1);
-                        if (!param.isValidEnum(stripped)) throw new ParsingException(t,
-                            "'" + stripped + "' is not a valid value for '" + condName + "' param #" + (i+1) + ". Must be one of: " + String.join(", ", param.enumValues()));
-                        parsedArgs.add(new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, t));
-                    } else {
-                        parsedArgs.add(parseExpression());
-                    }
-                }
-                case LONG_LITERAL -> {
-                    Token t = consume(TokenType.LONG_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a LONG");
-                    long val = Long.parseLong(t.text);
-                    if (!param.inRange(val)) throw new ParsingException(t,
-                        "Value " + val + " is out of range for '" + condName + "' param #" + (i+1) + ". Must be between " + param.rangeMin() + " and " + param.rangeMax() + ".");
-                    parsedArgs.add(new ConstantPrimitiveNode(new LongValue(val), VariableType.LONG, t));
-                }
-                case DOUBLE_LITERAL -> {
-                    Token t = consume(TokenType.DOUBLE_VALUE, "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a DOUBLE");
-                    parsedArgs.add(new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(t.text)), VariableType.DOUBLE, t));
-                }
-                case BOOL_LITERAL -> {
-                    Token t;
-                    if (match(TokenType.TRUE)) t = previous();
-                    else if (match(TokenType.FALSE)) t = previous();
-                    else throw new ParsingException(peek(), "Condition '" + condName + "' was given a " + peek().type + " at parameter #" + (i + 1) + ", but must be a BOOL");
-
-                    boolean v = t.type == TokenType.TRUE;
-                    parsedArgs.add(new ConstantPrimitiveNode(new BoolValue(v), VariableType.BOOL, t));
-                }
-                case NORMAL_EXPRESSION -> parsedArgs.add(parseExpression());
-                case ITEM_LITERAL -> {
-                    String searchName = parseItemLiteral();
-                    parsedArgs.add(new ConstantPrimitiveNode(new StringValue(searchName), VariableType.STRING, nameToken));
-                }
-            }
-
+            parsedArgs.add(parseLiteralArg(sig.params.get(i), i + 1, "Condition '" + condName + "'"));
             if (i < sig.params.size() - 1) {
                 consume(TokenType.COMMA, "Expected ',' between condition parameters");
             }
@@ -794,10 +929,6 @@ public class Parser {
 
         consume(TokenType.RPAREN, "Expected ')' after condition parameters");
         return new ConditionCallNode(condName, new ArgumentListNode(parsedArgs), nameToken);
-    }
-
-    private NormalExpressionNode parseNormalExpression() {
-        return parsePrecedence(Precedence.NONE);
     }
 
     private Precedence getCurrentPrecedence() {
@@ -837,10 +968,66 @@ public class Parser {
         return new AssignationNode(variableNode, operator, expression, operatorToken);
     }
 
+    public TupleDestructureNode parseTupleDestructure() {
+        Token openParen = consume(TokenType.LPAREN, "Expected '('");
+        List<VariableNode> targets = new ArrayList<>();
+        do {
+            targets.add(parseVariable());
+        } while (match(TokenType.COMMA));
+
+        if (targets.size() < 2)
+            throw new ParsingException(openParen, "Tuple destructure must have at least 2 targets");
+
+        consume(TokenType.RPAREN, "Expected ')' after targets");
+        Token opToken = advance();
+        AssignmentOperator operator = parseAssignmentOperatorFromToken(opToken);
+
+        Token nameToken = consume(TokenType.IDENT, "Expected function name");
+        consume(TokenType.LPAREN, "Expected '(' after function name");
+        List<NormalExpressionNode> argExprs = new ArrayList<>();
+        if (!check(TokenType.RPAREN)) {
+            do {
+                argExprs.add(parseExpression());
+            } while (match(TokenType.COMMA));
+        }
+        consume(TokenType.RPAREN, "Expected ')' after arguments");
+        consume(TokenType.SEMI, "Expected ';' after tuple destructure");
+
+        return new TupleDestructureNode(targets, operator, nameToken.text,
+                new ArgumentListNode(argExprs), openParen);
+    }
+
     public DeclarationNode parseDeclaration() {
         VariableNode var = parseTypedVariable();
+        if (var.enumName != null) varEnumType.put(var.holder + "." + var.name, var.enumName);
         consume(TokenType.SEMI, "Expect ';' after declaration");
         return new DeclarationNode(var, var.token);
+    }
+
+    /** After parsing a variable read, consume an optional {@code ?fallback} suffix.
+     *  The fallback must be a constant literal whose type is checked later against the variable. */
+    private void attachFallback(VariableNode v) {
+        if (!match(TokenType.QUESTION)) return;
+        Token qTok = previous();
+        NormalExpressionNode fb = parsePrecedence(Precedence.UNARY);
+        ConstantPrimitiveNode folded = foldFallbackConstant(fb);
+        if (folded == null)
+            throw new ParsingException(qTok, "Fallback after '?' must be a constant literal (e.g. p.name?0)");
+        v.fallback = folded;
+    }
+
+    /** Folds a fallback expression to a constant, accepting a literal or a negated numeric literal. */
+    private ConstantPrimitiveNode foldFallbackConstant(NormalExpressionNode e) {
+        if (e instanceof ConstantPrimitiveNode c) return c;
+        if (e instanceof UnaryExpressionNode u && u.operator == UnaryOperator.NEGATE
+                && u.operand instanceof ConstantPrimitiveNode c) {
+            return switch (c.value) {
+                case LongValue l   -> new ConstantPrimitiveNode(new LongValue(-l.value), VariableType.LONG, c.token);
+                case DoubleValue d -> new ConstantPrimitiveNode(new DoubleValue(-d.value), VariableType.DOUBLE, c.token);
+                default -> null;
+            };
+        }
+        return null;
     }
 
     VariableNode parseVariable() {
@@ -855,7 +1042,10 @@ public class Parser {
         };
 
         if (!isHolderPrefix) {
-            return new VariableNode(null, Holder.PLAYER, firstTok.text, null, firstTok);
+            VariableNode bare = new VariableNode(null, Holder.PLAYER, firstTok.text, null, firstTok);
+            bare.wasBare = true;
+            bare.enumName = varEnumType.get(Holder.PLAYER + "." + firstTok.text);
+            return bare;
         }
 
         Holder holder = parseHolderFromToken(firstTok);
@@ -876,14 +1066,24 @@ public class Parser {
         consume(TokenType.DOT, "Expect '.' after scope prefix");
         Token varTok = consume(TokenType.IDENT, "Expect variable name identifier");
 
-        return new VariableNode(null, holder, varTok.text, teamName, varTok);
+        VariableNode vn = new VariableNode(null, holder, varTok.text, teamName, varTok);
+        vn.enumName = varEnumType.get(holder + "." + varTok.text);
+        return vn;
     }
 
     VariableNode parseTypedVariable() {
         Token type = advance();
-        VariableType variableType = parseVariableFromToken(type);
+        String enumType = null;
+        VariableType variableType;
+        if (isEnumType(type)) {
+            variableType = VariableType.LONG; // enums are longs under the hood
+            enumType = type.text;
+        } else {
+            variableType = parseVariableFromToken(type);
+        }
         VariableNode variableNode = parseVariable();
         variableNode.type = variableType;
+        variableNode.enumName = enumType;
         return variableNode;
     }
 
@@ -906,6 +1106,51 @@ public class Parser {
 
         consume(TokenType.RPAREN, "Expected ')' after placeholder parameters");
         return new PlaceholderNode(placeholderName.text, new ConstantPrimitiveList(args), null, placeholderName);
+    }
+
+    /**
+     * Parses an enum declaration: {@code enum Name { A, B, C }}. Each member is registered as a
+     * {@code long} constant with its ordinal value (0, 1, 2, ...), i.e. enums are just named longs.
+     */
+    private void parseEnumDeclaration() {
+        consume(TokenType.ENUM, "Expected 'enum'");
+        Token nameTok = consume(TokenType.IDENT, "Expected enum name after 'enum'");
+        String enumName = nameTok.text;
+        if (enumDefs.containsKey(enumName))
+            throw new ParsingException(nameTok, "Enum '" + enumName + "' is already declared");
+        consume(TokenType.LBRACE, "Expected '{' to begin enum body");
+
+        List<String> members = new ArrayList<>();
+        long index = 0;
+        if (!check(TokenType.RBRACE)) {
+            do {
+                if (check(TokenType.RBRACE)) break; // allow a trailing comma
+                Token memberTok = consume(TokenType.IDENT, "Expected enum member name");
+                String member = memberTok.text;
+                if (constTable.containsKey(member))
+                    throw new ParsingException(memberTok, "Enum member '" + member + "' clashes with an existing constant or enum member");
+                // Members are long constants (their ordinal), tagged with the enum name for type checks.
+                ConstantPrimitiveNode memberNode = new ConstantPrimitiveNode(new LongValue(index), VariableType.LONG, memberTok);
+                memberNode.enumName = enumName;
+                constTable.put(member, memberNode);
+                members.add(member);
+                index++;
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RBRACE, "Expected '}' after enum body");
+        if (members.isEmpty())
+            throw new ParsingException(nameTok, "Enum '" + enumName + "' must declare at least one member");
+        enumDefs.put(enumName, members);
+    }
+
+    /** True if the token is an identifier naming a declared enum, usable as a type. */
+    private boolean isEnumType(Token t) {
+        return t.type == TokenType.IDENT && enumDefs.containsKey(t.text);
+    }
+
+    private UnaryExpressionNode makeUnary(UnaryOperator op, NormalExpressionNode operand, Token token) {
+        return new UnaryExpressionNode(op, operand, null, token);
     }
 
     private void parseConstDeclaration() {
@@ -932,6 +1177,7 @@ public class Parser {
 
     GlobalDeclarationNode parseGlobalDeclaration() {
         VariableNode var = parseTypedVariable();
+        if (var.enumName != null) varEnumType.put(var.holder + "." + var.name, var.enumName);
         NormalExpressionNode initializer = null;
         if (match(TokenType.EQ)) {
             if (var.holder == Holder.PLAYER) {
@@ -948,20 +1194,14 @@ public class Parser {
         return switch (token.type) {
             case STRING_VALUE -> new StringValue(token.text.substring(1, token.text.length() - 1));
             case LONG_VALUE -> new LongValue(Long.parseLong(token.text));
-            case DOUBLE_VALUE -> new DoubleValue(Double.parseDouble(token.text.replace("d", "").replace("D", "")));
+            case DOUBLE_VALUE -> new DoubleValue(Double.parseDouble(token.text));
             case TRUE -> new BoolValue(true);
             case FALSE -> new BoolValue(false);
-            case CONST_IDENT -> switch (token.text) {
-                case "PI" -> new DoubleValue(3.14159265358979);
-                case "E" -> new DoubleValue(2.71828182845904);
-                case "HALF_PI" -> new DoubleValue(1.57079632679489);
-                case "TWO_PI" -> new DoubleValue(6.28318530717958);
-                case "SQRT_TWO" -> new DoubleValue(1.41421356237309);
-                case "SQRT_THREE" -> new DoubleValue(1.73205080756887);
-                case "SQRT_FIVE" -> new DoubleValue(2.23606797749978);
-                case "PHI" -> new DoubleValue(1.61803398874989);
-                default -> throw new ParsingException(token, "Unsupported constant: " + token.text);
-            };
+            case CONST_IDENT -> {
+                Double constVal = MATH_CONSTANTS.get(token.text);
+                if (constVal == null) throw new ParsingException(token, "Unsupported constant: " + token.text);
+                yield new DoubleValue(constVal);
+            }
             default -> throw new ParsingException(token, "Expected a constant value. Did you mean \"" + token.text + "\"?");
         };
     }
@@ -1017,14 +1257,6 @@ public class Parser {
             case RIGHT_SHIFT -> BinaryOperator.RIGHT_SHIFT;
             case UNSIGNED_RIGHT_SHIFT -> BinaryOperator.UNSIGNED_RIGHT_SHIFT;
             default -> throw new ParsingException(operator, "Invalid binary operator, expected '+', '-', '*', '/', '|', '&', '^', '<<', '>>' or '>>>'");
-        };
-    }
-
-    LogicalOperator parseLogicalOperatorFromToken(Token operator) {
-        return switch (operator.type) {
-            case AND -> LogicalOperator.AND;
-            case OR -> LogicalOperator.OR;
-            default -> throw new ParsingException(operator, "Invalid binary operator, expected '&&' or '||'");
         };
     }
 

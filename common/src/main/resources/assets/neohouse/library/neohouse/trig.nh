@@ -1,0 +1,124 @@
+// ─────────────────────────────────────────
+//   NeoHouse built-in library
+// ─────────────────────────────────────────
+
+// We use Bhāskara I's approximation, which is extremely precise for values [0,π].
+// sin(x) ≈ B(x) = (16x(π-x)) / (5π^2-4x(π-x)).
+// To extend to ]-∞, ∞[, we can do this:
+// y = mod(x, 2π)
+// t = π - abs(π - y)
+// sin(x) ≈ sign(π - y) * B(t)
+const function double sin(double x) {
+    // y = mod(x, 2π)
+    p.temp = (double)((long)(x / TWO_PI));
+    p.temp = x - TWO_PI * p.temp;
+    if (p.temp < 0.0) {
+        p.temp += TWO_PI;
+    }
+
+    // t = π - abs(π - y)
+    p.temp2 = PI - p.temp;
+    if (p.temp2 < 0.0) { p.temp2 *= -1.0; }
+    p.temp2 = PI - p.temp2;
+
+    // B(t)
+    p.temp3 = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
+
+    // sign(π - y)
+    p.temp4 = 0.0;
+    if (p.temp < PI) { p.temp4 = 1.0; }
+    if (p.temp > PI) { p.temp4 = -1.0; }
+
+    // sin(x) ≈ sign(π - y) * B(t)
+    return (double)(p.temp4 * p.temp3);
+}
+
+// cos(x) = sin(x + π/2).
+const function double cos(double x) {
+    return sin(x + 1.57079632679);
+}
+
+// tan(x) = sin(x)/cos(x).
+const function double tan(double x) {
+    return sin(x)/cos(x);
+}
+
+// let u = sqrt((1-|x|)/2)
+// asin(x) ≈ sign(x) * (π/2 - 2*u*(
+//   0.9999994098 + 0.1667511541*u^2 + 0.07308794137*u^4 +
+//   0.05996102211*u^6 - 0.0220605251*u^8 + 0.09460451869*u^10
+// ))
+const function double asin(double x) {
+    // (1-|x|)/2
+    p.temp = x;
+    if (p.temp < 0.0) { p.temp *= -1.0; }
+    p.temp = (1.0 - p.temp) / 2.0;
+
+    // u = sqrt((1-|x|)/2)
+    p.temp2 = 0.0316;
+    if (p.temp <= 0.0) { p.temp2 = 0.0; }
+    if (p.temp >= 0.03) { p.temp2 = 0.5; }
+    if (p.temp >= 0.001 && p.temp < 0.03) { p.temp2 = 0.1; }
+    if (p.temp > 0.0) {
+        repeat(4) {
+            p.temp2 += p.temp / p.temp2;
+            p.temp2 *= 0.5;
+        }
+    }
+    else {
+        p.temp2 = 0.0;
+    }
+
+    // The polynomial
+    p.temp3 = p.temp2 * p.temp2;
+    p.temp = 0.09460451869;
+    p.temp = p.temp * p.temp3 - 0.0220605251;
+    p.temp = p.temp * p.temp3 + 0.05996102211;
+    p.temp = p.temp * p.temp3 + 0.07308794137;
+    p.temp = p.temp * p.temp3 + 0.1667511541;
+    p.temp = p.temp * p.temp3 + 0.9999994098;
+
+    // asin(x) ≈ sign(x) * (π/2 - 2*u*(...))
+    p.temp = 1.57079632679 - 2.0 * p.temp2 * p.temp;
+    if (x < 0.0) { p.temp *= -1.0; }
+
+    return (double)p.temp;
+}
+
+// acos(x) = π/2 - asin(x).
+const function double acos(double x) {
+    return 1.57079632679 - asin(x);
+}
+
+// atan(x) = asin(x / sqrt(1 + x^2))
+const function double atan(double x) {
+    // 1 + x^2
+    p.temp = 1.0 + x * x;
+
+    // sqrt(1 + x^2)
+    p.temp2 = 0.0316;
+    if (p.temp <= 0.0) { p.temp2 = 0.0; }
+    if (p.temp >= 0.03) { p.temp2 = 0.5; }
+    if (p.temp >= 0.001 && p.temp < 0.03) { p.temp2 = 0.1; }
+    if (p.temp > 0.0) {
+        repeat(4) {
+            p.temp2 += p.temp / p.temp2;
+            p.temp2 *= 0.5;
+        }
+    }
+    else {
+        p.temp2 = 0.0;
+    }
+
+    // atan(x) = asin(x / sqrt(1 + x^2))
+    return asin(x / p.temp2);
+}
+
+const function double atan2(double x, double y) {
+    if (x > 0.0)                { return atan(y / x); }
+    if (x < 0.0 && y >= 0.0)    { return atan(y / x) + 3.14159632679; }
+    if (x < 0.0 && y < 0.0)     { return atan(y / x) - 3.14159632679; }
+    if (y > 0.0)                { return  1.57079632679; }
+    if (y < 0.0)                { return -1.57079632679; }
+    return 0.0;
+}

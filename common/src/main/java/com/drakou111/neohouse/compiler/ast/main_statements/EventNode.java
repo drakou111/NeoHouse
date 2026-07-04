@@ -9,10 +9,12 @@ import com.drakou111.neohouse.constants.Event;
 public class EventNode extends MainStatementNode {
     public final Event event;
     public final StatementListNode statements;
+    public final boolean isConst;
 
-    public EventNode(final Event event, final StatementListNode statements, Token token) {
+    public EventNode(final Event event, final StatementListNode statements, final boolean isConst, Token token) {
         this.event = event;
         this.statements = statements;
+        this.isConst = isConst;
         this.token = token;
     }
 

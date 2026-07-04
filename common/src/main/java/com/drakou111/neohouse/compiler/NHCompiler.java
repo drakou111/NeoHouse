@@ -1,7 +1,11 @@
 package com.drakou111.neohouse.compiler;
 
+import com.drakou111.neohouse.config.MultiCallMode;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
+import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
 import com.drakou111.neohouse.compiler.lexer.Lexer;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.parser.Parser;
@@ -13,8 +17,14 @@ import java.util.List;
 
 public class NHCompiler implements Compiler {
     private int lastHelperCount = 0;
+    private List<String> lastHelperNames = List.of();
+    private List<String> lastExtraVariables = List.of();
+    private List<CompileWarning> lastWarnings = List.of();
 
     public int getLastHelperCount() { return lastHelperCount; }
+    public List<String> getLastHelperNames() { return lastHelperNames; }
+    public List<String> getLastExtraVariables() { return lastExtraVariables; }
+    public List<CompileWarning> getLastWarnings() { return lastWarnings; }
 
     @Override
     public Action compile(String source) throws CompilingException {
@@ -31,11 +41,24 @@ public class NHCompiler implements Compiler {
         Parser parser = new Parser(tokens);
         MainNode node = parser.parseMain();
 
+        // Enum nominal-type checks run first, on the raw AST where enum tags are still present.
+        new EnumCheckVisitor(parser.getFunctionParamEnums(), parser.getFunctionReturnEnums()).check(node);
+
         PlaceholderValidationVisitor pv = new PlaceholderValidationVisitor();
         node = pv.analyze(node);
 
         LinkFunctionVisitor linkFunctionVisitor = new LinkFunctionVisitor(node);
         node = linkFunctionVisitor.analyze(node);
+
+        List<CompileWarning> warnings = new java.util.ArrayList<>();
+        lastWarnings = warnings;
+
+        new RecursionCheckVisitor(NeoHouseConfig.get().recursionMode, warnings).analyze(node);
+
+        new GlobalCallCheckVisitor(NeoHouseConfig.get().globalCallMode, warnings).analyze(node);
+
+        MultiCallMode multiCallMode = NeoHouseConfig.get().multiCallMode;
+        node = new FunctionDeduplicationVisitor(multiCallMode).analyze(node);
 
         RepeatUnrollingVisitor repeatUnroller = new RepeatUnrollingVisitor();
         node = repeatUnroller.analyze(node);
@@ -73,15 +96,21 @@ public class NHCompiler implements Compiler {
         FunctionParamLoweringVisitor functionParamLoweringVisitor = new FunctionParamLoweringVisitor();
         node = functionParamLoweringVisitor.analyze(node);
 
+        NeutralStatementRemovalVisitor neutralRemoval = new NeutralStatementRemovalVisitor();
+        node = neutralRemoval.analyze(node);
+
         RandomUnfoldingVisitor randomUnfoldingVisitor = new RandomUnfoldingVisitor();
         node = randomUnfoldingVisitor.analyze(node);
 
         ActionCountSplittingVisitor actionCountSplittingVisitor = new ActionCountSplittingVisitor();
         node = actionCountSplittingVisitor.analyze(node);
         lastHelperCount = actionCountSplittingVisitor.getHelpersCreated();
+        lastHelperNames = actionCountSplittingVisitor.getHelperNames();
 
         ActionRestrictionVisitor actionRestrictionVisitor = new ActionRestrictionVisitor();
         node = actionRestrictionVisitor.analyze(node);
+
+        lastExtraVariables = new ExtraVariableCollectorVisitor().collect(node);
 
         return new CodeGenerator().generate(node);
     }

@@ -18,6 +18,7 @@ public class DeadCodeCheckVisitor extends EmptyVisitor<Void> {
     }
 
     @Override public Void visitTypedFunction(TypedFunctionNode f) { checkBlock(f.statements); return null; }
+    @Override public Void visitTupleFunction(TupleFunctionNode f) { checkBlock(f.statements); return null; }
     @Override public Void visitVoidFunction(VoidFunctionNode f)   { checkBlock(f.statements); return null; }
     @Override public Void visitLoop(LoopNode l)                   { checkBlock(l.statements); return null; }
     @Override public Void visitEvent(EventNode e)                 { checkBlock(e.statements); return null; }

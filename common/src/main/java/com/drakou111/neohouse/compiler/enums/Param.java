@@ -5,12 +5,14 @@ import java.util.Arrays;
 public record Param(String name, ActionParamKind kind, String[] enumValues, Long rangeMin, Long rangeMax, Double decimalMin, Double decimalMax) {
 
 
-    public static final Param STRING = new Param(null, ActionParamKind.STRING_LITERAL, null, null, null, null, null);
-    public static final Param BOOL   = new Param(null, ActionParamKind.BOOL_LITERAL,      null, null, null, null, null);
-    public static final Param LONG   = new Param(null, ActionParamKind.LONG_LITERAL,      null, null, null, null, null);
-    public static final Param DOUBLE = new Param(null, ActionParamKind.DOUBLE_LITERAL,    null, null, null, null, null);
-    public static final Param EXPR   = new Param(null, ActionParamKind.NORMAL_EXPRESSION, null, null, null, null, null);
-    public static final Param ITEM   = new Param(null, ActionParamKind.ITEM_LITERAL,      null, null, null, null, null);
+    public static final Param STRING   = new Param(null, ActionParamKind.STRING_LITERAL,    null, null, null, null, null);
+    public static final Param BOOL     = new Param(null, ActionParamKind.BOOL_LITERAL,      null, null, null, null, null);
+    public static final Param LONG     = new Param(null, ActionParamKind.LONG_LITERAL,      null, null, null, null, null);
+    public static final Param DOUBLE   = new Param(null, ActionParamKind.DOUBLE_LITERAL,    null, null, null, null, null);
+    public static final Param EXPR     = new Param(null, ActionParamKind.NORMAL_EXPRESSION, null, null, null, null, null);
+    public static final Param ITEM     = new Param(null, ActionParamKind.ITEM_LITERAL,      null, null, null, null, null);
+    /** HOUSE_SPAWN | INVOKER | CURRENT, or any string expression for custom coordinates. */
+    public static final Param LOCATION = new Param(null, ActionParamKind.LOCATION,          null, null, null, null, null);
 
     public Param withName(String n) {
         return new Param(n, kind, enumValues, rangeMin, rangeMax, decimalMin, decimalMax);
@@ -18,12 +20,13 @@ public record Param(String name, ActionParamKind kind, String[] enumValues, Long
 
     public String typeName() {
         return switch (kind) {
-            case STRING_LITERAL -> "string";
+            case STRING_LITERAL    -> "string";
             case BOOL_LITERAL      -> "bool";
             case LONG_LITERAL      -> "long";
             case DOUBLE_LITERAL    -> "double";
             case NORMAL_EXPRESSION -> "expr";
             case ITEM_LITERAL      -> "item";
+            case LOCATION          -> "location";
         };
     }
 

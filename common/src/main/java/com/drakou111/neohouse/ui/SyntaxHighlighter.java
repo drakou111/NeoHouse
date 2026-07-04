@@ -1,7 +1,8 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.NeoHouseConfig;
-import com.drakou111.neohouse.SyntaxTheme;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.SyntaxTheme;
+
 import com.drakou111.neohouse.compiler.lexer.TokenType;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.Placeholder;
@@ -18,9 +19,39 @@ public class SyntaxHighlighter {
 
     private SyntaxTheme activeTheme = SyntaxTheme.VSCODE_DARK;
 
+    // Minecraft chat color codes (&0–&f), in index order 0–15.
+    private static final int[] MC_COLORS = {
+        0xFF000000, 0xFF0000AA, 0xFF00AA00, 0xFF00AAAA,
+        0xFFAA0000, 0xFFAA00AA, 0xFFFFAA00, 0xFFAAAAAA,
+        0xFF555555, 0xFF5555FF, 0xFF55FF55, 0xFF55FFFF,
+        0xFFFF5555, 0xFFFF55FF, 0xFFFFFF55, 0xFFFFFFFF,
+    };
+
+    /** Returns the Minecraft display color for a hex digit code, or -1 if not a color code. */
+    private static int mcColorFor(char code) {
+        code = Character.toLowerCase(code);
+        if (code >= '0' && code <= '9') return MC_COLORS[code - '0'];
+        if (code >= 'a' && code <= 'f') return MC_COLORS[10 + (code - 'a')];
+        return -1;
+    }
+
+    /** True for any valid Minecraft formatting code character (&0–&f, &k–&o, &r). */
+    private static boolean isMcCode(char code) {
+        code = Character.toLowerCase(code);
+        return (code >= '0' && code <= '9') || (code >= 'a' && code <= 'f') || "klmnor".indexOf(code) >= 0;
+    }
+
+    /** Dims a color by multiplying each channel by 2/3. */
+    private static int dimColor(int color) {
+        int r = (color >> 16) & 0xFF;
+        int g = (color >>  8) & 0xFF;
+        int b =  color        & 0xFF;
+        return 0xFF000000 | ((r * 2 / 3) << 16) | ((g * 2 / 3) << 8) | (b * 2 / 3);
+    }
+
     public List<Span> buildSpans(String src) {
         List<Span> spans = new ArrayList<>();
-        activeTheme = SyntaxTheme.byId(NeoHouseConfig.get().syntaxTheme);
+        activeTheme = NeoHouseConfig.get().syntaxTheme;
 
         int pos = 0;
         List<Tok> toks = new ArrayList<>();
@@ -42,11 +73,58 @@ public class SyntaxHighlighter {
 
         for (int i = 0; i < toks.size(); i++) {
             Tok tok = toks.get(i);
-            int color = contextualColor(toks, i);
-            spans.add(new Span(tok.pos(), tok.pos() + tok.text().length(), color));
+            if (tok.type() == TokenType.STRING_VALUE) {
+                addStringSpans(spans, tok.text(), tok.pos());
+            } else {
+                int color = contextualColor(toks, i);
+                spans.add(new Span(tok.pos(), tok.pos() + tok.text().length(), color));
+            }
         }
 
         return spans;
+    }
+
+    private void addStringSpans(List<Span> spans, String raw, int basePos) {
+        int len = raw.length();
+        if (len == 0) return;
+
+        spans.add(new Span(basePos, basePos + 1, activeTheme.string));
+
+        int contentEnd = (len >= 2 && raw.charAt(len - 1) == '"') ? len - 1 : len;
+        String content = raw.substring(1, contentEnd);
+
+        int currentColor = activeTheme.string;
+        int segStart     = 0;
+
+        for (int i = 0; i < content.length(); ) {
+            if (content.charAt(i) == '&' && i + 1 < content.length()) {
+                char code = content.charAt(i + 1);
+                if (isMcCode(code)) {
+                    if (i > segStart)
+                        spans.add(new Span(basePos + 1 + segStart, basePos + 1 + i, currentColor));
+
+                    char lower = Character.toLowerCase(code);
+                    if (lower == 'r') {
+                        currentColor = activeTheme.string;
+                    } else {
+                        int col = mcColorFor(lower);
+                        if (col != -1) currentColor = col;
+                    }
+
+                    spans.add(new Span(basePos + 1 + i, basePos + 1 + i + 2, dimColor(currentColor)));
+                    segStart = i + 2;
+                    i       += 2;
+                    continue;
+                }
+            }
+            i++;
+        }
+
+        if (segStart < content.length())
+            spans.add(new Span(basePos + 1 + segStart, basePos + 1 + content.length(), currentColor));
+
+        if (contentEnd < len)
+            spans.add(new Span(basePos + contentEnd, basePos + len, activeTheme.string));
     }
 
     private int contextualColor(List<Tok> toks, int i) {
@@ -59,13 +137,11 @@ public class SyntaxHighlighter {
         int prevI  = prevNonWsIdx(toks, i - 1);
         Tok prev   = prevI >= 0 ? toks.get(prevI) : null;
 
-        // Scope prefix letters (color the letter itself)
         if ("p".equals(tok.text())  && next != null && next.type() == TokenType.DOT)    return th.playerVar;
         if ("g".equals(tok.text())  && next != null && next.type() == TokenType.DOT)    return th.globalVar;
         if ("t".equals(tok.text())  && next != null && next.type() == TokenType.LBRACK) return th.teamVar;
         if ("ph".equals(tok.text()) && next != null && next.type() == TokenType.DOT)    return th.phVar;
 
-        // Identifier that follows a scope dot (p.name, g.name, ph.name)
         if (prev != null && prev.type() == TokenType.DOT) {
             int prevPrevI = prevNonWsIdx(toks, prevI - 1);
             Tok prevPrev  = prevPrevI >= 0 ? toks.get(prevPrevI) : null;
@@ -76,7 +152,6 @@ public class SyntaxHighlighter {
             if (prevPrev != null && "p".equals(prevPrev.text())) return th.playerVar;
             if (prevPrev != null && "g".equals(prevPrev.text())) return th.globalVar;
 
-            // t[...].fieldName — walk back to find matching '[' and verify 't' precedes it
             if (prevPrev != null && prevPrev.type() == TokenType.RBRACK) {
                 int depth = 1;
                 int k = prevPrevI - 1;
@@ -86,7 +161,6 @@ public class SyntaxHighlighter {
                     else if (tt == TokenType.LBRACK) depth--;
                     k--;
                 }
-                // k is now one before the LBRACK; find the non-ws token before the bracket
                 Tok beforeBrack = prevNonWsTok(toks, k);
                 if (beforeBrack != null && "t".equals(beforeBrack.text())) return th.teamVar;
             }
@@ -99,7 +173,7 @@ public class SyntaxHighlighter {
         SyntaxTheme th = activeTheme;
         return switch (t) {
             case FUNCTION, RETURN, LOOP,
-                 IF, ELSE, REPEAT, EVENT, RANDOM, COMMAND, IMPORT, MENU, GLOBAL, CONST -> th.keyword;
+                 IF, ELSE, REPEAT, EVENT, RANDOM, COMMAND, IMPORT, MENU, GLOBAL, CONST, ENUM -> th.keyword;
             case LONG, DOUBLE, STRING, BOOL, VAR          -> th.type;
             case TRUE, FALSE                               -> th.keyword;
             case LONG_CAST, DOUBLE_CAST, STRING_CAST       -> th.type;

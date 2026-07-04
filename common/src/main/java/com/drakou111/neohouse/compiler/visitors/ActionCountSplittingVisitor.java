@@ -15,8 +15,13 @@ import java.util.Map;
 public class ActionCountSplittingVisitor extends DefaultVisitor {
     private final List<VoidFunctionNode> all = new ArrayList<>();
     private int nextHelperId = 0;
+    private String currentScopeName = "";
 
     public int getHelpersCreated() { return all.size(); }
+
+    public List<String> getHelperNames() {
+        return all.stream().map(fn -> fn.name).toList();
+    }
 
     @Override
     public MainNode analyze(MainNode main) {
@@ -28,26 +33,28 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitVoidFunction(VoidFunctionNode fn) {
+        currentScopeName = fn.name;
         StatementListNode stmts = (StatementListNode)fn.statements.accept(this);
         StatementListNode body = splitIfNeeded(stmts, false);
-        return new VoidFunctionNode(fn.name, fn.description, fn.parameters, body, fn.token);
+        return new VoidFunctionNode(fn.name, fn.description, fn.icon, fn.parameters, body, fn.isConst, fn.token);
     }
 
     @Override
     public ASTNode visitEvent(EventNode ev) {
+        currentScopeName = ev.event.name().toLowerCase();
         StatementListNode stmts = (StatementListNode)ev.statements.accept(this);
         StatementListNode body = splitIfNeeded(stmts, false);
-        return new EventNode(ev.event, body, ev.token);
+        return new EventNode(ev.event, body, ev.isConst, ev.token);
     }
 
     @Override
     public ASTNode visitConditional(ConditionalNode c) {
-
         StatementListNode thenBlock = (StatementListNode)c.thenBlock.accept(this);
         StatementListNode elseBlock = null;
         if (c.elseBlock != null) {
             elseBlock = (StatementListNode)c.elseBlock.accept(this);
         }
+        // Already inside a conditional — Housing forbids nesting, so helpers only.
         StatementListNode thenB = splitIfNeeded(thenBlock, true);
         StatementListNode elseB = elseBlock == null ? null : splitIfNeeded(elseBlock, true);
         return new ConditionalNode(c.condition, thenB, elseB, c.token);
@@ -55,25 +62,28 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitLoop(LoopNode loop) {
+        currentScopeName = loop.name;
         StatementListNode statements = (StatementListNode)loop.statements.accept(this);
         StatementListNode body = splitIfNeeded(statements, false);
-        return new LoopNode(loop.name, loop.description, body, loop.tickDelay, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, body, loop.tickDelay, loop.isConst, loop.token);
     }
 
     @Override
     public ASTNode visitCommand(CommandNode cmd) {
+        currentScopeName = cmd.name;
         StatementListNode stmts = (StatementListNode)cmd.statements.accept(this);
         StatementListNode body = splitIfNeeded(stmts, false);
-        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.token);
+        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.isConst, cmd.token);
     }
 
     @Override
     public ASTNode visitMenu(MenuNode menu) {
         List<SlotNode> slots = new ArrayList<>();
         for (SlotNode slot : menu.slots) {
+            currentScopeName = menu.name + "_slot" + slot.slotId;
             slots.add((SlotNode) slot.accept(this));
         }
-        return new MenuNode(menu.name, menu.rows, slots, menu.token);
+        return new MenuNode(menu.name, menu.rows, slots, menu.isConst, menu.token);
     }
 
     @Override
@@ -85,107 +95,111 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitRandom(RandomNode rand) {
+        // Housing materialises a random block by duplicating each branch `weight` times,
+        // so the block holds sum(weight) copies of each branch's action. Every action type
+        // therefore has to stay within its per-block maxCount across the whole random block.
+        Map<AddAction, Long> totals = new HashMap<>();
         for (int i = 0; i < rand.statements.size(); i++) {
             StatementListNode branch = rand.statements.get(i);
             long weight = rand.weights.get(i);
-            if (weight <= 1) continue;
 
             // Every branch has exactly 1 statement after RandomUnfoldingVisitor
             if (branch.statements.isEmpty()) continue;
             StatementNode stmt = branch.statements.get(0);
             AddAction action = extractAction(stmt);
-            if (action != null && weight > action.maxCount) {
+            if (action == null) continue;
+
+            long total = totals.merge(action, weight, Long::sum);
+            if (total > action.maxCount) {
                 throw new SemanticException(stmt.token,
-                        "Random branch weight " + weight + " exceeds the maximum of " + action.maxCount
-                        + " for '" + action.displayName + "'. Reduce the weight to at most " + action.maxCount + ".");
+                        "Random block contains " + total + " '" + action.displayName + "' actions"
+                        + " (counting branch weights), which exceeds the maximum of " + action.maxCount
+                        + ". Reduce the number of branches or their weights.");
             }
         }
         return super.visitRandom(rand);
     }
 
+    /**
+     * Distributes statements across the current scope while respecting Housing's per-scope limits.
+     *
+     * When inCondition=false (top-level scope):
+     *   Greedily packs overflow into empty if(){} wrappers (each gets a fresh counter).
+     *   Only falls back to a helper function once all 25 conditional slots are used up.
+     *   This minimises helper functions: a single scope can hold up to
+     *   maxCount (flat) + 25 * maxCount (in conditionals) of each action type.
+     *
+     * When inCondition=true (inside a user conditional):
+     *   Housing forbids nested conditionals, so overflow goes straight to helpers.
+     */
     private StatementListNode splitIfNeeded(StatementListNode stmts, boolean inCondition) {
         List<StatementNode> list = new ArrayList<>(stmts.statements);
+        List<StatementNode> result = new ArrayList<>();
+        Map<AddAction, Integer> outerCounts = new HashMap<>();
 
-        // Wrap each overflow segment in an empty if() { … } block, unless we're already in one
-        if (!inCondition) {
-            boolean didWrap;
-            do {
-                didWrap = false;
-                Map<AddAction, Integer> counts = new HashMap<>();
-                int lastDelimIdx = -1;
-
-                for (int i = 0; i < list.size(); i++) {
-                    StatementNode s = list.get(i);
-
-                    // delimiters reset counts
-                    if (s instanceof ConditionalNode || s instanceof RandomNode) {
-                        counts.clear();
-                        lastDelimIdx = i;
-                        continue;
-                    }
-
-                    AddAction a = extractAction(s);
-                    if (a == null) continue;
-
-                    int c = counts.getOrDefault(a, 0) + 1;
-                    counts.put(a, c);
-
-                    if (c > a.maxCount) {
-                        // wrap [lastDelimIdx+1 .. i) in an empty if()
-                        List<StatementNode> segment = new ArrayList<>(list.subList(lastDelimIdx + 1, i));
-                        StatementListNode body = new StatementListNode(segment);
-                        ConditionalNode wrapper = new ConditionalNode(null, body, null, segment.getFirst().token);
-
-                        List<StatementNode> rebuilt = new ArrayList<>(list.subList(0, lastDelimIdx + 1));
-                        rebuilt.add(wrapper);
-                        rebuilt.addAll(list.subList(i, list.size()));
-                        list = rebuilt;
-
-                        didWrap = true;
-                        break;
-                    }
-                }
-            } while (didWrap);
-        }
-
-        // Peel off any remaining overflow *tails* into helper functions
-        Map<AddAction, Integer> counts = new HashMap<>();
-        int overflowIdx = -1;
+        // Currently open empty-if buffer (null = none open).
+        List<StatementNode> condBuffer = null;
+        Map<AddAction, Integer> condCounts = null;
 
         for (int i = 0; i < list.size(); i++) {
             StatementNode s = list.get(i);
             AddAction a = extractAction(s);
-            if (a == null) continue;
+            // ConditionalNodes and RandomNodes must stay in the outer scope — no nesting.
+            boolean mustGoOuter = s instanceof ConditionalNode || s instanceof RandomNode;
 
-            int c = counts.getOrDefault(a, 0) + 1;
-            counts.put(a, c);
-
-            if (c > a.maxCount) {
-                overflowIdx = i;
-                break;
+            // --- Try to place into the open conditional buffer ---
+            if (!inCondition && condBuffer != null) {
+                if (!mustGoOuter && (a == null || condCounts.getOrDefault(a, 0) < a.maxCount)) {
+                    if (a != null) condCounts.merge(a, 1, Integer::sum);
+                    condBuffer.add(s);
+                    continue;
+                }
+                // Buffer full or mustGoOuter — flush it to the outer scope first.
+                result.add(new ConditionalNode(null, new StatementListNode(condBuffer), null, condBuffer.getFirst().token));
+                condBuffer = null;
+                condCounts = null;
             }
+
+            // --- Try to place into the outer scope ---
+            if (a == null || outerCounts.getOrDefault(a, 0) < a.maxCount) {
+                if (a != null) outerCounts.merge(a, 1, Integer::sum);
+                result.add(s);
+                continue;
+            }
+
+            // Outer scope is full for this action type.
+            // Open a new empty-if buffer if we still have conditional slots available.
+            if (!inCondition && !mustGoOuter
+                    && outerCounts.getOrDefault(AddAction.CONDITIONAL, 0) < AddAction.CONDITIONAL.maxCount) {
+                outerCounts.merge(AddAction.CONDITIONAL, 1, Integer::sum);
+                condBuffer = new ArrayList<>();
+                condBuffer.add(s);
+                condCounts = new HashMap<>();
+                if (a != null) condCounts.put(a, 1);
+                continue;
+            }
+
+            // No room anywhere — emit a helper function for the tail [i..end).
+            if (condBuffer != null) {
+                result.add(new ConditionalNode(null, new StatementListNode(condBuffer), null, condBuffer.getFirst().token));
+                condBuffer = null;
+            }
+            List<StatementNode> tail = new ArrayList<>(list.subList(i, list.size()));
+            String helperName = currentScopeName + "_s$" + nextHelperId++;
+            StatementListNode helperBody = splitIfNeeded(new StatementListNode(tail), false);
+            VoidFunctionNode helper = new VoidFunctionNode(helperName, "", null, new ParameterListNode(List.of()), helperBody, false, tail.getFirst().token);
+            all.add(helper);
+            result.add(new VoidFunctionCallNode(helperName, new ArgumentListNode(List.of()), tail.getFirst().token));
+            return new StatementListNode(result);
         }
 
-        if (overflowIdx < 0) return new StatementListNode(list);
+        // Flush any remaining open buffer.
+        if (condBuffer != null && !condBuffer.isEmpty()) {
+            result.add(new ConditionalNode(null, new StatementListNode(condBuffer), null, condBuffer.getFirst().token));
+        }
 
-        // split off tail [overflowIdx..end) into a helper
-        List<StatementNode> tail = new ArrayList<>(list.subList(overflowIdx, list.size()));
-        String helperName = "split$" + (nextHelperId++);
-        StatementListNode helperBody = splitIfNeeded(new StatementListNode(tail), false);
-        VoidFunctionNode helper = new VoidFunctionNode(helperName, "", new ParameterListNode(List.of()), helperBody, tail.getFirst().token);
-        all.add(helper);
-
-        VoidFunctionCallNode call = new VoidFunctionCallNode(
-                helperName, new ArgumentListNode(List.of()), tail.getFirst().token
-        );
-        List<StatementNode> prefix = new ArrayList<>(list.subList(0, overflowIdx));
-        prefix.add(call);
-        list = prefix;
-
-        return new StatementListNode(list);
+        return new StatementListNode(result);
     }
-
-
 
     private AddAction extractAction(StatementNode stmt) {
         return switch (stmt) {

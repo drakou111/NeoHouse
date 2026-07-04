@@ -1,5 +1,7 @@
 {
   "key.categories.neohouse": "NeoHouse",
+  "key.category.neohouse.neohouse": "NeoHouse",
   "key.neohouse.cancel": "Cancel Current Import",
-  "key.neohouse.files": "Open NeoHouse Files"
+  "key.neohouse.files": "Open NeoHouse Files",
+  "key.neohouse.open": "Open NeoHouse"
 }

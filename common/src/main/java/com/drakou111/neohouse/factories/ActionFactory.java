@@ -16,21 +16,26 @@ public class ActionFactory {
     private static Action buildSimpleAction(RestrictionAction state, AddAction action) {
         if (!state.isAllowed(action))
             throw new InterruptActionException("Cannot add action '" + action.displayName + "' here.");
-        return new ActionBuilder().addAction(action, state).get();
+        return new ActionBuilder().addAction(action).get();
     }
 
     private static Action buildAction(RestrictionAction state, AddAction action, InputParam... params) {
+        return buildAction(state, action, Others.GENERAL_GO_BACK_H4, params);
+    }
+
+    private static Action buildAction(RestrictionAction state, AddAction action, int backId, InputParam... params) {
         if (!state.isAllowed(action))
             throw new InterruptActionException("Cannot add action '" + action.displayName + "' here.");
-        ActionBuilder b = new ActionBuilder().addAction(action, state);
+        ActionBuilder b = new ActionBuilder().addAction(action);
         for (InputParam p : params) p.apply(b);
-        return b.clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true).get();
+        return b.clickSlotAndWait(backId, true).get();
     }
+
 
     public static Action addActionConditional(RestrictionAction state, boolean matchAny, Action conditions, Action ifs, Action elses, String note) {
         if (!state.isAllowed(AddAction.CONDITIONAL)) throw new InterruptActionException("Cannot add action 'Conditional' here.");
         return new ActionBuilder()
-                .addAction(AddAction.CONDITIONAL, state)
+                .addAction(AddAction.CONDITIONAL)
                 .onlyIf(matchAny, () -> new ActionBuilder()
                         .search(ConditionInputs.MATCH_ANY))
                 .onlyIf(conditions != null, () -> new ActionBuilder()
@@ -54,7 +59,7 @@ public class ActionFactory {
     public static Action addActionRandom(RestrictionAction state, Action randoms, String note) {
         if (!state.isAllowed(AddAction.RANDOM)) throw new InterruptActionException("Cannot add action 'Random' here.");
         return new ActionBuilder()
-                .addAction(AddAction.RANDOM, state)
+                .addAction(AddAction.RANDOM)
                 .onlyIf(randoms != null, () -> new ActionBuilder()
                         .search(RandomInputs.ACTIONS)
                         .append(randoms)
@@ -266,7 +271,7 @@ public class ActionFactory {
     }
 
     public static Action addActionDropItem(RestrictionAction state, DropItemParams p) {
-        return buildAction(state, AddAction.DROP_ITEM,
+        return buildAction(state, AddAction.DROP_ITEM, Others.GENERAL_GO_BACK_H5,
                 InputParam.item(DropItemInputs.ITEM, p.snbtData),
                 InputParam.predefined(DropItemInputs.LOCATION, p.teleport != null && p.teleport != Teleport.CUSTOM, p.teleport != null ? p.teleport.displayName : null),
                 InputParam.withCustom(DropItemInputs.LOCATION, p.teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, p.customLocation),

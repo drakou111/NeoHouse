@@ -1,0 +1,64 @@
+// ─────────────────────────────────────────
+//   NeoHouse built-in library
+// ─────────────────────────────────────────
+
+// Returns the absolute value of x.
+const function double double_abs(double x) {
+    if (x < 0.0) { return -x; }
+    return x;
+}
+
+// Returns the smaller of a and b.
+const function double double_min(double a, double b) {
+    if (a < b) { return a; }
+    return b;
+}
+
+// Returns the larger of a and b.
+const function double double_max(double a, double b) {
+    if (a > b) { return a; }
+    return b;
+}
+
+// Clamps x to the range [lo, hi].
+const function double double_clamp(double x, double lo, double hi) {
+    if (x < lo) { return lo; }
+    if (x > hi) { return hi; }
+    return x;
+}
+
+// Sign of x: returns -1.0, 0.0, or 1.0.
+const function double double_sign(double x) {
+    if (x < 0.0) { return -1.0; }
+    if (x > 0.0) { return 1.0; }
+    return 0.0;
+}
+
+// Remainder of x divided by n.
+const function double double_mod(double x, double n) {
+    p.temp = (double)((long)(x / n));
+    p.temp = x - n * p.temp;
+
+    if (p.temp < 0.0) {
+        p.temp += n;
+    }
+
+    return (double)p.temp;
+}
+
+// Square root of x.
+const function double sqrt(double x) {
+    p.temp = 0.001;
+    if (x <= 0.0) { p.temp = 0.0; }
+    if (x >= 0.03) { p.temp = 0.5; }
+    if (x >= 0.001 && x < 0.03) { p.temp = 0.1; }
+    if (x > 0.0) {
+        repeat(8) {
+            p.temp = (p.temp + x / p.temp) * 0.5;
+        }
+    }
+    else {
+        p.temp = 0.0;
+    }
+    return (double)p.temp;
+}
