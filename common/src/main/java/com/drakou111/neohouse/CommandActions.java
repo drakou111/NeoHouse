@@ -18,6 +18,7 @@ import com.drakou111.neohouse.ui.FileBrowserScreen;
 import com.drakou111.neohouse.ui.HelpScreen;
 import com.drakou111.neohouse.ui.HomeScreen;
 import com.drakou111.neohouse.ui.InputDialogScreen;
+import com.drakou111.neohouse.ui.MusicBrowserScreen;
 import com.drakou111.neohouse.utils.ActionBuilder;
 import com.drakou111.neohouse.utils.HousingCheck;
 import com.drakou111.neohouse.utils.LibraryManager;
@@ -66,6 +67,7 @@ public final class CommandActions {
 
     public static int openHome()   { return openScreen(() -> new HomeScreen(CommandActions::getScriptsDir)); }
     public static int openFiles()  { return openScreen(() -> new FileBrowserScreen(getScriptsDir())); }
+    public static int openMusic()  { return openScreen(() -> new MusicBrowserScreen(getMusicDir())); }
     public static int openHelp()   { return openScreen(() -> new HelpScreen(null)); }
     public static int openConfig() { return openScreen(() -> new ConfigScreen(null)); }
 
@@ -273,6 +275,15 @@ public final class CommandActions {
         } catch (IOException ignored) {
         }
         LibraryManager.init(dir);
+        return dir;
+    }
+
+    public static Path getMusicDir() {
+        Path dir = Minecraft.getInstance().gameDirectory.toPath().resolve("neohouse-music");
+        try {
+            if (!Files.exists(dir)) Files.createDirectories(dir);
+        } catch (IOException ignored) {
+        }
         return dir;
     }
 

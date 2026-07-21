@@ -32,6 +32,10 @@ public final class RenderHelper {
         return Minecraft.getInstance().hasShiftDown();
     }
 
+    public static boolean hasControlDown() {
+        return Minecraft.getInstance().hasControlDown();
+    }
+
     public static @Nullable LivingEntity createEntity(Minecraft mc, String mobId) {
         try {
             Identifier loc = Identifier.tryParse(mobId);

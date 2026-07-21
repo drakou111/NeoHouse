@@ -77,15 +77,16 @@ public class HomeScreen extends Screen implements NeoHouseScreen {
     protected void init() {
         int cx = this.width / 2;
         int midY = this.height / 2;
-        int btnW = 110;
+        int btnW = 84;
         int btnH = 22;
-        int gap = 10;
-        int totalW = 3 * btnW + 2 * gap;
+        int gap = 8;
+        int totalW = 4 * btnW + 3 * gap;
         int startX = cx - totalW / 2;
         int btnY = midY + 48;
         addRenderableWidget(Button.builder(Component.literal("Files"), b -> openFiles()).bounds(startX, btnY, btnW, btnH).build());
-        addRenderableWidget(Button.builder(Component.literal("Help"), b -> openHelp()).bounds(startX + btnW + gap, btnY, btnW, btnH).build());
-        addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig()).bounds(startX + 2 * (btnW + gap), btnY, btnW, btnH).build());
+        addRenderableWidget(Button.builder(Component.literal("Music"), b -> openMusic()).bounds(startX + btnW + gap, btnY, btnW, btnH).build());
+        addRenderableWidget(Button.builder(Component.literal("Help"), b -> openHelp()).bounds(startX + 2 * (btnW + gap), btnY, btnW, btnH).build());
+        addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig()).bounds(startX + 3 * (btnW + gap), btnY, btnW, btnH).build());
         hintText = getRandomHint().getText(Minecraft.getInstance());
     }
 
@@ -138,6 +139,10 @@ public class HomeScreen extends Screen implements NeoHouseScreen {
 
     private void openFiles() {
         minecraft.setScreen(new FileBrowserScreen(scriptsDir.get(), this));
+    }
+
+    private void openMusic() {
+        minecraft.setScreen(new MusicBrowserScreen(CommandActions.getMusicDir(), this));
     }
 
     private void openHelp() {

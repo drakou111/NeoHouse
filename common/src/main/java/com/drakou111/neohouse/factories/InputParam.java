@@ -31,6 +31,16 @@ public interface InputParam {
         return b -> { if (value != null && !value.trim().isEmpty()) { b.search(label); b.search(value); } };
     }
 
+    static InputParam listSearchAnvil(String label, String value) {
+        return b -> {
+            if (value != null && !value.trim().isEmpty()) {
+                b.search(label);
+                b.anvilInput(value, Others.GENERAL_SEARCH_H6);
+                b.search(value);
+            }
+        };
+    }
+
     static InputParam item(String label, String snbt) {
         return b -> { if (snbt != null && !snbt.isEmpty()) { b.search(label); b.customItem(snbt); } };
     }

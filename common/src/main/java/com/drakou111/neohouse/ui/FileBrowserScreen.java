@@ -37,7 +37,7 @@ public class FileBrowserScreen extends ScreenBase {
     private static final int SB_W     = 4;
     private static final int SB_PAD   = 3;
 
-    private static final String[] FILE_LABELS   = { "Edit", "Run", "Rename", "Move", "Delete", "Reveal" };
+    private static final String[] FILE_LABELS   = { "Edit", "Run", "Rename", "Move", "Delete" };
     private static final String[] FOLDER_LABELS = { "Open", "Rename", "Delete" };
 
     private final Path   rootPath;
@@ -344,7 +344,6 @@ public class FileBrowserScreen extends ScreenBase {
                 case 2 -> renameEntry(entry);
                 case 3 -> moveFile(entry);
                 case 4 -> deleteEntry(entry);
-                case 5 -> openInExplorer(entry);
             }
         }
     }
@@ -429,19 +428,6 @@ public class FileBrowserScreen extends ScreenBase {
             }
         }
         Files.deleteIfExists(path);
-    }
-
-    private void openInExplorer(Path file) {
-        Path folder = Files.isDirectory(file) ? file : file.getParent();
-        try {
-            if (java.awt.Desktop.isDesktopSupported()) {
-                java.awt.Desktop.getDesktop().open(folder.toFile());
-            } else {
-                MessageUtils.errorToChat("Opening folders is not supported on this system.");
-            }
-        } catch (IOException e) {
-            MessageUtils.errorToChat("Could not open folder: " + e.getMessage());
-        }
     }
 
     private void newFile() {

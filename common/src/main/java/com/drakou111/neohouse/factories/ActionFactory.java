@@ -181,7 +181,8 @@ public class ActionFactory {
 
     public static Action addActionTeleport(RestrictionAction state, Teleport teleport, String customLocation, boolean preventInsideBlocks, String note) {
         return buildAction(state, AddAction.TELEPORT,
-                InputParam.predefined(TeleportInputs.LOCATION, teleport != null && teleport != Teleport.CUSTOM, teleport != null ? teleport.displayName : null),
+                // INVOKER is the default location — no need to set it explicitly.
+                InputParam.predefined(TeleportInputs.LOCATION, teleport != null && teleport != Teleport.CUSTOM && teleport != Teleport.INVOKER, teleport != null ? teleport.displayName : null),
                 InputParam.withCustom(TeleportInputs.LOCATION, teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, customLocation),
                 InputParam.toggle(TeleportInputs.PREVENT_TELEPORT_INSIDE_BLOCKS, preventInsideBlocks),
                 InputParam.note(note));
@@ -196,10 +197,11 @@ public class ActionFactory {
 
     public static Action addActionPlaySound(RestrictionAction state, PlaySoundParams p) {
         return buildAction(state, AddAction.PLAY_SOUND,
-                InputParam.listSearch(PlaySoundInputs.SOUND, p.sound != null ? p.sound.displayName : null),
+                InputParam.listSearchAnvil(PlaySoundInputs.SOUND, p.sound != null ? p.sound.displayName : null),
                 InputParam.anvil(PlaySoundInputs.VOLUME, String.valueOf(p.volume), "0.7"),
                 InputParam.anvil(PlaySoundInputs.PITCH,  String.valueOf(p.pitch),  "1.0"),
-                InputParam.predefined(PlaySoundInputs.LOCATION, p.teleport != null && p.teleport != Teleport.CUSTOM, p.teleport != null ? p.teleport.displayName : null),
+                // INVOKER is the default location — no need to set it explicitly.
+                InputParam.predefined(PlaySoundInputs.LOCATION, p.teleport != null && p.teleport != Teleport.CUSTOM && p.teleport != Teleport.INVOKER, p.teleport != null ? p.teleport.displayName : null),
                 InputParam.withCustom(PlaySoundInputs.LOCATION, p.teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, p.customLocation),
                 InputParam.note(p.note));
     }

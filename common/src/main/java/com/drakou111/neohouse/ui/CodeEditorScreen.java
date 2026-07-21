@@ -64,9 +64,11 @@ public class CodeEditorScreen extends ScreenBase {
                 .bounds(rx - 136, by, 76, bh).build());
         addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose())
                 .bounds(rx - 56, by, 56, bh).build());
+        addRenderableWidget(Button.builder(Component.literal("< Back"), btn -> goBack())
+                .bounds(6, by, 46, bh).build());
         addRenderableWidget(Button.builder(Component.literal("(i)").withStyle(ChatFormatting.AQUA), btn ->
                         Minecraft.getInstance().setScreen(new HelpScreen(this)))
-                .bounds(22, by, 24, bh).build());
+                .bounds(56, by, 24, bh).build());
 
         editor = new SyntaxEditorWidget(4, HEADER_H + 2, this.width - 8, this.height - HEADER_H - 5);
         editor.setOnChange(() -> { scheduleCheck(); updateSaveBtn(); });
@@ -209,6 +211,23 @@ public class CodeEditorScreen extends ScreenBase {
 
     private void discard() {
         Minecraft.getInstance().setScreen(parent);
+    }
+
+    /** Return to the parent screen (e.g. the file browser), prompting if there are unsaved changes. */
+    private void goBack() {
+        if (isDirty()) {
+            pendingContent = editor.getValue();
+            Minecraft.getInstance().setScreen(new InputDialogScreen(
+                    "Unsaved changes. Discard?",
+                    this,
+                    () -> {
+                        pendingContent = null;
+                        discard();
+                    }
+            ));
+        } else {
+            discard();
+        }
     }
 
     /** Exit the editor straight back to the game, without popping to the parent screen. */

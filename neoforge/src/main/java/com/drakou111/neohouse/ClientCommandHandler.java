@@ -28,6 +28,7 @@ public class ClientCommandHandler {
         return Commands.literal(name)
                 .executes(ctx -> CommandActions.openHome())
                 .then(Commands.literal("files").executes(ctx -> CommandActions.openFiles()))
+                .then(Commands.literal("music").executes(ctx -> CommandActions.openMusic()))
                 .then(Commands.literal("help").executes(ctx -> CommandActions.openHelp()))
                 .then(Commands.literal("config").executes(ctx -> CommandActions.openConfig()))
                 .then(Commands.literal("nuke").executes(ctx -> CommandActions.guarded(CommandActions::handleNuke)))

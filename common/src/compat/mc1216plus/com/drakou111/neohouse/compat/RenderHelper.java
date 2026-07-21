@@ -31,6 +31,10 @@ public final class RenderHelper {
         return Screen.hasShiftDown();
     }
 
+    public static boolean hasControlDown() {
+        return Screen.hasControlDown();
+    }
+
     public static @Nullable LivingEntity createEntity(Minecraft mc, String mobId) {
         try {
             ResourceLocation loc = ResourceLocation.tryParse(mobId);
