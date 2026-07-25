@@ -14,7 +14,10 @@ public class MusicProject {
 
     public String name = "Untitled";
 
-    public int gridDivision = 4;
+    public int gridDivision = 10;
+
+    /** Song tempo. Derived from {@link #gridDivision} ({@code 1200 / gridDivision}) on load if unset. */
+    public double bpm = 120.0;
 
     public boolean allowAllSounds = false;
 
@@ -25,6 +28,8 @@ public class MusicProject {
     public static MusicProject fresh(String name) {
         MusicProject p = new MusicProject();
         p.name = name;
+        p.gridDivision = 10;
+        p.bpm = 120.0;
         p.tracks.add(new MusicTrack("Harp", Sound.BLOCK_NOTE_BLOCK_HARP));
         return p;
     }

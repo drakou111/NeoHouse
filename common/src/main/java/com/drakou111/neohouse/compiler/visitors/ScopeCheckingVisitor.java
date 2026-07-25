@@ -178,7 +178,8 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
 
     @Override
     public ASTNode visitConditional(ConditionalNode cond) {
-        ExpressionNode newCond = (ExpressionNode) cond.condition.accept(this);
+        // A conditionless if(){...} (grouping wrapper, or user-written empty if) has no condition.
+        ExpressionNode newCond = cond.condition == null ? null : (ExpressionNode) cond.condition.accept(this);
 
         scopeStack.push(new HashMap<>());
         StatementListNode newThen = (StatementListNode) cond.thenBlock.accept(this);

@@ -91,9 +91,6 @@ public class FileBrowserScreen extends ScreenBase {
                 Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
                 .bounds(this.width - PAD - 18, 5, 18, 18).build());
 
-        addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig())
-                .bounds(this.width - PAD - 18 - 4 - 54, 5, 54, 18).build());
-
         if (currentPath.equals(rootPath)) {
             addRenderableWidget(Button.builder(Component.literal("< Back"), b -> goBack())
                     .bounds(PAD, 28, 60, 16).build());
@@ -453,10 +450,6 @@ public class FileBrowserScreen extends ScreenBase {
                     catch (IOException e) { MessageUtils.errorToChat("Create failed: " + e.getMessage()); }
                 }
         ));
-    }
-
-    private void openConfig() {
-        Minecraft.getInstance().setScreen(new ConfigScreen(this));
     }
 
     private int maxVisibleRows() {

@@ -6,7 +6,6 @@ import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Others;
 import com.drakou111.neohouse.constants.others.CommandInputs;
 import com.drakou111.neohouse.constants.others.CustomMenuInputs;
-import com.drakou111.neohouse.constants.others.FunctionInputs;
 import com.drakou111.neohouse.utils.ActionBuilder;
 
 public class MovementFactory {
@@ -81,27 +80,4 @@ public class MovementFactory {
                 .get();
     }
 
-    // Goes to and deletes the function (if any) and recreates it.
-    public static Action goAndRecreateFunction(String functionName, String description, String iconSNBT, boolean automaticExecution, int loopTime) {
-        return new ActionBuilder()
-                .closeAll()
-                .sendChatAndWait(Commands.FUNCTIONS)
-                .removeFunctionIfPresent(functionName)
-                .anvilInput(functionName, Others.GENERAL_ADD_H6)
-                .onlyIf((description != null && !description.trim().isEmpty()) || iconSNBT != null || automaticExecution, () -> new ActionBuilder()
-                        .gotoFunction(true, functionName, false)
-                        .onlyIf(description != null && !description.trim().isEmpty(), () -> new ActionBuilder()
-                                .searchForChat(FunctionInputs.DESCRIPTION, description)
-                        )
-                        .onlyIf(iconSNBT != null, () -> new ActionBuilder()
-                                .search(FunctionInputs.ICON)
-                                .customItem(iconSNBT)
-                        )
-                        .onlyIf(automaticExecution, () -> new ActionBuilder()
-                                .searchForAnvil(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loopTime))
-                        )
-                        .gotoFunction(true, functionName, true)
-                       )
-                .get();
-    }
 }

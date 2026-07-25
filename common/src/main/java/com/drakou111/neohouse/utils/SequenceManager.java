@@ -11,8 +11,25 @@ public class SequenceManager {
     private static int totalSteps = 0;
     private static int completedSteps = 0;
 
+    // Names of functions/loops the current run created as fresh shells. Used by "Never Override"
+    // so a later pass fills only the entities it just created, leaving pre-existing ones alone.
+    private static final java.util.Set<String> createdThisRun = new java.util.HashSet<>();
+
+    public static void markCreated(String name) { createdThisRun.add(name); }
+    public static boolean wasCreated(String name) { return createdThisRun.contains(name); }
+
+    // Names of functions that already existed in Housing when this run started (populated by a
+    // ReadFunctionNamesAction at the start of Phase 1). Lets the delete pass skip searching for
+    // functions that aren't there.
+    private static final java.util.Set<String> existingFunctions = new java.util.HashSet<>();
+
+    public static void recordExistingFunction(String name) { existingFunctions.add(name); }
+    public static boolean functionExists(String name) { return existingFunctions.contains(name); }
+
     public static void startAction(Action action) {
         ChatEvents.clear(); // drop any listeners left over from a previous run
+        createdThisRun.clear();
+        existingFunctions.clear();
         currentAction = action;
         startTimeMs = System.currentTimeMillis();
         totalSteps = action.countSteps();

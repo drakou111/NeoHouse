@@ -18,6 +18,7 @@ import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.enums.*;
 import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.constants.Comparator;
+import com.drakou111.neohouse.constants.others.CustomMenuInputs;
 import com.drakou111.neohouse.constants.others.FunctionInputs;
 import com.drakou111.neohouse.factories.ActionFactory;
 import com.drakou111.neohouse.factories.ConditionFactory;
@@ -45,17 +46,27 @@ public class CodeGenerator {
             }
         }
 
-        // Pass 1: create empty shells for forward-reference support. ALWAYS does this for
-        // every item; SKIP_CONST does it only for non-const items; NEVER skips this pass.
-        if (mode == OverrideMode.ALWAYS || mode == OverrideMode.SKIP_CONST) {
-            for (MainStatementNode stmt : main.statements) {
-                if (mode == OverrideMode.SKIP_CONST && stmtIsConst(stmt)) continue;
+        // NEVER has its own two-pass flow: create shells for missing functions, then fill
+        // only the ones that were empty (i.e. the shells we just added), preserving the rest.
+        if (mode == OverrideMode.NEVER) {
+            generateNeverMode(main, parts);
+            return new GroupAction(parts);
+        }
+
+        // Pass 1: prepare shells (mode here is ALWAYS or SKIP_CONST; NEVER already returned).
+        // First read every existing function name once, so an overridden function is deleted only
+        // when it's actually present (skipping a wasted list search otherwise). Overridden functions
+        // are then recreated as bare stubs — their description/icon is applied in Pass 2 right before
+        // the body, so stub creation stays a cheap list operation. Const items keep shell-if-absent.
+        parts.add(new ActionBuilder().closeAll().sendChatAndWait(Commands.FUNCTIONS).get());
+        parts.add(new ReadFunctionNamesAction());
+        for (MainStatementNode stmt : main.statements) {
+            boolean override = mode == OverrideMode.ALWAYS || !stmtIsConst(stmt);
+            if (override) {
                 if (stmt instanceof VoidFunctionNode fn) {
-                    parts.add(MovementFactory.goAndRecreateFunction(fn.name, fn.description, fn.icon, false, 0));
-                    parts.add(MovementFactory.exit(true));
+                    parts.add(recreateFunctionStub(fn.name));
                 } else if (stmt instanceof LoopNode loop) {
-                    parts.add(MovementFactory.goAndRecreateFunction(loop.name, loop.description, loop.icon, false, 0));
-                    parts.add(MovementFactory.exit(true));
+                    parts.add(recreateFunctionStub(loop.name));
                 } else if (stmt instanceof CommandNode cmd) {
                     parts.add(MovementFactory.goAndRecreateCommand(cmd.name, cmd.targeted, cmd.priority, cmd.listed));
                     parts.add(MovementFactory.exit(true));
@@ -63,6 +74,12 @@ public class CodeGenerator {
                     parts.add(MovementFactory.goAndRecreateMenu(menu.name, menu.rows));
                     parts.add(MovementFactory.exit(true));
                 }
+            } else if (stmt instanceof VoidFunctionNode fn) {
+                parts.add(createShellUsingRead(fn.name, "function"));
+            } else if (stmt instanceof LoopNode loop) {
+                parts.add(createShellUsingRead(loop.name, "loop"));
+            } else if (stmt instanceof MenuNode menu) {
+                parts.add(createMenuShellIfAbsent(menu.name, menu.rows));
             }
         }
 
@@ -71,50 +88,153 @@ public class CodeGenerator {
         Map<String, List<String>> copiesOf = fnCopies.copiesOf();
         Set<String> isCopy = fnCopies.isCopy();
 
-        // Pass 2: fill in bodies.
-        // In SKIP_CONST mode, const items are processed first so that every const
-        // definition is fully created before any non-const body is edited. Otherwise a
-        // non-const function defined earlier in the source could reference (Trigger Function)
-        // a const function that hasn't been created yet — const items are skipped in Pass 1's
-        // shell creation, so they only come into existence here.
-        List<MainStatementNode> pass2Order;
-        if (mode == OverrideMode.SKIP_CONST) {
-            pass2Order = new ArrayList<>(main.statements.size());
-            for (MainStatementNode s : main.statements) if (stmtIsConst(s)) pass2Order.add(s);
-            for (MainStatementNode s : main.statements) if (!stmtIsConst(s)) pass2Order.add(s);
-        } else {
-            pass2Order = main.statements;
-        }
-        for (MainStatementNode stmt : pass2Order) {
-            boolean doOverride = switch (mode) {
-                case ALWAYS     -> true;
-                case NEVER      -> false;
-                case SKIP_CONST -> !stmtIsConst(stmt);
-            };
+        // Pass 2: fill in bodies. Overridden items are (re)filled unconditionally; const items in
+        // SKIP_CONST are filled only if Pass 1 created them (pre-existing ones are left as-is, and
+        // Pass 1 already warned about the skip). All shells exist by now, so any reference resolves.
+        for (MainStatementNode stmt : main.statements) {
+            boolean override = mode == OverrideMode.ALWAYS || !stmtIsConst(stmt);
             if (stmt instanceof VoidFunctionNode fn) {
-                if (isCopy.contains(fn.name)) continue; // handled when original is processed
-                List<String> copies = copiesOf.getOrDefault(fn.name, List.of());
-                if (!copies.isEmpty() && doOverride) {
-                    parts.add(generateFunctionWithCopies(fn, copies));
-                } else if (doOverride) {
-                    parts.add(generateFunction(fn));
-                } else if (copies.isEmpty()) {
-                    parts.add(generateFunctionIfAbsent(fn));
+                if (override) {
+                    if (isCopy.contains(fn.name)) continue; // filled by pasting from its original
+                    List<String> copies = copiesOf.getOrDefault(fn.name, List.of());
+                    parts.add(!copies.isEmpty() ? generateFunctionWithCopies(fn, copies) : generateFunction(fn));
                 } else {
-                    parts.add(generateFunctionAndCopiesIfAbsent(fn, fnByName, copies));
+                    // const: fill only what we created this run (each copy handled on its own).
+                    parts.add(new RunIfCreatedAction(fnKey(fn.name), generateFunction(fn)));
                 }
             } else if (stmt instanceof EventNode event) {
-                parts.add(doOverride ? generateEvent(event) : generateEventIfEmpty(event));
+                parts.add(override ? generateEvent(event) : generateEventIfEmpty(event));
             } else if (stmt instanceof LoopNode loop) {
-                parts.add(doOverride ? generateLoop(loop) : generateLoopIfAbsent(loop));
+                parts.add(override ? generateLoop(loop) : new RunIfCreatedAction(fnKey(loop.name), generateLoop(loop)));
             } else if (stmt instanceof CommandNode cmd) {
-                parts.add(doOverride ? generateCommand(cmd) : generateCommandIfAbsent(cmd));
+                parts.add(override ? generateCommand(cmd) : generateCommandIfAbsent(cmd));
             } else if (stmt instanceof MenuNode menu) {
-                parts.add(doOverride ? generateMenu(menu) : generateMenuIfAbsent(menu));
+                parts.add(override ? generateMenu(menu) : new RunIfCreatedAction(menuKey(menu.name), generateMenu(menu)));
             }
         }
         return new GroupAction(parts);
     }
+
+    /**
+     * "Never Override" generation. Pass 1 searches the Functions list for each function/loop: if
+     * it's missing we create an empty shell AND note its name; if it's already there we leave it
+     * completely untouched. Creating every missing shell first means references between functions
+     * (including forward references and mutual calls) resolve when bodies are written in Pass 2.
+     * Pass 2 then fills in ONLY the entities we noted as created this run — anything that already
+     * existed keeps its content. Detection is purely by list search (no entering functions to
+     * inspect them); the created-set is remembered client-side via {@link SequenceManager}.
+     * Events keep their fill-if-empty handling; commands and menus create-if-absent.
+     */
+    private void generateNeverMode(MainNode main, List<Action> parts) {
+        // Read every existing function name once so shell creation can decide create-vs-warn from
+        // that set instead of searching the list per function.
+        parts.add(new ActionBuilder().closeAll().sendChatAndWait(Commands.FUNCTIONS).get());
+        parts.add(new ReadFunctionNamesAction());
+        // Pass 1: create a shell for every missing function/loop/menu and record which we created.
+        for (MainStatementNode stmt : main.statements) {
+            if (stmt instanceof VoidFunctionNode fn) {
+                parts.add(createShellUsingRead(fn.name, "function"));
+            } else if (stmt instanceof LoopNode loop) {
+                parts.add(createShellUsingRead(loop.name, "loop"));
+            } else if (stmt instanceof MenuNode menu) {
+                parts.add(createMenuShellIfAbsent(menu.name, menu.rows));
+            }
+        }
+        // Pass 2: fill only the entities Pass 1 created (never the pre-existing ones).
+        for (MainStatementNode stmt : main.statements) {
+            if (stmt instanceof VoidFunctionNode fn) {
+                parts.add(new RunIfCreatedAction(fnKey(fn.name), generateFunction(fn)));
+            } else if (stmt instanceof LoopNode loop) {
+                parts.add(new RunIfCreatedAction(fnKey(loop.name), generateLoop(loop)));
+            } else if (stmt instanceof EventNode event) {
+                parts.add(generateEventIfEmpty(event));
+            } else if (stmt instanceof CommandNode cmd) {
+                parts.add(generateCommandIfAbsent(cmd));
+            } else if (stmt instanceof MenuNode menu) {
+                parts.add(new RunIfCreatedAction(menuKey(menu.name), generateMenu(menu)));
+            }
+        }
+    }
+
+    /**
+     * Deletes {@code name} (only if it existed when the run started — see {@link ReadFunctionNamesAction})
+     * and creates a fresh empty stub. The description/icon are applied in Pass 2 right before the
+     * body, so this stays a lean list operation.
+     */
+    private Action recreateFunctionStub(String name) {
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.FUNCTIONS)
+                .append(new IfFunctionExistsAction(name, new ActionBuilder().removeFunctionIfPresent(name).get(), null))
+                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .get();
+    }
+
+    /**
+     * Shell-creation that decides existence from the pre-read function set
+     * ({@link ReadFunctionNamesAction}) instead of searching the list. If the function already
+     * exists, just warn (and leave it for Pass 2 to skip); otherwise create a bare stub and record
+     * it. Used by NEVER (all functions) and SKIP_CONST (const functions) — both run after a read pass.
+     */
+    private Action createShellUsingRead(String name, String kind) {
+        Action createStub = new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.FUNCTIONS)
+                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .append(new MarkCreatedAction(fnKey(name)))
+                .get();
+        Action warn = new ClientMessageAction("Skipped " + kind + " '" + name + "' — already exists.", true);
+        return new IfFunctionExistsAction(name, warn, createStub);
+    }
+
+    /**
+     * Applies a function/loop's description and icon via its config menu (right-click), if any;
+     * a no-op when there's neither. Used at the start of Pass 2 body generation so metadata is set
+     * right before editing rather than during the (batched) stub-creation pass.
+     */
+    private Action setFunctionMeta(String name, String description, String icon) {
+        boolean hasDesc = description != null && !description.trim().isEmpty();
+        if (!hasDesc && icon == null) return new GroupAction(List.of());
+        return new ActionBuilder()
+                .gotoFunction(true, name, false)
+                .onlyIf(hasDesc, () -> new ActionBuilder().searchForChat(FunctionInputs.DESCRIPTION, description))
+                .onlyIf(icon != null, () -> new ActionBuilder().search(FunctionInputs.ICON).customItem(icon))
+                .closeAll()
+                .get();
+    }
+
+    /**
+     * Searches the Custom Menus list; if the menu already exists, leaves it untouched and warns; if
+     * missing, creates an empty menu of the right size and records it so Pass 2 fills its slots.
+     * Shell-creating menus up front lets a function's {@code displayMenu(...)} resolve even when the
+     * menu is defined later. (Menus have no read-pass equivalent, so this still searches.)
+     */
+    private Action createMenuShellIfAbsent(String name, int rows) {
+        String rowsLabel = rows == 1 ? "1 Row" : rows + " Rows";
+        ActionBuilder create = new ActionBuilder()
+                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .onlyIf(rows != 1, () -> new ActionBuilder()
+                        .gotoCustomMenu(name, true)
+                        .search(CustomMenuInputs.CHANGE_SIZE)
+                        .search(rowsLabel))
+                .closeAll()
+                .append(new MarkCreatedAction(menuKey(name)));
+        ActionBuilder skip = new ActionBuilder()
+                .closeAll()
+                .append(new ClientMessageAction("Skipped menu '" + name + "' — already exists.", true));
+        return new ActionBuilder()
+                .closeAll()
+                .sendChatAndWait(Commands.CUSTOM_MENUS)
+                .search(name, null, false,
+                        skip,   // found → skip + warn
+                        create) // missing → create shell + note it
+                .get();
+    }
+
+    // Registry keys for "created this run" are namespaced so a function and a menu that happen to
+    // share a name (they live in separate Housing lists) don't get conflated.
+    private static String fnKey(String name)   { return "fn:" + name; }
+    private static String menuKey(String name) { return "menu:" + name; }
 
     /** Collects all top-level void functions, keyed by name, preserving source order. */
     private static Map<String, VoidFunctionNode> collectFunctions(MainNode main) {
@@ -164,6 +284,7 @@ public class CodeGenerator {
 
     private Action generateFunction(VoidFunctionNode fn) {
         List<Action> parts = new ArrayList<>();
+        parts.add(setFunctionMeta(fn.name, fn.description, fn.icon));
         parts.add(MovementFactory.goToFunction(false, fn.name));
         parts.add(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
         parts.add(MovementFactory.exit(true));
@@ -172,6 +293,7 @@ public class CodeGenerator {
 
     private Action generateFunctionWithCopies(VoidFunctionNode fn, List<String> copyNames) {
         List<Action> parts = new ArrayList<>();
+        parts.add(setFunctionMeta(fn.name, fn.description, fn.icon));
         parts.add(MovementFactory.goToFunction(false, fn.name));
         parts.add(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
         parts.add(new ActionBuilder().copyContext().get());
@@ -198,11 +320,15 @@ public class CodeGenerator {
     }
 
     private Action generateLoop(LoopNode loop) {
+        boolean hasDesc = loop.description != null && !loop.description.trim().isEmpty();
         List<Action> parts = new ArrayList<>();
         parts.add(MovementFactory.goToFunction(false, loop.name));
         parts.add(generateStatements(loop.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
+        // One config-menu visit sets description, icon and the automatic-execution delay.
         parts.add(new ActionBuilder()
                 .gotoFunction(true, loop.name, false)
+                .onlyIf(hasDesc, () -> new ActionBuilder().searchForChat(FunctionInputs.DESCRIPTION, loop.description))
+                .onlyIf(loop.icon != null, () -> new ActionBuilder().search(FunctionInputs.ICON).customItem(loop.icon))
                 .searchForAnvil(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay))
                 .closeAll()
                 .get());
@@ -225,126 +351,6 @@ public class CodeGenerator {
         }
         parts.add(MovementFactory.exit(true));
         return new GroupAction(parts);
-    }
-
-    private Action generateFunctionIfAbsent(VoidFunctionNode fn) {
-        Action warn = new GroupAction(List.of(
-            new ActionBuilder().closeAll().get(),
-            new ClientMessageAction("Skipped function '" + fn.name + "' — already exists.", true)
-        ));
-        Action createAndFill = new ActionBuilder()
-                .anvilInput(fn.name, Others.GENERAL_ADD_H6)
-                .append(MovementFactory.goToFunction(true, fn.name))
-                .append(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
-                .closeAll()
-                .get();
-        return new ActionBuilder()
-                .closeAll()
-                .sendChatAndWait(Commands.FUNCTIONS)
-                .search(fn.name, null, false, new ActionBuilder().append(warn), new ActionBuilder().append(createAndFill))
-                .get();
-    }
-
-    private Action generateFunctionAndCopiesIfAbsent(VoidFunctionNode fn, Map<String, VoidFunctionNode> fnByName, List<String> copyNames) {
-        List<VoidFunctionNode> copyFns = copyNames.stream()
-                .map(fnByName::get)
-                .filter(Objects::nonNull)
-                .toList();
-
-        // Original exists: skip it, then process copies starting with no clipboard context.
-        Action foundBranch = new GroupAction(List.of(
-                new ActionBuilder().closeAll().get(),
-                new ClientMessageAction("Skipped function '" + fn.name + "' — already exists.", true),
-                generateCopiesChain(copyFns, 0, false)
-        ));
-
-        // Original missing: write it, copy its context, then process copies (can paste).
-        Action notFoundBranch = new ActionBuilder()
-                .anvilInput(fn.name, Others.GENERAL_ADD_H6)
-                .append(MovementFactory.goToFunction(true, fn.name))
-                .append(generateStatements(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
-                .copyContext()
-                .closeAll()
-                .append(generateCopiesChain(copyFns, 0, true))
-                .get();
-
-        return new ActionBuilder()
-                .closeAll()
-                .sendChatAndWait(Commands.FUNCTIONS)
-                .search(fn.name, null, false, new ActionBuilder().append(foundBranch), new ActionBuilder().append(notFoundBranch))
-                .get();
-    }
-
-    /**
-     * Builds a chain of SearchActions that writes each missing copy.
-     * hasContext=true means a function context is already in the clipboard (from a prior write),
-     * so missing copies can be paste-filled instead of written from scratch.
-     * Skipping an existing copy leaves the clipboard intact for later copies.
-     */
-    private Action generateCopiesChain(List<VoidFunctionNode> copyFns, int idx, boolean hasContext) {
-        if (idx >= copyFns.size()) return new GroupAction(List.of());
-        VoidFunctionNode copyFn = copyFns.get(idx);
-
-        // Found: skip this copy; clipboard state is unchanged for subsequent copies.
-        Action foundAction = new GroupAction(List.of(
-                new ActionBuilder().closeAll().get(),
-                new ClientMessageAction("Skipped function '" + copyFn.name + "' — already exists.", true),
-                generateCopiesChain(copyFns, idx + 1, hasContext)
-        ));
-
-        Action notFoundAction;
-        if (!hasContext) {
-            // No clipboard yet: write from scratch and copy context for subsequent copies.
-            notFoundAction = new ActionBuilder()
-                    .anvilInput(copyFn.name, Others.GENERAL_ADD_H6)
-                    .append(MovementFactory.goToFunction(true, copyFn.name))
-                    .append(generateStatements(copyFn.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
-                    .copyContext()
-                    .closeAll()
-                    .append(generateCopiesChain(copyFns, idx + 1, true))
-                    .get();
-        } else {
-            // Clipboard available: create empty function and paste instead of writing.
-            notFoundAction = new ActionBuilder()
-                    .anvilInput(copyFn.name, Others.GENERAL_ADD_H6)
-                    .append(MovementFactory.goToFunction(true, copyFn.name))
-                    .append(new ActionBuilder().append(new DeleteAllAction(10)).get())
-                    .pasteContext()
-                    .closeAll()
-                    .append(generateCopiesChain(copyFns, idx + 1, true))
-                    .get();
-        }
-
-        return new ActionBuilder()
-                .closeAll()
-                .sendChatAndWait(Commands.FUNCTIONS)
-                .search(copyFn.name, null, false, new ActionBuilder().append(foundAction), new ActionBuilder().append(notFoundAction))
-                .get();
-    }
-
-    private Action generateLoopIfAbsent(LoopNode loop) {
-        Action warn = new GroupAction(List.of(
-            new ActionBuilder().closeAll().get(),
-            new ClientMessageAction("Skipped loop '" + loop.name + "' — already exists.", true)
-        ));
-        Action createAndFill = new ActionBuilder()
-                .anvilInput(loop.name, Others.GENERAL_ADD_H6)
-                .append(MovementFactory.goToFunction(true, loop.name))
-                .append(generateStatements(loop.statements, RestrictionAction.NONE, RestrictionCondition.NONE))
-                .gotoFunction(true, loop.name, false)
-                .onlyIf(loop.description != null && !loop.description.trim().isEmpty(), () -> new ActionBuilder()
-                        .searchForChat(FunctionInputs.DESCRIPTION, loop.description))
-                .onlyIf(loop.icon != null, () -> new ActionBuilder()
-                        .search(FunctionInputs.ICON)
-                        .customItem(loop.icon))
-                .searchForAnvil(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay))
-                .closeAll()
-                .get();
-        return new ActionBuilder()
-                .closeAll()
-                .sendChatAndWait(Commands.FUNCTIONS)
-                .search(loop.name, null, false, new ActionBuilder().append(warn), new ActionBuilder().append(createAndFill))
-                .get();
     }
 
     private Action generateCommandIfAbsent(CommandNode cmd) {
@@ -382,26 +388,6 @@ public class CodeGenerator {
             MovementFactory.goToEvent(event.event),
             new CheckSlotEmptyAction(10, fill, warn)
         ));
-    }
-
-    private Action generateMenuIfAbsent(MenuNode menu) {
-        Action warn = new GroupAction(List.of(
-            new ActionBuilder().closeAll().get(),
-            new ClientMessageAction("Skipped menu '" + menu.name + "' — already exists.", true)
-        ));
-        List<Action> slotActions = new ArrayList<>();
-        for (SlotNode slot : menu.slots) slotActions.add(generateSlot(slot));
-        Action createAndFill = new ActionBuilder()
-                .anvilInput(menu.name, Others.GENERAL_ADD_H6)
-                .append(MovementFactory.goToMenuGrid(menu.name))
-                .append(new GroupAction(slotActions))
-                .closeAll()
-                .get();
-        return new ActionBuilder()
-                .closeAll()
-                .sendChatAndWait(Commands.CUSTOM_MENUS)
-                .search(menu.name, null, false, new ActionBuilder().append(warn), new ActionBuilder().append(createAndFill))
-                .get();
     }
 
     private Action generateSlot(SlotNode slot) {

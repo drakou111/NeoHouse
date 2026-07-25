@@ -35,7 +35,8 @@ public final class MusicIO {
 
     private static void sanitize(MusicProject p) {
         if (p.tracks == null) p.tracks = new java.util.ArrayList<>();
-        if (p.gridDivision <= 0) p.gridDivision = 4;
+        if (p.gridDivision <= 0) p.gridDivision = 10;
+        if (p.bpm <= 0) p.bpm = 60.0 * MusicProject.TICKS_PER_SECOND / p.gridDivision;
         p.tracks.removeIf(Objects::isNull);
         for (MusicTrack t : p.tracks) {
             if (t.notes == null) t.notes = new java.util.ArrayList<>();

@@ -194,7 +194,7 @@ public class MusicEditorScreen extends ScreenBase {
             String sel = String.format("Vol %.1f   ·   Pitch %.2f", tr.volumeFor(selected), tr.pitchFor(selected));
             g.drawString(font, sel, PAD, fY, 0xFFCCCCCC, false);
         }
-        String hint = String.format("Len %.1fs   ·   LMB add   ·   RMB delete   ·   scroll note = volume",
+        String hint = String.format("Len %.1fs   ·   LMB add   ·   RMB delete   ·   scroll note/track = volume",
                 project.lengthTicks() / (double) MusicProject.TICKS_PER_SECOND);
         g.drawString(font, hint, width - PAD - font.width(hint), fY, t.muted(), false);
 
@@ -305,7 +305,9 @@ public class MusicEditorScreen extends ScreenBase {
 
             int col = tr.muted ? t.muted() : (act ? 0xFFFFFFFF : 0xFFCCCCCC);
             g.drawString(font, trimTo(tr.name, 92), 21, rowY + 1, col, false);
-            g.drawString(font, tr.notes.size() + (tr.muted ? " · muted" : " notes"), 21, rowY + 10, t.muted(), false);
+            String info = (tr.muted ? tr.notes.size() + " · muted" : tr.notes.size() + " notes")
+                    + "  ·  " + String.format("%.1f×", tr.volume);
+            g.drawString(font, info, 21, rowY + 10, t.muted(), false);
         }
     }
 
@@ -456,11 +458,31 @@ public class MusicEditorScreen extends ScreenBase {
                 return true;
             }
         }
+        // scrolling over a track's left-panel row adjusts that whole track's volume (gain)
+        if (mouseX < LEFT_W && mouseY >= HEADER_H && mouseY < height - FOOTER_H) {
+            int ti = trackAtY(mouseY);
+            if (ti >= 0) {
+                MusicTrack tr = project.tracks.get(ti);
+                tr.volume = clamp(tr.volume + (scrollY > 0 ? 0.1 : -0.1), 0.0, 2.0);
+                markDirty();
+                return true;
+            }
+        }
         int step = RenderHelper.hasShiftDown() ? 4 : 1;
         int maxOff = Math.max(0, hsbTotal() - visibleTicks());
         if (scrollY > 0) tickOffset = Math.max(0, tickOffset - step);
         else if (scrollY < 0) tickOffset = Math.min(maxOff, tickOffset + step);
         return true;
+    }
+
+    /** Index of the track whose left-panel row contains {@code my}, or -1. */
+    private int trackAtY(double my) {
+        for (int i = 0; i < project.tracks.size(); i++) {
+            int rowY = trackRowY(i);
+            if (rowY + TRACK_ROW_H - 4 > height - FOOTER_H) break;
+            if (my >= rowY - 2 && my < rowY + TRACK_ROW_H - 4) return i;
+        }
+        return -1;
     }
 
     @Override

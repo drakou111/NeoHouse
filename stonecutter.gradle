@@ -57,21 +57,22 @@ verList.forEach { ver ->
     tasks.register("collect-${ver.project}") {
         group       = 'stonecutter'
         def mcVer   = ver.project
+        def modVer  = project.findProperty('mod_version') ?: ''
         def distDir = file("${rootDir}/dist")
         doLast {
             distDir.mkdirs()
+            // Pin to the current mod_version so stale jars from earlier versions
+            // (Gradle leaves them in build/libs) don't both match and collide on rename.
             copy {
                 from file("${rootDir}/neoforge/build/libs")
                 into distDir
-                include 'neohouse-*.jar'
-                exclude '*-dev*.jar', '*-shadow*.jar'
+                include "neohouse-${modVer}.jar"
                 rename { "neohouse-neoforge-${mcVer}.jar" }
             }
             copy {
                 from file("${rootDir}/fabric/build/libs")
                 into distDir
-                include 'neohouse-fabric-*.jar'
-                exclude '*-dev*.jar', '*-shadow*.jar'
+                include "neohouse-fabric-${modVer}.jar"
                 rename { "neohouse-fabric-${mcVer}.jar" }
             }
         }

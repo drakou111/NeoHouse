@@ -11,7 +11,6 @@ import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.utils.MessageUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -66,9 +65,6 @@ public class CodeEditorScreen extends ScreenBase {
                 .bounds(rx - 56, by, 56, bh).build());
         addRenderableWidget(Button.builder(Component.literal("< Back"), btn -> goBack())
                 .bounds(6, by, 46, bh).build());
-        addRenderableWidget(Button.builder(Component.literal("(i)").withStyle(ChatFormatting.AQUA), btn ->
-                        Minecraft.getInstance().setScreen(new HelpScreen(this)))
-                .bounds(56, by, 24, bh).build());
 
         editor = new SyntaxEditorWidget(4, HEADER_H + 2, this.width - 8, this.height - HEADER_H - 5);
         editor.setOnChange(() -> { scheduleCheck(); updateSaveBtn(); });
@@ -93,7 +89,9 @@ public class CodeEditorScreen extends ScreenBase {
 
         addRenderableWidget(editor);
         setInitialFocus(editor);
-        checkErrors();
+        // Defer the first error-check to the debounce tick so a large file's editor appears
+        // immediately instead of blocking the open on a full compile.
+        scheduleCheck();
         updateSaveBtn();
     }
 

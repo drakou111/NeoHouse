@@ -53,17 +53,30 @@ public class SyntaxHighlighter {
         List<Span> spans = new ArrayList<>();
         activeTheme = NeoHouseConfig.get().syntaxTheme;
 
+        int len = src.length();
+
+        // Build one reusable matcher per token type over the WHOLE source. Advancing the region
+        // start (instead of substringing the tail) keeps this linear — the previous
+        // src.substring(pos) per position made highlighting O(n^2), which froze large files.
+        List<TokenType> types = new ArrayList<>();
+        List<Matcher>   matchers = new ArrayList<>();
+        for (TokenType tt : TokenType.values()) {
+            if (tt.pattern == null) continue;
+            types.add(tt);
+            matchers.add(tt.pattern.matcher(src));
+        }
+
         int pos = 0;
         List<Tok> toks = new ArrayList<>();
-        while (pos < src.length()) {
-            String  rest    = src.substring(pos);
+        while (pos < len) {
             boolean matched = false;
-            for (TokenType tt : TokenType.values()) {
-                if (tt.pattern == null) continue;
-                Matcher m = tt.pattern.matcher(rest);
+            for (int t = 0; t < matchers.size(); t++) {
+                Matcher m = matchers.get(t);
+                m.region(pos, len);
                 if (!m.lookingAt()) continue;
                 String s = m.group();
-                toks.add(new Tok(tt, s, pos));
+                if (s.isEmpty()) continue; // avoid an infinite loop on a zero-width match
+                toks.add(new Tok(types.get(t), s, pos));
                 pos += s.length();
                 matched = true;
                 break;

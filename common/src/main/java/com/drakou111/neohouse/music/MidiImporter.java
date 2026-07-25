@@ -61,6 +61,11 @@ public final class MidiImporter {
 
     private record Ev(long tick, MidiMessage msg) {}
 
+    /**
+     * Imports the MIDI file, inferring tempo from its first tempo meta-event. Timing is snapped
+     * to the nearest tempo whose beat is a whole number of game ticks, so every note lands
+     * cleanly on the 20 tps grid (fast even runs stay evenly spaced; only the tempo may shift).
+     */
     public static MusicProject importMidi(Path midiFile, String projectName)
             throws InvalidMidiDataException, IOException {
         Sequence seq = MidiSystem.getSequence(midiFile.toFile());
@@ -86,27 +91,18 @@ public final class MidiImporter {
         Map<String, MusicTrack> byKey = new LinkedHashMap<>();
         int[] programByChannel = new int[16];
 
-        long lastTick = 0;
-        double timeSec = 0.0;
-        int usPerQuarter = DEFAULT_US_PER_QUARTER;
         int firstTempo = DEFAULT_US_PER_QUARTER;
         boolean sawTempo = false;
 
+        // Notes are captured at their RAW midi tick; timing is resolved below once the whole
+        // song is known, so we can lock the grid to musical beats rather than wall-clock time.
         for (Ev ev : events) {
-            long dTick = ev.tick - lastTick;
-            if (dTick > 0) {
-                timeSec += ppq
-                        ? dTick * (usPerQuarter / 1_000_000.0) / resolution
-                        : dTick / smpteTicksPerSec;
-                lastTick = ev.tick;
-            }
-
             MidiMessage m = ev.msg;
             if (m instanceof MetaMessage meta && meta.getType() == 0x51) {
                 byte[] d = meta.getData();
-                if (d.length == 3) {
-                    usPerQuarter = ((d[0] & 0xFF) << 16) | ((d[1] & 0xFF) << 8) | (d[2] & 0xFF);
-                    if (!sawTempo) { firstTempo = usPerQuarter; sawTempo = true; }
+                if (d.length == 3 && !sawTempo) {
+                    firstTempo = ((d[0] & 0xFF) << 16) | ((d[1] & 0xFF) << 8) | (d[2] & 0xFF);
+                    sawTempo = true;
                 }
             } else if (m instanceof ShortMessage sm) {
                 int cmd = sm.getCommand();
@@ -114,8 +110,32 @@ public final class MidiImporter {
                 if (cmd == ShortMessage.PROGRAM_CHANGE) {
                     programByChannel[channel] = sm.getData1();
                 } else if (cmd == ShortMessage.NOTE_ON && sm.getData2() > 0) {
-                    addNote(byKey, channel, programByChannel[channel], sm.getData1(), sm.getData2(),
-                            (int) Math.round(timeSec * MusicProject.TICKS_PER_SECOND));
+                    addNote(byKey, channel, programByChannel[channel], sm.getData1(), sm.getData2(), ev.tick);
+                }
+            }
+        }
+
+        // ---- map every note onto the game-tick grid at the song's real tempo ----
+        // Place notes by MUSICAL position (beats = midiTick / PPQ) and make one beat a whole
+        // number of game ticks, so the beat grid stays aligned and the tempo is preserved
+        // (rounded to the nearest whole-tick beat). We deliberately do NOT snap onsets to a
+        // detected subdivision: many MIDIs (e.g. the original DOOM tracks, which are a 140 Hz
+        // event stream, not musically quantized) have no clean subdivision, and forcing one
+        // both drags the tempo off and makes steady runs uneven. Each note simply rounds to the
+        // nearest game tick — the most faithful the 20 tps engine allows.
+        int ticksPerBeat = 10; // neutral default (used for gridDivision on SMPTE files)
+        if (ppq) {
+            double idealTicksPerBeat = MusicProject.TICKS_PER_SECOND * (firstTempo / 1_000_000.0);
+            ticksPerBeat = Math.max(1, (int) Math.round(idealTicksPerBeat));
+        }
+
+        for (MusicTrack t : byKey.values()) {
+            for (MusicNote n : t.notes) {
+                if (ppq) {
+                    n.tick = Math.max(0, (int) Math.round(n.tick / resolution * ticksPerBeat));
+                } else {
+                    // SMPTE (absolute-time) files carry no beat grid — fall back to seconds.
+                    n.tick = Math.max(0, (int) Math.round(n.tick / smpteTicksPerSec * MusicProject.TICKS_PER_SECOND));
                 }
             }
         }
@@ -127,13 +147,13 @@ public final class MidiImporter {
         if (project.tracks.isEmpty()) {
             project.tracks.add(new MusicTrack("Harp", Sound.BLOCK_NOTE_BLOCK_HARP));
         }
-        project.gridDivision = Math.max(1,
-                (int) Math.round(MusicProject.TICKS_PER_SECOND * (firstTempo / 1_000_000.0)));
+        project.gridDivision = Math.max(1, ticksPerBeat);
+        project.bpm = 60.0 * MusicProject.TICKS_PER_SECOND / project.gridDivision;
         return project;
     }
 
     private static void addNote(Map<String, MusicTrack> byKey, int channel, int program,
-                                int midiNote, int velocity, int neoTick) {
+                                int midiNote, int velocity, long rawTick) {
         boolean drums = channel == 9;
         String key = drums ? "drums" : channel + "|" + program;
 
@@ -145,7 +165,7 @@ public final class MidiImporter {
             byKey.put(key, track);
         }
 
-        MusicNote note = new MusicNote(Math.max(0, neoTick));
+        MusicNote note = new MusicNote((int) Math.max(0, rawTick));
         note.volume = velocityToVolume(velocity);
         if (drums) {
             note.sound = drumSound(midiNote).name();

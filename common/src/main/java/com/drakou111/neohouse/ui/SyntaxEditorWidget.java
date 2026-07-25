@@ -639,8 +639,10 @@ public class SyntaxEditorWidget extends WidgetBase {
         int charDrawn = 0;
         int hintPtr   = 0;
 
-        for (SyntaxHighlighter.Span sp : spans) {
-            if (sp.end() <= lineStart) continue;
+        // Spans are sorted and non-overlapping, so jump straight to the first one touching this
+        // line instead of scanning from the start (which made deep scrolling O(spans) per line).
+        for (int si = firstSpanTouching(lineStart); si < spans.size(); si++) {
+            SyntaxHighlighter.Span sp = spans.get(si);
             if (sp.start() >= lineEnd)  break;
 
             int lo = Math.max(0, Math.min(sp.start() - lineStart, line.length()));
@@ -701,6 +703,17 @@ public class SyntaxEditorWidget extends WidgetBase {
 
     private void rebuildSpans() {
         spans = highlighter.buildSpans(text.toString());
+    }
+
+    /** Index of the first span whose end is past {@code lineStart} (spans are sorted by end). */
+    private int firstSpanTouching(int lineStart) {
+        int lo = 0, hi = spans.size();
+        while (lo < hi) {
+            int mid = (lo + hi) >>> 1;
+            if (spans.get(mid).end() <= lineStart) lo = mid + 1;
+            else hi = mid;
+        }
+        return lo;
     }
 
     @Override
