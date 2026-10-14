@@ -64,10 +64,11 @@ public class NHCompiler implements Compiler {
 
         new GlobalCallCheckVisitor(options.globalCallMode(), warnings).analyze(node);
 
-        node = new FunctionDeduplicationVisitor(options.multiCallMode()).analyze(node);
-
         RepeatUnrollingVisitor repeatUnroller = new RepeatUnrollingVisitor();
         node = repeatUnroller.analyze(node);
+
+        // After unrolling, so each unrolled call site can be given its own copy.
+        node = new FunctionDeduplicationVisitor(options.multiCallMode(), warnings).analyze(node);
 
         DeclarationCollectorVisitor collector = new DeclarationCollectorVisitor();
         collector.analyze(node);

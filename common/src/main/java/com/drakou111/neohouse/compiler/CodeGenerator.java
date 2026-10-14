@@ -72,7 +72,7 @@ public class CodeGenerator {
         // Pass 2: write the bodies. ALWAYS writes everything; NEVER only what Pass 1 created;
         // IF_EMPTY also fills existing entries that turn out to be empty.
         Map<String, VoidFunctionNode> fnByName = collectFunctions(main);
-        FunctionCopies fnCopies = findFunctionCopies(main, fnByName.keySet());
+        FunctionCopies fnCopies = findFunctionCopies(main, fnByName);
         for (MainStatementNode stmt : main.statements) {
             Action fill = switch (stmt) {
                 case VoidFunctionNode fn when this.mode == OverrideMode.ALWAYS -> {
@@ -216,28 +216,28 @@ public class CodeGenerator {
     private record FunctionCopies(Map<String, List<String>> copiesOf, Set<String> isCopy) {}
 
     /**
-     * Detects compiler-created copies: functions named {@code baseName$N} where {@code baseName} is
-     * also a defined function. These should be paste-filled rather than manually rebuilt.
+     * Detects compiler-created copies ({@code baseName$N} where {@code baseName} is also defined) whose
+     * actions are identical to the original's, so they can be filled by pasting. A copy that calls
+     * its own copies of other functions differs from the original and is written out normally.
      */
-    private static FunctionCopies findFunctionCopies(MainNode main, Set<String> definedFunctions) {
+    private static FunctionCopies findFunctionCopies(MainNode main, Map<String, VoidFunctionNode> fnByName) {
         Map<String, List<String>> copiesOf = new LinkedHashMap<>();
         Set<String> isCopy = new HashSet<>();
         for (MainStatementNode s : main.statements) {
-            if (s instanceof VoidFunctionNode vf) {
-                int dollar = vf.name.lastIndexOf('$');
-                if (dollar > 0) {
-                    String tail = vf.name.substring(dollar + 1);
-                    String base = vf.name.substring(0, dollar);
-                    if (!tail.isEmpty() && tail.chars().allMatch(Character::isDigit) && definedFunctions.contains(base)) {
-                        copiesOf.computeIfAbsent(base, k -> new ArrayList<>()).add(vf.name);
-                        isCopy.add(vf.name);
-                    }
-                }
-            }
+            if (!(s instanceof VoidFunctionNode vf)) continue;
+            int dollar = vf.name.lastIndexOf('$');
+            if (dollar <= 0) continue;
+
+            String tail = vf.name.substring(dollar + 1);
+            VoidFunctionNode original = fnByName.get(vf.name.substring(0, dollar));
+            if (tail.isEmpty() || !tail.chars().allMatch(Character::isDigit) || original == null) continue;
+            if (!vf.statements.toShortString().equals(original.statements.toShortString())) continue;
+
+            copiesOf.computeIfAbsent(original.name, k -> new ArrayList<>()).add(vf.name);
+            isCopy.add(vf.name);
         }
         return new FunctionCopies(copiesOf, isCopy);
     }
-
     /** Fills a function the run created or just emptied. An empty body never opens the function. */
     private Action generateFunction(VoidFunctionNode fn) {
         List<Action> parts = new ArrayList<>();

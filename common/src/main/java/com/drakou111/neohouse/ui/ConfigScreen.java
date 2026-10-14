@@ -526,7 +526,7 @@ public class ConfigScreen extends ScreenBase {
 
             g.drawString(font, "Multi-call mode:", PAD, multiCallLabelY, 0xFFCCCCCC);
             if (hit(mouseX, mouseY, PAD, multiCallLabelY - 2, LABEL_W, 13))
-                hoveredTip = "Off: no check. Warn: error if a function is called twice in one context. Fix: auto-create copies ($0, $1, ...) so each call uses a unique function name.";
+                hoveredTip = "Housing won't run a function twice in one execution. Off: no check. Warn: allowed but reported. Error: compilation fails. Fix: auto-create copies ($0, $1, ...) so each call uses its own function.";
             drawDropBtn(g, DROP_MULTICALL, multiCallDropY, activeMultiCallMode.displayName, t, mouseX, mouseY);
 
             g.drawString(font, "Recursion:", PAD, recursionLabelY, 0xFFCCCCCC);

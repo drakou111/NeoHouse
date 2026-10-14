@@ -28,7 +28,7 @@ public class NeoHouseConfig {
     public boolean showArgumentRecommendations = true;
     public boolean autoIndent                 = true;
     public OverrideMode  overrideMode         = OverrideMode.IF_EMPTY;
-    public MultiCallMode multiCallMode        = MultiCallMode.FIX;
+    public MultiCallMode multiCallMode        = MultiCallMode.ERROR;
     public RecursionMode  recursionMode       = RecursionMode.WARN;
     public GlobalCallMode globalCallMode      = GlobalCallMode.ERROR;
     public SyntaxTheme   syntaxTheme          = SyntaxTheme.VSCODE_DARK;

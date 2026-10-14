@@ -33,9 +33,32 @@ function double sin(double x) {
     return (double)(p.temp4 * p.temp3);
 }
 
-// cos(x) = sin(x + π/2).
+// cos(x) = sin(x + π/2), written out instead of calling sin: Housing won't run a function
+// twice in one execution, and tan needs both sin and cos.
 function double cos(double x) {
-    return sin(x + 1.57079632679);
+    p.temp5 = x + 1.57079632679;
+
+    // y = mod(x + π/2, 2π)
+    p.temp = (double)((long)(p.temp5 / TWO_PI));
+    p.temp = p.temp5 - TWO_PI * p.temp;
+    if (p.temp < 0.0) {
+        p.temp += TWO_PI;
+    }
+
+    // t = π - abs(π - y)
+    p.temp2 = PI - p.temp;
+    if (p.temp2 < 0.0) { p.temp2 *= -1.0; }
+    p.temp2 = PI - p.temp2;
+
+    // B(t)
+    p.temp3 = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
+
+    // sign(π - y)
+    p.temp4 = 0.0;
+    if (p.temp < PI) { p.temp4 = 1.0; }
+    if (p.temp > PI) { p.temp4 = -1.0; }
+
+    return (double)(p.temp4 * p.temp3);
 }
 
 // tan(x) = sin(x)/cos(x).

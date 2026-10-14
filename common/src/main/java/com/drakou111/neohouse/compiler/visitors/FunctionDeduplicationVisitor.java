@@ -1,754 +1,338 @@
 package com.drakou111.neohouse.compiler.visitors;
 
-import com.drakou111.neohouse.config.MultiCallMode;
-
-import com.drakou111.neohouse.compiler.ast.expr.*;
+import com.drakou111.neohouse.compiler.ast.expr.BinaryExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.BooleanExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.LogicalExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
-import com.drakou111.neohouse.compiler.ast.main.*;
-import com.drakou111.neohouse.compiler.ast.main_statements.*;
-import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
+import com.drakou111.neohouse.compiler.ast.main.MainNode;
+import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.CommandNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.FunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.MenuNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.SlotNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.statement.ActionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
+import com.drakou111.neohouse.compiler.ast.statement.ConditionalNode;
+import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.RandomNode;
+import com.drakou111.neohouse.compiler.ast.statement.RepeatNode;
+import com.drakou111.neohouse.compiler.ast.statement.ReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
+import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
+import com.drakou111.neohouse.compiler.lexer.Token;
+import com.drakou111.neohouse.config.MultiCallMode;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
- * Detects and optionally fixes functions called more than once in the same
- * execution context (directly or transitively).
+ * Housing won't run the same function twice within one execution (one event, command, loop, menu
+ * click or function run, including everything it triggers). This pass finds such multi-calls.
  *
- * WARN mode: throws a SemanticException on the first detected multi-call.
- * FIX  mode: creates duplicate function copies ($0, $1, …) to avoid the problem.
+ * <p>WARN reports them as warnings, ERROR as errors. FIX gives every call site a function
+ * "instance" (the original or a {@code name$N} copy) whose whole call closure is disjoint from what
+ * that execution has already run. Copies are built from the original body with the same rule, so a
+ * copy calls its own copies of whatever it needs. Branches of an if/else or random are exclusive,
+ * and a branch that ends in a return doesn't carry its calls into the code after it.</p>
  */
 public class FunctionDeduplicationVisitor {
+    private static final int MAX_COPY_BASE_LENGTH = 47; // Housing names are at most 50 characters
 
     private final MultiCallMode mode;
+    private final List<CompileWarning> warnings;
+    /** Callable functions as written, by name. Loops can't be called, so they're only roots. */
+    private final Map<String, FunctionNode> originals = new LinkedHashMap<>();
+    private final Map<String, FunctionNode> rewritten = new HashMap<>();
+    /** Every function name (concrete, copies included) that may run when the key runs, the key included. */
+    private final Map<String, Set<String>> closures = new HashMap<>();
+    /** Base name -> concrete instances in creation order, the original first. */
+    private final Map<String, List<String>> instances = new HashMap<>();
+    private final Map<String, Integer> nextCopyIndex = new HashMap<>();
+    private final Set<String> inProgress = new HashSet<>();
+    private final List<FunctionNode> copies = new ArrayList<>();
 
-    // All function definitions found in the main node
-    private final Map<String, VoidFunctionNode>  voidDefs  = new LinkedHashMap<>();
-    private final Map<String, TypedFunctionNode> typedDefs = new LinkedHashMap<>();
+    /** Call state while walking one body. {@code live} only holds calls on paths that can still continue. */
+    private static final class Context {
+        final Set<String> avoid;
+        final Set<String> all;
+        final String owner;
+        Set<String> live;
+        boolean returned = false;
 
-    // For FIX mode: extra copies to append after rewriting
-    private final List<VoidFunctionNode>  extraVoidCopies  = new ArrayList<>();
-    private final List<TypedFunctionNode> extraTypedCopies = new ArrayList<>();
+        Context(Set<String> avoid, Set<String> live, Set<String> all, String owner) {
+            this.avoid = avoid;
+            this.live = live;
+            this.all = all;
+            this.owner = owner;
+        }
 
-    public FunctionDeduplicationVisitor(MultiCallMode mode) {
-        this.mode = mode;
+        Context branch() {
+            return new Context(this.avoid, new HashSet<>(this.live), this.all, this.owner);
+        }
+
+        boolean allows(Set<String> closure) {
+            for (String name : closure) if (this.avoid.contains(name) || this.live.contains(name)) return false;
+            return true;
+        }
+
+        void run(Set<String> closure) {
+            this.live.addAll(closure);
+            this.all.addAll(closure);
+        }
     }
 
-    // -------------------------------------------------------------------------
-    // Entry point
-    // -------------------------------------------------------------------------
+    public FunctionDeduplicationVisitor(MultiCallMode mode, List<CompileWarning> warnings) {
+        this.mode = Objects.requireNonNull(mode);
+        this.warnings = Objects.requireNonNull(warnings);
+    }
 
     public MainNode analyze(MainNode main) {
-        if (mode == MultiCallMode.OFF) return main;
+        if (this.mode == MultiCallMode.OFF) return main;
 
-        // Collect all function definitions
-        for (MainStatementNode stmt : main.statements) {
-            if (stmt instanceof VoidFunctionNode vf)  voidDefs.put(vf.name, vf);
-            else if (stmt instanceof TypedFunctionNode tf) typedDefs.put(tf.name, tf);
+        for (MainStatementNode statement : main.statements) {
+            if (statement instanceof FunctionNode function && !(statement instanceof LoopNode)) {
+                this.originals.put(function.name, function);
+                this.instances.put(function.name, new ArrayList<>(List.of(function.name)));
+            }
         }
 
-        // Build transitive call profiles for each function
-        // profile(F) = Map<callee, total times called when F runs>
-        Map<String, Map<String, Integer>> profiles = buildTransitiveProfiles();
-
-        if (mode == MultiCallMode.WARN) {
-            warnPass(main, profiles);
-            return main;
-        }
-
-        // FIX mode
-        return fixPass(main, profiles);
-    }
-
-    // -------------------------------------------------------------------------
-    // Transitive profile computation
-    // -------------------------------------------------------------------------
-
-    /**
-     * Computes for every defined function F a Map<calleeName, count> representing
-     * how many times each callee (direct or transitive) is invoked when F runs once.
-     *
-     * We compute this iteratively until stable (handles transitive dependencies).
-     */
-    private Map<String, Map<String, Integer>> buildTransitiveProfiles() {
-        // Direct profiles are never mutated during expansion
-        Map<String, Map<String, Integer>> directProfiles = new HashMap<>();
-        for (VoidFunctionNode vf : voidDefs.values()) directProfiles.put(vf.name, directCallProfile(vf.statements));
-        for (TypedFunctionNode tf : typedDefs.values()) directProfiles.put(tf.name, directCallProfile(tf.statements));
-
-        // Initialize transitive profiles as copies of direct
-        Map<String, Map<String, Integer>> transitiveProfiles = new HashMap<>();
-        for (Map.Entry<String, Map<String, Integer>> e : directProfiles.entrySet())
-            transitiveProfiles.put(e.getKey(), new HashMap<>(e.getValue()));
-
-        // transitive[F] = direct[F] + sum_{C in direct[F]} direct[F][C] * transitive[C]
-        // Iterate until stable. Always expand from direct (not from current transitive)
-        // so counts never grow unboundedly across iterations.
-        boolean changed = true;
-        while (changed) {
-            changed = false;
-            for (String fn : directProfiles.keySet()) {
-                Map<String, Integer> direct = directProfiles.get(fn);
-                Map<String, Integer> expanded = new HashMap<>(direct);
-                for (Map.Entry<String, Integer> e : direct.entrySet()) {
-                    String callee = e.getKey();
-                    int callCount = e.getValue();
-                    Map<String, Integer> calleeTransitive = transitiveProfiles.get(callee);
-                    if (calleeTransitive == null) continue;
-                    for (Map.Entry<String, Integer> ce : calleeTransitive.entrySet()) {
-                        if (!ce.getKey().equals(fn))
-                            expanded.merge(ce.getKey(), ce.getValue() * callCount, Integer::sum);
-                    }
+        List<MainStatementNode> result = new ArrayList<>();
+        for (MainStatementNode statement : main.statements) {
+            result.add(switch (statement) {
+                case LoopNode loop -> new LoopNode(loop.name, loop.description, loop.icon,
+                        walkRoot(loop.statements, "loop '" + loop.name + "'"), loop.tickDelay, loop.token);
+                case FunctionNode function -> {
+                    ensureRewritten(function.name);
+                    yield this.rewritten.get(function.name);
                 }
-                expanded.remove(fn);
-                if (!expanded.equals(transitiveProfiles.get(fn))) {
-                    transitiveProfiles.put(fn, expanded);
-                    changed = true;
+                case EventNode event -> new EventNode(event.event, walkRoot(event.statements, "event " + event.event.name()), event.token);
+                case CommandNode command -> new CommandNode(command.name, command.targeted, command.priority, command.listed,
+                        walkRoot(command.statements, "command /" + command.name), command.token);
+                case MenuNode menu -> {
+                    List<SlotNode> slots = new ArrayList<>();
+                    for (SlotNode slot : menu.slots)
+                        slots.add(new SlotNode(slot.slotId, slot.item,
+                                walkRoot(slot.statements, "menu '" + menu.name + "' slot " + slot.slotId), slot.token));
+                    yield new MenuNode(menu.name, menu.rows, slots, menu.token);
                 }
-            }
+                default -> statement;
+            });
         }
 
-        return transitiveProfiles;
+        if (this.mode != MultiCallMode.FIX) return main;
+        result.addAll(this.copies);
+        return new MainNode(result);
     }
 
-    /**
-     * Computes the direct (non-transitive) call profile of a statement list.
-     * For sequential statements, counts are summed.
-     * For conditional/random branches, both branches are summed (conservative).
-     * For repeat, the body is multiplied by the count.
-     */
-    private Map<String, Integer> directCallProfile(StatementListNode statements) {
-        Map<String, Integer> result = new HashMap<>();
-        for (StatementNode stmt : statements.statements) {
-            addProfileFromStatement(stmt, result);
-        }
-        return result;
+    private StatementListNode walkRoot(StatementListNode body, String owner) {
+        return walkStatements(body, new Context(Set.of(), new HashSet<>(), new HashSet<>(), owner));
     }
 
-    private void addProfileFromStatement(StatementNode stmt, Map<String, Integer> result) {
-        if (stmt instanceof VoidFunctionCallNode call) {
-            result.merge(call.functionName, 1, Integer::sum);
-        } else if (stmt instanceof GlobalFunctionCallNode call) {
-            result.merge(call.functionName, 1, Integer::sum);
-        } else if (stmt instanceof ConditionalNode cond) {
-            // Sum both branches conservatively
-            Map<String, Integer> thenP = directCallProfile(cond.thenBlock);
-            Map<String, Integer> elseP = cond.elseBlock != null
-                    ? directCallProfile(cond.elseBlock)
-                    : new HashMap<>();
-            for (String k : thenP.keySet()) result.merge(k, thenP.get(k), Integer::sum);
-            for (String k : elseP.keySet())  result.merge(k, elseP.get(k), Integer::sum);
-        } else if (stmt instanceof RandomNode rand) {
-            // Sum all branches conservatively
-            for (StatementListNode branch : rand.statements) {
-                Map<String, Integer> bp = directCallProfile(branch);
-                for (String k : bp.keySet()) result.merge(k, bp.get(k), Integer::sum);
-            }
-        } else if (stmt instanceof RepeatNode repeat) {
-            Map<String, Integer> inner = directCallProfile(repeat.statements);
-            for (String k : inner.keySet()) result.merge(k, (int)(inner.get(k) * repeat.count), Integer::sum);
-        } else if (stmt instanceof AssignationNode assign) {
-            addCallsFromExpr(assign.value, result);
-        } else if (stmt instanceof TypedReturnNode ret && ret.expression != null) {
-            addCallsFromExpr(ret.expression, result);
-        } else if (stmt instanceof ActionCallNode action) {
-            for (var arg : action.arguments.expressions) addCallsFromExpr(arg, result);
-        }
+    /** Rewrites an original function's body (as its own execution) once, recording its closure. */
+    private void ensureRewritten(String name) {
+        if (this.rewritten.containsKey(name) || !this.inProgress.add(name)) return;
+
+        FunctionNode function = this.originals.get(name);
+        Set<String> all = new HashSet<>(Set.of(name));
+        Context context = new Context(Set.of(), new HashSet<>(Set.of(name)), all, "function '" + name + "'");
+        this.rewritten.put(name, withBody(function, name, walkStatements(function.statements, context)));
+        this.closures.put(name, all);
+        this.inProgress.remove(name);
     }
 
-    /** Recursively collects FunctionCallNode names from an expression. */
-    private void addCallsFromExpr(ExpressionNode expr, Map<String, Integer> result) {
-        if (expr instanceof FunctionCallNode call) {
-            result.merge(call.functionName, 1, Integer::sum);
-            for (var arg : call.arguments.expressions) addCallsFromExpr(arg, result);
-        } else if (expr instanceof BinaryExpressionNode bin) {
-            addCallsFromExpr(bin.left, result);
-            addCallsFromExpr(bin.right, result);
-        } else if (expr instanceof UnaryExpressionNode un) {
-            addCallsFromExpr(un.operand, result);
-        }
+    private Set<String> closureOf(String name) {
+        return this.closures.getOrDefault(name, Set.of(name));
     }
 
-    // -------------------------------------------------------------------------
-    // WARN pass
-    // -------------------------------------------------------------------------
+    /** Picks the instance a call to {@code base} should use in this context, creating a copy in FIX mode. */
+    private String resolveCall(String base, Token token, Context context) {
+        if (!this.originals.containsKey(base)) return base;
+        ensureRewritten(base);
 
-    private void warnPass(MainNode main, Map<String, Map<String, Integer>> profiles) {
-        // Check each root body and function body
-        for (MainStatementNode stmt : main.statements) {
-            Map<String, Integer> bodyProfile;
-            com.drakou111.neohouse.compiler.lexer.Token tok = stmt.token;
-
-            if (stmt instanceof EventNode ev) {
-                bodyProfile = computeBodyProfile(ev.statements, profiles);
-            } else if (stmt instanceof CommandNode cmd) {
-                bodyProfile = computeBodyProfile(cmd.statements, profiles);
-            } else if (stmt instanceof LoopNode loop) {
-                bodyProfile = computeBodyProfile(loop.statements, profiles);
-            } else if (stmt instanceof VoidFunctionNode vf) {
-                bodyProfile = computeBodyProfile(vf.statements, profiles);
-                tok = vf.token;
-            } else if (stmt instanceof TypedFunctionNode tf) {
-                bodyProfile = computeBodyProfile(tf.statements, profiles);
-                tok = tf.token;
-            } else if (stmt instanceof MenuNode menu) {
-                for (SlotNode slot : menu.slots) {
-                    Map<String, Integer> slotProfile = computeBodyProfile(slot.statements, profiles);
-                    for (Map.Entry<String, Integer> e : slotProfile.entrySet()) {
-                        if (e.getValue() > 1) {
-                            throw new SemanticException(slot.token,
-                                    "Function '" + e.getKey() + "' is called " + e.getValue() +
-                                    " times in the same execution context (multi-call). " +
-                                    "Set multiCallMode to FIX to auto-resolve, or restructure your code.");
-                        }
-                    }
-                }
-                continue;
-            } else {
-                continue;
-            }
-
-            for (Map.Entry<String, Integer> e : bodyProfile.entrySet()) {
-                if (e.getValue() > 1) {
-                    throw new SemanticException(tok,
-                            "Function '" + e.getKey() + "' is called " + e.getValue() +
-                            " times in the same execution context (multi-call). " +
-                            "Set multiCallMode to FIX to auto-resolve, or restructure your code.");
-                }
+        for (String candidate : this.instances.get(base)) {
+            if (context.allows(closureOf(candidate))) {
+                context.run(closureOf(candidate));
+                return candidate;
             }
         }
+
+        if (this.mode != MultiCallMode.FIX) {
+            report(token, base, context);
+            context.run(closureOf(base));
+            return base;
+        }
+
+        String copy = createCopy(base, context);
+        context.run(closureOf(copy));
+        return copy;
     }
 
-    /**
-     * Computes the total call profile of a body (direct + transitive expansion).
-     * For branching structures (conditional/random) we take the max of branches
-     * to get the worst case. This is used for WARN-mode analysis.
-     */
-    private Map<String, Integer> computeBodyProfile(StatementListNode stmts,
-                                                     Map<String, Map<String, Integer>> profiles) {
-        Map<String, Integer> result = new HashMap<>();
-        for (StatementNode stmt : stmts.statements) {
-            addTransitiveFromStatement(stmt, profiles, result);
-        }
-        return result;
+    private String createCopy(String base, Context caller) {
+        String prefix = base.length() > MAX_COPY_BASE_LENGTH ? base.substring(0, MAX_COPY_BASE_LENGTH) : base;
+        String copyName;
+        do {
+            int index = this.nextCopyIndex.merge(base, 1, Integer::sum) - 1;
+            copyName = prefix + "$" + index;
+        } while (this.originals.containsKey(copyName));
+        this.instances.get(base).add(copyName);
+
+        Set<String> avoid = new HashSet<>(caller.avoid);
+        avoid.addAll(caller.live);
+        Set<String> all = new HashSet<>(Set.of(copyName));
+        Context context = new Context(avoid, new HashSet<>(Set.of(copyName)), all, "function '" + copyName + "'");
+
+        FunctionNode original = this.originals.get(base);
+        this.copies.add(withBody(original, copyName, walkStatements(original.statements, context)));
+        this.closures.put(copyName, all);
+        return copyName;
     }
 
-    private void addTransitiveFromStatement(StatementNode stmt,
-                                             Map<String, Map<String, Integer>> profiles,
-                                             Map<String, Integer> counters) {
-        if (stmt instanceof VoidFunctionCallNode call) {
-            counters.merge(call.functionName, 1, Integer::sum);
-            // Add transitive calls
-            Map<String, Integer> fp = profiles.get(call.functionName);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                }
-            }
-        } else if (stmt instanceof GlobalFunctionCallNode call) {
-            counters.merge(call.functionName, 1, Integer::sum);
-            Map<String, Integer> fp = profiles.get(call.functionName);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                }
-            }
-        } else if (stmt instanceof ConditionalNode cond) {
-            Map<String, Integer> thenC = new HashMap<>(counters);
-            for (StatementNode s : cond.thenBlock.statements) addTransitiveFromStatement(s, profiles, thenC);
-            Map<String, Integer> elseC = new HashMap<>(counters);
-            if (cond.elseBlock != null) {
-                for (StatementNode s : cond.elseBlock.statements) addTransitiveFromStatement(s, profiles, elseC);
-            }
-            // Take max of both branches for each key
-            Set<String> allKeys = new HashSet<>();
-            allKeys.addAll(thenC.keySet());
-            allKeys.addAll(elseC.keySet());
-            for (String k : allKeys) {
-                int tv = thenC.getOrDefault(k, counters.getOrDefault(k, 0));
-                int ev = elseC.getOrDefault(k, counters.getOrDefault(k, 0));
-                counters.put(k, Math.max(tv, ev));
-            }
-        } else if (stmt instanceof RandomNode rand) {
-            List<Map<String, Integer>> branchResults = new ArrayList<>();
-            for (StatementListNode branch : rand.statements) {
-                Map<String, Integer> bc = new HashMap<>(counters);
-                for (StatementNode s : branch.statements) addTransitiveFromStatement(s, profiles, bc);
-                branchResults.add(bc);
-            }
-            Set<String> allKeys = new HashSet<>();
-            for (Map<String, Integer> bc : branchResults) allKeys.addAll(bc.keySet());
-            for (String k : allKeys) {
-                int maxV = 0;
-                for (Map<String, Integer> bc : branchResults) maxV = Math.max(maxV, bc.getOrDefault(k, counters.getOrDefault(k, 0)));
-                counters.put(k, maxV);
-            }
-        } else if (stmt instanceof RepeatNode repeat) {
-            Map<String, Integer> iterCounters = new HashMap<>(counters);
-            for (StatementNode s : repeat.statements.statements) {
-                addTransitiveFromStatement(s, profiles, iterCounters);
-            }
-            for (Map.Entry<String, Integer> e : iterCounters.entrySet()) {
-                long scaled = (long) e.getValue() * repeat.count;
-                counters.put(e.getKey(), (int) Math.min(scaled, Integer.MAX_VALUE));
-            }
-        } else if (stmt instanceof AssignationNode assign) {
-            addTransitiveFromExpr(assign.value, profiles, counters);
-        } else if (stmt instanceof TypedReturnNode ret && ret.expression != null) {
-            addTransitiveFromExpr(ret.expression, profiles, counters);
-        } else if (stmt instanceof ActionCallNode action) {
-            for (var arg : action.arguments.expressions) addTransitiveFromExpr(arg, profiles, counters);
-        }
+    private void report(Token token, String base, Context context) {
+        String message = ("Function '%s' would run more than once in one run of %s, which Housing doesn't allow. "
+                + "Set Multi-call mode to Fix to create copies automatically.").formatted(base, context.owner);
+        if (this.mode == MultiCallMode.ERROR) throw new SemanticException(token, message);
+        this.warnings.add(new CompileWarning(token, message));
     }
 
-    private void addTransitiveFromExpr(ExpressionNode expr,
-                                        Map<String, Map<String, Integer>> profiles,
-                                        Map<String, Integer> counters) {
-        if (expr instanceof FunctionCallNode call) {
-            counters.merge(call.functionName, 1, Integer::sum);
-            Map<String, Integer> fp = profiles.get(call.functionName);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                }
-            }
-            for (var arg : call.arguments.expressions) addTransitiveFromExpr(arg, profiles, counters);
-        } else if (expr instanceof BinaryExpressionNode bin) {
-            addTransitiveFromExpr(bin.left, profiles, counters);
-            addTransitiveFromExpr(bin.right, profiles, counters);
-        } else if (expr instanceof UnaryExpressionNode un) {
-            addTransitiveFromExpr(un.operand, profiles, counters);
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // FIX pass
-    // -------------------------------------------------------------------------
-
-    private MainNode fixPass(MainNode main, Map<String, Map<String, Integer>> profiles) {
-        // Step 1: determine how many copies of each function are needed globally
-        // For each root body (and each function body), compute how many extra copies are needed
-        Map<String, Integer> maxExtraCopies = new HashMap<>();
-
-        for (MainStatementNode stmt : main.statements) {
-            if (stmt instanceof MenuNode menu) {
-                for (SlotNode slot : menu.slots) {
-                    collectExtraCopiesNeeded(slot.statements, profiles, maxExtraCopies);
-                }
-            } else if (stmt instanceof EventNode ev) {
-                collectExtraCopiesNeeded(ev.statements, profiles, maxExtraCopies);
-            } else if (stmt instanceof CommandNode cmd) {
-                collectExtraCopiesNeeded(cmd.statements, profiles, maxExtraCopies);
-            } else if (stmt instanceof LoopNode loop) {
-                collectExtraCopiesNeeded(loop.statements, profiles, maxExtraCopies);
-            } else if (stmt instanceof VoidFunctionNode vf) {
-                collectExtraCopiesNeeded(vf.statements, profiles, maxExtraCopies);
-            } else if (stmt instanceof TypedFunctionNode tf) {
-                collectExtraCopiesNeeded(tf.statements, profiles, maxExtraCopies);
-            }
-        }
-
-        // Remove functions that don't need extra copies
-        maxExtraCopies.entrySet().removeIf(e -> e.getValue() <= 0);
-
-        if (maxExtraCopies.isEmpty()) return main;
-
-        // Step 2: create copies for void functions
-        // (typed functions can't be global-called so they're less likely to need copies,
-        //  but we handle them too)
-        Map<String, List<String>> copyNames = new HashMap<>(); // original -> [copy0, copy1, ...]
-
-        for (Map.Entry<String, Integer> e : maxExtraCopies.entrySet()) {
-            String baseName = e.getKey();
-            int numCopies   = e.getValue();
-            List<String> names = new ArrayList<>();
-            for (int i = 0; i < numCopies; i++) {
-                String copyBase = baseName.length() > 47 ? baseName.substring(0, 47) : baseName;
-                String copyName = copyBase + "$" + i;
-                names.add(copyName);
-            }
-            copyNames.put(baseName, names);
-
-            // Create the actual copy nodes
-            if (voidDefs.containsKey(baseName)) {
-                VoidFunctionNode orig = voidDefs.get(baseName);
-                for (String copyName : names) {
-                    VoidFunctionNode copy = new VoidFunctionNode(
-                            copyName, orig.description, orig.icon, orig.parameters, orig.statements, orig.token);
-                    extraVoidCopies.add(copy);
-                }
-            } else if (typedDefs.containsKey(baseName)) {
-                TypedFunctionNode orig = typedDefs.get(baseName);
-                for (String copyName : names) {
-                    TypedFunctionNode copy = new TypedFunctionNode(
-                            copyName, orig.description, orig.icon, orig.returnType, orig.parameters,
-                            orig.statements, orig.token);
-                    extraTypedCopies.add(copy);
-                }
-            }
-        }
-
-        // Step 3: rewrite each body using copy names
-        List<MainStatementNode> rewritten = new ArrayList<>();
-        for (MainStatementNode stmt : main.statements) {
-            rewritten.add(rewriteMainStatement(stmt, copyNames, profiles));
-        }
-
-        // Append extra copies to the main statement list
-        rewritten.addAll(extraVoidCopies);
-        rewritten.addAll(extraTypedCopies);
-
-        return new MainNode(rewritten);
-    }
-
-    private void collectExtraCopiesNeeded(StatementListNode stmts,
-                                           Map<String, Map<String, Integer>> profiles,
-                                           Map<String, Integer> maxExtraCopies) {
-        // Simulate the counter-based walk to find max call count for each function
-        Map<String, Integer> counters = new HashMap<>();
-        simulateWalk(stmts, profiles, counters, maxExtraCopies);
-    }
-
-    /**
-     * Walks statements tracking call counts per function (including transitive).
-     * Records how many extra copies (beyond the first) are needed.
-     */
-    private void simulateWalk(StatementListNode stmts,
-                               Map<String, Map<String, Integer>> profiles,
-                               Map<String, Integer> counters,
-                               Map<String, Integer> maxExtraCopies) {
-        for (StatementNode stmt : stmts.statements) {
-            simulateStatement(stmt, profiles, counters, maxExtraCopies);
-        }
-    }
-
-    private void simulateStatement(StatementNode stmt,
-                                    Map<String, Map<String, Integer>> profiles,
-                                    Map<String, Integer> counters,
-                                    Map<String, Integer> maxExtraCopies) {
-        if (stmt instanceof VoidFunctionCallNode call) {
-            int cnt = counters.merge(call.functionName, 1, Integer::sum);
-            if (cnt > 1) {
-                maxExtraCopies.merge(call.functionName, cnt - 1, Integer::max);
-            }
-            // Commit transitive calls
-            Map<String, Integer> fp = profiles.get(call.functionName);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    int tc = counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                    if (tc > 1) {
-                        maxExtraCopies.merge(e.getKey(), tc - 1, Integer::max);
-                    }
-                }
-            }
-        } else if (stmt instanceof GlobalFunctionCallNode call) {
-            int cnt = counters.merge(call.functionName, 1, Integer::sum);
-            if (cnt > 1) {
-                maxExtraCopies.merge(call.functionName, cnt - 1, Integer::max);
-            }
-            Map<String, Integer> fp = profiles.get(call.functionName);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    int tc = counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                    if (tc > 1) {
-                        maxExtraCopies.merge(e.getKey(), tc - 1, Integer::max);
-                    }
-                }
-            }
-        } else if (stmt instanceof ConditionalNode cond) {
-            // Process both branches from same snapshot, take max after
-            Map<String, Integer> thenC = new HashMap<>(counters);
-            simulateWalk(cond.thenBlock, profiles, thenC, maxExtraCopies);
-            Map<String, Integer> elseC = new HashMap<>(counters);
-            if (cond.elseBlock != null) simulateWalk(cond.elseBlock, profiles, elseC, maxExtraCopies);
-            // Take max of both branches for each key
-            Set<String> allKeys = new HashSet<>();
-            allKeys.addAll(thenC.keySet());
-            allKeys.addAll(elseC.keySet());
-            for (String k : allKeys) {
-                counters.put(k, Math.max(
-                        thenC.getOrDefault(k, 0),
-                        elseC.getOrDefault(k, 0)));
-            }
-        } else if (stmt instanceof RandomNode rand) {
-            List<Map<String, Integer>> branchCounters = new ArrayList<>();
-            for (StatementListNode branch : rand.statements) {
-                Map<String, Integer> bc = new HashMap<>(counters);
-                simulateWalk(branch, profiles, bc, maxExtraCopies);
-                branchCounters.add(bc);
-            }
-            Set<String> allKeys = new HashSet<>();
-            for (Map<String, Integer> bc : branchCounters) allKeys.addAll(bc.keySet());
-            for (String k : allKeys) {
-                int maxV = 0;
-                for (Map<String, Integer> bc : branchCounters) maxV = Math.max(maxV, bc.getOrDefault(k, 0));
-                counters.put(k, maxV);
-            }
-        } else if (stmt instanceof RepeatNode repeat) {
-            // Simulate body once and scale counts — avoids O(count) loop for large repeats
-            Map<String, Integer> iterCounters = new HashMap<>(counters);
-            simulateWalk(repeat.statements, profiles, iterCounters, maxExtraCopies);
-            for (Map.Entry<String, Integer> e : iterCounters.entrySet()) {
-                long scaled = (long) e.getValue() * repeat.count;
-                counters.put(e.getKey(), (int) Math.min(scaled, Integer.MAX_VALUE));
-            }
-        } else if (stmt instanceof AssignationNode assign) {
-            simulateExpr(assign.value, profiles, counters, maxExtraCopies);
-        } else if (stmt instanceof TypedReturnNode ret && ret.expression != null) {
-            simulateExpr(ret.expression, profiles, counters, maxExtraCopies);
-        } else if (stmt instanceof ActionCallNode action) {
-            for (var arg : action.arguments.expressions) simulateExpr(arg, profiles, counters, maxExtraCopies);
-        }
-    }
-
-    private void simulateExpr(ExpressionNode expr,
-                               Map<String, Map<String, Integer>> profiles,
-                               Map<String, Integer> counters,
-                               Map<String, Integer> maxExtraCopies) {
-        if (expr instanceof FunctionCallNode call) {
-            int cnt = counters.merge(call.functionName, 1, Integer::sum);
-            if (cnt > 1) maxExtraCopies.merge(call.functionName, cnt - 1, Integer::max);
-            Map<String, Integer> fp = profiles.get(call.functionName);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    int tc = counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                    if (tc > 1) maxExtraCopies.merge(e.getKey(), tc - 1, Integer::max);
-                }
-            }
-            for (var arg : call.arguments.expressions) simulateExpr(arg, profiles, counters, maxExtraCopies);
-        } else if (expr instanceof BinaryExpressionNode bin) {
-            simulateExpr(bin.left, profiles, counters, maxExtraCopies);
-            simulateExpr(bin.right, profiles, counters, maxExtraCopies);
-        } else if (expr instanceof UnaryExpressionNode un) {
-            simulateExpr(un.operand, profiles, counters, maxExtraCopies);
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Rewriting (replacing 2nd, 3rd, ... calls with copies)
-    // -------------------------------------------------------------------------
-
-    private MainStatementNode rewriteMainStatement(MainStatementNode stmt,
-                                                    Map<String, List<String>> copyNames,
-                                                    Map<String, Map<String, Integer>> profiles) {
-        if (stmt instanceof EventNode ev) {
-            StatementListNode body = rewriteBody(ev.statements, copyNames, profiles);
-            return new EventNode(ev.event, body, ev.token);
-        } else if (stmt instanceof CommandNode cmd) {
-            StatementListNode body = rewriteBody(cmd.statements, copyNames, profiles);
-            return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.token);
-        } else if (stmt instanceof LoopNode loop) {
-            StatementListNode body = rewriteBody(loop.statements, copyNames, profiles);
-            return new LoopNode(loop.name, loop.description, loop.icon, body, loop.tickDelay, loop.token);
-        } else if (stmt instanceof MenuNode menu) {
-            List<SlotNode> slots = new ArrayList<>();
-            for (SlotNode slot : menu.slots) {
-                StatementListNode body = rewriteBody(slot.statements, copyNames, profiles);
-                slots.add(new SlotNode(slot.slotId, slot.item, body, slot.token));
-            }
-            return new MenuNode(menu.name, menu.rows, slots, menu.token);
-        } else if (stmt instanceof VoidFunctionNode vf) {
-            StatementListNode body = rewriteBody(vf.statements, copyNames, profiles);
-            return new VoidFunctionNode(vf.name, vf.description, vf.icon, vf.parameters, body, vf.token);
-        } else if (stmt instanceof TypedFunctionNode tf) {
-            StatementListNode body = rewriteBody(tf.statements, copyNames, profiles);
-            return new TypedFunctionNode(tf.name, tf.description, tf.icon, tf.returnType, tf.parameters, body, tf.token);
-        }
-        return stmt;
-    }
-
-    private StatementListNode rewriteBody(StatementListNode stmts,
-                                           Map<String, List<String>> copyNames,
-                                           Map<String, Map<String, Integer>> profiles) {
-        // Pre-scan: compute total calls (direct + transitive) vs direct-only counts.
-        // If a function F has transitive callers that push its total count above 1,
-        // we can't rename the transitive calls (they're inside other functions), so we
-        // must rename all DIRECT calls to copies, leaving the original for transitive use.
-        Map<String, Integer> preScanTotals = new HashMap<>();
-        Map<String, Integer> directCounts  = new HashMap<>();
-        for (StatementNode stmt : stmts.statements) {
-            addTransitiveFromStatement(stmt, profiles, preScanTotals);
-            addProfileFromStatement(stmt, directCounts);
-        }
-        // useCopyFromFirstCall: functions whose copies start at callIdx=0 (not callIdx=1)
-        Set<String> useCopyFromFirstCall = new HashSet<>();
-        for (String fname : preScanTotals.keySet()) {
-            if (preScanTotals.get(fname) > directCounts.getOrDefault(fname, 0)) {
-                useCopyFromFirstCall.add(fname);
-            }
-        }
-        Map<String, Integer> counters = new HashMap<>();
-        return rewriteStatements(stmts, copyNames, profiles, counters, useCopyFromFirstCall);
-    }
-
-    /**
-     * Resolves which function name to actually call, given how many times it has already
-     * been called directly in this body (callIdx) and whether transitive conflicts mean
-     * we must use copies starting from the very first call.
-     */
-    private String resolveCallTarget(String fname, int callIdx,
-                                      Map<String, List<String>> copyNames,
-                                      Set<String> useCopyFromFirstCall) {
-        List<String> copies = copyNames.get(fname);
-        if (copies == null) return fname;
-        if (useCopyFromFirstCall.contains(fname)) {
-            // Transitive conflict: direct calls use copies ($0, $1, ...), original left for transitive
-            if (callIdx < copies.size()) return copies.get(callIdx);
-        } else if (callIdx > 0) {
-            // Multiple direct calls: original for first, copies ($0, $1, ...) for subsequent
-            if (callIdx - 1 < copies.size()) return copies.get(callIdx - 1);
-        }
-        return fname;
-    }
-
-    private StatementListNode rewriteStatements(StatementListNode stmts,
-                                                 Map<String, List<String>> copyNames,
-                                                 Map<String, Map<String, Integer>> profiles,
-                                                 Map<String, Integer> counters,
-                                                 Set<String> useCopyFromFirstCall) {
+    private StatementListNode walkStatements(StatementListNode body, Context context) {
         List<StatementNode> result = new ArrayList<>();
-        for (StatementNode stmt : stmts.statements) {
-            result.add(rewriteStatement(stmt, copyNames, profiles, counters, useCopyFromFirstCall));
+        for (StatementNode statement : body.statements) {
+            result.add(walkStatement(statement, context));
+            if (statement instanceof ReturnNode) context.returned = true;
         }
         return new StatementListNode(result);
     }
 
-    private StatementNode rewriteStatement(StatementNode stmt,
-                                            Map<String, List<String>> copyNames,
-                                            Map<String, Map<String, Integer>> profiles,
-                                            Map<String, Integer> counters,
-                                            Set<String> useCopyFromFirstCall) {
-        if (stmt instanceof VoidFunctionCallNode call) {
-            String fname = call.functionName;
-            int callIdx = counters.getOrDefault(fname, 0);
-            counters.put(fname, callIdx + 1);
-            Map<String, Integer> fp = profiles.get(fname);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                }
+    private StatementNode walkStatement(StatementNode statement, Context context) {
+        return switch (statement) {
+            case VoidFunctionCallNode call -> {
+                ArgumentListNode arguments = walkArguments(call.arguments, context);
+                yield new VoidFunctionCallNode(resolveCall(call.functionName, call.token, context), arguments, call.token);
             }
-            String target = resolveCallTarget(fname, callIdx, copyNames, useCopyFromFirstCall);
-            if (!target.equals(fname)) return new VoidFunctionCallNode(target, call.arguments, call.token);
-            return call;
-
-        } else if (stmt instanceof GlobalFunctionCallNode call) {
-            String fname = call.functionName;
-            int callIdx = counters.getOrDefault(fname, 0);
-            counters.put(fname, callIdx + 1);
-            Map<String, Integer> fp = profiles.get(fname);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                }
+            case GlobalFunctionCallNode call -> {
+                ArgumentListNode arguments = walkArguments(call.arguments, context);
+                yield new GlobalFunctionCallNode(resolveCall(call.functionName, call.token, context), arguments, call.token);
             }
-            String target = resolveCallTarget(fname, callIdx, copyNames, useCopyFromFirstCall);
-            if (!target.equals(fname)) return new GlobalFunctionCallNode(target, call.arguments, call.token);
-            return call;
-
-        } else if (stmt instanceof ConditionalNode cond) {
-            Map<String, Integer> thenC = new HashMap<>(counters);
-            StatementListNode thenBlock = rewriteStatements(cond.thenBlock, copyNames, profiles, thenC, useCopyFromFirstCall);
-            Map<String, Integer> elseC = new HashMap<>(counters);
-            StatementListNode elseBlock = null;
-            if (cond.elseBlock != null) {
-                elseBlock = rewriteStatements(cond.elseBlock, copyNames, profiles, elseC, useCopyFromFirstCall);
+            case TupleDestructureNode destructure -> {
+                ArgumentListNode arguments = walkArguments(destructure.arguments, context);
+                String target = resolveCall(destructure.functionName, destructure.token, context);
+                yield new TupleDestructureNode(destructure.targets, destructure.operator, target, arguments, destructure.token);
             }
-            Set<String> allKeys = new HashSet<>();
-            allKeys.addAll(thenC.keySet());
-            allKeys.addAll(elseC.keySet());
-            for (String k : allKeys) {
-                counters.put(k, Math.max(thenC.getOrDefault(k, 0), elseC.getOrDefault(k, 0)));
+            case AssignationNode assignment -> new AssignationNode(assignment.variable, assignment.operator,
+                    walkExpression(assignment.value, context), assignment.token);
+            case TypedReturnNode ret -> ret.expression == null ? ret : new TypedReturnNode(walkExpression(ret.expression, context), ret.token);
+            case TupleReturnNode ret -> {
+                List<NormalExpressionNode> expressions = new ArrayList<>();
+                for (NormalExpressionNode expression : ret.expressions) expressions.add(walkExpression(expression, context));
+                yield new TupleReturnNode(expressions, ret.token);
             }
-            return new ConditionalNode(cond.condition, thenBlock, elseBlock, cond.token);
-
-        } else if (stmt instanceof RandomNode rand) {
-            List<Map<String, Integer>> branchCounters = new ArrayList<>();
-            List<StatementListNode> rewrittenBranches = new ArrayList<>();
-            for (StatementListNode branch : rand.statements) {
-                Map<String, Integer> bc = new HashMap<>(counters);
-                rewrittenBranches.add(rewriteStatements(branch, copyNames, profiles, bc, useCopyFromFirstCall));
-                branchCounters.add(bc);
-            }
-            Set<String> allKeys = new HashSet<>();
-            for (Map<String, Integer> bc : branchCounters) allKeys.addAll(bc.keySet());
-            for (String k : allKeys) {
-                int maxV = 0;
-                for (Map<String, Integer> bc : branchCounters) maxV = Math.max(maxV, bc.getOrDefault(k, 0));
-                counters.put(k, maxV);
-            }
-            return new RandomNode(rewrittenBranches, rand.weights, rand.token);
-
-        } else if (stmt instanceof RepeatNode repeat) {
-            StatementListNode body = rewriteStatements(repeat.statements, copyNames, profiles, counters, useCopyFromFirstCall);
-            return new RepeatNode(repeat.count, body, repeat.token);
-
-        } else if (stmt instanceof AssignationNode assign) {
-            NormalExpressionNode newVal = rewriteExpr(assign.value, copyNames, profiles, counters, useCopyFromFirstCall);
-            if (newVal != assign.value) return new AssignationNode(assign.variable, assign.operator, newVal, assign.token);
-            return assign;
-
-        } else if (stmt instanceof TypedReturnNode ret && ret.expression != null) {
-            NormalExpressionNode newExpr = rewriteExpr(ret.expression, copyNames, profiles, counters, useCopyFromFirstCall);
-            if (newExpr != ret.expression) return new TypedReturnNode(newExpr, ret.token);
-            return ret;
-
-        } else if (stmt instanceof ActionCallNode action) {
-            List<NormalExpressionNode> newArgs = new ArrayList<>(action.arguments.expressions);
-            boolean changed = false;
-            for (int i = 0; i < newArgs.size(); i++) {
-                NormalExpressionNode rewritten = rewriteExpr(newArgs.get(i), copyNames, profiles, counters, useCopyFromFirstCall);
-                if (rewritten != newArgs.get(i)) { newArgs.set(i, rewritten); changed = true; }
-            }
-            if (changed) return new ActionCallNode(action.name, new ArgumentListNode(newArgs), action.token);
-            return action;
-        }
-
-        return stmt;
+            case ActionCallNode action -> new ActionCallNode(action.name, walkArguments(action.arguments, context), action.token);
+            case ConditionalNode conditional -> walkConditional(conditional, context);
+            case RandomNode random -> walkRandom(random, context);
+            // Repeats are unrolled before this pass; kept for safety, the body is one execution path.
+            case RepeatNode repeat -> new RepeatNode(repeat.count, walkStatements(repeat.statements, context), repeat.token);
+            default -> statement;
+        };
     }
 
-    private NormalExpressionNode rewriteExpr(NormalExpressionNode expr,
-                                              Map<String, List<String>> copyNames,
-                                              Map<String, Map<String, Integer>> profiles,
-                                              Map<String, Integer> counters,
-                                              Set<String> useCopyFromFirstCall) {
-        if (expr instanceof FunctionCallNode call) {
-            String fname = call.functionName;
-            int callIdx = counters.getOrDefault(fname, 0);
-            counters.put(fname, callIdx + 1);
-            Map<String, Integer> fp = profiles.get(fname);
-            if (fp != null) {
-                for (Map.Entry<String, Integer> e : fp.entrySet()) {
-                    counters.merge(e.getKey(), e.getValue(), Integer::sum);
-                }
-            }
-            List<NormalExpressionNode> newArgs = new ArrayList<>(call.arguments.expressions);
-            boolean argsChanged = false;
-            for (int i = 0; i < newArgs.size(); i++) {
-                NormalExpressionNode rw = rewriteExpr(newArgs.get(i), copyNames, profiles, counters, useCopyFromFirstCall);
-                if (rw != newArgs.get(i)) { newArgs.set(i, rw); argsChanged = true; }
-            }
-            String target = resolveCallTarget(fname, callIdx, copyNames, useCopyFromFirstCall);
-            if (!target.equals(fname)) {
-                return new FunctionCallNode(target, new ArgumentListNode(newArgs), call.type, call.token);
-            }
-            if (argsChanged) return new FunctionCallNode(fname, new ArgumentListNode(newArgs), call.type, call.token);
-            return call;
+    private StatementNode walkConditional(ConditionalNode conditional, Context context) {
+        ExpressionNode condition = conditional.condition == null ? null : walkCondition(conditional.condition, context);
 
-        } else if (expr instanceof BinaryExpressionNode bin) {
-            NormalExpressionNode left  = rewriteExpr(bin.left,  copyNames, profiles, counters, useCopyFromFirstCall);
-            NormalExpressionNode right = rewriteExpr(bin.right, copyNames, profiles, counters, useCopyFromFirstCall);
-            if (left != bin.left || right != bin.right)
-                return new BinaryExpressionNode(left, right, bin.operator, bin.type, bin.token);
-            return bin;
+        Context thenContext = context.branch();
+        StatementListNode thenBlock = walkStatements(conditional.thenBlock, thenContext);
+        Context elseContext = context.branch();
+        StatementListNode elseBlock = conditional.elseBlock == null ? null : walkStatements(conditional.elseBlock, elseContext);
 
-        } else if (expr instanceof UnaryExpressionNode un) {
-            NormalExpressionNode inner = rewriteExpr(un.operand, copyNames, profiles, counters, useCopyFromFirstCall);
-            if (inner != un.operand)
-                return new UnaryExpressionNode(un.operator, inner, un.type, un.token);
-            return un;
+        mergeBranches(context, List.of(thenContext, elseContext));
+        return new ConditionalNode(condition, thenBlock, elseBlock, conditional.token);
+    }
+
+    private StatementNode walkRandom(RandomNode random, Context context) {
+        List<StatementListNode> options = new ArrayList<>();
+        List<Context> branches = new ArrayList<>();
+        for (StatementListNode option : random.statements) {
+            Context branch = context.branch();
+            options.add(walkStatements(option, branch));
+            branches.add(branch);
         }
+        mergeBranches(context, branches);
+        return new RandomNode(options, random.weights, random.token);
+    }
 
-        return expr;
+    /** After exclusive branches, the calls that may have run are those of every branch that didn't return. */
+    private static void mergeBranches(Context context, List<Context> branches) {
+        Set<String> live = new HashSet<>();
+        boolean allReturned = true;
+        for (Context branch : branches) {
+            if (branch.returned) continue;
+            allReturned = false;
+            live.addAll(branch.live);
+        }
+        context.live = live;
+        context.returned = allReturned;
+    }
+
+    private ArgumentListNode walkArguments(ArgumentListNode arguments, Context context) {
+        List<NormalExpressionNode> result = new ArrayList<>();
+        for (NormalExpressionNode argument : arguments.expressions) result.add(walkExpression(argument, context));
+        return new ArgumentListNode(result);
+    }
+
+    private ExpressionNode walkCondition(ExpressionNode condition, Context context) {
+        return switch (condition) {
+            case LogicalExpressionNode logical -> {
+                List<ExpressionNode> conditions = new ArrayList<>();
+                for (ExpressionNode single : logical.conditions) conditions.add(walkCondition(single, context));
+                yield new LogicalExpressionNode(conditions, logical.operator, logical.token);
+            }
+            case BooleanExpressionNode comparison -> new BooleanExpressionNode(walkExpression(comparison.left, context),
+                    walkExpression(comparison.right, context), comparison.operator, comparison.token);
+            case NormalExpressionNode expression -> walkExpression(expression, context);
+            default -> condition;
+        };
+    }
+
+    private NormalExpressionNode walkExpression(NormalExpressionNode expression, Context context) {
+        return switch (expression) {
+            case FunctionCallNode call -> {
+                ArgumentListNode arguments = walkArguments(call.arguments, context);
+                yield new FunctionCallNode(resolveCall(call.functionName, call.token, context), arguments, call.type, call.token);
+            }
+            case BinaryExpressionNode binary -> new BinaryExpressionNode(walkExpression(binary.left, context),
+                    walkExpression(binary.right, context), binary.operator, binary.type, binary.token);
+            case UnaryExpressionNode unary -> new UnaryExpressionNode(unary.operator,
+                    walkExpression(unary.operand, context), unary.type, unary.token);
+            default -> expression;
+        };
+    }
+
+    private static FunctionNode withBody(FunctionNode function, String name, StatementListNode body) {
+        return switch (function) {
+            case VoidFunctionNode v -> new VoidFunctionNode(name, v.description, v.icon, v.parameters, body, v.token);
+            case TypedFunctionNode t -> new TypedFunctionNode(name, t.description, t.icon, t.returnType, t.parameters, body, t.token);
+            case TupleFunctionNode t -> new TupleFunctionNode(name, t.description, t.icon, t.returnTypes, t.parameters, body, t.token);
+            default -> throw new IllegalStateException("Unexpected function kind: " + function.getClass().getSimpleName());
+        };
     }
 }
