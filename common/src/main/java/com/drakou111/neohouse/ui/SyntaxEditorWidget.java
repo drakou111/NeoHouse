@@ -5,11 +5,13 @@ import com.drakou111.neohouse.config.UITheme;
 
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.WidgetBase;
+import com.drakou111.neohouse.compiler.enums.ActionParamKind;
 import com.drakou111.neohouse.compiler.enums.Param;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Placeholder;
+import com.drakou111.neohouse.constants.Teleport;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -106,6 +108,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     private static final Pattern USER_FUNC_PAT =
             Pattern.compile("\\bfunction\\b\\s+(?:\\w+\\s+)?(\\w+)\\s*\\(([^)]*)\\)");
     private static final Pattern PH_SUGGEST_PAT = Pattern.compile("ph\\.(\\w*)$");
+    private static final Pattern TRAILING_WORD_PAT = Pattern.compile("([A-Za-z_]*)$");
 
     private static final Map<String, String[]> PH_PARAM_HINTS = Map.ofEntries(
         Map.entry("playerTeamPlayers",   new String[]{"teamName: string"}),
@@ -1443,46 +1446,30 @@ public class SyntaxEditorWidget extends WidgetBase {
 
         int quoteCount = 0;
         for (int i = 0; i < beforeCursor.length(); i++) if (beforeCursor.charAt(i) == '"') quoteCount++;
-        if (quoteCount % 2 == 0) return null;
+
+        // A bare location preset (teleport(INVOKER, ...)): suggest the preset names.
+        if (quoteCount % 2 == 0) {
+            Matcher word = TRAILING_WORD_PAT.matcher(beforeCursor);
+            if (!word.find()) return null;
+            String partial = word.group(1);
+            String beforeWord = beforeCursor.substring(0, word.start(1));
+            if (!beforeWord.stripTrailing().endsWith("(") && !beforeWord.stripTrailing().endsWith(",")) return null;
+            Param param = parameterAt(beforeWord);
+            if (param == null || param.kind() != ActionParamKind.LOCATION) return null;
+            String[] presets = Arrays.stream(Teleport.values())
+                    .filter(t -> t != Teleport.CUSTOM)
+                    .map(Enum::name)
+                    .filter(n -> n.startsWith(partial))
+                    .toArray(String[]::new);
+            if (presets.length == 0) return null;
+            suggestionTypedLen = partial.length();
+            return presets;
+        }
 
         int quotePos   = beforeCursor.lastIndexOf('"');
         String typedIn = beforeCursor.substring(quotePos + 1);
-        String beforeQ = beforeCursor.substring(0, quotePos);
-
-        int paramIndex = 0, depth = 0, braceDepth = 0, funcNameEnd = -1;
-        for (int i = beforeQ.length() - 1; i >= 0; i--) {
-            char c = beforeQ.charAt(i);
-            if (c == '"') {
-                i--;
-                while (i >= 0 && beforeQ.charAt(i) != '"') i--;
-                continue;
-            }
-            if      (c == '}')                               braceDepth++;
-            else if (c == '{')                               braceDepth--;
-            else if (c == ')')                               depth++;
-            else if (c == '(' && depth > 0)                  depth--;
-            else if (c == '(')                               { funcNameEnd = i; break; }
-            else if (c == ',' && depth == 0 && braceDepth == 0) paramIndex++;
-        }
-        if (funcNameEnd < 0) return null;
-
-        String beforeParen = beforeQ.substring(0, funcNameEnd).stripTrailing();
-        int nameStart = beforeParen.length();
-        while (nameStart > 0 && Character.isLetterOrDigit(beforeParen.charAt(nameStart - 1))) nameStart--;
-        String funcName = beforeParen.substring(nameStart);
-        if (funcName.isEmpty()) return null;
-
-        String[] allowed = null;
-        AddAction action = AddAction.searchByName(funcName);
-        if (action != null && paramIndex < action.params.size()) {
-            allowed = action.params.get(paramIndex).enumValues();
-        }
-        if (allowed == null) {
-            AddCondition cond = AddCondition.searchByName(funcName);
-            if (cond != null && paramIndex < cond.params.size()) {
-                allowed = cond.params.get(paramIndex).enumValues();
-            }
-        }
+        Param param = parameterAt(beforeCursor.substring(0, quotePos));
+        String[] allowed = param == null ? null : param.enumValues();
         if (allowed == null) return null;
 
         final String prefix = typedIn;
@@ -1494,6 +1481,41 @@ public class SyntaxEditorWidget extends WidgetBase {
         suggestionTypedLen = typedIn.length();
         suggestionIsString = true;
         return filtered;
+    }
+
+    /**
+     * The action or condition parameter an argument starting right after {@code before} belongs to,
+     * found by scanning back to the call's opening parenthesis; null outside a built-in call.
+     */
+    private static Param parameterAt(String before) {
+        int paramIndex = 0, depth = 0, braceDepth = 0, funcNameEnd = -1;
+        for (int i = before.length() - 1; i >= 0; i--) {
+            char c = before.charAt(i);
+            if (c == '"') {
+                i--;
+                while (i >= 0 && before.charAt(i) != '"') i--;
+                continue;
+            }
+            if      (c == '}')                               braceDepth++;
+            else if (c == '{')                               braceDepth--;
+            else if (c == ')')                               depth++;
+            else if (c == '(' && depth > 0)                  depth--;
+            else if (c == '(')                               { funcNameEnd = i; break; }
+            else if (c == ',' && depth == 0 && braceDepth == 0) paramIndex++;
+        }
+        if (funcNameEnd < 0) return null;
+
+        String beforeParen = before.substring(0, funcNameEnd).stripTrailing();
+        int nameStart = beforeParen.length();
+        while (nameStart > 0 && Character.isLetterOrDigit(beforeParen.charAt(nameStart - 1))) nameStart--;
+        String funcName = beforeParen.substring(nameStart);
+        if (funcName.isEmpty()) return null;
+
+        AddAction action = AddAction.searchByName(funcName);
+        if (action != null) return paramIndex < action.params.size() ? action.params.get(paramIndex) : null;
+        AddCondition cond = AddCondition.searchByName(funcName);
+        if (cond != null) return paramIndex < cond.params.size() ? cond.params.get(paramIndex) : null;
+        return null;
     }
 
     private void applySuggestion() {
