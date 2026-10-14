@@ -21,7 +21,7 @@ public enum AddAction {
             "Fully restores the player's health and hunger.", "golden_apple", "Full Heal"),
     TITLE(5, true, "title",
             List.of(Param.STRING.withName(TitleInputs.TITLE), Param.STRING.withName(TitleInputs.SUBTITLE), Param.longRange(0, 3).withName(TitleInputs.FADEIN), Param.longRange(0, 10).withName(TitleInputs.STAY), Param.longRange(0, 3).withName(TitleInputs.FADEOUT)),
-            "Shows title/subtitle. fadeIn, stay, fadeOut are in ticks.", "book", "Display Title"),
+            "Shows title/subtitle. fadeIn, stay and fadeOut are in seconds.", "book", "Display Title"),
     ACTION_BAR(5, true, "actionBar",
             List.of(Param.STRING.withName(ActionBarInputs.MESSAGE)),
             "Displays a message in the player's action bar.", "writable_book", "Display Action Bar"),
