@@ -77,6 +77,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         int selAnchor = 0;
         int replaceCursor = 0;
         int replaceSelAnchor = 0;
+        /** 0 = find field, 1 = replace field, {@link #FOCUS_CODE} = the code (the bar stays open). */
         int focused = 0;
         int matchIndex = -1;
         final List<Integer> matches = new ArrayList<>();
@@ -84,6 +85,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         int btnReplaceAllX = -1, btnReplaceAllY = -1;
     }
     private final FindReplaceState fr = new FindReplaceState();
+    private static final int FOCUS_CODE = -1;
     private static final int FIND_BAR_W = 260;
     private static final int FIND_FIELD_H = 12;
     private static final int FIND_BTN_W = 60;
@@ -724,7 +726,9 @@ public class SyntaxEditorWidget extends WidgetBase {
         boolean ctrl  = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
         boolean shift = (mods & GLFW.GLFW_MOD_SHIFT)   != 0;
 
-        if (fr.mode > 0 && handleFindBarKey(key, mods)) return true;
+        // The find bar only takes keys while one of its fields has focus; clicking the code gives
+        // the editor its shortcuts (Ctrl+A, Ctrl+C, ...) back without closing the bar.
+        if (fr.mode > 0 && fr.focused != FOCUS_CODE && handleFindBarKey(key, mods)) return true;
 
         if (ctrl && key == GLFW.GLFW_KEY_F) { openFind(); return true; }
         if (ctrl && key == GLFW.GLFW_KEY_R) { openReplace(); return true; }
@@ -780,7 +784,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     @Override
     protected boolean onCharTyped(char c, int mods) {
         if (c < 32 || c == 127) return false;
-        if (fr.mode > 0) return handleFindBarChar(c);
+        if (fr.mode > 0 && fr.focused != FOCUS_CODE) return handleFindBarChar(c);
         insertChar(c);
         return true;
     }
@@ -872,6 +876,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
 
         setFocused(true);
+        fr.focused = FOCUS_CODE;
         int pos = hitToOffset((int) mx, (int) my);
         if (pos >= 0) {
             long now = System.currentTimeMillis();
@@ -879,7 +884,9 @@ public class SyntaxEditorWidget extends WidgetBase {
             lastClickTime = now;
             lastClickPos  = pos;
 
-            if (isDoubleClick) {
+            if (RenderHelper.hasShiftDown()) {
+                cursor = pos; // Shift+click extends the selection from the current anchor
+            } else if (isDoubleClick) {
                 selectWordAt(pos);
             } else {
                 cursor    = pos;
