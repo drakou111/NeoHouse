@@ -71,6 +71,8 @@ sourceSets.main.java.srcDir(atLeast('26.1') ? 'src/compat/api26' : 'src/compat/a
 sourceSets.main.java.srcDir(atLeast('26.2') ? 'src/compat/client_new' : 'src/compat/client_old')
 // 26.3 replaced GLFW keyboard input with SDL: different key codes and no org.lwjgl.glfw.
 sourceSets.main.java.srcDir(atLeast('26.3') ? 'src/compat/keys_sdl' : 'src/compat/keys_glfw')
+// Opening a folder in the system file manager: Util moved package at 1.21.11, then to Blaze3D at 26.3.
+sourceSets.main.java.srcDir(atLeast('26.3') ? 'src/compat/desktop_sdl' : atLeast('1.21.11') ? 'src/compat/desktop_util' : 'src/compat/desktop_old')
 sourceSets.main.java.srcDir(
     atLeast('26.1')    ? 'src/compat/mc261plus'   :
     atLeast('1.21.11') ? 'src/compat/mc12111plus' :

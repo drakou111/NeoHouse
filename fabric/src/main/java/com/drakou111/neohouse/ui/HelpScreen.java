@@ -16,7 +16,6 @@ import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Placeholder;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -672,8 +671,6 @@ public class HelpScreen extends ScreenBase {
     protected void init() {
         addRenderableWidget(Button.builder(Component.literal("< Back"), b -> ClientUi.setScreen(minecraft, parent))
                 .bounds(PAD, 5, 52, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
-                .bounds(this.width - PAD - 18, 5, 18, 18).build());
 
         List<TabButton> tabs = new ArrayList<>();
         int x = PAD;

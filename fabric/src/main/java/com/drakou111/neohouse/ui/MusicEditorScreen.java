@@ -18,7 +18,6 @@ import com.drakou111.neohouse.music.MusicTrack;
 import com.drakou111.neohouse.music.SoundEventResolver;
 import com.drakou111.neohouse.music.SoundIcon;
 import com.drakou111.neohouse.utils.MessageUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -131,9 +130,7 @@ public class MusicEditorScreen extends ScreenBase {
     private void rebuildAll() {
         clearWidgets();
 
-        // Row 1: file actions on the left, close on the right (the song name sits between them).
-        addRenderableWidget(Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
-                .bounds(width - PAD - 16, TOOLBAR_ROW_1_Y, 16, 16).build());
+        // Row 1: file actions on the left (the song name sits in the middle).
         int x = PAD;
         x = addTop("< Back", 42, x, TOOLBAR_ROW_1_Y, b -> onClose(), "Back to the file browser");
         x = addTop("Save", 40, x, TOOLBAR_ROW_1_Y, b -> save(), "Save (Ctrl+S)");

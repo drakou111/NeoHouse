@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.FileOpener;
 import com.drakou111.neohouse.compat.Gfx;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
@@ -12,7 +13,6 @@ import com.drakou111.neohouse.music.MusicFunctionExporter;
 import com.drakou111.neohouse.music.MusicIO;
 import com.drakou111.neohouse.music.MusicProject;
 import com.drakou111.neohouse.utils.MessageUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -134,15 +134,13 @@ public class FileBrowserScreen extends ScreenBase {
     private void rebuildAll() {
         clearWidgets();
 
-        addRenderableWidget(Button.builder(
-                Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
-                .bounds(this.width - PAD - 18, 5, 18, 18).build());
-
         int x = PAD;
         x = addHeaderButton("< Back", 60, x, b -> { if (currentPath.equals(rootPath)) goBack(); else navigateUp(); });
         x = addHeaderButton("+ Script", 60, x, b -> newScript());
         x = addHeaderButton("+ Music", 60, x, b -> newMusic());
-        addHeaderButton("+ Folder", 60, x, b -> newFolder());
+        x = addHeaderButton("+ Folder", 60, x, b -> newFolder());
+        int browseW = 84;
+        addHeaderButton("Browse Folder", browseW, Math.max(x, this.width - PAD - browseW), b -> browseFolder());
 
         if (selectedIdx >= 0 && selectedIdx < entries.size()) {
             Entry entry = entries.get(selectedIdx);
@@ -510,6 +508,11 @@ public class FileBrowserScreen extends ScreenBase {
             try { Files.createDirectories(target); }
             catch (IOException e) { MessageUtils.errorToChat("Create failed: " + e.getMessage()); }
         }));
+    }
+
+    /** Opens the folder being browsed in the system file manager. */
+    private void browseFolder() {
+        FileOpener.openFolder(currentPath);
     }
 
     private int maxVisibleRows() {

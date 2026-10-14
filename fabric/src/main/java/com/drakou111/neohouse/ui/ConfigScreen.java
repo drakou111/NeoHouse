@@ -12,7 +12,6 @@ import com.drakou111.neohouse.config.RecursionMode;
 import com.drakou111.neohouse.config.SyntaxTheme;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
@@ -216,8 +215,6 @@ public class ConfigScreen extends ScreenBase {
 
         addRenderableWidget(Button.builder(Component.literal("< Back"), b -> closeAndSave())
                 .bounds(PAD, 5, 52, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), b -> closeAndSave())
-                .bounds(this.width - PAD - 18, 5, 18, 18).build());
     }
 
     private int addIntBoxesForTab(int tab, int y) {

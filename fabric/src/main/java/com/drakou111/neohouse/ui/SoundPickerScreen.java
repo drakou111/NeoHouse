@@ -76,9 +76,6 @@ public class SoundPickerScreen extends ScreenBase {
     }
 
     private void rebuildButtons() {
-        addRenderableWidget(Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), b -> cancel())
-                .bounds(this.width - PAD - 18, 5, 18, 18).build());
-
         int btnW = 80, btnH = 16;
         int btnY = this.height - FOOTER_H + (FOOTER_H - btnH) / 2;
         addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> cancel())
