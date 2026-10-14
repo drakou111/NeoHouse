@@ -9,6 +9,7 @@ import com.drakou111.neohouse.config.MultiCallMode;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.OverrideMode;
 import com.drakou111.neohouse.config.RecursionMode;
+import com.drakou111.neohouse.config.UndeclaredVariableMode;
 import com.drakou111.neohouse.config.SyntaxTheme;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
@@ -53,14 +54,16 @@ public class ConfigScreen extends ScreenBase {
     };
     private static final int[] INT_TABS = { TAB_COMPILER, TAB_COMPILER, TAB_IDE, TAB_IDE };
 
-    private static final String[] BOOL_KEYS   = { "showArgumentHints", "showArgumentRecommendations", "autoIndent", "showScriptMob" };
-    private static final String[] BOOL_LABELS = { "Show argument hints:", "Show argument recommendations:", "Auto-indent on Enter:", "Show mob while running:" };
+    private static final String[] BOOL_KEYS   = { "showArgumentHints", "showArgumentRecommendations", "autoIndent", "showScriptMob", "forbidVarType" };
+    private static final String[] BOOL_LABELS = { "Show argument hints:", "Show argument recommendations:", "Auto-indent on Enter:", "Show mob while running:", "Ban the var type:" };
     private static final String[] BOOL_TIPS   = {
         "Show the expected argument types when writing inside function calls.",
         "Show autocomplete suggestions for string argument values.",
         "Automatically match the indentation of the previous line on Enter.",
         "Display a mob above the progress overlay while a script is running as a companion!",
+        "Reject the var type everywhere: in declarations, parameters and return types. Undeclared variables are vars, so they become errors too.",
     };
+    private static final int BOOL_FORBID_VAR = 4;
 
     private final String[]  intValues  = new String[INT_KEYS.length];
     private final boolean[] boolValues = new boolean[BOOL_KEYS.length];
@@ -71,6 +74,7 @@ public class ConfigScreen extends ScreenBase {
     private MultiCallMode activeMultiCallMode;
     private RecursionMode activeRecursionMode;
     private GlobalCallMode activeGlobalCallMode;
+    private UndeclaredVariableMode activeUndeclaredMode;
 
     private final EditBox[]  intBoxes = new EditBox[INT_KEYS.length];
     private final Checkbox[] boolBtns = new Checkbox[BOOL_KEYS.length];
@@ -83,6 +87,7 @@ public class ConfigScreen extends ScreenBase {
     private static final int DROP_MULTICALL     =  4;
     private static final int DROP_RECURSION     =  5;
     private static final int DROP_GLOBALCALL    =  6;
+    private static final int DROP_UNDECLARED    =  7;
     private int openDropdown         = DROP_NONE;
     private int dropScrollSyntax     = 0;
     private int dropScrollUITheme    = 0;
@@ -91,6 +96,7 @@ public class ConfigScreen extends ScreenBase {
     private int dropScrollMultiCall  = 0;
     private int dropScrollRecursion  = 0;
     private int dropScrollGlobalCall = 0;
+    private int dropScrollUndeclared = 0;
 
     private String[] mobIds;
     private String[] mobNames;
@@ -108,6 +114,7 @@ public class ConfigScreen extends ScreenBase {
     private int multiCallDropY;
     private int recursionDropY;
     private int globalCallDropY;
+    private int undeclaredDropY;
     private int mobDropY;
 
     private int sliderX, sliderY, sliderW;
@@ -118,7 +125,7 @@ public class ConfigScreen extends ScreenBase {
 
     private final int[] intLabelY  = new int[INT_KEYS.length];
     private final int[] boolLabelY = new int[BOOL_KEYS.length];
-    private int overrideLabelY, multiCallLabelY, recursionLabelY, globalCallLabelY;
+    private int overrideLabelY, multiCallLabelY, recursionLabelY, globalCallLabelY, undeclaredLabelY;
     private int syntaxLabelY, uiThemeLabelY, opacityLabelY, mobLabelY;
     private int previewY;
 
@@ -148,6 +155,7 @@ public class ConfigScreen extends ScreenBase {
                 case "showArgumentRecommendations" -> cfg.showArgumentRecommendations;
                 case "autoIndent"                  -> cfg.autoIndent;
                 case "showScriptMob"               -> cfg.showScriptMob;
+                case "forbidVarType"               -> cfg.forbidVarType;
                 default -> true;
             };
         }
@@ -158,6 +166,7 @@ public class ConfigScreen extends ScreenBase {
         activeMultiCallMode  = cfg.multiCallMode;
         activeRecursionMode  = cfg.recursionMode;
         activeGlobalCallMode = cfg.globalCallMode;
+        activeUndeclaredMode = cfg.undeclaredVariableMode;
 
         List<EntityType<?>> entityTypes = new ArrayList<>();
         for (EntityType<?> et : BuiltInRegistries.ENTITY_TYPE) {
@@ -187,6 +196,13 @@ public class ConfigScreen extends ScreenBase {
             multiCallDropY  = y + (ROW_H - DROP_H) / 2; multiCallLabelY  = y + (ROW_H - 9) / 2; y += ROW_H;
             recursionDropY  = y + (ROW_H - DROP_H) / 2; recursionLabelY  = y + (ROW_H - 9) / 2; y += ROW_H;
             globalCallDropY = y + (ROW_H - DROP_H) / 2; globalCallLabelY = y + (ROW_H - 9) / 2; y += ROW_H;
+            undeclaredDropY = y + (ROW_H - DROP_H) / 2; undeclaredLabelY = y + (ROW_H - 9) / 2; y += ROW_H;
+            boolLabelY[BOOL_FORBID_VAR] = y + (ROW_H - 9) / 2;
+            boolBtns[BOOL_FORBID_VAR] = addRenderableWidget(Checkbox.builder(Component.empty(), font)
+                    .pos(widgetX, y + (ROW_H - BOX_H) / 2)
+                    .selected(boolValues[BOOL_FORBID_VAR])
+                    .build());
+            y += ROW_H;
             y = addIntBoxesForTab(TAB_COMPILER, y);
         } else if (activeTab == TAB_IDE) {
             for (int i = 0; i < 3; i++) {
@@ -235,6 +251,7 @@ public class ConfigScreen extends ScreenBase {
         if (activeTab == TAB_COMPILER) {
             for (int i = 0; i < INT_KEYS.length; i++)
                 if (INT_TABS[i] == TAB_COMPILER && intBoxes[i] != null) intValues[i] = intBoxes[i].getValue();
+            if (boolBtns[BOOL_FORBID_VAR] != null) boolValues[BOOL_FORBID_VAR] = boolBtns[BOOL_FORBID_VAR].selected();
         } else if (activeTab == TAB_IDE) {
             for (int i = 0; i < INT_KEYS.length; i++)
                 if (INT_TABS[i] == TAB_IDE && intBoxes[i] != null) intValues[i] = intBoxes[i].getValue();
@@ -268,6 +285,7 @@ public class ConfigScreen extends ScreenBase {
             if (openDropdown == DROP_MULTICALL && clickInList(x, y, DROP_MULTICALL)) return true;
             if (openDropdown == DROP_RECURSION  && clickInList(x, y, DROP_RECURSION))  return true;
             if (openDropdown == DROP_GLOBALCALL && clickInList(x, y, DROP_GLOBALCALL)) return true;
+            if (openDropdown == DROP_UNDECLARED && clickInList(x, y, DROP_UNDECLARED)) return true;
             openDropdown = DROP_NONE;
         }
 
@@ -296,6 +314,11 @@ public class ConfigScreen extends ScreenBase {
             if (hit(x, y, widgetX, globalCallDropY, DROP_W, DROP_H)) {
                 openDropdown = DROP_GLOBALCALL;
                 dropScrollGlobalCall = centeredScroll(activeGlobalCallMode.ordinal(), GlobalCallMode.values().length);
+                return true;
+            }
+            if (hit(x, y, widgetX, undeclaredDropY, DROP_W, DROP_H)) {
+                openDropdown = DROP_UNDECLARED;
+                dropScrollUndeclared = centeredScroll(activeUndeclaredMode.ordinal(), UndeclaredVariableMode.values().length);
                 return true;
             }
         } else if (activeTab == TAB_IDE) {
@@ -426,6 +449,9 @@ public class ConfigScreen extends ScreenBase {
         } else if (dropId == DROP_GLOBALCALL) {
             listY = globalCallDropY + DROP_H; total = GlobalCallMode.values().length;
             scroll = dropScrollGlobalCall; maxRows = DROP_MAX_ROWS;
+        } else if (dropId == DROP_UNDECLARED) {
+            listY = undeclaredDropY + DROP_H; total = UndeclaredVariableMode.values().length;
+            scroll = dropScrollUndeclared; maxRows = DROP_MAX_ROWS;
         } else {
             listY = mobDropY + DROP_H; total = mobIds != null ? mobIds.length : 0;
             scroll = dropScrollMob; maxRows = MOB_DROP_MAX_ROWS;
@@ -442,6 +468,7 @@ public class ConfigScreen extends ScreenBase {
             else if (dropId == DROP_MULTICALL) activeMultiCallMode = MultiCallMode.values()[itemIdx];
             else if (dropId == DROP_RECURSION)  activeRecursionMode  = RecursionMode.values()[itemIdx];
             else if (dropId == DROP_GLOBALCALL) activeGlobalCallMode = GlobalCallMode.values()[itemIdx];
+            else if (dropId == DROP_UNDECLARED) activeUndeclaredMode = UndeclaredVariableMode.values()[itemIdx];
             else                               selectedMobIdx      = itemIdx;
             openDropdown = DROP_NONE;
         }
@@ -486,12 +513,14 @@ public class ConfigScreen extends ScreenBase {
                 case "showArgumentRecommendations" -> cfg.showArgumentRecommendations = boolValues[i];
                 case "autoIndent"                  -> cfg.autoIndent                  = boolValues[i];
                 case "showScriptMob"               -> cfg.showScriptMob               = boolValues[i];
+                case "forbidVarType"               -> cfg.forbidVarType               = boolValues[i];
             }
         }
         cfg.overrideMode    = activeOverrideMode;
         cfg.multiCallMode   = activeMultiCallMode;
         cfg.recursionMode   = activeRecursionMode;
         cfg.globalCallMode  = activeGlobalCallMode;
+        cfg.undeclaredVariableMode = activeUndeclaredMode;
         if (mobIds != null && selectedMobIdx >= 0 && selectedMobIdx < mobIds.length)
             cfg.scriptMobId = mobIds[selectedMobIdx];
         cfg.syntaxTheme = activeTheme;
@@ -534,6 +563,15 @@ public class ConfigScreen extends ScreenBase {
             if (hit(mouseX, mouseY, PAD, globalCallLabelY - 2, LABEL_W, 13))
                 hoveredTip = "How to handle a globally-called function (or loop) that itself contains 'global ...' calls. Off: allowed silently. Warn: allowed but reported. Error: compilation fails.";
             drawDropBtn(g, DROP_GLOBALCALL, globalCallDropY, activeGlobalCallMode.displayName, t, mouseX, mouseY);
+
+            g.drawString(font, "Undeclared variables:", PAD, undeclaredLabelY, 0xFFCCCCCC);
+            if (hit(mouseX, mouseY, PAD, undeclaredLabelY - 2, LABEL_W, 13))
+                hoveredTip = "A variable used without a declaration becomes an untyped var, which hides typos like p.cions. Allow: as before. Warn: reported. Error: compilation fails.";
+            drawDropBtn(g, DROP_UNDECLARED, undeclaredDropY, activeUndeclaredMode.displayName, t, mouseX, mouseY);
+
+            g.drawString(font, BOOL_LABELS[BOOL_FORBID_VAR], PAD, boolLabelY[BOOL_FORBID_VAR], 0xFFCCCCCC);
+            if (hit(mouseX, mouseY, PAD, boolLabelY[BOOL_FORBID_VAR] - 2, LABEL_W, 13))
+                hoveredTip = BOOL_TIPS[BOOL_FORBID_VAR];
 
             for (int i = 0; i < INT_KEYS.length; i++) {
                 if (INT_TABS[i] != TAB_COMPILER) continue;
@@ -599,6 +637,10 @@ public class ConfigScreen extends ScreenBase {
             String[] names = new String[GlobalCallMode.values().length];
             for (int i = 0; i < names.length; i++) names[i] = GlobalCallMode.values()[i].displayName;
             drawDropList(g, widgetX, globalCallDropY + DROP_H, names, activeGlobalCallMode.ordinal(), dropScrollGlobalCall, DROP_MAX_ROWS, t, mouseX, mouseY);
+        } else if (openDropdown == DROP_UNDECLARED) {
+            String[] names = new String[UndeclaredVariableMode.values().length];
+            for (int i = 0; i < names.length; i++) names[i] = UndeclaredVariableMode.values()[i].displayName;
+            drawDropList(g, widgetX, undeclaredDropY + DROP_H, names, activeUndeclaredMode.ordinal(), dropScrollUndeclared, DROP_MAX_ROWS, t, mouseX, mouseY);
         } else if (openDropdown == DROP_MOB && mobNames != null) {
             drawDropList(g, widgetX, mobDropY + DROP_H, mobNames, selectedMobIdx, dropScrollMob, MOB_DROP_MAX_ROWS, t, mouseX, mouseY);
         }

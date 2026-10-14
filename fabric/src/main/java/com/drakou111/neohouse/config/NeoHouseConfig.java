@@ -31,6 +31,8 @@ public class NeoHouseConfig {
     public MultiCallMode multiCallMode        = MultiCallMode.ERROR;
     public RecursionMode  recursionMode       = RecursionMode.WARN;
     public GlobalCallMode globalCallMode      = GlobalCallMode.ERROR;
+    public UndeclaredVariableMode undeclaredVariableMode = UndeclaredVariableMode.ALLOW;
+    public boolean forbidVarType              = false;
     public SyntaxTheme   syntaxTheme          = SyntaxTheme.VSCODE_DARK;
     public UITheme       uiTheme              = UITheme.DARK_BLUE;
     public UIOpacity     uiOpacity            = UIOpacity.DEFAULT;
@@ -57,6 +59,8 @@ public class NeoHouseConfig {
             Setting.ofEnum("multiCallMode",               () -> multiCallMode,               v -> multiCallMode = v, MultiCallMode::byId),
             Setting.ofEnum("recursionMode",               () -> recursionMode,               v -> recursionMode = v, RecursionMode::byId),
             Setting.ofEnum("globalCallMode",              () -> globalCallMode,              v -> globalCallMode = v, GlobalCallMode::byId),
+            Setting.ofEnum("undeclaredVariableMode",      () -> undeclaredVariableMode,      v -> undeclaredVariableMode = v, UndeclaredVariableMode::byId),
+            Setting.ofBool("forbidVarType",               () -> forbidVarType,               v -> forbidVarType = v),
             Setting.ofEnum("syntaxTheme",                 () -> syntaxTheme,                 v -> syntaxTheme = v,   SyntaxTheme::byId),
             Setting.ofEnum("uiTheme",                     () -> uiTheme,                     v -> uiTheme = v,       UITheme::byId),
             Setting.ofEnum("uiOpacity",                   () -> uiOpacity,                   v -> uiOpacity = v,     UIOpacity::byId),

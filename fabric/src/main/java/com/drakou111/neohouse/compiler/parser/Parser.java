@@ -28,6 +28,8 @@ public class Parser {
     private final HashMap<String, ConstantPrimitiveNode> constTable = new HashMap<>();
     /** enum name -> its members in declaration order (member index = ordinal value). */
     private final Map<String, List<String>> enumDefs = new HashMap<>();
+    // Where 'var' was written as a type, for the setting that forbids it.
+    private final List<Token> varTypeTokens = new ArrayList<>();
     /** enum name -> the token naming it in its declaration (used for import visibility). */
     private final Map<String, Token> enumDeclTokens = new HashMap<>();
     /** full variable name (holder + "." + name) -> enum type name, for enum-typed variables. */
@@ -1223,7 +1225,13 @@ public class Parser {
     }
 
 
+    /** Every place 'var' was written as a type (declarations, parameters, return types). */
+    public List<Token> getVarTypeTokens() {
+        return this.varTypeTokens;
+    }
+
     VariableType parseVariableFromToken(Token type) {
+        if (type.type == TokenType.VAR) this.varTypeTokens.add(type);
         return switch (type.type) {
             case TokenType.LONG -> VariableType.LONG;
             case TokenType.DOUBLE -> VariableType.DOUBLE;

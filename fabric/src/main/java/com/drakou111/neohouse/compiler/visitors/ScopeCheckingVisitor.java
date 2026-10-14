@@ -22,6 +22,8 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
     private final Set<String> allLocalNames;
     private final Deque<Map<String, VariableType>> scopeStack = new ArrayDeque<>();
     private boolean inFunction = false;
+    // The first use of each variable that was never declared (and so became an untyped var).
+    private final List<VariableNode> undeclared = new ArrayList<>();
 
     public ScopeCheckingVisitor(Map<String, VariableType> globals, Set<String> locals) {
         this.globalDecls = globals;
@@ -33,6 +35,11 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         ASTNode result = main.accept(this);
         scopeStack.pop();
         return (MainNode) result;
+    }
+
+    /** The first use of each variable the script never declared, in source order. */
+    public List<VariableNode> getUndeclared() {
+        return this.undeclared;
     }
 
     private VariableType resolveOrDeclareGlobal(String fullname, Token token, VariableNode varNode) {
@@ -53,6 +60,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
             return vt;
         }
         VariableType vt = VariableType.VAR;
+        if (varNode != null) this.undeclared.add(varNode);
         globalDecls.put(fullname, vt);
         scopeStack.getLast().put(fullname, vt);
         if (varNode != null) varNode.type = vt;

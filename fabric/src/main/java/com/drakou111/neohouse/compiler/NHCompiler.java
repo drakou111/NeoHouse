@@ -1,12 +1,15 @@
 package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.parser.Parser;
 import com.drakou111.neohouse.compiler.visitors.*;
+import com.drakou111.neohouse.config.UndeclaredVariableMode;
 import com.drakou111.neohouse.exceptions.CompilingException;
+import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,6 +51,9 @@ public class NHCompiler implements Compiler {
 
         Parser parser = new Parser(tokens, lastImportGraph);
         MainNode node = parser.parseMain();
+        if (options.forbidVarType() && !parser.getVarTypeTokens().isEmpty())
+            throw new SemanticException(parser.getVarTypeTokens().getFirst(),
+                    "The var type is turned off in the settings; use long, double, string or bool.");
 
         // Enum nominal-type checks run first, on the raw AST where enum tags are still present.
         new EnumCheckVisitor(parser.getFunctionParamEnums(), parser.getFunctionReturnEnums()).check(node);
@@ -75,6 +81,7 @@ public class NHCompiler implements Compiler {
 
         ScopeCheckingVisitor checker = new ScopeCheckingVisitor(collector.globalDecls, collector.allLocalNames);
         node = checker.analyze(node);
+        reportUndeclared(checker.getUndeclared(), options, warnings);
 
         ReturnCheckVisitor returnCheck = new ReturnCheckVisitor();
         returnCheck.analyze(node);
@@ -128,5 +135,32 @@ public class NHCompiler implements Compiler {
 
         lastExtraVariables = new ExtraVariableCollectorVisitor().collect(node);
         return node;
+    }
+
+    /**
+     * Warns about or rejects variables the script uses without declaring them, as the settings ask.
+     * With the var type turned off they are always errors, since an undeclared variable is a var.
+     */
+    private static void reportUndeclared(List<VariableNode> undeclared, CompileOptions options, List<CompileWarning> warnings) {
+        UndeclaredVariableMode mode = options.forbidVarType() ? UndeclaredVariableMode.ERROR : options.undeclaredVariableMode();
+        if (mode == UndeclaredVariableMode.ALLOW) return;
+        for (VariableNode variable : undeclared) {
+            String name = displayName(variable);
+            String message = options.forbidVarType()
+                    ? "'%s' is not declared, so it would be a var, which is turned off; declare it with a type, e.g. long %s;".formatted(name, name)
+                    : "'%s' is not declared; declare it at the top of the file, e.g. long %s;".formatted(name, name);
+            if (mode == UndeclaredVariableMode.ERROR) throw new SemanticException(variable.token, message);
+            warnings.add(new CompileWarning(variable.token, message));
+        }
+    }
+
+    /** A variable as written in a script: p.x, g.x, t[team].x, or a bare name. */
+    private static String displayName(VariableNode variable) {
+        if (variable.wasBare) return variable.name;
+        return switch (variable.holder) {
+            case PLAYER -> "p." + variable.name;
+            case GLOBAL -> "g." + variable.name;
+            case TEAM -> "t[" + variable.teamName + "]." + variable.name;
+        };
     }
 }

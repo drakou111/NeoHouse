@@ -158,7 +158,9 @@ final class HelpContent {
                 new Heading("Types"),
                 new Text("long: whole numbers. double: decimals. string: text. bool: true or false. var: untyped, "
                         + "nothing is checked. Declare variables at the top of a file; only g. and t[] variables can "
-                        + "have a starting value. A variable that isn't declared is an untyped var."),
+                        + "have a starting value. A variable that isn't declared is an untyped var; the Undeclared "
+                        + "variables setting can warn about that or make it an error, which catches typos, and Ban the "
+                        + "var type rejects var altogether."),
                 new Code("""
                         long p.coins;
                         double p.speed;
@@ -399,7 +401,9 @@ final class HelpContent {
                 new Heading("Compiler"),
                 new Text("Multi-call mode: calling a function twice in one execution (Error, Warn, Fix or Off). "
                         + "Recursion: functions calling themselves (Warn, Error or Off). Global call rules: global calls "
-                        + "inside globally called functions or loops (Error, Warn or Off)."),
+                        + "inside globally called functions or loops (Error, Warn or Off). Undeclared variables: using a "
+                        + "variable without declaring it (Allow, Warn or Error). Ban the var type: reject var everywhere, "
+                        + "including the implicit var of an undeclared variable."),
                 new Heading("Editor"),
                 new Text("Tab width, parameter hints, value suggestions, auto indent, the number of error lines shown, "
                         + "and the syntax colours."),
