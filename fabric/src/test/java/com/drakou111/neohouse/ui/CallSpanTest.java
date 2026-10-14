@@ -55,6 +55,33 @@ class CallSpanTest {
         assertThat(closes(1, "foo(", "    1,", "")).isFalse();
     }
 
+    private static boolean continues(int callLine, int lineIndex, String... lines) {
+        return CallSpan.continuesCall(List.of(lines), callLine, lineIndex, MAX_LINES);
+    }
+
+    @Test
+    void indentedArgumentsContinueACallWhoseParenIsNotTypedYet() {
+        assertThat(continues(0, 1, "playSound(", "    \"x\",")).isTrue();
+        assertThat(continues(0, 2, "playSound(", "    \"x\",", "    1.0")).isTrue();
+        assertThat(continues(1, 2, "function f() {", "    playSound(", "        \"x\"", "}")).isTrue();
+    }
+
+    @Test
+    void sameIndentStatementAfterAnUnfinishedCallDoesNotContinueIt() {
+        assertThat(continues(1, 2, "function f() {", "    sin(", "    p.x = 1", "}")).isFalse();
+        assertThat(continues(0, 1, "sin(", "p.x = 1")).isFalse();
+    }
+
+    @Test
+    void shallowerBlockEndDoesNotContinueTheCall() {
+        assertThat(continues(1, 2, "function f() {", "    sin(", "}")).isFalse();
+    }
+
+    @Test
+    void unindentedArgumentsContinueOnceTheParenIsTyped() {
+        assertThat(continues(0, 1, "foo(", "1,", "2)")).isTrue();
+    }
+
     @Test
     void scanStopsAfterMaxLines() {
         assertThat(CallSpan.closesBeforeStatementEnds(List.of("foo(", "1,", "2,", ")"), 1, 2)).isFalse();

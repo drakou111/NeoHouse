@@ -56,5 +56,5 @@
 - Music editor header: file actions and the song name on the first row, playback / tracks / zoom on the second, with tooltips; Export writes next to the song.
 - Music editor: a start cursor set from the ruler above the grid; Ctrl+C/V/S and Space use the version's key codes (they didn't work on 26.3).
 - Script mob preview no longer crashes on 26.2+.
-- Editor: parameter hints only label a following line when the call's `)` really comes after it.
+- Editor: parameter hints only label a following line when it is indented deeper than the unfinished call, or the call's `)` already follows it.
 - Moving a file no longer overwrites an existing one or forces the `.nh` extension.
