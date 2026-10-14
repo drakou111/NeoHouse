@@ -1,15 +1,17 @@
 def mcVer = rootProject.ext.active_mc_version
-// True when the active Minecraft version is at least {@code min} (compares numerically: 26.1.2 >= 26.1).
-def atLeast = { String min ->
-    def a = mcVer.tokenize('.').collect { it as int }
-    def b = min.tokenize('.').collect { it as int }
+// Compares dotted versions numerically (26.1.2 > 26.1 > 1.21.11 > 1.21.9); negative, zero or positive.
+def compareVersions = { String left, String right ->
+    def a = left.tokenize('.').collect { it as int }
+    def b = right.tokenize('.').collect { it as int }
     for (int i = 0; i < Math.max(a.size(), b.size()); i++) {
         int x = i < a.size() ? a[i] : 0
         int y = i < b.size() ? b[i] : 0
-        if (x != y) return x > y
+        if (x != y) return x <=> y
     }
-    return true
+    return 0
 }
+// True when the active Minecraft version is at least {@code min}.
+def atLeast = { String min -> compareVersions(mcVer, min) >= 0 }
 // Minecraft is unobfuscated from 26.1 on: no mappings and no remapping of the built jar.
 def unobfuscated = atLeast('26.1')
 apply plugin: unobfuscated ? 'net.fabricmc.fabric-loom' : 'net.fabricmc.fabric-loom-remap'
@@ -57,29 +59,22 @@ tasks.named("test", Test).configure {
     testLogging { events "failed"; exceptionFormat "full" }
 }
 
-// Version-specific compat source dirs: each holds the same classes written against one API range.
-sourceSets.main.java.srcDir(atLeast('1.21.6') ? 'src/compat/mc1215plus' : 'src/compat/mc1214')
-
-// In 1.21.5: ClickEvent became a sealed interface with record subtypes (ClickEvent.RunCommand),
-// and Inventory.selected went private in favor of the getSelectedSlot() getter.
-def oldClickInv = !atLeast('1.21.5')
-sourceSets.main.java.srcDir(oldClickInv ? 'src/compat/click_old' : 'src/compat/click_new')
-sourceSets.main.java.srcDir(oldClickInv ? 'src/compat/inv_field' : 'src/compat/inv_getter')
-// 26.1 renamed inventory clicks (ContainerInput) and the Fabric key, command and HUD APIs.
-sourceSets.main.java.srcDir(atLeast('26.1') ? 'src/compat/api26' : 'src/compat/api121')
-// 26.2 moved the open screen and the tab list from Minecraft onto Gui.
-sourceSets.main.java.srcDir(atLeast('26.2') ? 'src/compat/client_new' : 'src/compat/client_old')
-// 26.3 replaced GLFW keyboard input with SDL: different key codes and no org.lwjgl.glfw.
-sourceSets.main.java.srcDir(atLeast('26.3') ? 'src/compat/keys_sdl' : 'src/compat/keys_glfw')
-// Opening a folder in the system file manager: Util moved package at 1.21.11, then to Blaze3D at 26.3.
-sourceSets.main.java.srcDir(atLeast('26.3') ? 'src/compat/desktop_sdl' : atLeast('1.21.11') ? 'src/compat/desktop_util' : 'src/compat/desktop_old')
-sourceSets.main.java.srcDir(
-    atLeast('26.1')    ? 'src/compat/mc261plus'   :
-    atLeast('1.21.11') ? 'src/compat/mc12111plus' :
-    atLeast('1.21.9')  ? 'src/compat/mc1219plus'  :
-    atLeast('1.21.6')  ? 'src/compat/mc1216plus'  :
-                         'src/compat/mc1218minus'
-)
+// Version-specific code lives in src/compat/<Class>/<version>/: that class as written for
+// Minecraft <version> and later. Each build uses, per class, the newest folder that isn't newer
+// than the version being built, so a new Minecraft version only needs folders for what changed.
+// Why the folders exist:
+//   1.21.5   ClickEvent became a sealed interface; Inventory.selected went behind getSelectedSlot()
+//   1.21.6   GUI rendering moved to render pipelines (Gfx, logo, entity preview)
+//   1.21.9   input events (KeyEvent, MouseButtonEvent) for screens, widgets and key mappings
+//   1.21.11  ResourceLocation renamed to Identifier; Util moved to net.minecraft.util
+//   26.1     unobfuscated; GuiGraphics drawing renamed; Fabric key, command and HUD APIs renamed
+//   26.2     the open screen and the tab list moved from Minecraft onto Gui
+//   26.3     SDL replaced GLFW (key codes, opening folders)
+file('src/compat').eachDir { classDir ->
+    def variants = classDir.listFiles().findAll { it.isDirectory() && atLeast(it.name) }
+    if (variants.isEmpty()) throw new GradleException("src/compat/${classDir.name} has no folder for Minecraft ${mcVer}")
+    sourceSets.main.java.srcDir(variants.max { a, b -> compareVersions(a.name, b.name) })
+}
 
 // Generates BuildConstants.java with the current build date baked in.
 def generatedBuildSrcDir = layout.buildDirectory.dir("generated/sources/buildinfo")
