@@ -532,9 +532,10 @@ public class CodeGenerator {
         List<Action> branches = new ArrayList<>();
         for (int i = 0; i < rand.statements.size(); i++) {
             long weight = rand.weights.get(i);
-            Action branchContent = generateStatements(rand.statements.get(i), innerRa, rc);
+            // A weight of N adds the branch N times. Each copy needs its own Action objects: actions
+            // keep their progress, so a shared instance is "already done" after the first copy.
             for (long k = 0; k < weight; k++) {
-                branches.add(branchContent);
+                branches.add(generateStatements(rand.statements.get(i), innerRa, rc));
             }
         }
         return ActionFactory.addActionRandom(ra, new GroupAction(branches), null);

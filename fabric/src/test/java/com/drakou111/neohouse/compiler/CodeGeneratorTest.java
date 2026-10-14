@@ -9,7 +9,10 @@ import com.drakou111.neohouse.exceptions.CompilingException;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,6 +44,18 @@ class CodeGeneratorTest {
     private static void collectActions(Action action, List<Action> all) {
         all.add(action);
         for (Action child : action.getChildren()) collectActions(child, all);
+    }
+
+    @Test
+    void weightedRandomBranchCopiesAreSeparateActions() {
+        // Actions keep their progress: a shared instance would only run for the first copy.
+        Action action = generate("function a() { random [ 10*{ message(\"A\"); } { message(\"B\"); } ] }", OverrideMode.ALWAYS);
+
+        List<Action> all = new ArrayList<>();
+        collectActions(action, all);
+        Set<Action> distinct = Collections.newSetFromMap(new IdentityHashMap<>());
+        distinct.addAll(all);
+        assertThat(distinct).hasSameSizeAs(all);
     }
 
     @Test
