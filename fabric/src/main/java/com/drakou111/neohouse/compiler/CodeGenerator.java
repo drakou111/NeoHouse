@@ -15,6 +15,7 @@ import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.*;
 import com.drakou111.neohouse.compiler.ast.statement.*;
 import com.drakou111.neohouse.compiler.enums.*;
+import com.drakou111.neohouse.compiler.visitors.HousingNameCollector;
 import com.drakou111.neohouse.constants.*;
 import com.drakou111.neohouse.constants.Comparator;
 import com.drakou111.neohouse.constants.others.CustomMenuInputs;
@@ -39,6 +40,11 @@ public class CodeGenerator {
 
     public Action generate(MainNode main) {
         List<Action> parts = new ArrayList<>();
+
+        // First of all: the teams, layouts and groups the script names must already exist, since
+        // Housing can't create them from a script. Checking up front fails before anything changes.
+        for (Map.Entry<HousingList, Set<String>> entry : new HousingNameCollector().collect(main).entrySet())
+            parts.add(checkNamesExist(entry.getKey(), List.copyOf(entry.getValue())));
 
         // Pass 0: emit global/team variable initializers
         for (MainStatementNode stmt : main.statements) {
@@ -94,6 +100,16 @@ public class CodeGenerator {
             if (fill != null) parts.add(fill);
         }
         return new GroupAction(parts);
+    }
+
+    /** Opens a list (through its menu item when needed), reads its entries and checks {@code names} are among them. */
+    private static Action checkNamesExist(HousingList list, List<String> names) {
+        ActionBuilder open = new ActionBuilder().closeAll().sendChatAndWait(list.openCommand);
+        list.openThrough().ifPresent(open::search);
+        return open
+                .append(new ReadListNamesAction(list))
+                .append(new CheckNamesExistAction(list, names))
+                .get();
     }
 
     /** Every name the script adds to each Housing list, for lists it adds at least one entry to. */

@@ -2,12 +2,7 @@
 
 ## Open
 
-- [ ] `!=` comparison: compile `a != b` as an `==` condition with the condition's "Inverted" toggle on (variable and placeholder conditions).
-- [ ] Editor polish: autocomplete, the parameter-name hint (sometimes shown on a line that isn't part of the call) and the Ctrl+F bar feel janky.
-- [ ] Editor: horizontal scrollbar when code is wider than the editor.
 - [ ] Back button / logo / "(i)" overlap: the code editor header is fixed; no "(i)" element exists in NeoHouse's own screens, so if it still overlaps somewhere, note which screen.
-
-- [ ] Before anything else, check that every team (setTeam, hasTeam, team variables), layout (applyLayout) and group (setGroup, isGroup) the script uses exists: teams in `/teams` (one h6 page, max 14), layouts in `/layout` (paginated), groups in `/menu` -> "Permissions and Groups" (max 20, one page). Stop with a clear error listing the missing ones.
 
 ## Needs checking in game (done in code, can't be tested without Hypixel)
 
@@ -16,7 +11,9 @@
 - [ ] Commands and custom menus lists use the same layout as the functions list (entries in slots 10-34, next-page arrow in slot 53) for the pre-read.
 - [ ] Menu loading: a menu counts as loaded once it shows items that stay the same for 4 ticks (fixes "Could not find ..." on slow servers).
 - [ ] Custom Sound: playSound with a name that isn't a listed sound clicks "Custom Sound" and types the id.
-- [ ] 26.1 / 26.2 / 26.3 builds: compile and pass tests, but haven't been launched in game.
+- [ ] 26.1 / 26.2 / 26.3 builds: compile and pass tests, but haven't been launched in game. 26.3 uses SDL key codes (Keys compat set); default keybinds K and N should be checked there.
+- [ ] Team / layout / group check: names are read from item names in slots 10-34 of `/teams`, `/layout` and `/menu` -> "Permissions and Groups"; check those menus really list them there.
+- [ ] Editor: horizontal scrollbar, suggestion and parameter-hint behaviour (see Done).
 
 ## Done
 
@@ -48,3 +45,6 @@
 - Chat inputs assumed for every text field.
 - Teleport/location presets (HOUSE_SPAWN, INVOKER, CURRENT) are suggested in the editor.
 - Built-in library files are upgraded on existing installs unless the user edited them.
+- `!=` comparison (an `==` condition with Invert on).
+- Editor: parameter hints no longer appear on lines that aren't part of a call; suggestions only open while typing; find matches follow edits; horizontal scrollbar.
+- Before anything else, a run checks that every team, layout and group the script names exists, and stops listing the missing ones.

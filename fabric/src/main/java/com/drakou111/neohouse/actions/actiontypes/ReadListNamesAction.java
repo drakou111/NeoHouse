@@ -74,7 +74,8 @@ public class ReadListNamesAction extends Action {
         for (String name : readEntries(menu)) addedNew |= SequenceManager.recordExisting(this.list, name);
         if (!addedNew || ++this.pages >= MAX_PAGES) return true;
 
-        boolean hasNextPage = NEXT_PAGE_SLOT < menu.slots.size() && menu.slots.get(NEXT_PAGE_SLOT).hasItem();
+        boolean hasNextPage = this.list.paginated && NEXT_PAGE_SLOT < menu.slots.size()
+                && MenuSettling.isNextPageArrow(menu.slots.get(NEXT_PAGE_SLOT).getItem());
         if (!hasNextPage || mc.gameMode == null) return true;
         ContainerClicks.pickup(mc, menu.containerId, NEXT_PAGE_SLOT, 0);
         this.pageBeforeTurn = snapshot;
@@ -93,7 +94,7 @@ public class ReadListNamesAction extends Action {
         List<String> page = new ArrayList<>();
         for (int slot : ENTRY_SLOTS) {
             if (slot < menu.slots.size() && menu.slots.get(slot).hasItem())
-                page.add(menu.slots.get(slot).getItem().getHoverName().getString());
+                page.add(MenuSettling.plainName(menu.slots.get(slot).getItem()));
         }
         return page;
     }

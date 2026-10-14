@@ -8,7 +8,7 @@ public class Commands {
     public static final String COMMANDS = "/command";
     public static final String SCOREBOARD = "/scoreboard";
     public static final String LAYOUTS = "/layout";
-    public static final String TEAMS = "/team";
+    public static final String TEAMS = "/teams";
     public static final String REGIONS = "/region";
     public static final String CUSTOM_MENUS = "/custommenu";
 }

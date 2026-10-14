@@ -13,12 +13,10 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -33,7 +31,6 @@ import java.util.stream.Stream;
 public class SearchAction extends Action {
     private static final int STABLE_TICKS = 4;
     private static final int PAGE_TURN_TIMEOUT_TICKS = 60;
-    private static final String NEXT_PAGE_WORD = "next";
 
     private final int[] primarySlots;
     private final String targetName;
@@ -128,7 +125,7 @@ public class SearchAction extends Action {
 
         List<String> page = snapshot(menu, slots);
         Slot arrow = slots.length == 0 ? null : menu.getSlot(slots[slots.length - 1]);
-        if (!this.seenPages.add(page) || arrow == null || !isNextPageArrow(arrow.getItem()) || mc.gameMode == null) {
+        if (!this.seenPages.add(page) || arrow == null || !MenuSettling.isNextPageArrow(arrow.getItem()) || mc.gameMode == null) {
             discardStepsOf(this.onFound, this.onNotFound);
             this.step = Step.NOT_FOUND;
             return;
@@ -171,13 +168,6 @@ public class SearchAction extends Action {
                 && (this.itemType == null || stack.getItem() == this.itemType);
     }
 
-    private static boolean isNextPageArrow(ItemStack stack) {
-        if (stack.isEmpty()) return false;
-        String name = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
-        if (name.contains(NEXT_PAGE_WORD)) return true;
-        // "Go Back" and "Previous Page" are arrows too.
-        return stack.is(Items.ARROW) && !name.contains("back") && !name.contains("previous");
-    }
 
     private int[] searchSlots(AbstractContainerMenu menu) {
         if (this.primarySlots != null) return this.primarySlots;

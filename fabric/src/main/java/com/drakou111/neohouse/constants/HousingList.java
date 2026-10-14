@@ -1,23 +1,39 @@
 package com.drakou111.neohouse.constants;
 
-/** The paginated Housing lists the script can add entries to, with how many entries Housing allows. */
-public enum HousingList {
-    FUNCTIONS(Commands.FUNCTIONS, 300, "", "function"),
-    COMMANDS(Commands.COMMANDS, 50, "/", "command"),
-    MENUS(Commands.CUSTOM_MENUS, 200, "", "menu");
+import java.util.Optional;
 
-    /** Chat command that opens the list. */
+/** The Housing lists NeoHouse reads entries from, with how to open them and how many entries Housing allows. */
+public enum HousingList {
+    FUNCTIONS(Commands.FUNCTIONS, null, 300, true, "", "function"),
+    COMMANDS(Commands.COMMANDS, null, 50, true, "/", "command"),
+    MENUS(Commands.CUSTOM_MENUS, null, 200, true, "", "menu"),
+    TEAMS(Commands.TEAMS, null, 14, false, "", "team"),
+    // Housing doesn't document a layout limit; the list pages like functions.
+    LAYOUTS(Commands.LAYOUTS, null, Integer.MAX_VALUE, true, "", "layout"),
+    GROUPS(Commands.MENU, "Permissions and Groups", 20, false, "", "group");
+
+    /** Chat command that opens the list, or the menu holding {@link #openThrough}. */
     public final String openCommand;
+    private final String openThrough;
     public final int maxEntries;
+    /** Whether the list can span several pages (a next-page arrow in the last slot). */
+    public final boolean paginated;
     /** What the list shows in front of an entry's name (commands are listed as {@code /name}). */
     private final String displayPrefix;
     public final String singularName;
 
-    HousingList(String openCommand, int maxEntries, String displayPrefix, String singularName) {
+    HousingList(String openCommand, String openThrough, int maxEntries, boolean paginated, String displayPrefix, String singularName) {
         this.openCommand = openCommand;
+        this.openThrough = openThrough;
         this.maxEntries = maxEntries;
+        this.paginated = paginated;
         this.displayPrefix = displayPrefix;
         this.singularName = singularName;
+    }
+
+    /** The item to click in {@link #openCommand}'s menu to reach the list, when the command doesn't open it directly. */
+    public Optional<String> openThrough() {
+        return Optional.ofNullable(this.openThrough);
     }
 
     /** The item name an entry called {@code name} has in the list. */
