@@ -39,3 +39,6 @@ versions/
 # others
 .claude
 .architectury-transformer
+# local working folders
+scratch/
+output/
