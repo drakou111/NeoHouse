@@ -54,17 +54,6 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
 
     private record ArgLowerResult(NormalExpressionNode simple, List<StatementNode> stmts) {}
 
-    /** Returns the base function name, stripping any compiler-added $N copy suffix. */
-    private static String baseName(String name) {
-        int idx = name.lastIndexOf('$');
-        if (idx > 0) {
-            String tail = name.substring(idx + 1);
-            if (!tail.isEmpty() && tail.chars().allMatch(Character::isDigit))
-                return name.substring(0, idx);
-        }
-        return name;
-    }
-
     private ArgLowerResult lowerArgument(ExpressionNode expr) {
         if (expr instanceof FunctionCallNode tfc) {
             TypedFunctionNode def = typedFunctions.get(tfc.functionName);
@@ -83,7 +72,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             for (int i = 0; i < realArgs.size(); i++) {
                 NormalExpressionNode argExpr = realArgs.get(i);
                 VariableNode param = params.get(i);
-                String newName = baseName(tfc.functionName) + "_p$" + i;
+                String newName = CompilerNames.parameterSlot(tfc.functionName, i);
                 VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, tfc.token);
                 stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, argExpr, tfc.token));
             }
@@ -151,7 +140,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             ArgLowerResult lowered = lowerArgument(rawArgs.get(i));
             stmts.addAll(lowered.stmts());
             VariableNode param = params.get(i);
-            String newName = baseName(call.functionName) + "_p$" + i;
+            String newName = CompilerNames.parameterSlot(call.functionName, i);
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }
@@ -171,7 +160,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             ArgLowerResult lowered = lowerArgument(rawArgs.get(i));
             stmts.addAll(lowered.stmts());
             VariableNode param = params.get(i);
-            String newName = baseName(call.functionName) + "_p$" + i;
+            String newName = CompilerNames.parameterSlot(call.functionName, i);
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }
@@ -192,7 +181,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             ArgLowerResult lowered = lowerArgument(rawArgs.get(i));
             stmts.addAll(lowered.stmts());
             VariableNode param = params.get(i);
-            String newName = baseName(call.functionName) + "_p$" + i;
+            String newName = CompilerNames.parameterSlot(call.functionName, i);
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }
@@ -223,7 +212,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
         // Assign parameters
         for (int i = 0; i < realArgs.size(); i++) {
             VariableNode param = params.get(i);
-            String newName = baseName(node.functionName) + "_p$" + i;
+            String newName = CompilerNames.parameterSlot(node.functionName, i);
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, node.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, realArgs.get(i), node.token));
         }
@@ -260,7 +249,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             stmts.addAll(lowered.stmts());
 
             VariableNode param = params.get(i);
-            String newName = baseName(call.functionName) + "_p$" + i;
+            String newName = CompilerNames.parameterSlot(call.functionName, i);
             VariableNode target = new VariableNode(param.type, param.holder, newName, param.teamName, call.token);
             stmts.add(new AssignationNode(target, AssignmentOperator.ASSIGN, lowered.simple, call.token));
         }

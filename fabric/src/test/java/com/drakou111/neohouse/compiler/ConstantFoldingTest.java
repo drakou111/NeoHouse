@@ -44,9 +44,9 @@ class ConstantFoldingTest {
     @Test
     void constantPartsOfAnExpressionAreComputed() {
         assertThat(loweredBody("long p.a; long p.r;", "p.r = 2 + 3 * 4 + p.a;")).containsExactly(
-                "t$0 ASSIGN 14",
-                "t$0 ADD_ASSIGN a",
-                "r ASSIGN t$0");
+                "f$t0 ASSIGN 14",
+                "f$t0 ADD_ASSIGN a",
+                "r ASSIGN f$t0");
     }
 
     @Test
@@ -71,15 +71,15 @@ class ConstantFoldingTest {
     @Test
     void divisionByAConstantZeroIsLeftToHousing() {
         assertThat(loweredBody("long p.x;", "p.x = 1 / 0;")).containsExactly(
-                "t$0 ASSIGN 1",
-                "t$0 DIV_ASSIGN 0",
-                "x ASSIGN t$0");
+                "f$t0 ASSIGN 1",
+                "f$t0 DIV_ASSIGN 0",
+                "x ASSIGN f$t0");
     }
 
     @Test
     void userVariablesAreNeverFolded() {
         assertThat(loweredBody("long p.a; long p.r;", "p.r = p.a * 1 + 0;")).containsExactly(
-                "t$0 ASSIGN a",
-                "r ASSIGN t$0");
+                "f$t0 ASSIGN a",
+                "r ASSIGN f$t0");
     }
 }

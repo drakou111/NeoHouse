@@ -41,33 +41,33 @@ class ModuloTest {
     @Test
     void longModuloAssignment() {
         assertThat(loweredBody("long p.a; long p.b;", "p.a %= p.b;")).containsExactly(
-                "t$0 ASSIGN a",
-                "t$0 DIV_ASSIGN b",
-                "t$0 MUL_ASSIGN b",
-                "a SUB_ASSIGN t$0");
+                "f$t0 ASSIGN a",
+                "f$t0 DIV_ASSIGN b",
+                "f$t0 MUL_ASSIGN b",
+                "a SUB_ASSIGN f$t0");
     }
 
     @Test
     void doubleModuloTruncatesOnlyTheQuotient() {
         assertThat(loweredBody("double p.a; double p.b;", "p.a %= p.b;")).containsExactly(
-                "t$0 ASSIGN a",
-                "t$0 DIV_ASSIGN b",
-                "t$0 ASSIGN t$0(L)",
-                "t$0 ASSIGN t$0(D)",
-                "t$0 MUL_ASSIGN b",
-                "a SUB_ASSIGN t$0");
+                "f$t0 ASSIGN a",
+                "f$t0 DIV_ASSIGN b",
+                "f$t0 ASSIGN f$t0(L)",
+                "f$t0 ASSIGN f$t0(D)",
+                "f$t0 MUL_ASSIGN b",
+                "a SUB_ASSIGN f$t0");
     }
 
     @Test
     void moduloInsideAnExpression() {
         assertThat(loweredBody("long p.a; long p.r;", "p.r = p.a % 4 + 1;")).containsExactly(
-                "t$0 ASSIGN a",
-                "t$1 ASSIGN t$0",
-                "t$1 DIV_ASSIGN 4",
-                "t$1 MUL_ASSIGN 4",
-                "t$0 SUB_ASSIGN t$1",
-                "t$0 ADD_ASSIGN 1",
-                "r ASSIGN t$0");
+                "f$t0 ASSIGN a",
+                "f$t1 ASSIGN f$t0",
+                "f$t1 DIV_ASSIGN 4",
+                "f$t1 MUL_ASSIGN 4",
+                "f$t0 SUB_ASSIGN f$t1",
+                "f$t0 ADD_ASSIGN 1",
+                "r ASSIGN f$t0");
     }
 
     @Test
@@ -91,6 +91,6 @@ class ModuloTest {
 
     @Test
     void castVarCanBeUsedWithModulo() {
-        assertThat(loweredBody("long p.r; var p.v;", "p.r = (long) p.v % 3;")).endsWith("r ASSIGN t$0");
+        assertThat(loweredBody("long p.r; var p.v;", "p.r = (long) p.v % 3;")).endsWith("r ASSIGN f$t0");
     }
 }

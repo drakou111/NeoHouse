@@ -15,25 +15,13 @@ import java.util.Map;
 
 public class FunctionParamLoweringVisitor extends DefaultVisitor {
 
-    /** Returns the base function name, stripping any compiler-added $N copy suffix. */
-    private static String baseName(String name) {
-        int idx = name.lastIndexOf('$');
-        if (idx > 0) {
-            String tail = name.substring(idx + 1);
-            if (!tail.isEmpty() && tail.chars().allMatch(Character::isDigit))
-                return name.substring(0, idx);
-        }
-        return name;
-    }
-
     @Override
     public ASTNode visitTypedFunction(TypedFunctionNode function) {
         Map<HolderAndName, String> renameMap = new HashMap<>();
         List<VariableNode> params = function.parameters.parameters;
-        String base = baseName(function.name);
         for (int i = 0; i < params.size(); i++) {
             VariableNode param = params.get(i);
-            renameMap.put(new HolderAndName(param.holder, param.name), base + "_p$" + i);
+            renameMap.put(new HolderAndName(param.holder, param.name), CompilerNames.parameterSlot(function.name, i));
         }
 
         StatementListNode rewrittenBody = (StatementListNode) new FunctionBodyRewriter(renameMap).visitStatements(function.statements);
@@ -45,10 +33,9 @@ public class FunctionParamLoweringVisitor extends DefaultVisitor {
     public ASTNode visitTupleFunction(TupleFunctionNode function) {
         Map<HolderAndName, String> renameMap = new HashMap<>();
         List<VariableNode> params = function.parameters.parameters;
-        String base = baseName(function.name);
         for (int i = 0; i < params.size(); i++) {
             VariableNode param = params.get(i);
-            renameMap.put(new HolderAndName(param.holder, param.name), base + "_p$" + i);
+            renameMap.put(new HolderAndName(param.holder, param.name), CompilerNames.parameterSlot(function.name, i));
         }
 
         StatementListNode rewrittenBody = (StatementListNode) new FunctionBodyRewriter(renameMap).visitStatements(function.statements);
@@ -60,10 +47,9 @@ public class FunctionParamLoweringVisitor extends DefaultVisitor {
     public ASTNode visitVoidFunction(VoidFunctionNode function) {
         Map<HolderAndName, String> renameMap = new HashMap<>();
         List<VariableNode> params = function.parameters.parameters;
-        String base = baseName(function.name);
         for (int i = 0; i < params.size(); i++) {
             VariableNode param = params.get(i);
-            renameMap.put(new HolderAndName(param.holder, param.name), base + "_p$" + i);
+            renameMap.put(new HolderAndName(param.holder, param.name), CompilerNames.parameterSlot(function.name, i));
         }
 
         StatementListNode rewrittenBody = (StatementListNode) new FunctionBodyRewriter(renameMap).visitStatements(function.statements);

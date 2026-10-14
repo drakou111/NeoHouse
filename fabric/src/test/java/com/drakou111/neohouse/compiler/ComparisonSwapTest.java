@@ -51,6 +51,6 @@ class ComparisonSwapTest {
         VoidFunctionNode function = compile("", "ph.playerName() == \"TEST\"");
 
         assertThat(function.statements.statements).hasSize(2);
-        assertThat(((VariableNode) onlyComparison(function).left).name).startsWith("t$");
+        assertThat(((VariableNode) onlyComparison(function).left).name).startsWith("f$t");
     }
 }
