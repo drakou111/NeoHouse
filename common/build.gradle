@@ -100,9 +100,23 @@ def generatedLibraryDir = layout.buildDirectory.dir("generated/resources/library
 
 def generateLibraryIndex = tasks.register("generateLibraryIndex") {
     inputs.files(fileTree(libResourceDir).include("**/*.nh"))
+    inputs.file(new File(libResourceDir, "shipped_versions.txt"))
     def indexFile = generatedLibraryDir.get().file("assets/neohouse/library/index.txt").asFile
     outputs.file(indexFile)
     doLast {
+        // LibraryManager only upgrades extracted files that match a shipped version, so every
+        // current library file must be listed (hash of the text without carriage returns).
+        def shipped = new File(libResourceDir, "shipped_versions.txt").readLines()
+                .findAll { !it.startsWith("#") && !it.trim().isEmpty() }
+                .collect { it.trim() } as Set
+        fileTree(libResourceDir).include("**/*.nh").each { file ->
+            def path = libResourceDir.toURI().relativize(file.toURI()).toString().replace('\\', '/')
+            def text = file.getText("UTF-8").replace("\r", "")
+            def hash = java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes("UTF-8")).encodeHex().toString()
+            if (!shipped.contains("${hash} ${path}".toString()))
+                throw new GradleException("Library file ${path} changed: add this line to shipped_versions.txt:\n${hash} ${path}")
+        }
+
         indexFile.parentFile.mkdirs()
         indexFile.text = fileTree(libResourceDir).include("**/*.nh")
             .collect { libResourceDir.toURI().relativize(it.toURI()).toString().replace('\\', '/') }

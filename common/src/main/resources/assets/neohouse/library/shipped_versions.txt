@@ -1,0 +1,10 @@
+# SHA-256 (of the text with carriage returns removed) of every version of each library file that
+# NeoHouse has shipped, one "<hash> <path>" per line. LibraryManager replaces an extracted library
+# file only when it matches a line here, so files a user edited are never overwritten.
+# When a library file changes, add its new hash here; the build fails until you do.
+1aafaf2a80037572841ca709e09472bc534cdb732c636f3d219573afc8d76dfc neohouse/double_math.nh
+e08a6cb7065a871b6e89a0bf7ce880ead3133bdcd53cd99709840aa92f148bcc neohouse/double_math.nh
+6100fdcf64fab25203fc63431da2de4545394b92297eac45adc9ba6fae924dc2 neohouse/long_math.nh
+c912ae1255fc2f821efe650ec911e39637938edbed15f56c7c6e332f98a922c5 neohouse/long_math.nh
+00538c90c1867cb1200c9f01092bd417a1455ff6d83637e6c6a99c5491c854cb neohouse/trig.nh
+cdce085d7398e14e4c07767e3de4c4cb7c548ffd10ae534142f6380b6029b752 neohouse/trig.nh
