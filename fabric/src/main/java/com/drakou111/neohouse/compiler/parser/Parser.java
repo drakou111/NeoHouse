@@ -386,6 +386,7 @@ public class Parser {
 
         // Tuple return: return (e0, e1, ...);
         if (check(TokenType.LPAREN)) {
+            int beforeParen = this.pos;
             advance(); // consume '('
             List<NormalExpressionNode> exprs = new ArrayList<>();
             exprs.add(parseExpression());
@@ -397,10 +398,8 @@ public class Parser {
                 consume(TokenType.SEMI, "Expected ';' after return");
                 return new TupleReturnNode(exprs, returnToken);
             }
-            // Single expression in parens - treat as normal return
-            consume(TokenType.RPAREN, "Expected ')'");
-            consume(TokenType.SEMI, "Expected ';' after return expression");
-            return new TypedReturnNode(exprs.get(0), returnToken);
+            // Not a tuple: the parentheses only start an expression, as in return (x + 1) * 2;
+            this.pos = beforeParen;
         }
 
         NormalExpressionNode value = parseExpression();
