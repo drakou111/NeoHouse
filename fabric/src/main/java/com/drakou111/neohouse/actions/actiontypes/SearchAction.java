@@ -25,12 +25,12 @@ import java.util.stream.Stream;
  * Finds the item with a given name in the open menu and clicks it, turning pages when needed.
  *
  * <p>The target is clicked as soon as it shows up. "Not on this page" is only concluded once the menu
- * has loaded (it shows items) and its contents have stayed the same for a few ticks, so a slow
- * server can't make a present item look missing. A page turn waits until the contents change.</p>
+ * has loaded (see {@link MenuSettling}, which waits longer the laggier the server is), so a slow
+ * server can't make a present item look missing. A page turn waits until the contents change; one
+ * that never does is an error rather than "not found", which could make a run create a duplicate.</p>
  */
 public class SearchAction extends Action {
     private static final int STABLE_TICKS = 4;
-    private static final int PAGE_TURN_TIMEOUT_TICKS = 60;
 
     private final int[] primarySlots;
     private final String targetName;
@@ -47,7 +47,8 @@ public class SearchAction extends Action {
 
     private Step step = Step.SEARCH;
     private final MenuSettling settling = new MenuSettling(STABLE_TICKS);
-    private List<String> pageBeforeTurn = null;
+    private final PageTurn pageTurn;
+    private boolean started = false;
     private final Set<List<String>> seenPages = new HashSet<>();
     private int stepTicks = 0;
 
@@ -60,6 +61,7 @@ public class SearchAction extends Action {
         this.onFound = onFound;
         this.onNotFound = onNotFound;
         this.waitForFound = new WaitForAction(waitForAfterClick, waitForOpen, waitForAfterClick != ContainerScreen.class);
+        this.pageTurn = new PageTurn("menu while looking for '" + targetName + "'");
     }
 
     public SearchAction(int[] primarySlots, String targetName, Item itemType, boolean leftClick, Class<? extends Screen> waitForAfterClick, boolean waitForOpen, Action onFound, Action onNotFound) {
@@ -85,10 +87,14 @@ public class SearchAction extends Action {
     public boolean run(Minecraft mc) {
         if (mc.player == null) return true;
         AbstractContainerMenu menu = mc.player.containerMenu;
+        if (!this.started) {
+            this.started = true;
+            this.settling.expectLag(MenuSettling.pingTicks(mc));
+        }
 
         switch (this.step) {
             case SEARCH -> search(mc, menu);
-            case TURN_PAGE -> waitForPageTurn(menu);
+            case TURN_PAGE -> waitForPageTurn(mc, menu);
             case WAIT_FOUND -> {
                 if (this.waitForFound.run(mc) && this.waitTick.run(mc)) {
                     discardStepsOf(this.onNotFound, this.onFound);
@@ -110,6 +116,14 @@ public class SearchAction extends Action {
     }
 
     private void search(Minecraft mc, AbstractContainerMenu menu) {
+        if (!MenuSettling.isOpenMenu(mc, menu)) {
+            // Closed or between menus (a laggy reopen): the player's inventory isn't the menu to search.
+            if (++this.stepTicks > NeoHouseConfig.get().actionTimeoutTicks)
+                throw new InterruptActionException("Timed out waiting for a menu to search for '" + this.targetName + "'.");
+            this.settling.reset();
+            this.settling.expectLag(MenuSettling.pingTicks(mc));
+            return;
+        }
         int[] slots = searchSlots(menu);
         for (int index : slots) {
             if (index < 0 || index >= menu.slots.size()) continue;
@@ -132,20 +146,15 @@ public class SearchAction extends Action {
         }
 
         ContainerClicks.pickup(mc, menu.containerId, arrow.index, 0);
-        this.pageBeforeTurn = page;
-        this.stepTicks = 0;
+        this.pageTurn.start(page);
         this.step = Step.TURN_PAGE;
     }
 
-    private void waitForPageTurn(AbstractContainerMenu menu) {
-        if (++this.stepTicks > PAGE_TURN_TIMEOUT_TICKS) {
-            // The arrow did nothing: this was the last page.
-            discardStepsOf(this.onFound, this.onNotFound);
-            this.step = Step.NOT_FOUND;
-            return;
-        }
-        if (snapshot(menu, searchSlots(menu)).equals(this.pageBeforeTurn)) return;
+    private void waitForPageTurn(Minecraft mc, AbstractContainerMenu menu) {
+        List<String> now = MenuSettling.isOpenMenu(mc, menu) ? snapshot(menu, searchSlots(menu)) : List.of();
+        if (!this.pageTurn.hasTurned(now, NeoHouseConfig.get().actionTimeoutTicks)) return;
         resetSettling();
+        this.settling.expectLag(Math.max(MenuSettling.pingTicks(mc), this.pageTurn.responseTicks()));
         this.step = Step.SEARCH;
     }
 

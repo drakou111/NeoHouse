@@ -1,6 +1,8 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -13,32 +15,74 @@ import java.util.Locale;
 
 /**
  * Decides when an open Housing menu has finished loading: it shows at least one item and its item
- * names haven't changed for a few ticks. Servers send a menu's contents after opening it (and a page
+ * names haven't changed for long enough. Servers send a menu's contents after opening it (and a page
  * turn may send them piece by piece), so reading a menu any earlier can miss items that are there.
+ *
+ * <p>"Long enough" grows with lag: at least the base window, the expected lag (ping, or how long the
+ * last page turn took to answer), and twice the longest pause seen between two updates of this
+ * menu, so contents arriving in slow bursts aren't mistaken for a finished menu.</p>
  */
 final class MenuSettling {
-    private final int stableTicksNeeded;
-    private List<String> lastSnapshot = null;
-    private int stableTicks = 0;
+    // Caps the wait so even a very laggy server gets a decision well before the action timeout.
+    static final int MAX_STABLE_TICKS = 40;
+    private static final int MS_PER_TICK = 50;
 
-    MenuSettling(int stableTicksNeeded) {
-        this.stableTicksNeeded = stableTicksNeeded;
+    private final int baseStableTicks;
+    private int expectedLagTicks = 0;
+    private List<String> lastSnapshot = null;
+    private boolean loaded = false;
+    private int stableTicks = 0;
+    private int longestGap = 0;
+
+    MenuSettling(int baseStableTicks) {
+        this.baseStableTicks = baseStableTicks;
     }
 
     /** Call once per tick; true once the snapshot has been loaded and unchanged long enough. */
     boolean update(List<String> snapshot) {
-        boolean loaded = snapshot.stream().anyMatch(name -> !name.isEmpty());
-        if (!loaded || !snapshot.equals(this.lastSnapshot)) {
+        boolean hasItems = snapshot.stream().anyMatch(name -> !name.isEmpty());
+        if (!hasItems || !snapshot.equals(this.lastSnapshot)) {
+            // A change after the menu first showed items: remember how long that update took to come.
+            if (this.loaded && hasItems) this.longestGap = Math.max(this.longestGap, this.stableTicks + 1);
+            this.loaded |= hasItems;
             this.lastSnapshot = snapshot;
             this.stableTicks = 0;
             return false;
         }
-        return ++this.stableTicks >= this.stableTicksNeeded;
+        return ++this.stableTicks >= requiredStableTicks();
     }
 
+    /** How many unchanged ticks currently count as loaded. */
+    int requiredStableTicks() {
+        int needed = Math.max(this.baseStableTicks, Math.max(this.expectedLagTicks, 2 * this.longestGap));
+        return Math.min(MAX_STABLE_TICKS, needed);
+    }
+
+    /** Raises the window to at least {@code ticks}, e.g. the ping or a page turn's response time. */
+    void expectLag(int ticks) {
+        this.expectedLagTicks = Math.max(this.expectedLagTicks, ticks);
+    }
+
+    /** Starts over for a new menu or page; the expected lag is cleared too. */
     void reset() {
         this.lastSnapshot = null;
+        this.loaded = false;
         this.stableTicks = 0;
+        this.longestGap = 0;
+        this.expectedLagTicks = 0;
+    }
+
+    /** The player's ping from the tab list, in ticks (rounded up); 0 when unknown. */
+    static int pingTicks(Minecraft mc) {
+        if (mc.player == null || mc.getConnection() == null) return 0;
+        PlayerInfo info = mc.getConnection().getPlayerInfo(mc.player.getUUID());
+        if (info == null) return 0;
+        return (Math.max(0, info.getLatency()) + MS_PER_TICK - 1) / MS_PER_TICK;
+    }
+
+    /** Whether {@code menu} is a real open menu, not the player's own inventory left after a close. */
+    static boolean isOpenMenu(Minecraft mc, AbstractContainerMenu menu) {
+        return mc.player != null && menu != null && menu != mc.player.inventoryMenu;
     }
 
     /** An item's display name without color or formatting codes. */

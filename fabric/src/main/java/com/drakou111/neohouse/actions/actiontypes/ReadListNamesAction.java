@@ -18,8 +18,9 @@ import java.util.List;
  * without searching the list again.
  *
  * <p>Entries live in rows 1-3, columns 1-7 (slots 10-16, 19-25, 28-34). The last slot (53) is the
- * next-page arrow. Each page is read only once it has finished loading, and paging stops when a page
- * adds no new name (last page, or an arrow that didn't advance).</p>
+ * next-page arrow. Each page is read only once it has finished loading (see {@link MenuSettling}),
+ * and paging stops on a page without a next-page arrow or one that adds no new name. A page that
+ * never turns after clicking the arrow is an error, not the end of the list.</p>
  */
 public class ReadListNamesAction extends Action {
 
@@ -31,19 +32,20 @@ public class ReadListNamesAction extends Action {
     private static final int NEXT_PAGE_SLOT = 53;
     private static final int MAX_PAGES = 1000;
     private static final int STABLE_TICKS = 4;
-    private static final int PAGE_TURN_TIMEOUT_TICKS = 60;
 
     private enum Step { SETTLE, TURN_PAGE }
 
     private final HousingList list;
     private final MenuSettling settling = new MenuSettling(STABLE_TICKS);
+    private final PageTurn pageTurn;
     private Step step = Step.SETTLE;
-    private List<String> pageBeforeTurn = null;
+    private boolean started = false;
     private int pages = 0;
     private int stepTicks = 0;
 
     public ReadListNamesAction(HousingList list) {
         this.list = list;
+        this.pageTurn = new PageTurn(list.singularName + " list");
     }
 
     @Override
@@ -55,18 +57,26 @@ public class ReadListNamesAction extends Action {
     public boolean run(Minecraft mc) {
         if (mc.player == null) return true;
         AbstractContainerMenu menu = mc.player.containerMenu;
-        if (menu == null) return true;
+        int timeout = NeoHouseConfig.get().actionTimeoutTicks;
+        if (!this.started) {
+            this.started = true;
+            this.settling.expectLag(MenuSettling.pingTicks(mc));
+        }
 
         if (this.step == Step.TURN_PAGE) {
-            // Wait for the clicked arrow to swap the page in; no change means it was the last page.
-            if (++this.stepTicks > PAGE_TURN_TIMEOUT_TICKS) return true;
-            if (MenuSettling.snapshot(menu).equals(this.pageBeforeTurn)) return false;
-            startSettling();
+            List<String> now = MenuSettling.isOpenMenu(mc, menu) ? MenuSettling.snapshot(menu) : List.of();
+            if (!this.pageTurn.hasTurned(now, timeout)) return false;
+            startSettling(Math.max(MenuSettling.pingTicks(mc), this.pageTurn.responseTicks()));
             return false;
         }
 
-        if (++this.stepTicks > NeoHouseConfig.get().actionTimeoutTicks)
+        if (++this.stepTicks > timeout)
             throw new InterruptActionException("Timed out waiting for the " + this.list.singularName + " list to load.");
+        if (!MenuSettling.isOpenMenu(mc, menu)) {
+            // Closed or between menus (a laggy reopen): wait for the list to come back.
+            this.settling.reset();
+            return false;
+        }
         List<String> snapshot = MenuSettling.snapshot(menu);
         if (!this.settling.update(snapshot)) return false;
 
@@ -78,14 +88,14 @@ public class ReadListNamesAction extends Action {
                 && MenuSettling.isNextPageArrow(menu.slots.get(NEXT_PAGE_SLOT).getItem());
         if (!hasNextPage || mc.gameMode == null) return true;
         ContainerClicks.pickup(mc, menu.containerId, NEXT_PAGE_SLOT, 0);
-        this.pageBeforeTurn = snapshot;
-        this.stepTicks = 0;
+        this.pageTurn.start(snapshot);
         this.step = Step.TURN_PAGE;
         return false;
     }
 
-    private void startSettling() {
+    private void startSettling(int expectedLagTicks) {
         this.settling.reset();
+        this.settling.expectLag(expectedLagTicks);
         this.stepTicks = 0;
         this.step = Step.SETTLE;
     }

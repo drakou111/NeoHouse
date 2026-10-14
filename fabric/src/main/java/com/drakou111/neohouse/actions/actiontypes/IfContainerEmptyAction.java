@@ -2,6 +2,7 @@ package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.constants.Others;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.SequenceManager;
@@ -26,7 +27,6 @@ import java.util.stream.Stream;
 public class IfContainerEmptyAction extends Action {
     private static final int FIRST_ACTION_SLOT = 10;
     private static final int STABLE_TICKS = 3;
-    private static final int LOAD_TIMEOUT_TICKS = 100;
 
     private final String description;
     private final Predicate<AbstractContainerMenu> isLoaded;
@@ -35,6 +35,7 @@ public class IfContainerEmptyAction extends Action {
     private final Action ifNotEmpty;
     private final MenuSettling settling = new MenuSettling(STABLE_TICKS);
     private int waitedTicks = 0;
+    private boolean started = false;
     private boolean decided = false;
     private Action active = null;
 
@@ -73,7 +74,11 @@ public class IfContainerEmptyAction extends Action {
     public boolean run(Minecraft mc) {
         if (!this.decided) {
             AbstractContainerMenu menu = mc.player == null ? null : mc.player.containerMenu;
-            if (menu == null || !hasSettled(menu)) return false;
+            if (!this.started) {
+                this.started = true;
+                this.settling.expectLag(MenuSettling.pingTicks(mc));
+            }
+            if (!hasSettled(mc, menu)) return false;
 
             this.decided = true;
             this.active = this.isEmpty.test(menu) ? this.ifEmpty : this.ifNotEmpty;
@@ -89,11 +94,12 @@ public class IfContainerEmptyAction extends Action {
         return false;
     }
 
-    private boolean hasSettled(AbstractContainerMenu menu) {
-        if (++this.waitedTicks > LOAD_TIMEOUT_TICKS)
+    private boolean hasSettled(Minecraft mc, AbstractContainerMenu menu) {
+        if (++this.waitedTicks > NeoHouseConfig.get().actionTimeoutTicks)
             throw new InterruptActionException("Timed out waiting for the " + this.description + " to load.");
-        if (!this.isLoaded.test(menu)) {
+        if (!MenuSettling.isOpenMenu(mc, menu) || !this.isLoaded.test(menu)) {
             this.settling.reset();
+            this.settling.expectLag(MenuSettling.pingTicks(mc));
             return false;
         }
         return this.settling.update(MenuSettling.snapshot(menu));
