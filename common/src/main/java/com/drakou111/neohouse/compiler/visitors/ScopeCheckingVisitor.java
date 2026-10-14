@@ -154,14 +154,14 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         String fullname = var.holder + "." + var.name;
         if (var.wasBare && !isDeclaredAnywhere(fullname)) {
             throw new SemanticException(var.token,
-                    "Unknown identifier '" + var.name + "' — not a constant, function parameter, or declared variable. " +
+                    "Unknown identifier '" + var.name + "' - not a constant, function parameter, or declared variable. " +
                     "If you meant a player variable, use 'p." + var.name + "' or declare it at the top of the file.");
         }
         resolveOrDeclareGlobal(fullname, var.token, var);
         if (var.fallback != null && var.type != VariableType.VAR && var.fallback.type != var.type) {
             throw new SemanticException(var.token,
                     "Fallback value is a " + var.fallback.type + " but variable '" + var.name +
-                    "' is a " + var.type + " — they must be the same type.");
+                    "' is a " + var.type + " - they must be the same type.");
         }
         VariableNode copy = new VariableNode(var.type, var.holder, var.name, var.teamName, var.token);
         copy.fallback = var.fallback;

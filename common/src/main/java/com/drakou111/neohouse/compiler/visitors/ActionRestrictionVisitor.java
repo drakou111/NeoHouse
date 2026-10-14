@@ -145,7 +145,7 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     public ASTNode visitActionCall(ActionCallNode call) {
         AddAction act = AddAction.searchByName(call.name);
         if (act == null) {
-            throw new SemanticException(call.token, "Unknown action “" + call.name + "”");
+            throw new SemanticException(call.token, "Unknown action '" + call.name + "'");
         }
         ensureAllowed(act, call.token);
         return super.visitActionCall(call);

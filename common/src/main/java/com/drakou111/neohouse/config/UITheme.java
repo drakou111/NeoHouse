@@ -46,7 +46,7 @@ public enum UITheme {
     public int accent    ()          { return 0xFF000000    | accentRgb;     }
     public int accentTint(int alpha) { return (alpha << 24) | accentRgb;    }
 
-    /** Mid-tone between panel and accent — for subtle content dividers. */
+    /** Mid-tone between panel and accent - for subtle content dividers. */
     public int divider() {
         int r = (((accentRgb >> 16) & 0xFF) + ((panelRgb >> 16) & 0xFF)) >> 1;
         int g = (((accentRgb >>  8) & 0xFF) + ((panelRgb >>  8) & 0xFF)) >> 1;
@@ -54,7 +54,7 @@ public enum UITheme {
         return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
-    /** Accent scaled up so its brightest channel reaches 0xCC — for secondary/muted text. */
+    /** Accent scaled up so its brightest channel reaches 0xCC - for secondary/muted text. */
     public int muted() {
         int r = (accentRgb >> 16) & 0xFF;
         int g = (accentRgb >>  8) & 0xFF;

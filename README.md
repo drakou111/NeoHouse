@@ -8,7 +8,7 @@ Maintained by: @drakou111
 
 **NeoHouse** is a standalone replacement for [Housing Editor](https://www.housingeditor.com/) and [HTSL](https://github.com/BusterBrown1218/HTSL).
 
-Existing tools like Housing Editor rely on external dependencies such as ChatTriggers and web-based workflows. NeoHouse is code-oriented and fully in-game — no external websites required.
+Existing tools like Housing Editor rely on external dependencies such as ChatTriggers and web-based workflows. NeoHouse is code-oriented and fully in-game - no external websites required.
 
 NeoHouse's language has a bit more abstraction than HTSL, but still allows for 1:1 representations if used properly.
 
@@ -43,14 +43,14 @@ Choose the version and mod loader that matches your setup, then place the `.jar`
 
 ## Supported Versions
 
-- Minecraft 1.21.2 → 1.21.11
+- Minecraft 1.21.2 -> 1.21.11
 - Fabric and NeoForge
 
 ---
 
 # License
 
-**NeoHouse is All Rights Reserved.** The source is publicly viewable for transparency and reference only — you may view the code and use the official compiled releases, but copying, modifying, redistributing, or re-uploading the mod is not permitted without written permission. See [LICENSE](LICENSE) for the full terms.
+**NeoHouse is All Rights Reserved.** The source is publicly viewable for transparency and reference only - you may view the code and use the official compiled releases, but copying, modifying, redistributing, or re-uploading the mod is not permitted without written permission. See [LICENSE](LICENSE) for the full terms.
 
 ---
 

@@ -743,7 +743,7 @@ public class CodeGenerator {
             case StringValue s -> s.value;
             case LongValue l -> l.toString();
             case DoubleValue d -> d.toString();
-            // Bools are stored in Housing as the number 1/0 — must match
+            // Bools are stored in Housing as the number 1/0 - must match
             // primitiveToInitString so declared and assigned/compared bools agree.
             case BoolValue b -> b.value ? "1" : "0";
         };

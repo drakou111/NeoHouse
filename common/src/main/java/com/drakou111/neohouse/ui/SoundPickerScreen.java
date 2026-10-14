@@ -65,7 +65,7 @@ public class SoundPickerScreen extends ScreenBase {
     protected void init() {
         searchBox = new EditBox(this.font, PAD, 28, this.width - 2 * PAD - 4, 16, Component.literal("Search"));
         searchBox.setMaxLength(64);
-        searchBox.setHint(Component.literal("Search sounds…"));
+        searchBox.setHint(Component.literal("Search sounds..."));
         searchBox.setResponder(s -> applyFilter());
         addRenderableWidget(searchBox);
         setInitialFocus(searchBox);
@@ -109,7 +109,7 @@ public class SoundPickerScreen extends ScreenBase {
         g.fill(0, HEADER_H - 1, width, HEADER_H, t.accent());
         int logoSize = 18;
         RenderHelper.renderLogo(g, PAD, 4, logoSize, t.accent());
-        g.drawString(font, melodicOnly ? "Pick Sound — note blocks only" : "Pick Sound", PAD + logoSize + 4, 9, 0xFFFFFFFF);
+        g.drawString(font, melodicOnly ? "Pick Sound - note blocks only" : "Pick Sound", PAD + logoSize + 4, 9, 0xFFFFFFFF);
 
         g.fill(0, height - FOOTER_H, width, height, t.panel(o.bgAlpha));
         g.fill(0, height - FOOTER_H, width, height - FOOTER_H + 1, t.accent());

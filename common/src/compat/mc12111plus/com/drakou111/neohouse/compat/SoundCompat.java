@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * Version-specific sound-registry access. Isolated here because the id type is
  * named {@code Identifier} in 1.21.9+ but {@code ResourceLocation} in 1.21.8 and
- * earlier — {@code common/src/main} must stay type-agnostic (Strings only).
+ * earlier - {@code common/src/main} must stay type-agnostic (Strings only).
  */
 public final class SoundCompat {
 

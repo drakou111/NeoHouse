@@ -56,7 +56,7 @@ public class ReturnContextChecker extends EmptyVisitor<Void> {
     @Override
     public Void visitTypedReturn(TypedReturnNode ret) {
         if (!inTypedFunction) {
-            throw new SemanticException(ret.token, "Cannot return a single value here — use 'return (e0, e1, ...);' in a tuple function");
+            throw new SemanticException(ret.token, "Cannot return a single value here - use 'return (e0, e1, ...);' in a tuple function");
         }
         ret.expression.accept(this);
         if (functionType != ret.expression.type && functionType != VariableType.VAR)

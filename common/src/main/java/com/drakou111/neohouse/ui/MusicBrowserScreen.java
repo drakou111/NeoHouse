@@ -130,7 +130,7 @@ public class MusicBrowserScreen extends ScreenBase {
         int logoSize = 18;
         RenderHelper.renderLogo(g, PAD, (8 + 28 - logoSize) / 2, logoSize, t.accent());
         int textX = PAD + logoSize + 4;
-        g.drawString(font, "NeoHouse — Music", textX, 8, 0xFFFFFFFF);
+        g.drawString(font, "NeoHouse - Music", textX, 8, 0xFFFFFFFF);
         String rel = rootPath.equals(currentPath) ? "/"
                 : "/" + rootPath.relativize(currentPath).toString().replace('\\', '/') + "/";
         g.drawString(font, rel, textX, 20, t.muted());
@@ -360,7 +360,7 @@ public class MusicBrowserScreen extends ScreenBase {
         }
         String suggested = MusicFunctionExporter.sanitizeFunctionName(project.name);
         Minecraft.getInstance().setScreen(new InputDialogScreen(
-                "Export as function — file name:", suggested, this,
+                "Export as function - file name:", suggested, this,
                 raw -> {
                     String fnName = MusicFunctionExporter.sanitizeFunctionName(raw);
                     Path target = CommandActions.getScriptsDir().resolve(fnName + ".nh");
@@ -377,7 +377,7 @@ public class MusicBrowserScreen extends ScreenBase {
     private void writeExport(MusicProject project, String fnName, Path target) {
         try {
             Files.writeString(target, MusicFunctionExporter.toScript(project, fnName));
-            MessageUtils.debugToChat("Exported to neohouse-scripts/" + fnName + ".nh — open the File Browser to run it.");
+            MessageUtils.debugToChat("Exported to neohouse-scripts/" + fnName + ".nh - open the File Browser to run it.");
         } catch (IOException e) {
             MessageUtils.errorToChat("Export failed: " + e.getMessage());
         }

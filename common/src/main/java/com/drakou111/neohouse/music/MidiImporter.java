@@ -122,7 +122,7 @@ public final class MidiImporter {
         // detected subdivision: many MIDIs (e.g. the original DOOM tracks, which are a 140 Hz
         // event stream, not musically quantized) have no clean subdivision, and forcing one
         // both drags the tempo off and makes steady runs uneven. Each note simply rounds to the
-        // nearest game tick — the most faithful the 20 tps engine allows.
+        // nearest game tick - the most faithful the 20 tps engine allows.
         int ticksPerBeat = 10; // neutral default (used for gridDivision on SMPTE files)
         if (ppq) {
             double idealTicksPerBeat = MusicProject.TICKS_PER_SECOND * (firstTempo / 1_000_000.0);
@@ -134,7 +134,7 @@ public final class MidiImporter {
                 if (ppq) {
                     n.tick = Math.max(0, (int) Math.round(n.tick / resolution * ticksPerBeat));
                 } else {
-                    // SMPTE (absolute-time) files carry no beat grid — fall back to seconds.
+                    // SMPTE (absolute-time) files carry no beat grid - fall back to seconds.
                     n.tick = Math.max(0, (int) Math.round(n.tick / smpteTicksPerSec * MusicProject.TICKS_PER_SECOND));
                 }
             }

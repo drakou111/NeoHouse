@@ -89,18 +89,18 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Commands"));
-        l.add(new HelpLine(COL_C, "  /nh                    — open home screen"));
-        l.add(new HelpLine(COL_C, "  /nh help               — open this help screen"));
-        l.add(new HelpLine(COL_C, "  /nh copyitem           — copies the data of the held item"));
-        l.add(new HelpLine(COL_C, "  /nh giveitem           — gives the item with the given data"));
-        l.add(new HelpLine(COL_C, "  /nh files              — open file browser"));
-        l.add(new HelpLine(COL_C, "  /nh run <file>         — compile & run a script"));
-        l.add(new HelpLine(COL_C, "  /nh rerun              — re-run last script"));
-        l.add(new HelpLine(COL_C, "  /nh config             — open config screen"));
-        l.add(new HelpLine(COL_C, "  /nh list functions     — list helper functions from last run"));
-        l.add(new HelpLine(COL_C, "  /nh list variables     — list extra variables from last run"));
-        l.add(new HelpLine(COL_C, "  /nh delete <section>   — deletes a specific section"));
-        l.add(new HelpLine(COL_C, "  /nh nuke               — delete everything"));
+        l.add(new HelpLine(COL_C, "  /nh                    - open home screen"));
+        l.add(new HelpLine(COL_C, "  /nh help               - open this help screen"));
+        l.add(new HelpLine(COL_C, "  /nh copyitem           - copies the data of the held item"));
+        l.add(new HelpLine(COL_C, "  /nh giveitem           - gives the item with the given data"));
+        l.add(new HelpLine(COL_C, "  /nh files              - open file browser"));
+        l.add(new HelpLine(COL_C, "  /nh run <file>         - compile & run a script"));
+        l.add(new HelpLine(COL_C, "  /nh rerun              - re-run last script"));
+        l.add(new HelpLine(COL_C, "  /nh config             - open config screen"));
+        l.add(new HelpLine(COL_C, "  /nh list functions     - list helper functions from last run"));
+        l.add(new HelpLine(COL_C, "  /nh list variables     - list extra variables from last run"));
+        l.add(new HelpLine(COL_C, "  /nh delete <section>   - deletes a specific section"));
+        l.add(new HelpLine(COL_C, "  /nh nuke               - delete everything"));
         l.add(new HelpLine(COL_D, ""));
 
         return l;
@@ -110,18 +110,18 @@ public class HelpScreen extends ScreenBase {
         List<HelpLine> l = new ArrayList<>();
 
         l.add(new HelpLine(COL_H, "Types"));
-        l.add(new HelpLine(COL_C, "  long   — whole numbers (e.g. 42)"));
-        l.add(new HelpLine(COL_C, "  double — decimal numbers (e.g. 3.14d)"));
-        l.add(new HelpLine(COL_C, "  string — text (e.g. \"hello\")"));
-        l.add(new HelpLine(COL_C, "  bool   — true or false"));
-        l.add(new HelpLine(COL_C, "  var    — untyped, no compile-time checking"));
+        l.add(new HelpLine(COL_C, "  long   - whole numbers (e.g. 42)"));
+        l.add(new HelpLine(COL_C, "  double - decimal numbers (e.g. 3.14d)"));
+        l.add(new HelpLine(COL_C, "  string - text (e.g. \"hello\")"));
+        l.add(new HelpLine(COL_C, "  bool   - true or false"));
+        l.add(new HelpLine(COL_C, "  var    - untyped, no compile-time checking"));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Variables & Holders"));
         l.add(new HelpLine(COL_T, "  Variables are scoped to a holder:"));
-        l.add(new HelpLine(COL_C, "    p.name        — player variable"));
-        l.add(new HelpLine(COL_C, "    g.name        — global variable (shared)"));
-        l.add(new HelpLine(COL_C, "    t[team].name  — team variable"));
+        l.add(new HelpLine(COL_C, "    p.name        - player variable"));
+        l.add(new HelpLine(COL_C, "    g.name        - global variable (shared)"));
+        l.add(new HelpLine(COL_C, "    t[team].name  - team variable"));
         l.add(new HelpLine(COL_T, "  Declare at the top of your file:"));
         l.add(new HelpLine(COL_CODE, "    string g.word = \"N/A\";"));
         l.add(new HelpLine(COL_CODE, "    long g.count;"));
@@ -142,7 +142,7 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Constants"));
-        l.add(new HelpLine(COL_T, "  Named compile-time values — inlined with no runtime cost:"));
+        l.add(new HelpLine(COL_T, "  Named compile-time values - inlined with no runtime cost:"));
         l.add(new HelpLine(COL_CODE, "    const long MAX_SCORE = 100;"));
         l.add(new HelpLine(COL_CODE, "    const string PREFIX = \"[Game]\";"));
         l.add(new HelpLine(COL_T, "  Use the name anywhere a literal is valid:"));
@@ -179,9 +179,9 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Casting"));
-        l.add(new HelpLine(COL_C, "  (long)x     — truncate to whole number"));
-        l.add(new HelpLine(COL_C, "  (double)x   — convert to decimal"));
-        l.add(new HelpLine(COL_C, "  (string)x   — convert to string"));
+        l.add(new HelpLine(COL_C, "  (long)x     - truncate to whole number"));
+        l.add(new HelpLine(COL_C, "  (double)x   - convert to decimal"));
+        l.add(new HelpLine(COL_C, "  (string)x   - convert to string"));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "String Concatenation"));
@@ -206,7 +206,7 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_CODE, "      return a + b;"));
         l.add(new HelpLine(COL_CODE, "    }"));
         l.add(new HelpLine(COL_CODE, "    long result = add(1, 2);"));
-        l.add(new HelpLine(COL_T, "  Parameters are passed by value — changes inside"));
+        l.add(new HelpLine(COL_T, "  Parameters are passed by value - changes inside"));
         l.add(new HelpLine(COL_T, "  the function do not affect the original variable."));
         l.add(new HelpLine(COL_D, "  Function names cannot clash with built-in actions."));
         l.add(new HelpLine(COL_T, "  Any function can be called as void (return discarded):"));
@@ -243,7 +243,7 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_CODE, "    if (p.score >= 100 && isSneaking(false)) {"));
         l.add(new HelpLine(COL_CODE, "      message(\"Done!\");"));
         l.add(new HelpLine(COL_CODE, "    } else { ... }"));
-        l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) — not both in one expression."));
+        l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) - not both in one expression."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Override Modes"));
@@ -275,7 +275,7 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_H, "Repeat"));
         l.add(new HelpLine(COL_T, "  Unrolls its body N times at compile time:"));
         l.add(new HelpLine(COL_CODE, "    repeat(3) { message(\"tick\"); }"));
-        l.add(new HelpLine(COL_D, "  Not a runtime loop — the actions are literally copied."));
+        l.add(new HelpLine(COL_D, "  Not a runtime loop - the actions are literally copied."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Events"));
@@ -310,22 +310,22 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_H, "Recursion"));
         l.add(new HelpLine(COL_T, "  Functions that call themselves directly or indirectly."));
         l.add(new HelpLine(COL_T, "  The compiler detects cycles in the call graph, e.g.:"));
-        l.add(new HelpLine(COL_T, "  \"Recursive call: a → b → a\". The recursionMode config"));
+        l.add(new HelpLine(COL_T, "  \"Recursive call: a -> b -> a\". The recursionMode config"));
         l.add(new HelpLine(COL_T, "  controls how it is handled:"));
-        l.add(new HelpLine(COL_C, "    Off   — allowed silently"));
-        l.add(new HelpLine(COL_C, "    Warn  — allowed, but reported (default)"));
-        l.add(new HelpLine(COL_C, "    Error — compilation fails"));
+        l.add(new HelpLine(COL_C, "    Off   - allowed silently"));
+        l.add(new HelpLine(COL_C, "    Warn  - allowed, but reported (default)"));
+        l.add(new HelpLine(COL_C, "    Error - compilation fails"));
         l.add(new HelpLine(COL_D, "  Hypixel Housing does not officially support recursive"));
-        l.add(new HelpLine(COL_D, "  functions — enable only if you know what you are doing."));
+        l.add(new HelpLine(COL_D, "  functions - enable only if you know what you are doing."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Multi-call behavior"));
         l.add(new HelpLine(COL_T, "  Calling the same function more than once in a single"));
         l.add(new HelpLine(COL_T, "  execution context (directly or transitively) causes issues"));
         l.add(new HelpLine(COL_T, "  in Hypixel Housing. The multiCallMode config controls this:"));
-        l.add(new HelpLine(COL_C, "    Off  — no check performed"));
-        l.add(new HelpLine(COL_C, "    Warn — compile error if a multi-call is detected"));
-        l.add(new HelpLine(COL_C, "    Fix  — auto-create copies (foo$0, foo$1, ...) so"));
+        l.add(new HelpLine(COL_C, "    Off  - no check performed"));
+        l.add(new HelpLine(COL_C, "    Warn - compile error if a multi-call is detected"));
+        l.add(new HelpLine(COL_C, "    Fix  - auto-create copies (foo$0, foo$1, ...) so"));
         l.add(new HelpLine(COL_C, "           each invocation uses a unique function name"));
         l.add(new HelpLine(COL_D, "  Configure via /nh config or in neohouse-config.json."));
         l.add(new HelpLine(COL_D, ""));
@@ -334,13 +334,13 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_T, "  Functions called via 'global foo()' are triggered for"));
         l.add(new HelpLine(COL_T, "  every player. Two restrictions apply:"));
         l.add(new HelpLine(COL_C, "    1. A globally-called function cannot itself contain"));
-        l.add(new HelpLine(COL_C, "       'global ...' calls — this would be doubly-global."));
+        l.add(new HelpLine(COL_C, "       'global ...' calls - this would be doubly-global."));
         l.add(new HelpLine(COL_C, "    2. Loops run for all players and cannot contain"));
         l.add(new HelpLine(COL_C, "       'global ...' calls for the same reason."));
         l.add(new HelpLine(COL_T, "  The globalCallMode config controls enforcement:"));
-        l.add(new HelpLine(COL_C, "    Off   — allowed silently"));
-        l.add(new HelpLine(COL_C, "    Warn  — allowed, but reported"));
-        l.add(new HelpLine(COL_C, "    Error — compilation fails (default)"));
+        l.add(new HelpLine(COL_C, "    Off   - allowed silently"));
+        l.add(new HelpLine(COL_C, "    Warn  - allowed, but reported"));
+        l.add(new HelpLine(COL_C, "    Error - compilation fails (default)"));
         l.add(new HelpLine(COL_D, ""));
 
         return l;
@@ -401,7 +401,7 @@ public class HelpScreen extends ScreenBase {
 
         // ── 5. Functions ──────────────────────────────────────────────────────
         l.add(new HelpLine(COL_H, "5. Functions"));
-        l.add(new HelpLine(COL_T, "  Reusable logic — void and typed."));
+        l.add(new HelpLine(COL_T, "  Reusable logic - void and typed."));
         l.add(new HelpLine(COL_CODE, "  function greet() {"));
         l.add(new HelpLine(COL_CODE, "    message(\"Hello, player!\");"));
         l.add(new HelpLine(COL_CODE, "  }"));
@@ -414,7 +414,7 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_CODE, "    greet();"));
         l.add(new HelpLine(COL_CODE, "    long result = double(5);"));
         l.add(new HelpLine(COL_CODE, "  }"));
-        l.add(new HelpLine(COL_D, "  Parameters are copied — changes inside don't affect callers."));
+        l.add(new HelpLine(COL_D, "  Parameters are copied - changes inside don't affect callers."));
         l.add(new HelpLine(COL_D, ""));
 
         // ── 6. Custom Command ─────────────────────────────────────────────────
@@ -693,7 +693,7 @@ public class HelpScreen extends ScreenBase {
         g.fillGradient(0, 0, this.width, this.height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
         g.fill(0, 0, this.width, HEADER_H, t.panel(o.panelAlpha));
         RenderHelper.renderLogo(g, PAD + 56, 4, 18, t.accent());
-        g.drawString(this.font, "NeoHouse — Help", PAD + 56 + 22, 9, 0xFFFFFFFF);
+        g.drawString(this.font, "NeoHouse - Help", PAD + 56 + 22, 9, 0xFFFFFFFF);
         g.fill(0, HEADER_H, this.width, HEADER_H + 1, t.accent());
 
         int tabY = HEADER_H + 1;

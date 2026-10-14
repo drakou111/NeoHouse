@@ -127,7 +127,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         for (int i = 0; i < list.size(); i++) {
             StatementNode s = list.get(i);
             AddAction a = extractAction(s);
-            // ConditionalNodes and RandomNodes must stay in the outer scope — no nesting.
+            // ConditionalNodes and RandomNodes must stay in the outer scope - no nesting.
             boolean mustGoOuter = s instanceof ConditionalNode || s instanceof RandomNode;
 
             if (!inCondition && condBuffer != null) {

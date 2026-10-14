@@ -90,7 +90,7 @@ public class RecursionCheckVisitor {
             List<String> pathList = new ArrayList<>(path);
             int cycleStart = pathList.indexOf(node);
             List<String> cycle = pathList.subList(cycleStart, pathList.size());
-            String msg = "Recursive call: " + String.join(" → ", cycle) + " → " + node;
+            String msg = "Recursive call: " + String.join(" -> ", cycle) + " -> " + node;
             // Find a token from the function definition
             com.drakou111.neohouse.compiler.lexer.Token token = null;
             if (voidDefs.containsKey(node)) token = voidDefs.get(node).token;

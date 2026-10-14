@@ -79,7 +79,7 @@ public class MidiImportScreen extends ScreenBase {
         RenderHelper.renderOutline(g, dialogX, dialogY, W, dialogH, t.accent());
         g.fill(dialogX, dialogY, dialogX + W, dialogY + TITLE_H, t.panel(0xFF));
         g.fill(dialogX, dialogY + TITLE_H - 1, dialogX + W, dialogY + TITLE_H, t.accent());
-        g.drawCenteredString(font, "Import MIDI → Music", dialogX + W / 2, dialogY + (TITLE_H - 8) / 2, t.muted());
+        g.drawCenteredString(font, "Import MIDI -> Music", dialogX + W / 2, dialogY + (TITLE_H - 8) / 2, t.muted());
 
         int ty = dialogY + TITLE_H + PAD;
         g.drawString(font, "Importing: " + midiFile.getFileName(), dialogX + PAD, ty, t.muted(), false);

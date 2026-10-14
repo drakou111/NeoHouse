@@ -140,7 +140,7 @@ public class MusicEditorScreen extends ScreenBase {
         for (int i = 0; i < project.tracks.size(); i++) {
             MusicTrack tr = project.tracks.get(i);
             int by = trackRowY(i) + 17;
-            if (by + 11 > height - FOOTER_H) break; // panel full — remaining tracks not shown
+            if (by + 11 > height - FOOTER_H) break; // panel full - remaining tracks not shown
             addPanelBtn(tr.muted ? "Unm" : "Mut", 4,  by, b -> { activeTrack(tr); tr.muted = !tr.muted; markDirty(); rebuildAll(); });
             addPanelBtn("Snd", 32, by, b -> { activeTrack(tr); pickSoundFor(tr); });
             addPanelBtn("Ren", 60, by, b -> { activeTrack(tr); renameTrack(tr); });
@@ -208,7 +208,7 @@ public class MusicEditorScreen extends ScreenBase {
         MusicTrack tr = active();
         int rh = rowH();
 
-        // pitch rows (row 12 = pitch 1.0) — drawn for every track since Y = pitch
+        // pitch rows (row 12 = pitch 1.0) - drawn for every track since Y = pitch
         for (int s = 0; s < SEMITONES; s++) {
             int y = gy0 + (24 - s) * rh;
             boolean base = (s == 12);
@@ -216,7 +216,7 @@ public class MusicEditorScreen extends ScreenBase {
             g.fill(gx0, y, gx0 + gw, y + rh, shade);
         }
 
-        // when zoomed out the grid gets crowded — drop the per-tick minor lines,
+        // when zoomed out the grid gets crowded - drop the per-tick minor lines,
         // and drop beat lines too once they'd be closer than a few pixels
         int beatEvery = Math.max(1, project.gridDivision);
         boolean drawMinor = tickW >= 9;
@@ -254,7 +254,7 @@ public class MusicEditorScreen extends ScreenBase {
             int nh = rh;
             int x2 = Math.min(gx0 + gw, nx + tickW - 1);
 
-            // volume (0..2) → background opacity: louder notes are brighter
+            // volume (0..2) -> background opacity: louder notes are brighter
             int alpha = 0x30 + (int) Math.round(Math.min(1.0, tr.volumeFor(n) / 2.0) * 0xC0);
             if (dim) alpha /= 2;
             g.fill(nx + 1, ny + 1, x2, ny + nh - 1, (alpha << 24) | rgb);
@@ -313,8 +313,8 @@ public class MusicEditorScreen extends ScreenBase {
 
     private String trimTo(String s, int px) {
         if (font.width(s) <= px) return s;
-        while (s.length() > 1 && font.width(s + "…") > px) s = s.substring(0, s.length() - 1);
-        return s + "…";
+        while (s.length() > 1 && font.width(s + "...") > px) s = s.substring(0, s.length() - 1);
+        return s + "...";
     }
 
     private int hsbTotal() { return Math.max(project.lengthTicks() + 8, visibleTicks()); }
@@ -564,7 +564,7 @@ public class MusicEditorScreen extends ScreenBase {
     private void exportFunction() {
         String suggested = MusicFunctionExporter.sanitizeFunctionName(project.name);
         minecraft.setScreen(new InputDialogScreen(
-                "Export as function — file name:", suggested, this,
+                "Export as function - file name:", suggested, this,
                 raw -> {
                     String fnName = MusicFunctionExporter.sanitizeFunctionName(raw);
                     Path target = CommandActions.getScriptsDir().resolve(fnName + ".nh");

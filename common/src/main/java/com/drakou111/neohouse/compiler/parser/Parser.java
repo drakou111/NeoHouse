@@ -396,7 +396,7 @@ public class Parser {
                 consume(TokenType.SEMI, "Expected ';' after return");
                 return new TupleReturnNode(exprs, returnToken);
             }
-            // Single expression in parens — treat as normal return
+            // Single expression in parens - treat as normal return
             consume(TokenType.RPAREN, "Expected ')'");
             consume(TokenType.SEMI, "Expected ';' after return expression");
             return new TypedReturnNode(exprs.get(0), returnToken);
@@ -617,7 +617,7 @@ public class Parser {
 
             int slotId = Integer.parseInt(slotToken.text.substring(4));
             if (slotId < 0 || slotId > maxSlotId)
-                throw new ParsingException(slotToken, "Slot " + slotId + " out of range for a " + rows + "-row menu (0–" + maxSlotId + ")");
+                throw new ParsingException(slotToken, "Slot " + slotId + " out of range for a " + rows + "-row menu (0-" + maxSlotId + ")");
             if (!usedSlots.add(slotId))
                 throw new ParsingException(slotToken, "Duplicate slot definition: slot" + slotId);
 
@@ -678,8 +678,8 @@ public class Parser {
                     args.add(parseExpression());
                 } while (match(TokenType.COMMA));
             }
-            consume(TokenType.RPAREN, "Expect ')' after arguments");
-            consume(TokenType.SEMI, "Expect ';' after call");
+            consume(TokenType.RPAREN, "Expected ')' after arguments");
+            consume(TokenType.SEMI, "Expected ';' after call");
             return new VoidFunctionCallNode(nameToken.text, new ArgumentListNode(args), nameToken);
         }
 
@@ -722,7 +722,7 @@ public class Parser {
 
         String result = snbt.toString();
         if (result.replaceAll("\\s+", "").equals("{}")) {
-            throw new ParsingException(open, "An item cannot be empty — provide at least an id field.");
+            throw new ParsingException(open, "An item cannot be empty - provide at least an id field.");
         }
         return result;
     }
@@ -801,7 +801,7 @@ public class Parser {
                 return new ConstantPrimitiveNode(new BoolValue(false), VariableType.BOOL, token);
             case LPAREN:
                 NormalExpressionNode expr = parseExpression();
-                consume(TokenType.RPAREN, "Expect ')' after expression.");
+                consume(TokenType.RPAREN, "Expected ')' after expression.");
                 return expr;
             case IDENT: {
                 // Qualified enum access: Color.GREEN -> its ordinal, tagged with the enum name.
@@ -835,7 +835,7 @@ public class Parser {
                             args.add(parseExpression());
                         } while (match(TokenType.COMMA));
                     }
-                    consume(TokenType.RPAREN, "Expect ')' after arguments");
+                    consume(TokenType.RPAREN, "Expected ')' after arguments");
                     return new FunctionCallNode(token.text, new ArgumentListNode(args), null, token);
                 }
 
@@ -888,12 +888,12 @@ public class Parser {
     }
 
     private ExpressionNode parseConditionClause() {
-        // or a condition‐built‐in
+        // or a condition-built-in
         if (check(TokenType.IDENT) && AddCondition.searchByName(peek().text) != null && checkTwo(TokenType.LPAREN)) {
             return parseConditionCall();
         }
 
-        // attempt a normal “a < b” style clause
+        // attempt a normal "a < b" style clause
         NormalExpressionNode left = parseExpression();
         if (isNextBooleanOperator()) {
             Token opToken = advance();
@@ -960,7 +960,7 @@ public class Parser {
 
         // x++; and x--; as shorthand for x += 1 and x -= 1
         if (operatorToken.type == TokenType.PLUS_PLUS || operatorToken.type == TokenType.MINUS_MINUS) {
-            consume(TokenType.SEMI, "Expect ';' after ++/--");
+            consume(TokenType.SEMI, "Expected ';' after ++/--");
             AssignmentOperator op = operatorToken.type == TokenType.PLUS_PLUS
                     ? AssignmentOperator.ADD_ASSIGN : AssignmentOperator.SUB_ASSIGN;
             NormalExpressionNode one = new ConstantPrimitiveNode(new LongValue(1L), VariableType.LONG, operatorToken);
@@ -969,7 +969,7 @@ public class Parser {
 
         AssignmentOperator operator = parseAssignmentOperatorFromToken(operatorToken);
         NormalExpressionNode expression = parseExpression();
-        consume(TokenType.SEMI, "Expect ';' after assignation");
+        consume(TokenType.SEMI, "Expected ';' after assignation");
         return new AssignationNode(variableNode, operator, expression, operatorToken);
     }
 
@@ -1005,7 +1005,7 @@ public class Parser {
     public DeclarationNode parseDeclaration() {
         VariableNode var = parseTypedVariable();
         if (var.enumName != null) varEnumType.put(var.holder + "." + var.name, var.enumName);
-        consume(TokenType.SEMI, "Expect ';' after declaration");
+        consume(TokenType.SEMI, "Expected ';' after declaration");
         return new DeclarationNode(var, var.token);
     }
 
@@ -1036,7 +1036,7 @@ public class Parser {
     }
 
     VariableNode parseVariable() {
-        Token firstTok = consume(TokenType.IDENT, "Expect a variable");
+        Token firstTok = consume(TokenType.IDENT, "Expected a variable");
 
         // Bare name (no holder prefix): default to PLAYER holder.
         // A holder prefix is only recognised when it's exactly p/g/t followed by its separator.
@@ -1068,8 +1068,8 @@ public class Parser {
             consume(TokenType.RBRACK, "Expected ']' after team name");
         }
 
-        consume(TokenType.DOT, "Expect '.' after scope prefix");
-        Token varTok = consume(TokenType.IDENT, "Expect variable name identifier");
+        consume(TokenType.DOT, "Expected '.' after scope prefix");
+        Token varTok = consume(TokenType.IDENT, "Expected a variable name");
 
         VariableNode vn = new VariableNode(null, holder, varTok.text, teamName, varTok);
         vn.enumName = varEnumType.get(holder + "." + varTok.text);
@@ -1193,7 +1193,7 @@ public class Parser {
             }
             initializer = parseExpression();
         }
-        consume(TokenType.SEMI, "Expect ';' after declaration");
+        consume(TokenType.SEMI, "Expected ';' after declaration");
         return new GlobalDeclarationNode(var, initializer, var.token);
     }
 

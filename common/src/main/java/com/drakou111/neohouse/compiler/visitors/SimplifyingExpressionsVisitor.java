@@ -112,7 +112,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
             switch (un.operator) {
                 case NOT -> {
-                    // !expr → expr == false/0  (Housing has no native boolean NOT)
+                    // !expr -> expr == false/0  (Housing has no native boolean NOT)
                     ConstantPrimitiveNode falsy = switch (un.operand.type) {
                         case BOOL   -> new ConstantPrimitiveNode(new BoolValue(false), VariableType.BOOL, un.token);
                         case DOUBLE -> new ConstantPrimitiveNode(new DoubleValue(0.0), VariableType.DOUBLE, un.token);
@@ -140,7 +140,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                         copy.fallback = v.fallback;
                         castSource = copy;
                     } else {
-                        castSource = inner; // constant — no suffix needed
+                        castSource = inner; // constant - no suffix needed
                     }
                     VariableNode result = makeTemp(un.token, VariableType.LONG);
                     stmts.add(new AssignationNode(result, AssignmentOperator.ASSIGN, castSource, un.token));
@@ -165,7 +165,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 case STRING_CAST -> {
                     VariableType fromType = un.operand.type;
                     if (fromType == VariableType.STRING) return opRes;
-                    // Constant literal → convert at compile time, no temp variable needed
+                    // Constant literal -> convert at compile time, no temp variable needed
                     if (opRes.simple() instanceof ConstantPrimitiveNode constNode) {
                         String strVal = switch (constNode.value) {
                             case LongValue l   -> l.toString();
@@ -176,7 +176,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                         return new LowerResult(new ConstantPrimitiveNode(
                                 new StringValue(strVal), VariableType.STRING, un.token), opRes.stmts());
                     }
-                    // Variable → embed as in-game placeholder reference (avoids broken string +=)
+                    // Variable -> embed as in-game placeholder reference (avoids broken string +=)
                     if (opRes.simple() instanceof VariableNode v) {
                         String ref = switch (v.holder) {
                             case PLAYER -> "%var.player/" + v.name + v.fallbackToken() + "%";
@@ -186,7 +186,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                         return new LowerResult(new ConstantPrimitiveNode(
                                 new StringValue(ref), VariableType.STRING, un.token), opRes.stmts());
                     }
-                    // Placeholder → embed as in-game placeholder reference
+                    // Placeholder -> embed as in-game placeholder reference
                     if (opRes.simple() instanceof PlaceholderNode p) {
                         com.drakou111.neohouse.constants.Placeholder ph =
                                 com.drakou111.neohouse.constants.Placeholder.requireByName(p.placeholder);
@@ -484,7 +484,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         VariableType lhsType = lhsVar.type;
         VariableType rhsType = lr.simple.type;
 
-        // BooleanExpressionNode result (e.g. from `!boolVar`) — emit if/else to set true or false
+        // BooleanExpressionNode result (e.g. from `!boolVar`) - emit if/else to set true or false
         if (lr.simple instanceof BooleanExpressionNode be) {
             LogicalExpressionNode cond = new LogicalExpressionNode(List.of(be), LogicalOperator.AND, be.token);
             ConstantPrimitiveNode trueVal  = new ConstantPrimitiveNode(new BoolValue(true),  VariableType.BOOL, be.token);

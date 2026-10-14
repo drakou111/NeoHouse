@@ -139,7 +139,7 @@ public class FileBrowserScreen extends ScreenBase {
         int logoX = PAD;
         int textX = logoX + logoSize + 4;
         RenderHelper.renderLogo(g, logoX, (8 + 28 - logoSize) / 2, logoSize, t.accent());
-        g.drawString(font, "NeoHouse — File Browser", textX, 8, 0xFFFFFFFF);
+        g.drawString(font, "NeoHouse - File Browser", textX, 8, 0xFFFFFFFF);
         String rel = rootPath.equals(currentPath)
                 ? "/"
                 : "/" + rootPath.relativize(currentPath).toString().replace('\\', '/') + "/";

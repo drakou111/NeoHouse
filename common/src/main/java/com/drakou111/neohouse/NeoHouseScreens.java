@@ -18,7 +18,7 @@ public final class NeoHouseScreens {
     /** Call every client tick: remember the current screen while it's a NeoHouse menu. */
     public static void track() {
         Screen current = Minecraft.getInstance().screen;
-        // Skip transient input/confirm dialogs — they aren't a place worth restoring to.
+        // Skip transient input/confirm dialogs - they aren't a place worth restoring to.
         if (current instanceof NeoHouseScreen && !(current instanceof InputDialogScreen)) lastScreen = current;
     }
 

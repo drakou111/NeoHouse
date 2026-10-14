@@ -40,7 +40,7 @@ public final class SoundEventResolver {
     }
 
     /**
-     * 1.8-era legacy names → modern sound-event id (path, minecraft namespace).
+     * 1.8-era legacy names -> modern sound-event id (path, minecraft namespace).
      * Only names that do NOT normalize-match a modern id need to be here.
      */
     private static final Map<Sound, String> LEGACY_OVERRIDES = buildOverrides();

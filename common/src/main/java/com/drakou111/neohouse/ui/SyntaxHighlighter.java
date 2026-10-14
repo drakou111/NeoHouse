@@ -19,7 +19,7 @@ public class SyntaxHighlighter {
 
     private SyntaxTheme activeTheme = SyntaxTheme.VSCODE_DARK;
 
-    // Minecraft chat color codes (&0–&f), in index order 0–15.
+    // Minecraft chat color codes (&0-&f), in index order 0-15.
     private static final int[] MC_COLORS = {
         0xFF000000, 0xFF0000AA, 0xFF00AA00, 0xFF00AAAA,
         0xFFAA0000, 0xFFAA00AA, 0xFFFFAA00, 0xFFAAAAAA,
@@ -35,7 +35,7 @@ public class SyntaxHighlighter {
         return -1;
     }
 
-    /** True for any valid Minecraft formatting code character (&0–&f, &k–&o, &r). */
+    /** True for any valid Minecraft formatting code character (&0-&f, &k-&o, &r). */
     private static boolean isMcCode(char code) {
         code = Character.toLowerCase(code);
         return (code >= '0' && code <= '9') || (code >= 'a' && code <= 'f') || "klmnor".indexOf(code) >= 0;
@@ -56,7 +56,7 @@ public class SyntaxHighlighter {
         int len = src.length();
 
         // Build one reusable matcher per token type over the WHOLE source. Advancing the region
-        // start (instead of substringing the tail) keeps this linear — the previous
+        // start (instead of substringing the tail) keeps this linear - the previous
         // src.substring(pos) per position made highlighting O(n^2), which froze large files.
         List<TokenType> types = new ArrayList<>();
         List<Matcher>   matchers = new ArrayList<>();

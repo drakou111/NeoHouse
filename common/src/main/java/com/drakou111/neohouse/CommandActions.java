@@ -85,7 +85,7 @@ public final class CommandActions {
                 "Type \"Delete\" to permanently destroy\nALL functions, events, commands and menus.\n(Use '/neohouse delete <section>'\nto delete a specific section)",
                 "", null,
                 typed -> {
-                    requireConfirmation(typed, "Nuke cancelled — you didn't type \"Delete\".");
+                    requireConfirmation(typed, "Nuke cancelled - you didn't type \"Delete\".");
                     ActionBuilder builder = new ActionBuilder()
                             .closeAll()
                             .sendChatAndWait(Commands.FUNCTIONS)
@@ -155,7 +155,7 @@ public final class CommandActions {
         Platforms.get().openScreenNextTick(new InputDialogScreen(
                 prompt, "", null,
                 typed -> {
-                    requireConfirmation(typed, "Cancelled — you didn't type \"Delete\".");
+                    requireConfirmation(typed, "Cancelled - you didn't type \"Delete\".");
                     SequenceManager.cancelAction();
                     SequenceManager.startAction(sequence.get());
                     MessageUtils.debugToChat(workingMsg);
@@ -318,7 +318,7 @@ public final class CommandActions {
 
         String name = p.getFileName().toString().toLowerCase();
         if (!name.endsWith(".nh")) {
-            MessageUtils.errorToChat("Unsupported extension '" + name + "' — only .nh files are supported.");
+            MessageUtils.errorToChat("Unsupported extension '" + name + "' - only .nh files are supported.");
             return null;
         }
         if (!Files.exists(p)) {

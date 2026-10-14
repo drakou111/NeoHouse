@@ -511,7 +511,7 @@ public class ConfigScreen extends ScreenBase {
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
         g.fill(0, 0, width, HEADER_H, t.panel(o.panelAlpha));
         RenderHelper.renderLogo(g, PAD + 56, 4, 18, t.accent());
-        g.drawString(font, "NeoHouse — Config", PAD + 56 + 22, 9, 0xFFFFFFFF);
+        g.drawString(font, "NeoHouse - Config", PAD + 56 + 22, 9, 0xFFFFFFFF);
         g.fill(0, HEADER_H, width, HEADER_H + 1, t.accent());
 
         drawTabs(g, t, mouseX, mouseY);
@@ -635,7 +635,7 @@ public class ConfigScreen extends ScreenBase {
                open ? t.highlight(0xFF) : hovered ? t.surface(0xFF) : 0xFF0F0F18);
         RenderHelper.renderOutline(g, widgetX, y, DROP_W, DROP_H, open ? t.accent() : 0xFF444466);
         int maxLabelW = DROP_W - 20;
-        String shown = font.width(label) > maxLabelW ? font.plainSubstrByWidth(label, maxLabelW) + "…" : label;
+        String shown = font.width(label) > maxLabelW ? font.plainSubstrByWidth(label, maxLabelW) + "..." : label;
         g.drawString(font, shown,            widgetX + 4,          y + (DROP_H - 8) / 2, 0xFFDDDDDD, false);
         g.drawString(font, open ? "▲" : "▼", widgetX + DROP_W - 11, y + (DROP_H - 8) / 2, 0xFF888899, false);
     }

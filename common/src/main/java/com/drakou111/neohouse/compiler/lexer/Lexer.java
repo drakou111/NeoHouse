@@ -29,7 +29,7 @@ public class Lexer {
 
         // Reuse one Matcher per token type across the whole input (via Matcher.region),
         // instead of allocating a fresh substring + matchers at every position. This keeps
-        // tokenization linear rather than O(n²) on large scripts.
+        // tokenization linear rather than O(n^2) on large scripts.
         TokenType[] types = TokenType.values();
         Matcher[] matchers = new Matcher[types.length];
         for (int i = 0; i < types.length; i++) {

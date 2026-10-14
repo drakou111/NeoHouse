@@ -181,7 +181,7 @@ public class ActionFactory {
 
     public static Action addActionTeleport(RestrictionAction state, Teleport teleport, String customLocation, boolean preventInsideBlocks, String note) {
         return buildAction(state, AddAction.TELEPORT,
-                // INVOKER is the default location — no need to set it explicitly.
+                // INVOKER is the default location - no need to set it explicitly.
                 InputParam.predefined(TeleportInputs.LOCATION, teleport != null && teleport != Teleport.CUSTOM && teleport != Teleport.INVOKER, teleport != null ? teleport.displayName : null),
                 InputParam.withCustom(TeleportInputs.LOCATION, teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, customLocation),
                 InputParam.toggle(TeleportInputs.PREVENT_TELEPORT_INSIDE_BLOCKS, preventInsideBlocks),
@@ -201,7 +201,7 @@ public class ActionFactory {
                 InputParam.customValue(PlaySoundInputs.SOUND, PlaySoundInputs.CUSTOM_SOUND, p.sound == null ? p.customSound : null),
                 InputParam.text(PlaySoundInputs.VOLUME, String.valueOf(p.volume), "0.7"),
                 InputParam.text(PlaySoundInputs.PITCH,  String.valueOf(p.pitch),  "1.0"),
-                // INVOKER is the default location — no need to set it explicitly.
+                // INVOKER is the default location - no need to set it explicitly.
                 InputParam.predefined(PlaySoundInputs.LOCATION, p.teleport != null && p.teleport != Teleport.CUSTOM && p.teleport != Teleport.INVOKER, p.teleport != null ? p.teleport.displayName : null),
                 InputParam.withCustom(PlaySoundInputs.LOCATION, p.teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, p.customLocation),
                 InputParam.note(p.note));

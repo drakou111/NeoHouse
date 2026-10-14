@@ -35,7 +35,7 @@ public class ReturnCheckVisitor extends EmptyVisitor<Void> {
     }
 
     private boolean allPathsReturn(StatementListNode block) {
-        // Iterate in order; once a statement is “guaranteed return,” no need to look further:
+        // Iterate in order; once a statement is "guaranteed return," no need to look further:
         for (StatementNode stmt : block.statements) {
             if (stmt instanceof StatementListNode list) {
                 if (allPathsReturn(list))
@@ -55,7 +55,7 @@ public class ReturnCheckVisitor extends EmptyVisitor<Void> {
                 boolean thenReturns = allPathsReturn(thenBlock);
                 boolean elseReturns = allPathsReturn(elseBlock);
                 if (thenReturns && elseReturns) {
-                    // This if‐statement guarantees return regardless of condition
+                    // This if-statement guarantees return regardless of condition
                     return true;
                 } else {
                     // One branch or both might fall through; keep scanning next statements
@@ -63,7 +63,7 @@ public class ReturnCheckVisitor extends EmptyVisitor<Void> {
                 }
             }
             if (stmt instanceof RandomNode rnd) {
-                // Every alternative block in “random” must guarantee a return:
+                // Every alternative block in "random" must guarantee a return:
                 boolean everyOptionReturns = true;
                 for (StatementListNode option : rnd.statements) {
                     if (!allPathsReturn(option)) {
