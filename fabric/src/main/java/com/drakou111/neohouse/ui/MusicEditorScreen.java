@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.CommandActions;
 import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.compat.Gfx;
 import com.drakou111.neohouse.compat.Keys;
@@ -22,6 +21,7 @@ import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -45,6 +45,9 @@ public class MusicEditorScreen extends ScreenBase {
 
     private static final int PAD = 6;
     private static final int HEADER_H = 40;
+    private static final int TOOLBAR_ROW_1_Y = 3;
+    private static final int TOOLBAR_ROW_2_Y = 21;
+    private static final int TOOLBAR_GROUP_GAP = 8;
     private static final int LEFT_W = 122;
     private static final int FOOTER_H = 24;
     private static final int HSB_H = 9;          // horizontal scrollbar strip height
@@ -122,39 +125,46 @@ public class MusicEditorScreen extends ScreenBase {
     private void rebuildAll() {
         clearWidgets();
 
-        // top-right close
+        // Row 1: file actions on the left, close on the right (the song name sits between them).
         addRenderableWidget(Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
-                .bounds(width - PAD - 16, 4, 16, 16).build());
-
-        // top toolbar
+                .bounds(width - PAD - 16, TOOLBAR_ROW_1_Y, 16, 16).build());
         int x = PAD;
-        x = addTop("< Back", 42, x, b -> onClose());
-        x = addTop("Save", 40, x, b -> save());
-        x = addTop("Export", 48, x, b -> exportFunction());
-        x = addTop(player.isPlaying() ? "■ Stop" : "▶ Play", 48, x, b -> { player.toggle(0); rebuildAll(); });
-        x = addTop(player.isLooping() ? "Loop On" : "Loop Off", 54, x, b -> { player.setLoop(!player.isLooping()); rebuildAll(); });
-        x = addTop("+ Track", 48, x, b -> addTrack());
-        x = addTop("Z -", 24, x, b -> zoom(-2));
-        x = addTop("Z +", 24, x, b -> zoom(2));
+        x = addTop("< Back", 42, x, TOOLBAR_ROW_1_Y, b -> onClose(), "Back to the file browser");
+        x = addTop("Save", 40, x, TOOLBAR_ROW_1_Y, b -> save(), "Save (Ctrl+S)");
+        addTop("Export", 48, x, TOOLBAR_ROW_1_Y, b -> exportFunction(), "Write the song as a playable .nh function next to it");
+
+        // Row 2: playback, tracks and view, grouped with small gaps between the groups.
+        x = PAD;
+        x = addTop(player.isPlaying() ? "■ Stop" : "▶ Play", 48, x, TOOLBAR_ROW_2_Y, b -> { player.toggle(0); rebuildAll(); }, "Play or stop the preview");
+        x = addTop(player.isLooping() ? "Loop: On" : "Loop: Off", 58, x, TOOLBAR_ROW_2_Y, b -> { player.setLoop(!player.isLooping()); rebuildAll(); }, "Repeat the preview");
+        x += TOOLBAR_GROUP_GAP;
+        x = addTop("+ Track", 52, x, TOOLBAR_ROW_2_Y, b -> addTrack(), "Add a track");
+        x += TOOLBAR_GROUP_GAP;
+        x = addTop("Zoom -", 44, x, TOOLBAR_ROW_2_Y, b -> zoom(-2), "Zoom out (or Ctrl+scroll)");
+        addTop("Zoom +", 44, x, TOOLBAR_ROW_2_Y, b -> zoom(2), "Zoom in (or Ctrl+scroll)");
 
         // per-track buttons in the left panel
         for (int i = 0; i < project.tracks.size(); i++) {
             MusicTrack tr = project.tracks.get(i);
             int by = trackRowY(i) + 17;
             if (by + 11 > height - FOOTER_H) break; // panel full - remaining tracks not shown
-            addPanelBtn(tr.muted ? "Unm" : "Mut", 4,  by, b -> { activeTrack(tr); tr.muted = !tr.muted; markDirty(); rebuildAll(); });
-            addPanelBtn("Snd", 32, by, b -> { activeTrack(tr); pickSoundFor(tr); });
-            addPanelBtn("Ren", 60, by, b -> { activeTrack(tr); renameTrack(tr); });
-            addPanelBtn("Del", 88, by, b -> { activeTrack(tr); deleteTrack(tr); });
+            addPanelBtn(tr.muted ? "Unm" : "Mut", 4,  by, tr.muted ? "Unmute this track" : "Mute this track",
+                    b -> { activeTrack(tr); tr.muted = !tr.muted; markDirty(); rebuildAll(); });
+            addPanelBtn("Snd", 32, by, "Change this track's sound", b -> { activeTrack(tr); pickSoundFor(tr); });
+            addPanelBtn("Ren", 60, by, "Rename this track", b -> { activeTrack(tr); renameTrack(tr); });
+            addPanelBtn("Del", 88, by, "Delete this track", b -> { activeTrack(tr); deleteTrack(tr); });
         }
     }
 
-    private int addTop(String label, int w, int x, Button.OnPress onPress) {
-        addRenderableWidget(Button.builder(Component.literal(label), onPress).bounds(x, 4, w, 16).build());
+    private int addTop(String label, int w, int x, int y, Button.OnPress onPress, String tooltip) {
+        addRenderableWidget(Button.builder(Component.literal(label), onPress)
+                .tooltip(Tooltip.create(Component.literal(tooltip))).bounds(x, y, w, 16).build());
         return x + w + 4;
     }
-    private void addPanelBtn(String label, int x, int y, Button.OnPress onPress) {
-        addRenderableWidget(Button.builder(Component.literal(label), onPress).bounds(x, y, 26, 11).build());
+
+    private void addPanelBtn(String label, int x, int y, String tooltip, Button.OnPress onPress) {
+        addRenderableWidget(Button.builder(Component.literal(label), onPress)
+                .tooltip(Tooltip.create(Component.literal(tooltip))).bounds(x, y, 26, 11).build());
     }
 
     private void activeTrack(MusicTrack tr) {
@@ -186,17 +196,19 @@ public class MusicEditorScreen extends ScreenBase {
         g.fill(0, height - FOOTER_H, width, height - FOOTER_H + 1, t.accent());
 
         String title = project.name + (dirty ? " *" : "");
-        g.drawString(font, title, width - PAD - 20 - font.width(title), 26, 0xFFFFFFFF, false);
+        g.drawCenteredString(font, title, width / 2, TOOLBAR_ROW_1_Y + 4, 0xFFFFFFFF);
+        String info = String.format("%.0f BPM   %d notes   %.1fs", project.bpm, project.totalNotes(),
+                project.lengthTicks() / (double) MusicProject.TICKS_PER_SECOND);
+        g.drawString(font, info, width - PAD - font.width(info), TOOLBAR_ROW_2_Y + 4, t.muted(), false);
 
         // compact footer: selected-note readout (left) + controls hint (right)
         int fY = height - FOOTER_H + 8;
         if (selected != null) {
             MusicTrack tr = active();
-            String sel = String.format("Vol %.1f   ·   Pitch %.2f", tr.volumeFor(selected), tr.pitchFor(selected));
+            String sel = String.format("Volume %.1f   Pitch %.2f", tr.volumeFor(selected), tr.pitchFor(selected));
             g.drawString(font, sel, PAD, fY, 0xFFCCCCCC, false);
         }
-        String hint = String.format("Len %.1fs   ·   LMB add   ·   RMB delete   ·   scroll note/track = volume",
-                project.lengthTicks() / (double) MusicProject.TICKS_PER_SECOND);
+        String hint = "Left click: add   Right click: delete   Scroll a note or track: volume   Del: delete selected";
         g.drawString(font, hint, width - PAD - font.width(hint), fY, t.muted(), false);
 
         renderWidgets(g, mouseX, mouseY, partialTick);
@@ -490,7 +502,7 @@ public class MusicEditorScreen extends ScreenBase {
     protected boolean onKeyPressed(int key, int scan, int mods) {
         boolean ctrl = (mods & Keys.MOD_CONTROL) != 0;
         if (key == 32) { player.toggle(0); rebuildAll(); return true; }
-        if (key == 261 && selected != null) {
+        if (key == Keys.DELETE && selected != null) {
             active().notes.remove(selected); selected = null; markDirty(); return true;
         }
         if (ctrl && key == 67 && selected != null) { clipboard = selected.copy(); return true; }
@@ -568,7 +580,7 @@ public class MusicEditorScreen extends ScreenBase {
                 "Export as function - file name:", suggested, this,
                 raw -> {
                     String fnName = MusicFunctionExporter.sanitizeFunctionName(raw);
-                    Path target = CommandActions.getScriptsDir().resolve(fnName + ".nh");
+                    Path target = file.resolveSibling(fnName + ".nh"); // next to the song
                     if (Files.exists(target)) {
                         ClientUi.setScreen(minecraft, new InputDialogScreen(
                                 "\"" + fnName + ".nh\" already exists. Overwrite?", this,
@@ -582,7 +594,7 @@ public class MusicEditorScreen extends ScreenBase {
     private void writeExport(String fnName, Path target) {
         try {
             Files.writeString(target, MusicFunctionExporter.toScript(project, fnName));
-            MessageUtils.debugToChat("Exported to neohouse-scripts/" + fnName + ".nh (" + project.totalNotes() + " notes).");
+            MessageUtils.debugToChat("Exported " + target.getFileName() + " (" + project.totalNotes() + " notes) next to the song.");
         } catch (IOException e) {
             MessageUtils.errorToChat("Export failed: " + e.getMessage());
         }

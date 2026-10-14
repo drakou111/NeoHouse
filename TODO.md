@@ -2,6 +2,7 @@
 
 ## Open
 
+- [ ] Music menus: the separate music browser is gone and the editor header is regrouped; say what still feels messy.
 - [ ] Back button / logo / "(i)" overlap: the code editor header is fixed; no "(i)" element exists in NeoHouse's own screens, so if it still overlaps somewhere, note which screen.
 
 ## Needs checking in game (done in code, can't be tested without Hypixel)
@@ -14,6 +15,7 @@
 - [ ] 26.1 / 26.2 / 26.3 builds: compile and pass tests, but haven't been launched in game. 26.3 uses SDL key codes (Keys compat set); default keybinds K and N should be checked there.
 - [ ] Team / layout / group check: names are read from item names in slots 10-34 of `/teams`, `/layout` and `/menu` -> "Permissions and Groups"; check those menus really list them there.
 - [ ] Editor: horizontal scrollbar, suggestion and parameter-hint behaviour (see Done).
+- [ ] File browser: icons per type and the move of old `neohouse-music` files into `neohouse-scripts` on first launch.
 
 ## Done
 
@@ -48,3 +50,7 @@
 - `!=` comparison (an `==` condition with Invert on).
 - Editor: parameter hints no longer appear on lines that aren't part of a call; suggestions only open while typing; find matches follow edits; horizontal scrollbar.
 - Before anything else, a run checks that every team, layout and group the script names exists, and stops listing the missing ones.
+- Note Block Studio `.nbs` files import into `.nhm` projects (all format versions; Housing-missing instruments use the closest note block sound).
+- Scripts and music share one folder: the file browser lists `.nh`, `.nhm`, `.mid`/`.midi` and `.nbs` with their own icons and actions (old `neohouse-music` files are moved in, never overwritten). `/nh music` opens it too.
+- Music editor header: file actions and the song name on the first row, playback / tracks / zoom on the second, with tooltips; Export writes next to the song.
+- Moving a file no longer overwrites an existing one or forces the `.nh` extension.

@@ -2,6 +2,7 @@ package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.Keys;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -10,6 +11,7 @@ import com.drakou111.neohouse.config.UITheme;
 import com.drakou111.neohouse.music.MidiImporter;
 import com.drakou111.neohouse.music.MusicIO;
 import com.drakou111.neohouse.music.MusicProject;
+import com.drakou111.neohouse.music.NbsImporter;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -21,27 +23,28 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 /**
- * Dialog for importing a known {@code .mid} file into a new {@code .nhm} project.
- * The MIDI path is already known (the file was selected in the browser), so this
- * only asks what to name the resulting {@code .nhm} and handles overwrite.
+ * Dialog for turning a MIDI ({@code .mid}) or Note Block Studio ({@code .nbs}) file into a new
+ * {@code .nhm} music project. The source file is already known (it was picked in the browser), so
+ * this only asks what to name the project and handles overwriting.
  */
-public class MidiImportScreen extends ScreenBase {
+public class MusicImportScreen extends ScreenBase {
 
     private static final int PAD = 10, W = 300, TITLE_H = 18, LINE_H = 10, INPUT_H = 18, BTN_H = 20;
 
     private final Screen parent;
-    private final Path midiFile;
+    private final Path sourceFile;
     private final Path targetDir;
 
     private EditBox nameBox;
     private int dialogX, dialogY, dialogH;
 
-    public MidiImportScreen(Screen parent, Path midiFile, Path targetDir) {
-        super(Component.literal("Import MIDI"));
+    public MusicImportScreen(Screen parent, Path sourceFile, Path targetDir) {
+        super(Component.literal("Import Music"));
         this.parent = parent;
-        this.midiFile = midiFile;
+        this.sourceFile = sourceFile;
         this.targetDir = targetDir;
     }
 
@@ -54,7 +57,7 @@ public class MidiImportScreen extends ScreenBase {
         int y = dialogY + TITLE_H + PAD + 2 * LINE_H + PAD;
         nameBox = new EditBox(font, dialogX + PAD, y, W - 2 * PAD, INPUT_H, Component.literal("Name"));
         nameBox.setMaxLength(128);
-        nameBox.setValue(MusicIO.stripExtension(midiFile.getFileName().toString()));
+        nameBox.setValue(MusicIO.stripExtension(sourceFile.getFileName().toString()));
         addRenderableWidget(nameBox);
         setInitialFocus(nameBox);
 
@@ -80,10 +83,11 @@ public class MidiImportScreen extends ScreenBase {
         RenderHelper.renderOutline(g, dialogX, dialogY, W, dialogH, t.accent());
         g.fill(dialogX, dialogY, dialogX + W, dialogY + TITLE_H, t.panel(0xFF));
         g.fill(dialogX, dialogY + TITLE_H - 1, dialogX + W, dialogY + TITLE_H, t.accent());
-        g.drawCenteredString(font, "Import MIDI -> Music", dialogX + W / 2, dialogY + (TITLE_H - 8) / 2, t.muted());
+        g.drawCenteredString(font, "Import " + (isNoteBlockSong() ? "Note Block Studio" : "MIDI") + " -> Music",
+                dialogX + W / 2, dialogY + (TITLE_H - 8) / 2, t.muted());
 
         int ty = dialogY + TITLE_H + PAD;
-        g.drawString(font, "Importing: " + midiFile.getFileName(), dialogX + PAD, ty, t.muted(), false);
+        g.drawString(font, "Importing: " + sourceFile.getFileName(), dialogX + PAD, ty, t.muted(), false);
         g.drawString(font, "Save as (.nhm):", dialogX + PAD, ty + LINE_H, 0xFFCCCCCC, false);
 
         renderWidgets(g, mouseX, mouseY, partialTick);
@@ -91,8 +95,8 @@ public class MidiImportScreen extends ScreenBase {
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
-        if (key == 256) { cancel(); return true; }
-        if (key == 257 || key == 335) { doImport(); return true; }
+        if (key == Keys.ESCAPE) { cancel(); return true; }
+        if (key == Keys.ENTER || key == Keys.KP_ENTER) { doImport(); return true; }
         return superKeyPressed(key, scan, mods);
     }
 
@@ -112,14 +116,20 @@ public class MidiImportScreen extends ScreenBase {
 
     private void write(String base, Path target) {
         try {
-            MusicProject project = MidiImporter.importMidi(midiFile, base);
+            MusicProject project = isNoteBlockSong()
+                    ? NbsImporter.importNbs(sourceFile, base)
+                    : MidiImporter.importMidi(sourceFile, base);
             MusicIO.save(target, project);
             MessageUtils.debugToChat("Imported " + project.totalNotes() + " notes across "
                     + project.tracks.size() + " tracks into " + target.getFileName());
             ClientUi.setScreen(Minecraft.getInstance(), new MusicEditorScreen(target, parent));
         } catch (Exception e) {
-            MessageUtils.errorToChat("MIDI import failed: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            MessageUtils.errorToChat("Import failed: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
         }
+    }
+
+    private boolean isNoteBlockSong() {
+        return sourceFile.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".nbs");
     }
 
     private void cancel() {

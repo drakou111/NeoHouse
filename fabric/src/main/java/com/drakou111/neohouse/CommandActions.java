@@ -2,11 +2,11 @@ package com.drakou111.neohouse;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.CreativeGiveAction;
-import com.drakou111.neohouse.compat.InventoryHelper;
 import com.drakou111.neohouse.actions.actiontypes.DeleteAllAction;
 import com.drakou111.neohouse.actions.actiontypes.DeleteAllCommandsAction;
 import com.drakou111.neohouse.actions.actiontypes.DeleteAllFunctionsAction;
 import com.drakou111.neohouse.actions.actiontypes.DeleteAllMenusAction;
+import com.drakou111.neohouse.compat.InventoryHelper;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.constants.Commands;
 import com.drakou111.neohouse.constants.Event;
@@ -18,11 +18,11 @@ import com.drakou111.neohouse.ui.FileBrowserScreen;
 import com.drakou111.neohouse.ui.HelpScreen;
 import com.drakou111.neohouse.ui.HomeScreen;
 import com.drakou111.neohouse.ui.InputDialogScreen;
-import com.drakou111.neohouse.ui.MusicBrowserScreen;
 import com.drakou111.neohouse.utils.ActionBuilder;
 import com.drakou111.neohouse.utils.HousingCheck;
 import com.drakou111.neohouse.utils.LibraryManager;
 import com.drakou111.neohouse.utils.MessageUtils;
+import com.drakou111.neohouse.utils.MusicFolderMerge;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 public final class CommandActions {
 
     private static final ScriptRunner SCRIPT_RUNNER = ScriptRunner.INSTANCE;
+    private static final String OLD_MUSIC_FOLDER = "neohouse-music";
 
     private CommandActions() {}
 
@@ -68,7 +69,8 @@ public final class CommandActions {
     // Screens opened by command get the home page as parent, so their Back button leads somewhere.
     public static int openHome()   { return openScreen(CommandActions::home); }
     public static int openFiles()  { return openScreen(() -> new FileBrowserScreen(getScriptsDir(), home())); }
-    public static int openMusic()  { return openScreen(() -> new MusicBrowserScreen(getMusicDir(), home())); }
+    /** Music lives in the same folder as scripts now; kept so /nh music still works. */
+    public static int openMusic()  { return openFiles(); }
     public static int openHelp()   { return openScreen(() -> new HelpScreen(home())); }
     public static int openConfig() { return openScreen(() -> new ConfigScreen(home())); }
 
@@ -280,16 +282,21 @@ public final class CommandActions {
         } catch (IOException ignored) {
         }
         LibraryManager.init(dir);
+        mergeOldMusicFolder(dir);
         return dir;
     }
 
-    public static Path getMusicDir() {
-        Path dir = Minecraft.getInstance().gameDirectory.toPath().resolve("neohouse-music");
+
+    /** Scripts and music used to have separate folders; move the old music folder's files in, once. */
+    private static void mergeOldMusicFolder(Path scriptsDir) {
+        Path oldMusicDir = Minecraft.getInstance().gameDirectory.toPath().resolve(OLD_MUSIC_FOLDER);
         try {
-            if (!Files.exists(dir)) Files.createDirectories(dir);
-        } catch (IOException ignored) {
+            int moved = MusicFolderMerge.merge(oldMusicDir, scriptsDir);
+            if (moved > 0) MessageUtils.debugToChat("Moved " + moved + " music file" + (moved == 1 ? "" : "s")
+                    + " from " + OLD_MUSIC_FOLDER + " into neohouse-scripts (scripts and music now share one folder).");
+        } catch (IOException e) {
+            MessageUtils.errorToChat("Could not move your music from " + OLD_MUSIC_FOLDER + " into neohouse-scripts: " + e.getMessage());
         }
-        return dir;
     }
 
     public static List<String> scriptSuggestions(String remaining) {

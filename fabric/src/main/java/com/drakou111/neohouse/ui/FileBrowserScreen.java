@@ -8,6 +8,9 @@ import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
+import com.drakou111.neohouse.music.MusicFunctionExporter;
+import com.drakou111.neohouse.music.MusicIO;
+import com.drakou111.neohouse.music.MusicProject;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -16,17 +19,25 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+/**
+ * Browses the NeoHouse folder: scripts, music projects, and MIDI / Note Block Studio files to import,
+ * each shown with its own icon and actions.
+ */
 public class FileBrowserScreen extends ScreenBase {
 
     private static final int PAD      = 8;
@@ -36,14 +47,49 @@ public class FileBrowserScreen extends ScreenBase {
     private static final int BTN_H    = 16;
     private static final int SB_W     = 4;
     private static final int SB_PAD   = 3;
+    private static final int ICON_SIZE = 16;
+    private static final int DOUBLE_CLICK_MS = 400;
+    private static final String SCRIPT_EXTENSION = ".nh";
 
-    private static final String[] FILE_LABELS   = { "Edit", "Run", "Rename", "Move", "Delete" };
-    private static final String[] FOLDER_LABELS = { "Open", "Rename", "Delete" };
+    /** What an entry is, decided by its extension; each kind has an icon and its actions (the first is the double-click one). */
+    private enum EntryKind {
+        FOLDER(() -> Items.CHEST, 0xFFFFCC55, "Open", "Rename", "Delete"),
+        SCRIPT(() -> Items.WRITABLE_BOOK, 0xFFCCCCCC, "Edit", "Run", "Rename", "Move", "Delete"),
+        MUSIC(() -> Items.NOTE_BLOCK, 0xFF99DDFF, "Open", "Export", "Rename", "Move", "Delete"),
+        MIDI(() -> Items.JUKEBOX, 0xFFCCAAFF, "Import", "Rename", "Move", "Delete"),
+        NOTE_BLOCK_SONG(() -> Items.MUSIC_DISC_CAT, 0xFFAAFFAA, "Import", "Rename", "Move", "Delete");
+
+        private final Supplier<Item> icon;
+        final int nameColor;
+        final List<String> actions;
+
+        EntryKind(Supplier<Item> icon, int nameColor, String... actions) {
+            this.icon = icon;
+            this.nameColor = nameColor;
+            this.actions = List.of(actions);
+        }
+
+        ItemStack icon() {
+            return new ItemStack(this.icon.get());
+        }
+
+        static Optional<EntryKind> of(Path path) {
+            if (Files.isDirectory(path)) return Optional.of(FOLDER);
+            String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
+            if (name.endsWith(SCRIPT_EXTENSION)) return Optional.of(SCRIPT);
+            if (name.endsWith(MusicIO.EXTENSION)) return Optional.of(MUSIC);
+            if (name.endsWith(".mid") || name.endsWith(".midi")) return Optional.of(MIDI);
+            if (name.endsWith(".nbs")) return Optional.of(NOTE_BLOCK_SONG);
+            return Optional.empty();
+        }
+    }
+
+    private record Entry(Path path, EntryKind kind) {}
 
     private final Path   rootPath;
     private final Screen parent;
     private Path currentPath;
-    private final List<Path> entries = new ArrayList<>();
+    private final List<Entry> entries = new ArrayList<>();
 
     private int selectedIdx  = -1;
     private int scrollOffset = 0;
@@ -75,11 +121,12 @@ public class FileBrowserScreen extends ScreenBase {
     private void loadEntries() {
         entries.clear();
         try (Stream<Path> stream = Files.list(currentPath)) {
-            stream.filter(p -> Files.isDirectory(p) || p.getFileName().toString().endsWith(".nh"))
-                  .sorted(Comparator.<Path, Boolean>comparing(p -> !Files.isDirectory(p))
-                                    .thenComparing(p -> p.getFileName().toString().toLowerCase()))
-                  .forEach(entries::add);
-        } catch (IOException ignored) {}
+            stream.sorted(Comparator.<Path, Boolean>comparing(p -> !Files.isDirectory(p))
+                                    .thenComparing(p -> p.getFileName().toString().toLowerCase(Locale.ROOT)))
+                  .forEach(p -> EntryKind.of(p).ifPresent(kind -> entries.add(new Entry(p, kind))));
+        } catch (IOException e) {
+            MessageUtils.errorToChat("Could not list " + currentPath.getFileName() + ": " + e.getMessage());
+        }
         scrollOffset = 0;
         selectedIdx  = -1;
     }
@@ -91,36 +138,33 @@ public class FileBrowserScreen extends ScreenBase {
                 Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
                 .bounds(this.width - PAD - 18, 5, 18, 18).build());
 
-        if (currentPath.equals(rootPath)) {
-            addRenderableWidget(Button.builder(Component.literal("< Back"), b -> goBack())
-                    .bounds(PAD, 28, 60, 16).build());
-        } else {
-            addRenderableWidget(Button.builder(Component.literal("< Back"), b -> navigateUp())
-                    .bounds(PAD, 28, 60, 16).build());
-        }
-        addRenderableWidget(Button.builder(Component.literal("+ File"), b -> newFile())
-                .bounds(PAD + 64, 28, 60, 16).build());
-        addRenderableWidget(Button.builder(Component.literal("+ Folder"), b -> newFolder())
-                .bounds(PAD + 64 + 64, 28, 80, 16).build());
+        int x = PAD;
+        x = addHeaderButton("< Back", 60, x, b -> { if (currentPath.equals(rootPath)) goBack(); else navigateUp(); });
+        x = addHeaderButton("+ Script", 60, x, b -> newScript());
+        x = addHeaderButton("+ Music", 60, x, b -> newMusic());
+        addHeaderButton("+ Folder", 60, x, b -> newFolder());
 
         if (selectedIdx >= 0 && selectedIdx < entries.size()) {
-            Path    entry  = entries.get(selectedIdx);
-            boolean isDir  = Files.isDirectory(entry);
-            String[] labels = isDir ? FOLDER_LABELS : FILE_LABELS;
-            int x    = this.width - PAD;
+            Entry entry = entries.get(selectedIdx);
+            List<String> labels = entry.kind().actions;
+            int right = this.width - PAD;
             int btnY = this.height - FOOTER_H + (FOOTER_H - BTN_H) / 2;
-            for (int j = labels.length - 1; j >= 0; j--) {
-                String lbl = labels[j];
-                int w = Math.max(46, font.width(lbl) + 10);
-                x -= (w + 4);
-                int idx = j;
-                addRenderableWidget(Button.builder(Component.literal(lbl), b -> {
+            for (int j = labels.size() - 1; j >= 0; j--) {
+                String label = labels.get(j);
+                int w = Math.max(46, font.width(label) + 10);
+                right -= (w + 4);
+                addRenderableWidget(Button.builder(Component.literal(label), b -> {
                     Minecraft.getInstance().getSoundManager().play(
                             SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
-                    handleBtnClick(entry, isDir, idx);
-                }).bounds(x, btnY, w, BTN_H).build());
+                    runAction(entry, label);
+                }).bounds(right, btnY, w, BTN_H).build());
             }
         }
+    }
+
+    private int addHeaderButton(String label, int w, int x, Button.OnPress onPress) {
+        addRenderableWidget(Button.builder(Component.literal(label), onPress).bounds(x, 28, w, 16).build());
+        return x + w + 4;
     }
 
     @Override
@@ -136,10 +180,9 @@ public class FileBrowserScreen extends ScreenBase {
         g.fill(0, HEADER_H - 1, width, HEADER_H, t.accent());
 
         int logoSize = 18;
-        int logoX = PAD;
-        int textX = logoX + logoSize + 4;
-        RenderHelper.renderLogo(g, logoX, (8 + 28 - logoSize) / 2, logoSize, t.accent());
-        g.drawString(font, "NeoHouse - File Browser", textX, 8, 0xFFFFFFFF);
+        int textX = PAD + logoSize + 4;
+        RenderHelper.renderLogo(g, PAD, (8 + 28 - logoSize) / 2, logoSize, t.accent());
+        g.drawString(font, "NeoHouse - Files", textX, 8, 0xFFFFFFFF);
         String rel = rootPath.equals(currentPath)
                 ? "/"
                 : "/" + rootPath.relativize(currentPath).toString().replace('\\', '/') + "/";
@@ -156,17 +199,10 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     private void renderFooterInfo(Gfx g, UITheme t) {
+        if (selectedIdx >= 0 && selectedIdx < entries.size()) return; // the action buttons take the footer
         int textY = height - FOOTER_H + (FOOTER_H - 8) / 2;
-        if (selectedIdx >= 0 && selectedIdx < entries.size()) {
-            Path    entry = entries.get(selectedIdx);
-            boolean isDir = Files.isDirectory(entry);
-            int color = isDir ? 0xFFFFCC55 : 0xFFCCCCCC;
-            String prefix = isDir ? "▶  " : "   ";
-            g.drawString(font, prefix + entry.getFileName(), PAD, textY, color, false);
-        } else {
-            g.drawString(font, "Click a file or folder",
-                    PAD, textY, t.divider(), false);
-        }
+        g.drawString(font, "Double-click to open. Scripts .nh, music .nhm, imports .mid .nbs",
+                PAD, textY, t.divider(), false);
     }
 
     private void renderScrollbar(Gfx g, UITheme t) {
@@ -188,45 +224,41 @@ public class FileBrowserScreen extends ScreenBase {
 
     private void renderList(Gfx g, int mouseX, int mouseY) {
         int listBottom = height - FOOTER_H - 2;
-        int maxRows    = maxVisibleRows();
-        int end        = Math.min(scrollOffset + maxRows, entries.size());
+        int end        = Math.min(scrollOffset + maxVisibleRows(), entries.size());
+        UITheme t      = NeoHouseConfig.get().uiTheme;
+
+        if (entries.isEmpty()) {
+            g.drawString(font, "This folder is empty. Use + Script or + Music, or drop .mid / .nbs files here.",
+                    PAD + 4, HEADER_H + 8, t.divider(), false);
+            return;
+        }
 
         for (int i = scrollOffset; i < end; i++) {
             int rowY = HEADER_H + (i - scrollOffset) * ROW_H;
             if (rowY + ROW_H > listBottom) break;
 
-            Path    entry    = entries.get(i);
-            boolean isDir    = Files.isDirectory(entry);
+            Entry   entry    = entries.get(i);
             boolean hover    = mouseY >= rowY && mouseY < rowY + ROW_H && mouseX < width - SB_W - SB_PAD - 1;
             boolean selected = (i == selectedIdx);
 
-            UITheme t   = NeoHouseConfig.get().uiTheme;
             int bg = selected ? t.accentTint(0x44) : hover ? 0x22FFFFFF : (i % 2 == 0 ? 0x0BFFFFFF : 0);
             g.fill(0, rowY, width - SB_W - SB_PAD - 1, rowY + ROW_H, bg);
             g.fill(0, rowY + ROW_H - 1, width - SB_W - SB_PAD - 1, rowY + ROW_H, t.accentTint(0x18));
 
-            int textY  = rowY + (ROW_H - 8) / 2;
-            int nameX  = PAD + 4;
+            int iconX = PAD + 2;
+            g.renderItem(entry.kind().icon(), iconX, rowY + (ROW_H - ICON_SIZE) / 2);
 
-            if (isDir) {
-                g.drawString(font, "▶", nameX, textY, selected ? 0xFFFFBB44 : 0xFFAA7722, false);
-                nameX += font.width("▶ ");
-                g.drawString(font, entry.getFileName().toString(), nameX, textY,
-                        selected ? 0xFFFFDD66 : 0xFFFFCC55, false);
+            int textY = rowY + (ROW_H - 8) / 2;
+            int nameX = iconX + ICON_SIZE + 6;
+            String name = entry.path().getFileName().toString();
+            int dot = entry.kind() == EntryKind.FOLDER ? -1 : name.lastIndexOf('.');
+            int nameColor = selected ? 0xFFFFFFFF : entry.kind().nameColor;
+            if (dot > 0) {
+                String base = name.substring(0, dot);
+                g.drawString(font, base, nameX, textY, nameColor, false);
+                g.drawString(font, name.substring(dot), nameX + font.width(base), textY, t.muted(), false);
             } else {
-                nameX += font.width("  ");
-                String name = entry.getFileName().toString();
-                int dot = name.lastIndexOf('.');
-                if (dot > 0) {
-                    String base = name.substring(0, dot);
-                    String ext  = name.substring(dot);
-                    int nameColor = selected ? 0xFFEEEEEE : 0xFFCCCCCC;
-                    g.drawString(font, base, nameX, textY, nameColor, false);
-                    g.drawString(font, ext, nameX + font.width(base), textY,
-                            selected ? t.muted() : t.accent(), false);
-                } else {
-                    g.drawString(font, name, nameX, textY, selected ? 0xFFEEEEEE : 0xFFCCCCCC, false);
-                }
+                g.drawString(font, name, nameX, textY, nameColor, false);
             }
         }
     }
@@ -260,23 +292,19 @@ public class FileBrowserScreen extends ScreenBase {
         if (superMouseClicked(mx, my, button)) return true;
 
         if (my >= HEADER_H && my < height - FOOTER_H) {
-            int maxRows = maxVisibleRows();
-            int end     = Math.min(scrollOffset + maxRows, entries.size());
-
+            int end = Math.min(scrollOffset + maxVisibleRows(), entries.size());
             for (int i = scrollOffset; i < end; i++) {
                 int rowY = HEADER_H + (i - scrollOffset) * ROW_H;
                 if (my < rowY || my >= rowY + ROW_H) continue;
 
-                Path    entry  = entries.get(i);
-                boolean isDir  = Files.isDirectory(entry);
-                long    now    = System.currentTimeMillis();
-                boolean dbl    = entry.equals(lastClickPath) && (now - lastClickMs) < 400;
+                Entry   entry = entries.get(i);
+                long    now   = System.currentTimeMillis();
+                boolean dbl   = entry.path().equals(lastClickPath) && (now - lastClickMs) < DOUBLE_CLICK_MS;
                 lastClickMs   = now;
-                lastClickPath = entry;
+                lastClickPath = entry.path();
 
                 if (dbl) {
-                    if (isDir) navigateInto(entry);
-                    else editFile(entry);
+                    runAction(entry, entry.kind().actions.getFirst());
                 } else {
                     selectedIdx = (selectedIdx == i) ? -1 : i;
                     rebuildAll();
@@ -304,8 +332,7 @@ public class FileBrowserScreen extends ScreenBase {
                 int slideH = trackH - thumbH;
                 if (slideH > 0) {
                     int delta = (int) (my - sbDragStartY);
-                    scrollOffset = Math.max(0, Math.min(maxOff,
-                            sbDragStartOffset + delta * maxOff / slideH));
+                    scrollOffset = Math.max(0, Math.min(maxOff, sbDragStartOffset + delta * maxOff / slideH));
                 }
             }
             return true;
@@ -327,22 +354,26 @@ public class FileBrowserScreen extends ScreenBase {
         return true;
     }
 
-    private void handleBtnClick(Path entry, boolean isDir, int idx) {
-        if (isDir) {
-            switch (idx) {
-                case 0 -> navigateInto(entry);
-                case 1 -> renameEntry(entry);
-                case 2 -> deleteEntry(entry);
+    private void runAction(Entry entry, String action) {
+        Path path = entry.path();
+        switch (action) {
+            case "Open" -> {
+                if (entry.kind() == EntryKind.FOLDER) navigateInto(path);
+                else open(new MusicEditorScreen(path, this));
             }
-        } else {
-            switch (idx) {
-                case 0 -> editFile(entry);
-                case 1 -> runFile(entry);
-                case 2 -> renameEntry(entry);
-                case 3 -> moveFile(entry);
-                case 4 -> deleteEntry(entry);
-            }
+            case "Edit" -> open(new CodeEditorScreen(path, this));
+            case "Run" -> runScript(path);
+            case "Export" -> exportMusic(path);
+            case "Import" -> open(new MusicImportScreen(this, path, currentPath));
+            case "Rename" -> renameEntry(path);
+            case "Move" -> moveEntry(path);
+            case "Delete" -> deleteEntry(path);
+            default -> throw new IllegalStateException("Unknown file action: " + action);
         }
+    }
+
+    private static void open(Screen screen) {
+        ClientUi.setScreen(Minecraft.getInstance(), screen);
     }
 
     private void goBack() {
@@ -364,11 +395,7 @@ public class FileBrowserScreen extends ScreenBase {
         rebuildAll();
     }
 
-    private void editFile(Path file) {
-        ClientUi.setScreen(Minecraft.getInstance(), new CodeEditorScreen(file, this));
-    }
-
-    private void runFile(Path file) {
+    private void runScript(Path file) {
         onClose();
         try {
             ScriptRunner.INSTANCE.runScript(file);
@@ -378,44 +405,73 @@ public class FileBrowserScreen extends ScreenBase {
         }
     }
 
-    private void renameEntry(Path entry) {
-        String current = entry.getFileName().toString();
-        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
-                "Rename \"" + current + "\" to:", current, this,
-                newName -> {
-                    if (!newName.isEmpty() && !newName.equals(current)) {
-                        try { Files.move(entry, entry.getParent().resolve(newName)); }
-                        catch (IOException e) { MessageUtils.errorToChat("Rename failed: " + e.getMessage()); }
-                    }
-                }
-        ));
+    /** Writes a music project as a script function next to it. */
+    private void exportMusic(Path file) {
+        final MusicProject project;
+        try {
+            project = MusicIO.load(file);
+        } catch (IOException e) {
+            MessageUtils.errorToChat("Export failed: " + e.getMessage());
+            return;
+        }
+        String suggested = MusicFunctionExporter.sanitizeFunctionName(project.name);
+        Path folder = file.getParent();
+        open(new InputDialogScreen("Export as function - file name:", suggested, this, raw -> {
+            String fnName = MusicFunctionExporter.sanitizeFunctionName(raw);
+            Path target = folder.resolve(fnName + SCRIPT_EXTENSION);
+            if (Files.exists(target)) {
+                open(new InputDialogScreen("\"" + target.getFileName() + "\" already exists. Overwrite?", this,
+                        () -> writeExport(project, fnName, target)));
+            } else {
+                writeExport(project, fnName, target);
+            }
+        }));
     }
 
-    private void moveFile(Path file) {
+    private void writeExport(MusicProject project, String fnName, Path target) {
+        try {
+            Files.writeString(target, MusicFunctionExporter.toScript(project, fnName));
+            MessageUtils.debugToChat("Exported " + target.getFileName() + " - run it like any other script.");
+        } catch (IOException e) {
+            MessageUtils.errorToChat("Export failed: " + e.getMessage());
+        }
+    }
+
+    private void renameEntry(Path entry) {
+        String current = entry.getFileName().toString();
+        open(new InputDialogScreen("Rename \"" + current + "\" to:", current, this, newName -> {
+            if (newName.isEmpty() || newName.equals(current)) return;
+            Path target = entry.resolveSibling(newName);
+            if (Files.exists(target)) { MessageUtils.errorToChat("\"" + newName + "\" already exists."); return; }
+            try { Files.move(entry, target); }
+            catch (IOException e) { MessageUtils.errorToChat("Rename failed: " + e.getMessage()); }
+        }));
+    }
+
+    /** Moves a file to another path inside the NeoHouse folder, keeping its extension and never overwriting. */
+    private void moveEntry(Path file) {
+        String name = file.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        String extension = dot > 0 ? name.substring(dot) : "";
         String relPath = rootPath.relativize(file).toString().replace('\\', '/');
-        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
-                "Move to:", relPath, this,
-                newPath -> {
-                    if (!newPath.isEmpty()) {
-                        if (!newPath.endsWith(".nh")) newPath += ".nh";
-                        Path target = rootPath.resolve(newPath);
-                        try {
-                            Files.createDirectories(target.getParent());
-                            Files.move(file, target, StandardCopyOption.REPLACE_EXISTING);
-                        } catch (IOException e) { MessageUtils.errorToChat("Move failed: " + e.getMessage()); }
-                    }
-                }
-        ));
+        open(new InputDialogScreen("Move to:", relPath, this, newPath -> {
+            if (newPath.isEmpty()) return;
+            if (!newPath.toLowerCase(Locale.ROOT).endsWith(extension.toLowerCase(Locale.ROOT))) newPath += extension;
+            Path target = rootPath.resolve(newPath).normalize();
+            if (!target.startsWith(rootPath)) { MessageUtils.errorToChat("Files can only be moved inside the NeoHouse folder."); return; }
+            if (Files.exists(target)) { MessageUtils.errorToChat("\"" + newPath + "\" already exists."); return; }
+            try {
+                Files.createDirectories(target.getParent());
+                Files.move(file, target);
+            } catch (IOException e) { MessageUtils.errorToChat("Move failed: " + e.getMessage()); }
+        }));
     }
 
     private void deleteEntry(Path entry) {
-        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
-                "Delete \"" + entry.getFileName() + "\"?", this,
-                () -> {
-                    try { deleteRecursive(entry); }
-                    catch (IOException e) { MessageUtils.errorToChat("Delete failed: " + e.getMessage()); }
-                }
-        ));
+        open(new InputDialogScreen("Delete \"" + entry.getFileName() + "\"?", this, () -> {
+            try { deleteRecursive(entry); }
+            catch (IOException e) { MessageUtils.errorToChat("Delete failed: " + e.getMessage()); }
+        }));
     }
 
     private void deleteRecursive(Path path) throws IOException {
@@ -427,29 +483,33 @@ public class FileBrowserScreen extends ScreenBase {
         Files.deleteIfExists(path);
     }
 
-    private void newFile() {
-        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
-                "New file name:", "new.nh", this,
-                name -> {
-                    if (!name.endsWith(".nh")) name += ".nh";
-                    Path target = currentPath.resolve(name);
-                    if (Files.exists(target)) { MessageUtils.errorToChat("\"" + name + "\" already exists."); return; }
-                    try { Files.createFile(target); }
-                    catch (IOException e) { MessageUtils.errorToChat("Create failed: " + e.getMessage()); }
-                }
-        ));
+    private void newScript() {
+        open(new InputDialogScreen("New script name:", "new" + SCRIPT_EXTENSION, this, name -> {
+            if (!name.endsWith(SCRIPT_EXTENSION)) name += SCRIPT_EXTENSION;
+            Path target = currentPath.resolve(name);
+            if (Files.exists(target)) { MessageUtils.errorToChat("\"" + name + "\" already exists."); return; }
+            try { Files.createFile(target); }
+            catch (IOException e) { MessageUtils.errorToChat("Create failed: " + e.getMessage()); }
+        }));
+    }
+
+    private void newMusic() {
+        open(new InputDialogScreen("New music name:", "new" + MusicIO.EXTENSION, this, name -> {
+            if (!name.endsWith(MusicIO.EXTENSION)) name += MusicIO.EXTENSION;
+            Path target = currentPath.resolve(name);
+            if (Files.exists(target)) { MessageUtils.errorToChat("\"" + name + "\" already exists."); return; }
+            try { MusicIO.save(target, MusicProject.fresh(MusicIO.stripExtension(name))); }
+            catch (IOException e) { MessageUtils.errorToChat("Create failed: " + e.getMessage()); }
+        }));
     }
 
     private void newFolder() {
-        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
-                "New folder name:", "folder", this,
-                name -> {
-                    Path target = currentPath.resolve(name);
-                    if (Files.exists(target)) { MessageUtils.errorToChat("\"" + name + "\" already exists."); return; }
-                    try { Files.createDirectories(target); }
-                    catch (IOException e) { MessageUtils.errorToChat("Create failed: " + e.getMessage()); }
-                }
-        ));
+        open(new InputDialogScreen("New folder name:", "folder", this, name -> {
+            Path target = currentPath.resolve(name);
+            if (Files.exists(target)) { MessageUtils.errorToChat("\"" + name + "\" already exists."); return; }
+            try { Files.createDirectories(target); }
+            catch (IOException e) { MessageUtils.errorToChat("Create failed: " + e.getMessage()); }
+        }));
     }
 
     private int maxVisibleRows() {

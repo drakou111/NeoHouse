@@ -80,13 +80,13 @@ public class HomeScreen extends ScreenBase {
         int btnW = 84;
         int btnH = 22;
         int gap = 8;
-        int totalW = 4 * btnW + 3 * gap;
+        int totalW = 3 * btnW + 2 * gap;
         int startX = cx - totalW / 2;
         int btnY = midY + 48;
+        // Scripts and music share one folder, so a single file browser covers both.
         addRenderableWidget(Button.builder(Component.literal("Files"), b -> openFiles()).bounds(startX, btnY, btnW, btnH).build());
-        addRenderableWidget(Button.builder(Component.literal("Music"), b -> openMusic()).bounds(startX + btnW + gap, btnY, btnW, btnH).build());
-        addRenderableWidget(Button.builder(Component.literal("Help"), b -> openHelp()).bounds(startX + 2 * (btnW + gap), btnY, btnW, btnH).build());
-        addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig()).bounds(startX + 3 * (btnW + gap), btnY, btnW, btnH).build());
+        addRenderableWidget(Button.builder(Component.literal("Help"), b -> openHelp()).bounds(startX + btnW + gap, btnY, btnW, btnH).build());
+        addRenderableWidget(Button.builder(Component.literal("Config"), b -> openConfig()).bounds(startX + 2 * (btnW + gap), btnY, btnW, btnH).build());
         hintText = getRandomHint().getText(Minecraft.getInstance());
     }
 
@@ -139,10 +139,6 @@ public class HomeScreen extends ScreenBase {
 
     private void openFiles() {
         ClientUi.setScreen(minecraft, new FileBrowserScreen(scriptsDir.get(), this));
-    }
-
-    private void openMusic() {
-        ClientUi.setScreen(minecraft, new MusicBrowserScreen(CommandActions.getMusicDir(), this));
     }
 
     private void openHelp() {

@@ -2,6 +2,7 @@ package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.Keys;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -125,8 +126,8 @@ public class InputDialogScreen extends ScreenBase {
 
     @Override
     protected boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == 257 || keyCode == 335) { confirm(); return true; }
-        if (keyCode == 256) { cancel(); return true; }
+        if (keyCode == Keys.ENTER || keyCode == Keys.KP_ENTER) { confirm(); return true; }
+        if (keyCode == Keys.ESCAPE) { cancel(); return true; }
         return superKeyPressed(keyCode, scanCode, modifiers);
     }
 

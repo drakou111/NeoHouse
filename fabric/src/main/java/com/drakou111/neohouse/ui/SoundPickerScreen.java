@@ -2,6 +2,7 @@ package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.Keys;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -251,8 +252,8 @@ public class SoundPickerScreen extends ScreenBase {
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
-        if (key == 256) { cancel(); return true; }                 // esc
-        if ((key == 257 || key == 335) && selected != null) { confirm(); return true; } // enter
+        if (key == Keys.ESCAPE) { cancel(); return true; }                 // esc
+        if ((key == Keys.ENTER || key == Keys.KP_ENTER) && selected != null) { confirm(); return true; } // enter
         return superKeyPressed(key, scan, mods);
     }
 
