@@ -519,7 +519,8 @@ public class SyntaxEditorWidget extends WidgetBase {
     /**
      * Hints for a line that continues a call's argument list from an earlier line. Only applies when
      * the previous code ends with ',' or '(' inside a still-open call and this line doesn't hold a
-     * statement of its own, so an unfinished call being typed doesn't label the lines below it.
+     * statement of its own, and the call's ')' follows before the statement ends, so an unfinished
+     * call being typed doesn't label the lines below it.
      * Scans a bounded window of earlier lines, skipping strings and comments.
      */
     private List<InlineHint> computeContinuationHints(List<String> allLines, int lineIndex, String activeFuncName, int activeParamIdx) {
@@ -551,6 +552,7 @@ public class SyntaxEditorWidget extends WidgetBase {
             }
         }
         if (open.isEmpty() || open.peek()[0] != '(' || (lastSignificant != ',' && lastSignificant != '(')) return List.of();
+        if (!CallSpan.closesBeforeStatementEnds(allLines, lineIndex, CONTINUATION_SCAN_LINES)) return List.of();
 
         int[] call = open.peek();
         String callLine = allLines.get(call[1]);
