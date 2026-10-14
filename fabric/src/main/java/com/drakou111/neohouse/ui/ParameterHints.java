@@ -122,6 +122,13 @@ final class ParameterHints {
         return hints;
     }
 
+    /** Offset of {@code name} in the first {@code function [type] name(...)} declaring it in {@code source}. */
+    static Optional<Integer> functionDefinition(CharSequence source, String name) {
+        Matcher m = USER_FUNC_PAT.matcher(source);
+        while (m.find()) if (m.group(1).equals(name)) return Optional.of(m.start(1));
+        return Optional.empty();
+    }
+
     /**
      * The call and argument an argument typed right after {@code before} belongs to, found by
      * scanning back to the unclosed '(' (skipping strings and nested brackets).

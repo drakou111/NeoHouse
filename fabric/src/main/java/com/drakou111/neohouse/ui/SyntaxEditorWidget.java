@@ -430,13 +430,14 @@ public class SyntaxEditorWidget extends WidgetBase {
     protected boolean onKeyPressed(int key, int scan, int mods) {
         boolean ctrl = (mods & Keys.MOD_CONTROL) != 0;
         boolean shift = (mods & Keys.MOD_SHIFT) != 0;
+        boolean alt = (mods & Keys.MOD_ALT) != 0;
 
         if (this.findBar.hasFocus() && this.findBar.keyPressed(key, mods)) return true;
 
         if (ctrl && key == Keys.F) { openFind(); return true; }
         if (ctrl && key == Keys.R) { openReplace(); return true; }
 
-        if (!ctrl && !shift && this.suggestions != null) {
+        if (!ctrl && !shift && !alt && this.suggestions != null) {
             int count = this.suggestions.items().size();
             switch (key) {
                 case Keys.TAB -> { applySuggestion(); return true; }
@@ -460,8 +461,16 @@ public class SyntaxEditorWidget extends WidgetBase {
                 case Keys.LEFT -> { moveCursor(this.document.wordLeftOf(this.document.getCursor()), shift); return true; }
                 case Keys.RIGHT -> { moveCursor(this.document.wordRightOf(this.document.getCursor()), shift); return true; }
                 case Keys.BACKSPACE -> { this.document.deleteWordBackward(); return true; }
+                case Keys.SLASH -> { this.document.toggleLineComments(); ensureCursorVisible(); return true; }
+                case Keys.D -> { this.document.duplicateLines(); ensureCursorVisible(); return true; }
                 default -> { }
             }
+        }
+
+        if (alt && (key == Keys.UP || key == Keys.DOWN)) {
+            this.document.moveLines(key == Keys.UP ? -1 : 1);
+            ensureCursorVisible();
+            return true;
         }
 
         switch (key) {
@@ -486,6 +495,7 @@ public class SyntaxEditorWidget extends WidgetBase {
             case Keys.END -> { moveToLineEdge(false, shift); return true; }
             case Keys.PAGE_UP -> { moveVertical(-visibleLines(), shift); return true; }
             case Keys.PAGE_DOWN -> { moveVertical(visibleLines(), shift); return true; }
+            case Keys.F12 -> { goToDefinition(this.document.getCursor()); return true; }
             default -> { return false; }
         }
     }
@@ -520,6 +530,10 @@ public class SyntaxEditorWidget extends WidgetBase {
         boolean isDoubleClick = now - this.lastClickTime < DOUBLE_CLICK_MS && pos == this.lastClickPos;
         this.lastClickTime = now;
         this.lastClickPos = pos;
+        if (RenderHelper.hasControlDown() && goToDefinition(pos)) {
+            dismissSuggestions();
+            return true;
+        }
         if (RenderHelper.hasShiftDown()) this.document.moveCursor(pos, true); // extends the selection from the anchor
         else if (isDoubleClick) this.document.selectWordAt(pos);
         else this.document.moveCursor(pos, false);
@@ -671,6 +685,19 @@ public class SyntaxEditorWidget extends WidgetBase {
         int line = this.document.cursorLineCol()[0];
         int start = this.document.lineOffsets()[line];
         moveCursor(home ? start : start + this.document.getLines().get(line).length(), select);
+    }
+
+    /** Ctrl+click / F12: selects the declaration of the function named at {@code pos}; false when there is none. */
+    private boolean goToDefinition(int pos) {
+        Optional<int[]> word = this.document.identifierAt(pos);
+        if (word.isEmpty()) return false;
+        String name = this.document.chars().subSequence(word.get()[0], word.get()[1]).toString();
+        Optional<Integer> definition = ParameterHints.functionDefinition(this.document.chars(), name);
+        if (definition.isEmpty()) return false;
+        this.document.select(definition.get(), definition.get() + name.length());
+        ensureCursorVisible();
+        updateActiveCall();
+        return true;
     }
 
     private void copySelection() {

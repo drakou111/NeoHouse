@@ -79,6 +79,15 @@ class ParameterHintsTest {
     }
 
     @Test
+    void functionDefinitionFindsTheDeclaredName() {
+        String source = "f(1);\nfunction long g() {}\nfunction f(long a) {}";
+
+        assertThat(ParameterHints.functionDefinition(source, "f")).contains(source.lastIndexOf("f("));
+        assertThat(ParameterHints.functionDefinition(source, "g")).contains(source.indexOf("g("));
+        assertThat(ParameterHints.functionDefinition(source, "h")).isEmpty();
+    }
+
+    @Test
     void callAtFindsTheEnclosingCallAndArgument() {
         assertThat(ParameterHints.callAt("foo(1, bar(2, 3), ")).contains(new CallAt("foo", 2));
         assertThat(ParameterHints.callAt("foo(\"a, b\", ")).contains(new CallAt("foo", 1));

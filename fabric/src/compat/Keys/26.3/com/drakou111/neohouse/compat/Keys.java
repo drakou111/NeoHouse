@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 public final class Keys {
     public static final int A = InputConstants.KEY_A;
     public static final int C = InputConstants.KEY_C;
+    public static final int D = InputConstants.KEY_D;
     public static final int F = InputConstants.KEY_F;
     public static final int H = InputConstants.KEY_H;
     public static final int K = InputConstants.KEY_K;
@@ -30,11 +31,14 @@ public final class Keys {
     public static final int RIGHT = InputConstants.KEY_RIGHT;
     public static final int SPACE = InputConstants.KEY_SPACE;
     public static final int TAB = InputConstants.KEY_TAB;
+    public static final int SLASH = InputConstants.KEY_SLASH;
+    public static final int F12 = InputConstants.KEY_F12;
     public static final int UP = InputConstants.KEY_UP;
 
     /** Modifier masks for the {@code mods} argument of key handlers. */
     public static final int MOD_SHIFT = InputConstants.MOD_SHIFT;
     public static final int MOD_CONTROL = InputConstants.MOD_CONTROL;
+    public static final int MOD_ALT = InputConstants.MOD_ALT;
 
     private Keys() {}
 

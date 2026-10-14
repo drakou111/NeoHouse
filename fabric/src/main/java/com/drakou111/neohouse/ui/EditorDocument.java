@@ -3,6 +3,7 @@ package com.drakou111.neohouse.ui;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The code editor's text, cursor and selection, with its edit operations and undo history. Lines
@@ -10,6 +11,11 @@ import java.util.List;
  * runs the change listener, so the widget can refresh highlighting, matches and suggestions.
  */
 final class EditorDocument {
+    private static final String LINE_COMMENT = "//";
+
+    /** Replaces {@code removed} characters at {@code offset} with {@code inserted}. */
+    private record Edit(int offset, int removed, String inserted) {}
+
     private final StringBuilder text = new StringBuilder();
     private final EditorUndoManager undoManager = new EditorUndoManager();
     private final Runnable onTextChanged;
@@ -321,6 +327,97 @@ final class EditorDocument {
         changed();
     }
 
+    /**
+     * Ctrl+/: comments out the selected lines (or the cursor's line) with "// " at their common
+     * indentation, or uncomments them when every non-blank one already starts with "//". Blank lines
+     * are left alone.
+     */
+    void toggleLineComments() {
+        int[] range = selectedLineRange();
+        List<String> lines = getLines();
+        int indent = Integer.MAX_VALUE;
+        boolean allCommented = true;
+        for (int line = range[0]; line <= range[1]; line++) {
+            String text = lines.get(line);
+            if (text.isBlank()) continue;
+            int ws = leadingSpaces(text, text.length());
+            indent = Math.min(indent, ws);
+            allCommented &= text.startsWith(LINE_COMMENT, ws);
+        }
+        if (indent == Integer.MAX_VALUE) return;
+
+        int[] offsets = lineOffsets();
+        List<Edit> edits = new ArrayList<>();
+        for (int line = range[0]; line <= range[1]; line++) {
+            String text = lines.get(line);
+            if (text.isBlank()) continue;
+            if (allCommented) {
+                int at = leadingSpaces(text, text.length());
+                int length = LINE_COMMENT.length();
+                if (text.startsWith(" ", at + length)) length++;
+                edits.add(new Edit(offsets[line] + at, length, ""));
+            } else {
+                edits.add(new Edit(offsets[line] + indent, 0, LINE_COMMENT + " "));
+            }
+        }
+        applyEdits(edits);
+    }
+
+    /** Ctrl+D: copies the selected lines (or the cursor's line) below themselves; the selection moves to the copy. */
+    void duplicateLines() {
+        int[] range = selectedLineRange();
+        int[] offsets = lineOffsets();
+        int blockEnd = offsets[range[1]] + getLines().get(range[1]).length();
+        String block = this.text.substring(offsets[range[0]], blockEnd);
+        int shift = block.length() + 1;
+        int newCursor = this.cursor + shift;
+        int newAnchor = this.selAnchor + shift;
+        this.undoManager.push(this.text.toString(), this.cursor);
+        this.text.insert(blockEnd, "\n" + block);
+        this.cursor = newCursor;
+        this.selAnchor = newAnchor;
+        changed();
+    }
+
+    /**
+     * Alt+Up / Alt+Down: swaps the selected lines (or the cursor's line) with the line above
+     * ({@code direction} < 0) or below; the cursor and selection move with them.
+     */
+    void moveLines(int direction) {
+        int[] range = selectedLineRange();
+        List<String> lines = getLines();
+        int neighbour = direction < 0 ? range[0] - 1 : range[1] + 1;
+        if (neighbour < 0 || neighbour >= lines.size()) return;
+
+        int[] offsets = lineOffsets();
+        String block = this.text.substring(offsets[range[0]], offsets[range[1]] + lines.get(range[1]).length());
+        String other = lines.get(neighbour);
+        int regionStart = offsets[Math.min(range[0], neighbour)];
+        int regionEnd = regionStart + block.length() + other.length() + 1;
+        String moved = direction < 0 ? block + "\n" + other : other + "\n" + block;
+        int shift = direction < 0 ? -(other.length() + 1) : other.length() + 1;
+        int newCursor = this.cursor + shift;
+        int newAnchor = this.selAnchor + shift;
+        this.undoManager.push(this.text.toString(), this.cursor);
+        this.text.replace(regionStart, regionEnd, moved);
+        this.cursor = newCursor;
+        this.selAnchor = newAnchor;
+        changed();
+    }
+
+    /** {start, end} of the identifier touching {@code pos} (just before or after it), if any. */
+    Optional<int[]> identifierAt(int pos) {
+        int len = this.text.length();
+        int p = clamp(pos);
+        if ((p >= len || !isIdentifierChar(this.text.charAt(p))) && p > 0 && isIdentifierChar(this.text.charAt(p - 1))) p--;
+        if (p >= len || !isIdentifierChar(this.text.charAt(p))) return Optional.empty();
+        int start = p;
+        int end = p;
+        while (start > 0 && isIdentifierChar(this.text.charAt(start - 1))) start--;
+        while (end < len && isIdentifierChar(this.text.charAt(end))) end++;
+        return Optional.of(new int[]{start, end});
+    }
+
     /** Returns false when there is nothing to undo. */
     boolean undo() {
         return restore(this.undoManager.undo(this.text.toString(), this.cursor));
@@ -341,6 +438,34 @@ final class EditorDocument {
         this.selAnchor = this.cursor;
         changed();
         return true;
+    }
+
+    /** Applies edits (ascending, non-overlapping offsets into the current text) as one undo step. */
+    private void applyEdits(List<Edit> edits) {
+        int newCursor = mapThroughEdits(this.cursor, edits);
+        int newAnchor = mapThroughEdits(this.selAnchor, edits);
+        this.undoManager.push(this.text.toString(), this.cursor);
+        for (int i = edits.size() - 1; i >= 0; i--) {
+            Edit e = edits.get(i);
+            this.text.replace(e.offset(), e.offset() + e.removed(), e.inserted());
+        }
+        this.cursor = newCursor;
+        this.selAnchor = newAnchor;
+        changed();
+    }
+
+    /**
+     * Where {@code pos} ends up after {@code edits}: text inserted at {@code pos} pushes it right
+     * (so the cursor stays with the code), and a position inside removed text moves to its start.
+     */
+    private static int mapThroughEdits(int pos, List<Edit> edits) {
+        int shift = 0;
+        for (Edit e : edits) {
+            if (pos < e.offset()) break;
+            if (pos < e.offset() + e.removed()) return e.offset() + shift;
+            shift += e.inserted().length() - e.removed();
+        }
+        return pos + shift;
     }
 
     /** Deletes the selection as its own undo step; false when nothing was selected. */

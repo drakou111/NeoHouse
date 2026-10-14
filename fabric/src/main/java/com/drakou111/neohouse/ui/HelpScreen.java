@@ -101,6 +101,19 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_C, "  /nh nuke               - delete everything"));
         l.add(new HelpLine(COL_D, ""));
 
+        l.add(new HelpLine(COL_H, "Code editor shortcuts"));
+        l.add(new HelpLine(COL_C, "  Ctrl+S                 - save"));
+        l.add(new HelpLine(COL_C, "  Ctrl+F / Ctrl+R        - find / find and replace"));
+        l.add(new HelpLine(COL_C, "  Ctrl+Z / Ctrl+Y        - undo / redo"));
+        l.add(new HelpLine(COL_C, "  Ctrl+/                 - comment or uncomment lines"));
+        l.add(new HelpLine(COL_C, "  Ctrl+D                 - duplicate lines"));
+        l.add(new HelpLine(COL_C, "  Alt+Up / Alt+Down      - move lines up / down"));
+        l.add(new HelpLine(COL_C, "  Ctrl+click or F12      - go to a function's definition"));
+        l.add(new HelpLine(COL_C, "  Tab / Shift+Tab        - indent / unindent"));
+        l.add(new HelpLine(COL_C, "  Ctrl+X with nothing selected cuts the whole line"));
+        l.add(new HelpLine(COL_T, "  Ctrl+/ uses the key where / is on a US keyboard."));
+        l.add(new HelpLine(COL_D, ""));
+
         return l;
     }
 

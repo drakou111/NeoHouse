@@ -6,6 +6,7 @@ import org.lwjgl.glfw.GLFW;
 public final class Keys {
     public static final int A = GLFW.GLFW_KEY_A;
     public static final int C = GLFW.GLFW_KEY_C;
+    public static final int D = GLFW.GLFW_KEY_D;
     public static final int F = GLFW.GLFW_KEY_F;
     public static final int H = GLFW.GLFW_KEY_H;
     public static final int K = GLFW.GLFW_KEY_K;
@@ -30,11 +31,14 @@ public final class Keys {
     public static final int RIGHT = GLFW.GLFW_KEY_RIGHT;
     public static final int SPACE = GLFW.GLFW_KEY_SPACE;
     public static final int TAB = GLFW.GLFW_KEY_TAB;
+    public static final int SLASH = GLFW.GLFW_KEY_SLASH;
+    public static final int F12 = GLFW.GLFW_KEY_F12;
     public static final int UP = GLFW.GLFW_KEY_UP;
 
     /** Modifier masks for the {@code mods} argument of key handlers. */
     public static final int MOD_SHIFT = GLFW.GLFW_MOD_SHIFT;
     public static final int MOD_CONTROL = GLFW.GLFW_MOD_CONTROL;
+    public static final int MOD_ALT = GLFW.GLFW_MOD_ALT;
 
     private Keys() {}
 
