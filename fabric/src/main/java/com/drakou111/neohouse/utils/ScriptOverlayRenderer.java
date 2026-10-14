@@ -27,6 +27,8 @@ public class ScriptOverlayRenderer {
     private static final int MOB_SCALE_MIN      = 8;
     private static final int MOB_SCALE_MAX      = 55;
     private static final int MOB_BOX_GAP        = 2;
+    // Real entity IDs count up from 1, so a negative one can't collide.
+    private static final int PREVIEW_ENTITY_ID  = -1;
 
     public static void render(Gfx gfx, Minecraft mc, int screenW, int screenH) {
         if (!SequenceManager.isRunning()) {
@@ -112,6 +114,8 @@ public class ScriptOverlayRenderer {
         String mobId = cfg.scriptMobId;
         if (!mobId.equals(cachedMobId)) {
             cachedMobEntity = RenderHelper.createEntity(mc, mobId);
+            // 26.2+ throws on getId() while the ID is still 0, and this entity is never added to a world.
+            if (cachedMobEntity != null) cachedMobEntity.setId(PREVIEW_ENTITY_ID);
             cachedMobId = mobId;
         }
         if (cachedMobEntity == null) return;
