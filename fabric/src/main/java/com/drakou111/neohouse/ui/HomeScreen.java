@@ -44,7 +44,7 @@ public class HomeScreen extends ScreenBase {
 
             new SeasonalHint(12, 24, 12, 26, "Merry Christmas!"),
             new SeasonalHint(12, 31, 1, 1, "Happy New Year!"),
-            new SeasonalHint(10, 31, 10, 31, "Happy Halloween!"),
+            new SeasonalHint(10, 30, 10, 31, "Happy Halloween!"),
             new SeasonalHint(7, 15, 7, 15, "JULY 15TH 7PM EST THE AWARDENING"),
 
             new RareHint("GG red.", 1.0 / 4),

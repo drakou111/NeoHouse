@@ -9,14 +9,20 @@
 
 - [ ] Chat inputs: every text field is answered in chat; an anvil (other than list search bars and Custom Sound) stops the run with a "turn on chat inputs" message.
 - [X] Override If Empty: existing functions/commands/events are opened and slot 10 is checked for an action; menus count as empty when every element is a gray glass "Empty Slot".
-- [ ] Commands and custom menus lists use the same layout as the functions list (entries in slots 10-34, next-page arrow in slot 53) for the pre-read.
-- [ ] Menu loading: a menu counts as loaded once it shows items that stay the same for 4 ticks (fixes "Could not find ..." on slow servers).
+- [X] Commands and custom menus lists use the same layout as the functions list (entries in slots 10-34, next-page arrow in slot 53) for the pre-read.
+- [X] Menu loading: a menu counts as loaded once it shows items that stay the same for 4 ticks (fixes "Could not find ..." on slow servers).
 - [ ] Custom Sound: playSound with a name that isn't a listed sound clicks "Custom Sound" and types the id.
 - [ ] 26.1 / 26.2 / 26.3 builds: compile and pass tests, but haven't been launched in game. 26.3 uses SDL key codes (Keys compat set); default keybinds K and N should be checked there.
+  - [ ] 26.1
+  - [X] 26.2
+  - [ ] 26.3
 - [ ] Team / layout / group check: names are read from item names in slots 10-34 of `/teams`, `/layout` and `/menu` -> "Permissions and Groups"; check those menus really list them there.
-- [ ] Editor: horizontal scrollbar, suggestion and parameter-hint behaviour (see Done).
-- [ ] Music editor start cursor: click/drag the ruler strip above the notes; Play/Space starts there, Stop returns there, Loop repeats from there, Home resets it to 0.
-- [ ] File browser: icons per type and the move of old `neohouse-music` files into `neohouse-scripts` on first launch.
+    - [X] team
+    - [X] layout
+    - [X] group
+- [X] Editor: horizontal scrollbar, suggestion and parameter-hint behaviour (see Done).
+- [X] Music editor start cursor: click/drag the ruler strip above the notes; Play/Space starts there, Stop returns there, Loop repeats from there, Home resets it to 0.
+- [X] File browser: icons per type and the move of old `neohouse-music` files into `neohouse-scripts` on first launch.
 
 ## Done
 

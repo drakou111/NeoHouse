@@ -16,7 +16,7 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen;
  */
 public class TextEntryAction extends Action {
     public static final String CHAT_INPUTS_HINT = "Housing opened an anvil where NeoHouse expected a chat prompt. "
-            + "Turn on chat inputs in your Housing settings, then run the script again.";
+            + "Turn on chat inputs in your Housing settings (/settings -> Personal Housing Settings -> Text Input Type -> Chat), then run the script again.";
 
     // Ticks to watch for an anvil after the menu closes: some servers close the menu just before opening it.
     private static final int ANVIL_GRACE_TICKS = 2;
