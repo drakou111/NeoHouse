@@ -1,6 +1,17 @@
 def mcVer = rootProject.ext.active_mc_version
+// True when the active Minecraft version is at least {@code min} (compares numerically: 26.1.2 >= 26.1).
+def atLeast = { String min ->
+    def a = mcVer.tokenize('.').collect { it as int }
+    def b = min.tokenize('.').collect { it as int }
+    for (int i = 0; i < Math.max(a.size(), b.size()); i++) {
+        int x = i < a.size() ? a[i] : 0
+        int y = i < b.size() ? b[i] : 0
+        if (x != y) return x > y
+    }
+    return true
+}
 // Minecraft is unobfuscated from 26.1 on: no mappings and no remapping of the built jar.
-def unobfuscated = !mcVer.startsWith('1.')
+def unobfuscated = atLeast('26.1')
 apply plugin: unobfuscated ? 'net.fabricmc.fabric-loom' : 'net.fabricmc.fabric-loom-remap'
 
 base {
@@ -47,26 +58,25 @@ tasks.named("test", Test).configure {
 }
 
 // Version-specific compat source dirs: each holds the same classes written against one API range.
-def itemApiVersions = ['1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11'] as Set
-sourceSets.main.java.srcDir(unobfuscated || itemApiVersions.contains(mcVer) ? 'src/compat/mc1215plus' : 'src/compat/mc1214')
+sourceSets.main.java.srcDir(atLeast('1.21.6') ? 'src/compat/mc1215plus' : 'src/compat/mc1214')
 
 // In 1.21.5: ClickEvent became a sealed interface with record subtypes (ClickEvent.RunCommand),
 // and Inventory.selected went private in favor of the getSelectedSlot() getter.
-def oldClickInv = mcVer in ['1.21.2', '1.21.3', '1.21.4']
+def oldClickInv = !atLeast('1.21.5')
 sourceSets.main.java.srcDir(oldClickInv ? 'src/compat/click_old' : 'src/compat/click_new')
 sourceSets.main.java.srcDir(oldClickInv ? 'src/compat/inv_field' : 'src/compat/inv_getter')
 // 26.1 renamed inventory clicks (ContainerInput) and the Fabric key, command and HUD APIs.
-sourceSets.main.java.srcDir(unobfuscated ? 'src/compat/api26' : 'src/compat/api121')
+sourceSets.main.java.srcDir(atLeast('26.1') ? 'src/compat/api26' : 'src/compat/api121')
 // 26.2 moved the open screen and the tab list from Minecraft onto Gui.
-sourceSets.main.java.srcDir(unobfuscated && mcVer != '26.1' ? 'src/compat/client_new' : 'src/compat/client_old')
+sourceSets.main.java.srcDir(atLeast('26.2') ? 'src/compat/client_new' : 'src/compat/client_old')
 // 26.3 replaced GLFW keyboard input with SDL: different key codes and no org.lwjgl.glfw.
-sourceSets.main.java.srcDir(unobfuscated && !(mcVer in ['26.1', '26.2']) ? 'src/compat/keys_sdl' : 'src/compat/keys_glfw')
+sourceSets.main.java.srcDir(atLeast('26.3') ? 'src/compat/keys_sdl' : 'src/compat/keys_glfw')
 sourceSets.main.java.srcDir(
-    unobfuscated                                     ? 'src/compat/mc261plus'   :
-    mcVer == '1.21.11'                               ? 'src/compat/mc12111plus' :
-    mcVer in ['1.21.9', '1.21.10']                   ? 'src/compat/mc1219plus'  :
-    mcVer in ['1.21.6', '1.21.7', '1.21.8']          ? 'src/compat/mc1216plus'  :
-                                                        'src/compat/mc1218minus'
+    atLeast('26.1')    ? 'src/compat/mc261plus'   :
+    atLeast('1.21.11') ? 'src/compat/mc12111plus' :
+    atLeast('1.21.9')  ? 'src/compat/mc1219plus'  :
+    atLeast('1.21.6')  ? 'src/compat/mc1216plus'  :
+                         'src/compat/mc1218minus'
 )
 
 // Generates BuildConstants.java with the current build date baked in.
