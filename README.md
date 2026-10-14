@@ -35,16 +35,23 @@ NeoHouse's language has a bit more abstraction than HTSL, but still allows for 1
 
 You can download **NeoHouse** from [Modrinth](https://modrinth.com/project/neohouse)
 
-Choose the version and mod loader that matches your setup, then place the `.jar` file into your `mods` folder.
+Choose the version that matches your Minecraft version, then place the `.jar` file into your `mods` folder.
 
 ## Requirements
 
-- Fabric requires if using the fabric version [Fabric API](https://modrinth.com/project/P7dR8mSH) 
+- [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://modrinth.com/project/P7dR8mSH)
+- In Housing, turn on chat inputs (NeoHouse types values into chat prompts instead of anvils)
 
 ## Supported Versions
 
-- Minecraft 1.21.2 -> 1.21.11
-- Fabric and NeoForge
+- Minecraft 1.21.2 to 1.21.11, 26.1, 26.2 and 26.3
+- Fabric only (NeoForge support was dropped)
+
+## Building
+
+`./gradlew chiseledBuild` builds a jar for every supported version into `dist/`. Gradle runs on Java 25
+and downloads it (and Java 21 for the 1.21.x builds) when needed. `./gradlew :fabric:test` runs the
+compiler tests for the active version (set with `./gradlew stonecutterSwitchTo<version>`).
 
 ---
 
