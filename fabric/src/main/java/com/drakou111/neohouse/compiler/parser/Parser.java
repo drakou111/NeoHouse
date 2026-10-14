@@ -909,7 +909,7 @@ public class Parser {
     private boolean isNextBooleanOperator() {
         TokenType type = peek().type;
         return switch (type) {
-            case EQ_EQ, LT, GT, LE, GE -> true;
+            case EQ_EQ, BANG_EQ, LT, GT, LE, GE -> true;
             default -> false;
         };
     }
@@ -1273,11 +1273,13 @@ public class Parser {
     BooleanOperator parseBooleanOperatorFromToken(Token operator) {
         return switch (operator.type) {
             case EQ_EQ -> BooleanOperator.EQUALS;
+            // Housing has no "not equal": it becomes an equality check with the condition inverted.
+            case BANG_EQ -> BooleanOperator.NOT_EQUALS;
             case LT -> BooleanOperator.LESS_THAN;
             case LE -> BooleanOperator.LESS_THAN_EQUALS;
             case GT -> BooleanOperator.GREATER_THAN;
             case GE -> BooleanOperator.GREATER_THAN_EQUALS;
-            default -> throw new ParsingException(operator, "Invalid boolean operator, expected '==', '<' ,'<=', '>' or '>='. Note that '!=' is not included.");
+            default -> throw new ParsingException(operator, "Invalid comparison, expected '==', '!=', '<', '<=', '>' or '>='.");
         };
     }
 

@@ -19,7 +19,7 @@ public enum TokenType {
     LONG_VALUE("0[xX][0-9a-fA-F](?:_?[0-9a-fA-F])*(?![0-9a-zA-Z_$])|0[bB][01](?:_?[01])*(?![0-9a-zA-Z_$])|\\d(?:_?\\d)*"),
     STRING_VALUE("\"([^\"\\\\]|\\\\.)*\""),
 
-    EQ_EQ("=="),
+    EQ_EQ("=="), BANG_EQ("!="),
     PLUS_EQ("\\+="), MINUS_EQ("-="), STAR_EQ("\\*="), SLASH_EQ("/="), PERCENT_EQ("%="), TILDE_EQ("~="),
     UNSIGNED_RIGHT_SHIFT_EQ(">>>="), RIGHT_SHIFT_EQ(">>="), LEFT_SHIFT_EQ("<<="),
     AMP_EQ("&="), CARET_EQ("\\^="), BAR_EQ("\\|="),
