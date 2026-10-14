@@ -3,12 +3,11 @@ package com.drakou111.neohouse;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.CreativeGiveAction;
 import com.drakou111.neohouse.actions.actiontypes.DeleteAllAction;
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllCommandsAction;
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllFunctionsAction;
-import com.drakou111.neohouse.actions.actiontypes.DeleteAllMenusAction;
+import com.drakou111.neohouse.actions.actiontypes.DeleteListEntriesAction;
 import com.drakou111.neohouse.compat.InventoryHelper;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.constants.Commands;
+import com.drakou111.neohouse.constants.HousingList;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Others;
 import com.drakou111.neohouse.exceptions.PermissionException;
@@ -88,17 +87,10 @@ public final class CommandActions {
                 "", null,
                 typed -> {
                     requireConfirmation(typed, "Nuke cancelled - you didn't type \"Delete\".");
-                    ActionBuilder builder = new ActionBuilder()
-                            .closeAll()
-                            .sendChatAndWait(Commands.FUNCTIONS)
-                            .append(new DeleteAllFunctionsAction())
-                            .closeAll()
-                            .sendChatAndWait(Commands.COMMANDS)
-                            .append(new DeleteAllCommandsAction())
-                            .closeAll()
-                            .sendChatAndWait(Commands.CUSTOM_MENUS)
-                            .append(new DeleteAllMenusAction())
-                            .closeAll();
+                    ActionBuilder builder = new ActionBuilder();
+                    deleteEntries(builder, HousingList.FUNCTIONS);
+                    deleteEntries(builder, HousingList.COMMANDS);
+                    deleteEntries(builder, HousingList.MENUS);
                     appendEventDeletes(builder);
                     SequenceManager.startAction(builder.closeAll().get());
                     MessageUtils.debugToChat("Nuking housing.");
@@ -110,34 +102,27 @@ public final class CommandActions {
     public static int handleDeleteFunctions() {
         return confirmDelete("Type \"Delete\" to permanently destroy ALL functions.",
                 "Deleting all functions...",
-                () -> new ActionBuilder()
-                        .closeAll()
-                        .sendChatAndWait(Commands.FUNCTIONS)
-                        .append(new DeleteAllFunctionsAction())
-                        .closeAll()
-                        .get());
+                () -> deleteEntries(new ActionBuilder(), HousingList.FUNCTIONS).get());
     }
 
     public static int handleDeleteCommands() {
         return confirmDelete("Type \"Delete\" to permanently destroy ALL commands.",
                 "Deleting all commands...",
-                () -> new ActionBuilder()
-                        .closeAll()
-                        .sendChatAndWait(Commands.COMMANDS)
-                        .append(new DeleteAllCommandsAction())
-                        .closeAll()
-                        .get());
+                () -> deleteEntries(new ActionBuilder(), HousingList.COMMANDS).get());
     }
 
     public static int handleDeleteMenus() {
         return confirmDelete("Type \"Delete\" to permanently destroy ALL custom menus.",
                 "Deleting all custom menus...",
-                () -> new ActionBuilder()
-                        .closeAll()
-                        .sendChatAndWait(Commands.CUSTOM_MENUS)
-                        .append(new DeleteAllMenusAction())
-                        .closeAll()
-                        .get());
+                () -> deleteEntries(new ActionBuilder(), HousingList.MENUS).get());
+    }
+
+    /** Opens {@code list} and deletes every entry in it. */
+    private static ActionBuilder deleteEntries(ActionBuilder builder, HousingList list) {
+        return builder.closeAll()
+                .sendChatAndWait(list.openCommand)
+                .append(new DeleteListEntriesAction(list))
+                .closeAll();
     }
 
     public static int handleDeleteEvents() {

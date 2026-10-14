@@ -40,4 +40,9 @@ public enum HousingList {
     public String displayName(String name) {
         return this.displayPrefix + name;
     }
+
+    /** The entry's own name, given the item name it has in the list ({@code /spawn} is command {@code spawn}). */
+    public String nameOf(String displayed) {
+        return displayed.startsWith(this.displayPrefix) ? displayed.substring(this.displayPrefix.length()) : displayed;
+    }
 }
