@@ -77,9 +77,7 @@ class ConstantFoldingTest {
     }
 
     @Test
-    void userVariablesAreNeverFolded() {
-        assertThat(loweredBody("long p.a; long p.r;", "p.r = p.a * 1 + 0;")).containsExactly(
-                "f$t0 ASSIGN a",
-                "r ASSIGN f$t0");
+    void neutralStepsDisappearLeavingOneWrite() {
+        assertThat(loweredBody("long p.a; long p.r;", "p.r = p.a * 1 + 0;")).containsExactly("r ASSIGN a");
     }
 }

@@ -103,6 +103,9 @@ public class NHCompiler implements Compiler {
         FunctionParamLoweringVisitor functionParamLoweringVisitor = new FunctionParamLoweringVisitor();
         node = functionParamLoweringVisitor.analyze(node);
 
+        // Calls, return and parameter slots have their final form from here on; temps are still t$N.
+        node = new TempOptimizationVisitor().analyze(node);
+
         NeutralStatementRemovalVisitor neutralRemoval = new NeutralStatementRemovalVisitor();
         node = neutralRemoval.analyze(node);
 
