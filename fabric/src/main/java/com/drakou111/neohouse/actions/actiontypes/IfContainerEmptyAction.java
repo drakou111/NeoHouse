@@ -1,17 +1,13 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
-import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.constants.Others;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.Slot;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -58,9 +54,8 @@ public class IfContainerEmptyAction extends Action {
     /** For a custom menu's element grid: empty when every element is an "Empty Slot" glass pane. */
     public static IfContainerEmptyAction menuGrid(Action ifEmpty, Action ifNotEmpty) {
         return new IfContainerEmptyAction("menu elements",
-                menu -> !containerSlots(menu).stream().allMatch(slot -> !slot.hasItem()),
-                menu -> containerSlots(menu).stream()
-                        .allMatch(slot -> !slot.hasItem() || ClientUi.isGrayGlassPane(slot.getItem())),
+                menu -> !MenuSettling.containerSlots(menu).stream().allMatch(slot -> !slot.hasItem()),
+                menu -> MenuSettling.containerSlots(menu).stream().allMatch(MenuSettling::isEmptyMenuElement),
                 ifEmpty, ifNotEmpty);
     }
 
@@ -102,12 +97,6 @@ public class IfContainerEmptyAction extends Action {
             return false;
         }
         return this.settling.update(MenuSettling.snapshot(menu));
-    }
-
-    private static List<Slot> containerSlots(AbstractContainerMenu menu) {
-        List<Slot> slots = new ArrayList<>();
-        for (Slot slot : menu.slots) if (!(slot.container instanceof Inventory)) slots.add(slot);
-        return slots;
     }
 
     private static boolean hasItem(AbstractContainerMenu menu, int slot) {

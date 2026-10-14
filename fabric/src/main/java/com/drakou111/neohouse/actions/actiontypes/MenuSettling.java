@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
+import com.drakou111.neohouse.compat.ClientUi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -107,5 +108,17 @@ final class MenuSettling {
             names.add(slot.hasItem() ? slot.getItem().getHoverName().getString() : "");
         }
         return names;
+    }
+
+    /** The menu's own slots, without the player's inventory. */
+    static List<Slot> containerSlots(AbstractContainerMenu menu) {
+        List<Slot> slots = new ArrayList<>();
+        for (Slot slot : menu.slots) if (!(slot.container instanceof Inventory)) slots.add(slot);
+        return slots;
+    }
+
+    /** A custom menu's element grid shows an unused element as a gray "Empty Slot" glass pane. */
+    static boolean isEmptyMenuElement(Slot slot) {
+        return !slot.hasItem() || ClientUi.isGrayGlassPane(slot.getItem());
     }
 }
