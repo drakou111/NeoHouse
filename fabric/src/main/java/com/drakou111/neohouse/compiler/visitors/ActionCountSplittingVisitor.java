@@ -119,7 +119,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
 
             if (branch.statements.isEmpty()) continue;
             StatementNode stmt = branch.statements.get(0);
-            AddAction action = extractAction(stmt);
+            AddAction action = actionKindOf(stmt);
             if (action == null) continue;
 
             long total = totals.merge(action, weight, Long::sum);
@@ -143,7 +143,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
 
         for (int i = 0; i < list.size(); i++) {
             StatementNode s = list.get(i);
-            AddAction a = extractAction(s);
+            AddAction a = actionKindOf(s);
             // ConditionalNodes and RandomNodes must stay in the outer scope - no nesting.
             boolean mustGoOuter = s instanceof ConditionalNode || s instanceof RandomNode;
 
@@ -194,7 +194,8 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         return new StatementListNode(result);
     }
 
-    private AddAction extractAction(StatementNode stmt) {
+    /** The Housing action a statement becomes, or null for one that adds no action (a declaration). */
+    public static AddAction actionKindOf(StatementNode stmt) {
         return switch (stmt) {
             case ActionCallNode f -> AddAction.requireByName(f.name);
             case VoidFunctionCallNode ignore -> AddAction.TRIGGER_FUNCTION;
