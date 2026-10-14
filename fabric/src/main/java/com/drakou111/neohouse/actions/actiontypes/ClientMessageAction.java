@@ -14,6 +14,9 @@ public class ClientMessageAction extends Action {
     }
 
     @Override
+    public String getDebugName() { return "Message: " + message; }
+
+    @Override
     public boolean run(Minecraft mc) {
         if (isWarning) MessageUtils.warningToChat(message);
         else           MessageUtils.debugToChat(message);
