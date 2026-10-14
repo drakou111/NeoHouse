@@ -146,7 +146,7 @@ public class SearchAction extends Action {
         }
 
         ContainerClicks.pickup(mc, menu.containerId, arrow.index, 0);
-        this.pageTurn.start(page);
+        this.pageTurn.start(page, slots.length - 1);
         this.step = Step.TURN_PAGE;
     }
 

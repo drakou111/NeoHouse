@@ -88,7 +88,8 @@ public class ReadListNamesAction extends Action {
                 && MenuSettling.isNextPageArrow(menu.slots.get(NEXT_PAGE_SLOT).getItem());
         if (!hasNextPage || mc.gameMode == null) return true;
         ContainerClicks.pickup(mc, menu.containerId, NEXT_PAGE_SLOT, 0);
-        this.pageTurn.start(snapshot);
+        // MenuSettling.snapshot lists the menu's own slots in order, so slot 53 is position 53.
+        this.pageTurn.start(snapshot, NEXT_PAGE_SLOT);
         this.step = Step.TURN_PAGE;
         return false;
     }

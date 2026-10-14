@@ -14,6 +14,9 @@ class MenuSettlingTest {
     private static final List<String> EMPTY = List.of("", "", "");
     private static final List<String> PARTIAL = List.of("a", "", "");
     private static final List<String> FULL = List.of("a", "b", "Next Page");
+    private static final int ARROW = 2;
+    private static final List<String> ARROW_LIFTED = List.of("a", "b", "");
+    private static final List<String> NEXT_PAGE = List.of("c", "d", "Next Page");
 
     /** Feeds {@code snapshot} until the settling says loaded; returns how many ticks that took. */
     private static int ticksUntilSettled(MenuSettling settling, List<String> snapshot) {
@@ -74,9 +77,28 @@ class MenuSettlingTest {
     }
 
     @Test
+    void liftingTheClickedArrowIsNotAPageTurn() {
+        // The client shows the click at once by moving the arrow onto the cursor; the page is still the old one.
+        PageTurn turn = new PageTurn("function list");
+        turn.start(FULL, ARROW);
+
+        for (int tick = 0; tick < 50; tick++) assertThat(turn.hasTurned(ARROW_LIFTED, 100)).isFalse();
+        assertThat(turn.hasTurned(FULL, 100)).isFalse();
+        assertThat(turn.hasTurned(NEXT_PAGE, 100)).isTrue();
+    }
+
+    @Test
+    void closedMenuCountsAsAChange() {
+        PageTurn turn = new PageTurn("function list");
+        turn.start(FULL, ARROW);
+
+        assertThat(turn.hasTurned(List.of(), 100)).isTrue();
+    }
+
+    @Test
     void pageTurnReportsTheResponseTime() {
         PageTurn turn = new PageTurn("function list");
-        turn.start(FULL);
+        turn.start(FULL, ARROW);
         for (int tick = 0; tick < 7; tick++) assertThat(turn.hasTurned(FULL, 100)).isFalse();
 
         assertThat(turn.hasTurned(PARTIAL, 100)).isTrue();
@@ -86,7 +108,7 @@ class MenuSettlingTest {
     @Test
     void pageThatNeverTurnsIsAnErrorNotTheLastPage() {
         PageTurn turn = new PageTurn("function list");
-        turn.start(FULL);
+        turn.start(FULL, ARROW);
         for (int tick = 0; tick < 10; tick++) turn.hasTurned(FULL, 10);
 
         assertThatThrownBy(() -> turn.hasTurned(FULL, 10))

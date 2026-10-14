@@ -33,7 +33,9 @@ public class WaitForAction extends Action {
             initialized = true;
         }
         if (++ticksWaited > NeoHouseConfig.get().actionTimeoutTicks) {
-            throw new InterruptActionException("Timed out waiting for screen to " + (waitForOpen ? "open" : "close") + ".");
+            throw new InterruptActionException(("Timed out after %d ticks waiting for a menu to %s. The server may be lagging: "
+                    + "run the script again, or raise \"Action timeout\" in the NeoHouse settings.")
+                    .formatted(NeoHouseConfig.get().actionTimeoutTicks, waitForOpen ? "open" : "close"));
         }
         Screen current = ClientUi.screen(mc);
         if (waitForOpen) {
