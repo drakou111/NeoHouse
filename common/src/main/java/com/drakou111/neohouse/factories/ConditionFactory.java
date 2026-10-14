@@ -32,10 +32,10 @@ public class ConditionFactory {
                 InputParam.toggle(VariableInputs.INVERT, invert),
                 InputParam.choice(VariableInputs.HOLDER, holder == Holder.GLOBAL ? 1 : holder == Holder.TEAM ? 2 : 0),
                 InputParam.listSearch(VariableInputs.TEAM, teamNameVal),
-                b -> { if (variable != null && !variable.trim().isEmpty() && !variable.equals("Kills")) b.searchForChat(VariableInputs.VARIABLE, variable); },
+                b -> { if (variable != null && !variable.trim().isEmpty() && !variable.equals("Kills")) b.searchForText(VariableInputs.VARIABLE, variable); },
                 InputParam.listSearch(VariableInputs.COMPARATOR, comparator != null && comparator != Comparator.EQUAL ? comparator.displayName : null),
-                InputParam.anvil(VariableInputs.COMPARE_VALUE, value, null),
-                b -> { if (fallback != null && !fallback.trim().isEmpty()) b.searchForAnvil(VariableInputs.FALLBACK_VALUE, fallback); },
+                InputParam.text(VariableInputs.COMPARE_VALUE, value, null),
+                b -> { if (fallback != null && !fallback.trim().isEmpty()) b.searchForText(VariableInputs.FALLBACK_VALUE, fallback); },
                 InputParam.note(note));
     }
 
@@ -92,7 +92,7 @@ public class ConditionFactory {
         return buildCondition(state, AddCondition.HEALTH,
                 InputParam.toggle(HealthInputs.INVERT, invert),
                 InputParam.listSearch(HealthInputs.COMPARATOR, comparator != null && comparator != Comparator.EQUAL ? comparator.displayName : null),
-                InputParam.anvil(HealthInputs.COMPARE_VALUE, value, null),
+                InputParam.text(HealthInputs.COMPARE_VALUE, value, null),
                 InputParam.note(note));
     }
 
@@ -100,7 +100,7 @@ public class ConditionFactory {
         return buildCondition(state, AddCondition.MAX_HEALTH,
                 InputParam.toggle(MaxHealthInputs.INVERT, invert),
                 InputParam.listSearch(MaxHealthInputs.COMPARATOR, comparator != null && comparator != Comparator.EQUAL ? comparator.displayName : null),
-                InputParam.anvil(HealthInputs.COMPARE_VALUE, value, null),
+                InputParam.text(HealthInputs.COMPARE_VALUE, value, null),
                 InputParam.note(note));
     }
 
@@ -108,7 +108,7 @@ public class ConditionFactory {
         return buildCondition(state, AddCondition.HUNGER,
                 InputParam.toggle(HungerInputs.INVERT, invert),
                 InputParam.listSearch(HungerInputs.COMPARATOR, comparator != null && comparator != Comparator.EQUAL ? comparator.displayName : null),
-                InputParam.anvil(HungerInputs.COMPARE_VALUE, value, null),
+                InputParam.text(HungerInputs.COMPARE_VALUE, value, null),
                 InputParam.note(note));
     }
 
@@ -123,9 +123,9 @@ public class ConditionFactory {
     public static Action addConditionPlaceholder(RestrictionCondition state, boolean invert, String placeholder, Comparator comparator, String value, String note) {
         return buildCondition(state, AddCondition.PLACEHOLDER,
                 InputParam.toggle(PlaceholderInputs.INVERT, invert),
-                InputParam.anvilIfSet(PlaceholderInputs.PLACEHOLDER, placeholder),
+                InputParam.textIfSet(PlaceholderInputs.PLACEHOLDER, placeholder),
                 InputParam.listSearch(PlaceholderInputs.COMPARATOR, comparator != null && comparator != Comparator.EQUAL ? comparator.displayName : null),
-                InputParam.anvilIfSet(PlaceholderInputs.COMPARE_VALUE, value),
+                InputParam.textIfSet(PlaceholderInputs.COMPARE_VALUE, value),
                 InputParam.note(note));
     }
 
@@ -161,7 +161,7 @@ public class ConditionFactory {
         return buildCondition(state, AddCondition.DAMAGE_AMOUNT,
                 InputParam.toggle(DamageAmountInputs.INVERT, invert),
                 InputParam.listSearch(DamageAmountInputs.COMPARATOR, comparator != null && comparator != Comparator.EQUAL ? comparator.displayName : null),
-                InputParam.anvil(DamageAmountInputs.COMPARE_VALUE, value, null),
+                InputParam.text(DamageAmountInputs.COMPARE_VALUE, value, null),
                 InputParam.note(note));
     }
 

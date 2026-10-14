@@ -2,20 +2,22 @@ package com.drakou111.neohouse.compiler.enums;
 
 import java.util.Arrays;
 
-public record Param(String name, ActionParamKind kind, String[] enumValues, Long rangeMin, Long rangeMax, Double decimalMin, Double decimalMax) {
+/** @param allowsCustomValue an enum-backed string that also accepts any other value (the enum values are just suggestions) */
+public record Param(String name, ActionParamKind kind, String[] enumValues, Long rangeMin, Long rangeMax, Double decimalMin, Double decimalMax,
+                    boolean allowsCustomValue) {
 
 
-    public static final Param STRING   = new Param(null, ActionParamKind.STRING_LITERAL,    null, null, null, null, null);
-    public static final Param BOOL     = new Param(null, ActionParamKind.BOOL_LITERAL,      null, null, null, null, null);
-    public static final Param LONG     = new Param(null, ActionParamKind.LONG_LITERAL,      null, null, null, null, null);
-    public static final Param DOUBLE   = new Param(null, ActionParamKind.DOUBLE_LITERAL,    null, null, null, null, null);
-    public static final Param EXPR     = new Param(null, ActionParamKind.NORMAL_EXPRESSION, null, null, null, null, null);
-    public static final Param ITEM     = new Param(null, ActionParamKind.ITEM_LITERAL,      null, null, null, null, null);
+    public static final Param STRING   = new Param(null, ActionParamKind.STRING_LITERAL,    null, null, null, null, null, false);
+    public static final Param BOOL     = new Param(null, ActionParamKind.BOOL_LITERAL,      null, null, null, null, null, false);
+    public static final Param LONG     = new Param(null, ActionParamKind.LONG_LITERAL,      null, null, null, null, null, false);
+    public static final Param DOUBLE   = new Param(null, ActionParamKind.DOUBLE_LITERAL,    null, null, null, null, null, false);
+    public static final Param EXPR     = new Param(null, ActionParamKind.NORMAL_EXPRESSION, null, null, null, null, null, false);
+    public static final Param ITEM     = new Param(null, ActionParamKind.ITEM_LITERAL,      null, null, null, null, null, false);
     /** HOUSE_SPAWN | INVOKER | CURRENT, or any string expression for custom coordinates. */
-    public static final Param LOCATION = new Param(null, ActionParamKind.LOCATION,          null, null, null, null, null);
+    public static final Param LOCATION = new Param(null, ActionParamKind.LOCATION,          null, null, null, null, null, false);
 
     public Param withName(String n) {
-        return new Param(n, kind, enumValues, rangeMin, rangeMax, decimalMin, decimalMax);
+        return new Param(n, kind, enumValues, rangeMin, rangeMax, decimalMin, decimalMax, allowsCustomValue);
     }
 
     public String typeName() {
@@ -52,15 +54,21 @@ public record Param(String name, ActionParamKind kind, String[] enumValues, Long
         String[] values = Arrays.stream(cls.getEnumConstants())
                                 .map(e -> ((Enum<?>) e).name())
                                 .toArray(String[]::new);
-        return new Param(null, ActionParamKind.STRING_LITERAL, values, null, null, null, null);
+        return new Param(null, ActionParamKind.STRING_LITERAL, values, null, null, null, null, false);
+    }
+
+    /** Suggests the enum's names but accepts any other non-empty string too. */
+    public static Param enumOrCustom(Class<? extends Enum<?>> cls) {
+        Param param = enumOf(cls);
+        return new Param(null, param.kind, param.enumValues, null, null, null, null, true);
     }
 
     public static Param longRange(long min, long max) {
-        return new Param(null, ActionParamKind.LONG_LITERAL, null, min, max, null, null);
+        return new Param(null, ActionParamKind.LONG_LITERAL, null, min, max, null, null, false);
     }
 
     public static Param doubleRange(double min, double max) {
-        return new Param(null, ActionParamKind.DOUBLE_LITERAL, null, null, null, min, max);
+        return new Param(null, ActionParamKind.DOUBLE_LITERAL, null, null, null, min, max, false);
     }
 
     public boolean hasEnumConstraint()       { return enumValues != null; }
@@ -69,6 +77,7 @@ public record Param(String name, ActionParamKind kind, String[] enumValues, Long
 
     public boolean isValidEnum(String v) {
         if (enumValues == null) return true;
+        if (allowsCustomValue) return !v.isBlank();
         for (String s : enumValues) if (s.equals(v)) return true;
         return false;
     }

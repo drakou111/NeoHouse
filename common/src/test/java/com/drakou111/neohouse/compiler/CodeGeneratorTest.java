@@ -90,6 +90,29 @@ class CodeGeneratorTest {
     }
 
     @Test
+    void unknownSoundNameUsesCustomSound() {
+        Action action = generate("function a() { playSound(\"entity.creeper.primed\", 0.7, 1.0, INVOKER); }", OverrideMode.ALWAYS);
+
+        assertThat(flatten(action)).contains("Search: Custom Sound", "Enter text: entity.creeper.primed");
+    }
+
+    @Test
+    void listedSoundNameUsesTheSoundList() {
+        String sound = com.drakou111.neohouse.constants.Sound.values()[0].name();
+
+        Action action = generate("function a() { playSound(\"" + sound + "\", 0.7, 1.0, INVOKER); }", OverrideMode.ALWAYS);
+
+        assertThat(flatten(action)).doesNotContain("Search: Custom Sound");
+    }
+
+    @Test
+    void variableValuesAreEnteredThroughChatPrompts() {
+        Action action = generate("function a() { p.x = 5; }", OverrideMode.ALWAYS);
+
+        assertThat(flatten(action)).contains("Enter text: x", "Enter text: 5");
+    }
+
+    @Test
     void tooManyFunctionsIsACompileError() {
         StringBuilder source = new StringBuilder();
         for (int i = 0; i <= 300; i++) source.append("function f").append(i).append("() { p.x = 1; }\n");

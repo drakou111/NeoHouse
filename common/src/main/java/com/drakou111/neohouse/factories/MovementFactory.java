@@ -40,7 +40,7 @@ public class MovementFactory {
     public static Action createCommand(String name, boolean targeted, int priority, boolean listed) {
         boolean needsConfigure = targeted || priority != 0 || !listed;
         return new ActionBuilder()
-                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .textInput(name, Others.GENERAL_ADD_H6)
                 .onlyIf(needsConfigure, () -> new ActionBuilder()
                         .gotoCommand(true, name, false)
                         .onlyIf(targeted, () -> new ActionBuilder()
@@ -57,7 +57,7 @@ public class MovementFactory {
     // Adds a custom menu to the open Custom Menus list and gives it the requested size.
     public static Action createMenu(String name, int rows) {
         return new ActionBuilder()
-                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .textInput(name, Others.GENERAL_ADD_H6)
                 .onlyIf(rows != 1, () -> new ActionBuilder().append(setMenuSize(name, rows)))
                 .closeAll()
                 .get();

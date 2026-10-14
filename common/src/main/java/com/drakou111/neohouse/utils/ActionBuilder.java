@@ -52,25 +52,20 @@ public class ActionBuilder {
         return this;
     }
 
-    public ActionBuilder chatInput(String string, int slot) {
-        String capped = string.length() > StringLimits.CHAT_TEXT ? string.substring(0, StringLimits.CHAT_TEXT) : string;
-
+    /** Clicks an input slot and types the value into the chat prompt it opens. */
+    public ActionBuilder textInput(String string, int slot) {
         actions.add(new SlotAction(slot, true));
-        actions.add(new WaitForAction(ContainerScreen.class, false));
-        actions.add(clickDelay());
-        actions.add(new ChatAction(capped));
-        actions.add(new WaitForAction(ContainerScreen.class, true));
+        actions.add(new TextEntryAction(cap(string, StringLimits.CHAT_TEXT), false));
         actions.add(clickDelay());
         return this;
     }
 
-    public ActionBuilder anvilInput(String string, int slot) {
-        String capped = string.length() > StringLimits.ANVIL_TEXT ? string.substring(0, StringLimits.ANVIL_TEXT) : string;
-
+    /** Clicks a list's search bar, which stays an anvil even with chat inputs on, and types the query. */
+    public ActionBuilder searchBarInput(String string, int slot) {
         actions.add(new SlotAction(slot, true));
         actions.add(new WaitForAction(AnvilScreen.class, true, true));
         actions.add(clickDelay());
-        actions.add(new AnvilAction(capped));
+        actions.add(new AnvilAction(cap(string, StringLimits.ANVIL_TEXT)));
         actions.add(new WaitForAction(ContainerScreen.class, true));
         actions.add(clickDelay());
         return this;
@@ -86,32 +81,29 @@ public class ActionBuilder {
         return this;
     }
 
-    public ActionBuilder searchForAnvil(String text, String anvilText) {
-        String capped = anvilText.length() > StringLimits.ANVIL_TEXT ? anvilText.substring(0, StringLimits.ANVIL_TEXT) : anvilText;
-        actions.add(new SearchAction(null, text, null, true,
-                                     AnvilScreen.class,
-                                     new ActionBuilder()
-                    .append(clickDelay())
-                    .append(new AnvilAction(capped))
-                    .append(new WaitForAction(ContainerScreen.class, true))
-                    .append(clickDelay())
-                    .get(),
-                                     null));
+    /** Finds the item called {@code label}, clicks it and types {@code value} into the chat prompt it opens. */
+    public ActionBuilder searchForText(String label, String value) {
+        return searchForText(label, value, false);
+    }
+
+    /**
+     * Like {@link #searchForText(String, String)}; with {@code anvilAllowed} the input may also open
+     * an anvil (used where Housing keeps an anvil even with chat inputs on).
+     */
+    public ActionBuilder searchForText(String label, String value, boolean anvilAllowed) {
+        int limit = anvilAllowed ? Math.min(StringLimits.CHAT_TEXT, StringLimits.ANVIL_TEXT) : StringLimits.CHAT_TEXT;
+        actions.add(new SearchAction(null, label, null, true,
+                ContainerScreen.class, false,
+                new ActionBuilder()
+                        .append(new TextEntryAction(cap(value, limit), anvilAllowed))
+                        .append(clickDelay())
+                        .get(),
+                null));
         return this;
     }
 
-    public ActionBuilder searchForChat(String text, String chatText) {
-        String capped = chatText.length() > StringLimits.CHAT_TEXT ? chatText.substring(0, StringLimits.CHAT_TEXT) : chatText;
-        actions.add(new SearchAction(null, text, null, true,
-                     ContainerScreen.class, false,
-                     new ActionBuilder()
-                             .append(clickDelay())
-                             .append(new ChatAction(capped))
-                             .append(new WaitForAction(ContainerScreen.class, true))
-                             .append(clickDelay())
-                             .get(),
-                     null));
-        return this;
+    private static String cap(String text, int limit) {
+        return text.length() > limit ? text.substring(0, limit) : text;
     }
 
     public ActionBuilder signInput(String searchText, String signText) {

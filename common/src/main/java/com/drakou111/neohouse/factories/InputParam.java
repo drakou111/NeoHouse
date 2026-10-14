@@ -11,16 +11,13 @@ public interface InputParam {
         return b -> { if (active) b.search(label); };
     }
 
-    static InputParam anvil(String label, String value, String skipValue) {
-        return b -> { if (value != null && !value.equals(skipValue)) b.searchForAnvil(label, value); };
+    /** A text field, filled through its chat prompt unless the value is the field's default. */
+    static InputParam text(String label, String value, String skipValue) {
+        return b -> { if (value != null && !value.equals(skipValue)) b.searchForText(label, value); };
     }
 
-    static InputParam anvilIfSet(String label, String value) {
-        return b -> { if (value != null && !value.trim().isEmpty()) b.searchForAnvil(label, value); };
-    }
-
-    static InputParam chat(String label, String value, String skipValue) {
-        return b -> { if (value != null && !value.equals(skipValue)) b.searchForChat(label, value); };
+    static InputParam textIfSet(String label, String value) {
+        return b -> { if (value != null && !value.trim().isEmpty()) b.searchForText(label, value); };
     }
 
     static InputParam choice(String label, int clicks) {
@@ -31,11 +28,12 @@ public interface InputParam {
         return b -> { if (value != null && !value.trim().isEmpty()) { b.search(label); b.search(value); } };
     }
 
-    static InputParam listSearchAnvil(String label, String value) {
+    /** Picks {@code value} from a long list by typing it into the list's search bar first. */
+    static InputParam listSearchWithSearchBar(String label, String value) {
         return b -> {
             if (value != null && !value.trim().isEmpty()) {
                 b.search(label);
-                b.anvilInput(value, Others.GENERAL_SEARCH_H6);
+                b.searchBarInput(value, Others.GENERAL_SEARCH_H6);
                 b.search(value);
             }
         };
@@ -46,14 +44,22 @@ public interface InputParam {
     }
 
     static InputParam note(String value) {
-        return b -> { if (value != null && !value.trim().isEmpty()) b.chatInput(value, Others.GENERAL_NOTE_H4); };
+        return b -> { if (value != null && !value.trim().isEmpty()) b.textInput(value, Others.GENERAL_NOTE_H4); };
     }
 
     static InputParam predefined(String label, boolean active, String displayName) {
         return b -> { if (active) { b.search(label); b.search(displayName); } };
     }
 
+    /**
+     * Opens {@code label} and enters a free-form value through its {@code customLabel} item. That prompt
+     * may be an anvil even with chat inputs on (e.g. Custom Sound), so either kind is accepted.
+     */
+    static InputParam customValue(String label, String customLabel, String customValue) {
+        return b -> { if (customValue != null && !customValue.isBlank()) { b.search(label); b.searchForText(customLabel, customValue, true); } };
+    }
+
     static InputParam withCustom(String label, boolean active, String customLabel, String customValue) {
-        return b -> { if (active) { b.search(label); b.searchForAnvil(customLabel, customValue); } };
+        return b -> { if (active) { b.search(label); b.searchForText(customLabel, customValue); } };
     }
 }

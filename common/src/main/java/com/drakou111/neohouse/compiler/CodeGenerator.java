@@ -138,14 +138,14 @@ public class CodeGenerator {
         Action create = new ActionBuilder()
                 .closeAll()
                 .sendChatAndWait(Commands.FUNCTIONS)
-                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .textInput(name, Others.GENERAL_ADD_H6)
                 .append(new MarkCreatedAction(fnKey(name)))
                 .get();
         Action replace = new ActionBuilder()
                 .closeAll()
                 .sendChatAndWait(Commands.FUNCTIONS)
                 .removeFunctionIfPresent(name)
-                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .textInput(name, Others.GENERAL_ADD_H6)
                 .get();
         return new IfExistsAction(HousingList.FUNCTIONS, name, existingEntryStep(HousingList.FUNCTIONS, name, replace), create);
     }
@@ -191,7 +191,7 @@ public class CodeGenerator {
         if (!hasDesc && icon == null) return null;
         return new ActionBuilder()
                 .gotoFunction(true, name, false)
-                .onlyIf(hasDesc, () -> new ActionBuilder().searchForChat(FunctionInputs.DESCRIPTION, description))
+                .onlyIf(hasDesc, () -> new ActionBuilder().searchForText(FunctionInputs.DESCRIPTION, description))
                 .onlyIf(icon != null, () -> new ActionBuilder().search(FunctionInputs.ICON).customItem(icon))
                 .closeAll()
                 .get();
@@ -330,9 +330,9 @@ public class CodeGenerator {
         boolean hasDesc = loop.description != null && !loop.description.trim().isEmpty();
         return new ActionBuilder()
                 .gotoFunction(true, loop.name, false)
-                .onlyIf(hasDesc, () -> new ActionBuilder().searchForChat(FunctionInputs.DESCRIPTION, loop.description))
+                .onlyIf(hasDesc, () -> new ActionBuilder().searchForText(FunctionInputs.DESCRIPTION, loop.description))
                 .onlyIf(loop.icon != null, () -> new ActionBuilder().search(FunctionInputs.ICON).customItem(loop.icon))
-                .searchForAnvil(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay))
+                .searchForText(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay))
                 .closeAll()
                 .get();
     }
@@ -661,7 +661,8 @@ public class CodeGenerator {
                 String loc = getString(args, 3);
                 Teleport tp = parseTeleport(loc);
                 yield ActionFactory.addActionPlaySound(ra, new PlaySoundParams()
-                        .sound(Sound.valueOf(getString(args, 0)))
+                        .sound(soundOrNull(getString(args, 0)))
+                        .customSound(soundOrNull(getString(args, 0)) == null ? getString(args, 0) : null)
                         .volume(getDouble(args, 1))
                         .pitch(getDouble(args, 2))
                         .teleport(tp)
@@ -835,6 +836,12 @@ public class CodeGenerator {
 
     private double getDouble(List<NormalExpressionNode> args, int idx) {
         return ((DoubleValue) ((ConstantPrimitiveNode) args.get(idx)).value).value;
+    }
+
+    /** The Housing sound with this enum name, or null for a custom Minecraft sound id. */
+    private static Sound soundOrNull(String name) {
+        for (Sound sound : Sound.values()) if (sound.name().equals(name)) return sound;
+        return null;
     }
 
     private Teleport parseTeleport(String s) {

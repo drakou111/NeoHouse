@@ -51,7 +51,7 @@ public class ActionFactory {
                         .append(elses)
                         .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true))
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Others.GENERAL_NOTE_H4))
+                        .textInput(note, Others.GENERAL_NOTE_H4))
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
@@ -65,7 +65,7 @@ public class ActionFactory {
                         .append(randoms)
                         .clickSlotAndWait(Others.GENERAL_GO_BACK_H6, true))
                 .onlyIf(note != null && !note.trim().isEmpty(), () -> new ActionBuilder()
-                        .chatInput(note, Others.GENERAL_NOTE_H4))
+                        .textInput(note, Others.GENERAL_NOTE_H4))
                 .clickSlotAndWait(Others.GENERAL_GO_BACK_H4, true)
                 .get();
     }
@@ -85,9 +85,9 @@ public class ActionFactory {
         return buildAction(state, AddAction.VARIABLE,
                 InputParam.choice(SetVariableInputs.HOLDER, p.holder == Holder.GLOBAL ? 1 : p.holder == Holder.TEAM ? 2 : 0),
                 InputParam.listSearch(SetVariableInputs.TEAM, teamName),
-                InputParam.chat(SetVariableInputs.VARIABLE, p.variable, "Kills"),
+                InputParam.text(SetVariableInputs.VARIABLE, p.variable, "Kills"),
                 operatorParam,
-                InputParam.anvil(SetVariableInputs.VALUE, p.value, "1"),
+                InputParam.text(SetVariableInputs.VALUE, p.value, "1"),
                 InputParam.toggle(SetVariableInputs.AUTOMATIC_UNSET, p.automaticUnset),
                 InputParam.note(p.note));
     }
@@ -112,24 +112,24 @@ public class ActionFactory {
         String finalTitle    = p.title    == null || p.title.trim().isEmpty()    ? "&l" : p.title;
         String finalSubTitle = p.subtitle == null || p.subtitle.trim().isEmpty() ? "&l" : p.subtitle;
         return buildAction(state, AddAction.TITLE,
-                InputParam.chat(TitleInputs.TITLE,    finalTitle,    "Hello World!"),
-                InputParam.chat(TitleInputs.SUBTITLE, finalSubTitle, "&l"),
-                InputParam.anvil(TitleInputs.FADEIN,  String.valueOf(p.fadeIn),  "1"),
-                InputParam.anvil(TitleInputs.STAY,    String.valueOf(p.stay),    "5"),
-                InputParam.anvil(TitleInputs.FADEOUT, String.valueOf(p.fadeOut), "1"),
+                InputParam.text(TitleInputs.TITLE,    finalTitle,    "Hello World!"),
+                InputParam.text(TitleInputs.SUBTITLE, finalSubTitle, "&l"),
+                InputParam.text(TitleInputs.FADEIN,  String.valueOf(p.fadeIn),  "1"),
+                InputParam.text(TitleInputs.STAY,    String.valueOf(p.stay),    "5"),
+                InputParam.text(TitleInputs.FADEOUT, String.valueOf(p.fadeOut), "1"),
                 InputParam.note(p.note));
     }
 
     public static Action addActionActionBar(RestrictionAction state, String text, String note) {
         String finalText = text == null || text.trim().isEmpty() ? "&l" : text;
         return buildAction(state, AddAction.ACTION_BAR,
-                InputParam.chat(ActionBarInputs.MESSAGE, finalText, "Hello World!"),
+                InputParam.text(ActionBarInputs.MESSAGE, finalText, "Hello World!"),
                 InputParam.note(note));
     }
 
     public static Action addActionMaxHealth(RestrictionAction state, String maxHealth, RestrictedOperator operator, boolean healOnChange, String note) {
         return buildAction(state, AddAction.MAX_HEALTH,
-                InputParam.anvil(MaxHealthInputs.MAX_HEALTH, maxHealth, "20"),
+                InputParam.text(MaxHealthInputs.MAX_HEALTH, maxHealth, "20"),
                 InputParam.listSearch(MaxHealthInputs.MODE, operator != RestrictedOperator.SET ? operator.displayName : null),
                 InputParam.toggle(MaxHealthInputs.HEAL_ON_CHANGE, !healOnChange),
                 InputParam.note(note));
@@ -153,15 +153,15 @@ public class ActionFactory {
     public static Action addActionSendMessage(RestrictionAction state, String text, String note) {
         String finalText = text == null || text.trim().isEmpty() ? "&l" : text;
         return buildAction(state, AddAction.CHAT_MESSAGE,
-                InputParam.chat(ChatMessageInputs.MESSAGE, finalText, "Hello!"),
+                InputParam.text(ChatMessageInputs.MESSAGE, finalText, "Hello!"),
                 InputParam.note(note));
     }
 
     public static Action addActionApplyPotion(RestrictionAction state, Potion potion, int duration, int level, boolean override, boolean showIcon, String note) {
         return buildAction(state, AddAction.APPLY_POTION,
                 InputParam.listSearch(ApplyPotionInputs.EFFECT, potion != null ? potion.displayName : null),
-                InputParam.anvil(ApplyPotionInputs.DURATION, String.valueOf(duration), "60"),
-                InputParam.anvil(ApplyPotionInputs.LEVEL,    String.valueOf(level),    "1"),
+                InputParam.text(ApplyPotionInputs.DURATION, String.valueOf(duration), "60"),
+                InputParam.text(ApplyPotionInputs.LEVEL,    String.valueOf(level),    "1"),
                 InputParam.toggle(ApplyPotionInputs.OVERRIDE,  override),
                 InputParam.toggle(ApplyPotionInputs.SHOW_ICON, !showIcon),
                 InputParam.note(note));
@@ -169,7 +169,7 @@ public class ActionFactory {
 
     public static Action addActionGiveXP(RestrictionAction state, int xp, String note) {
         return buildAction(state, AddAction.GIVE_XP,
-                InputParam.anvil(GiveExperienceInputs.LEVELS, String.valueOf(xp), "1"),
+                InputParam.text(GiveExperienceInputs.LEVELS, String.valueOf(xp), "1"),
                 InputParam.note(note));
     }
 
@@ -191,15 +191,16 @@ public class ActionFactory {
     public static Action addActionFailParkour(RestrictionAction state, String text, String note) {
         String finalText = text == null || text.trim().isEmpty() ? "&l" : text;
         return buildAction(state, AddAction.FAIL_PARKOUR,
-                InputParam.chat(FailParkourInputs.REASON, finalText, "Failed!"),
+                InputParam.text(FailParkourInputs.REASON, finalText, "Failed!"),
                 InputParam.note(note));
     }
 
     public static Action addActionPlaySound(RestrictionAction state, PlaySoundParams p) {
         return buildAction(state, AddAction.PLAY_SOUND,
-                InputParam.listSearchAnvil(PlaySoundInputs.SOUND, p.sound != null ? p.sound.displayName : null),
-                InputParam.anvil(PlaySoundInputs.VOLUME, String.valueOf(p.volume), "0.7"),
-                InputParam.anvil(PlaySoundInputs.PITCH,  String.valueOf(p.pitch),  "1.0"),
+                InputParam.listSearchWithSearchBar(PlaySoundInputs.SOUND, p.sound != null ? p.sound.displayName : null),
+                InputParam.customValue(PlaySoundInputs.SOUND, PlaySoundInputs.CUSTOM_SOUND, p.sound == null ? p.customSound : null),
+                InputParam.text(PlaySoundInputs.VOLUME, String.valueOf(p.volume), "0.7"),
+                InputParam.text(PlaySoundInputs.PITCH,  String.valueOf(p.pitch),  "1.0"),
                 // INVOKER is the default location — no need to set it explicitly.
                 InputParam.predefined(PlaySoundInputs.LOCATION, p.teleport != null && p.teleport != Teleport.CUSTOM && p.teleport != Teleport.INVOKER, p.teleport != null ? p.teleport.displayName : null),
                 InputParam.withCustom(PlaySoundInputs.LOCATION, p.teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, p.customLocation),
@@ -222,14 +223,14 @@ public class ActionFactory {
 
     public static Action addActionChangeHealth(RestrictionAction state, String health, RestrictedOperator operator, String note) {
         return buildAction(state, AddAction.CHANGE_HEALTH,
-                InputParam.anvil(HealthInputs.HEALTH, health, "20"),
+                InputParam.text(HealthInputs.HEALTH, health, "20"),
                 InputParam.listSearch(HealthInputs.MODE, operator != RestrictedOperator.SET ? operator.displayName : null),
                 InputParam.note(note));
     }
 
     public static Action addActionChangeHunger(RestrictionAction state, String hunger, RestrictedOperator operator, String note) {
         return buildAction(state, AddAction.CHANGE_HUNGER,
-                InputParam.anvil(HungerInputs.LEVEL, hunger, "20"),
+                InputParam.text(HungerInputs.LEVEL, hunger, "20"),
                 InputParam.listSearch(HungerInputs.MODE, operator != RestrictedOperator.SET ? operator.displayName : null),
                 InputParam.note(note));
     }
@@ -250,13 +251,13 @@ public class ActionFactory {
     public static Action addActionEnchantHeldItem(RestrictionAction state, Enchant enchant, int level, String note) {
         return buildAction(state, AddAction.ENCHANT_HELD_ITEM,
                 InputParam.listSearch(EnchantHeldInputs.ENCHANTMENT, enchant != null ? enchant.displayName : null),
-                InputParam.anvil(EnchantHeldInputs.LEVEL, String.valueOf(level), "1"),
+                InputParam.text(EnchantHeldInputs.LEVEL, String.valueOf(level), "1"),
                 InputParam.note(note));
     }
 
     public static Action addActionPause(RestrictionAction state, int timeToWait, String note) {
         return buildAction(state, AddAction.PAUSE,
-                InputParam.anvil(PauseInputs.TICKS, String.valueOf(timeToWait), "20"),
+                InputParam.text(PauseInputs.TICKS, String.valueOf(timeToWait), "20"),
                 InputParam.note(note));
     }
 
@@ -279,8 +280,8 @@ public class ActionFactory {
                 InputParam.withCustom(DropItemInputs.LOCATION, p.teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, p.customLocation),
                 InputParam.toggle(DropItemInputs.DROP_NATURALLY,    !p.dropNaturally),
                 InputParam.toggle(DropItemInputs.PREVENT_MERGE,     p.disableItemMerging),
-                InputParam.anvil(DropItemInputs.DESPAWN_DURATION,   String.valueOf(p.despawnDuration), "6000"),
-                InputParam.anvil(DropItemInputs.PICKUP_DELAY,       String.valueOf(p.pickupDelay),     "10"),
+                InputParam.text(DropItemInputs.DESPAWN_DURATION,   String.valueOf(p.despawnDuration), "6000"),
+                InputParam.text(DropItemInputs.PICKUP_DELAY,       String.valueOf(p.pickupDelay),     "10"),
                 InputParam.toggle(DropItemInputs.PRIORITIZE_PLAYER, p.prioritizePlayer),
                 InputParam.toggle(DropItemInputs.FALLBACK_INVENTORY, p.fallbackToInventory),
                 InputParam.note(p.note));
@@ -288,9 +289,9 @@ public class ActionFactory {
 
     public static Action addActionChangeVelocity(RestrictionAction state, String velocityX, String velocityY, String velocityZ, String note) {
         return buildAction(state, AddAction.CHANGE_VELOCITY,
-                InputParam.anvil(ChangeVelocityInputs.X_DIRECTION, velocityX, "10"),
-                InputParam.anvil(ChangeVelocityInputs.Y_DIRECTION, velocityY, "10"),
-                InputParam.anvil(ChangeVelocityInputs.Z_DIRECTION, velocityZ, "10"),
+                InputParam.text(ChangeVelocityInputs.X_DIRECTION, velocityX, "10"),
+                InputParam.text(ChangeVelocityInputs.Y_DIRECTION, velocityY, "10"),
+                InputParam.text(ChangeVelocityInputs.Z_DIRECTION, velocityZ, "10"),
                 InputParam.note(note));
     }
 
@@ -298,7 +299,7 @@ public class ActionFactory {
         return buildAction(state, AddAction.LAUNCH_TO_TARGET,
                 InputParam.predefined(LaunchTargetInputs.TARGET_LOCATION, teleport != null && teleport != Teleport.CUSTOM, teleport != null ? teleport.displayName : null),
                 InputParam.withCustom(LaunchTargetInputs.TARGET_LOCATION, teleport == Teleport.CUSTOM, Teleport.CUSTOM.displayName, customLocation),
-                InputParam.anvil(LaunchTargetInputs.STRENGTH, strength, "2"),
+                InputParam.text(LaunchTargetInputs.STRENGTH, strength, "2"),
                 InputParam.note(note));
     }
 
