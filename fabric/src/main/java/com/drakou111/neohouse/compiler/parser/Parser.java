@@ -213,6 +213,7 @@ public class Parser {
             // No return type: void function
             functionNameToken = consume(TokenType.IDENT, "Expected function name");
         }
+        requireNoReservedChar(functionNameToken, "function");
         functionName = functionNameToken.text;
         if (AddAction.searchByName(functionName) != null) {
             throw new ParsingException(functionNameToken,
@@ -498,6 +499,12 @@ public class Parser {
         }
 
         return new RandomNode(options, weights, randomToken);
+    }
+
+    /** '$' marks names the compiler makes (temps t$0, slots o$ and f_p$0, copies f$0), so scripts can't use it. */
+    private static void requireNoReservedChar(Token name, String kind) {
+        if (name.text.indexOf('$') >= 0)
+            throw new ParsingException(name, "'$' is reserved for names the compiler makes; rename this " + kind + ".");
     }
 
     private static long gcd(long a, long b) {
@@ -1047,6 +1054,7 @@ public class Parser {
         };
 
         if (!isHolderPrefix) {
+            requireNoReservedChar(firstTok, "variable");
             VariableNode bare = new VariableNode(null, Holder.PLAYER, firstTok.text, null, firstTok);
             bare.wasBare = true;
             bare.enumName = varEnumType.get(Holder.PLAYER + "." + firstTok.text);
@@ -1070,6 +1078,7 @@ public class Parser {
 
         consume(TokenType.DOT, "Expected '.' after scope prefix");
         Token varTok = consume(TokenType.IDENT, "Expected a variable name");
+        requireNoReservedChar(varTok, "variable");
 
         VariableNode vn = new VariableNode(null, holder, varTok.text, teamName, varTok);
         vn.enumName = varEnumType.get(holder + "." + varTok.text);
