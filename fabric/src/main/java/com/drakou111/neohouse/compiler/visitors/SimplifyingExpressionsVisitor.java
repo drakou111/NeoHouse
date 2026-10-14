@@ -22,19 +22,10 @@ import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.CommandNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.SlotNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.ActionCallNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
 import com.drakou111.neohouse.compiler.ast.statement.ConditionalNode;
 import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
-import com.drakou111.neohouse.compiler.ast.statement.RandomNode;
-import com.drakou111.neohouse.compiler.ast.statement.RepeatNode;
 import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
 import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
 import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
@@ -667,70 +658,6 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         ConditionalNode newIf = new ConditionalNode(simpleCond, newThen, newElse, conditional.token);
         beforeIf.add(newIf);
         return new StatementListNode(beforeIf);
-    }
-
-    @Override
-    public ASTNode visitRepeat(RepeatNode repeat) {
-        StatementListNode newBody = (StatementListNode)visitStatements(repeat.statements);
-        return new RepeatNode(repeat.count, newBody, repeat.token);
-    }
-
-    @Override
-    public ASTNode visitLoop(LoopNode loop) {
-        tempCounter = 0;
-        StatementListNode newBody = (StatementListNode)visitStatements(loop.statements);
-        return new LoopNode(loop.name, loop.description, loop.icon, newBody, loop.tickDelay, loop.token);
-    }
-
-    @Override
-    public ASTNode visitCommand(CommandNode command) {
-        tempCounter = 0;
-        StatementListNode newBody = (StatementListNode)visitStatements(command.statements);
-        return new CommandNode(command.name, command.targeted, command.priority, command.listed, newBody, command.token);
-    }
-
-    @Override
-    public ASTNode visitSlot(SlotNode slot) {
-        tempCounter = 0;
-        StatementListNode newBody = (StatementListNode)visitStatements(slot.statements);
-        return new SlotNode(slot.slotId, slot.item, newBody, slot.token);
-    }
-
-    @Override
-    public ASTNode visitRandom(RandomNode random) {
-        List<StatementListNode> newOptions = new ArrayList<>();
-        for (StatementListNode opt : random.statements) {
-            newOptions.add((StatementListNode)visitStatements(opt));
-        }
-        return new RandomNode(newOptions, random.weights, random.token);
-    }
-
-    @Override
-    public ASTNode visitTypedFunction(TypedFunctionNode function) {
-        tempCounter = 0;
-        StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new TypedFunctionNode(function.name, function.description, function.icon, function.returnType, function.parameters, newBody, function.token);
-    }
-
-    @Override
-    public ASTNode visitTupleFunction(TupleFunctionNode function) {
-        tempCounter = 0;
-        StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new TupleFunctionNode(function.name, function.description, function.icon, function.returnTypes, function.parameters, newBody, function.token);
-    }
-
-    @Override
-    public ASTNode visitVoidFunction(VoidFunctionNode function) {
-        tempCounter = 0;
-        StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new VoidFunctionNode(function.name, function.description, function.icon, function.parameters, newBody, function.token);
-    }
-
-    @Override
-    public ASTNode visitEvent(EventNode event) {
-        tempCounter = 0;
-        StatementListNode newBody = (StatementListNode)visitStatements(event.statements);
-        return new EventNode(event.event, newBody, event.token);
     }
 }
 
