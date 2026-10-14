@@ -2,20 +2,13 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         maven { url = 'https://maven.fabricmc.net/' }
-        maven { url = 'https://maven.architectury.dev/' }
-        maven { url = 'https://maven.neoforged.net/releases' }
-        maven { url = 'https://maven.parchmentmc.org' }
-        mavenLocal()
-    }
-    plugins {
-        id 'architectury-plugin' version '3.5.166'
-        id 'dev.architectury.loom' version '1.14.473'
-        id 'com.gradleup.shadow' version '8.3.6'
     }
 }
 
 plugins {
     id 'dev.kikugie.stonecutter' version '0.9.3'
+    // Downloads the JDK a version needs (21 for 1.21.x, 25 for 26.x) when it isn't installed.
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
 stonecutter {
@@ -25,7 +18,8 @@ stonecutter {
     create(rootProject) {
         versions '1.21.2', '1.21.3', '1.21.4',
                  '1.21.5', '1.21.6', '1.21.7', '1.21.8', '1.21.9',
-                 '1.21.10', '1.21.11'
+                 '1.21.10', '1.21.11',
+                 '26.1', '26.2', '26.3'
         vcsVersion = '1.21.4'
     }
 }
@@ -33,6 +27,4 @@ stonecutter {
 rootProject.name = 'NeoHouse'
 rootProject.buildFileName = 'stonecutter.gradle'
 
-include ':common'
 include ':fabric'
-include ':neoforge'

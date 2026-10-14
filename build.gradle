@@ -1,7 +1,2 @@
-plugins {
-    id 'architectury-plugin'
-}
-
-architectury {
-    minecraft = rootProject.ext.active_mc_version
-}
+// Stonecutter applies this script to each per-version project under versions/. They only hold
+// that version's gradle.properties; the mod itself is built by :fabric for the active version.

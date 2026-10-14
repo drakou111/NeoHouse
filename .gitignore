@@ -33,12 +33,12 @@ repo
 # built distribution jars — published to Modrinth/Releases instead
 dist/
 
-# stonecutter-generated per-version projects
-versions/
+# stonecutter per-version projects: only their gradle.properties (MC/Fabric API versions) are source
+versions/*/*
+!versions/*/gradle.properties
 
 # others
 .claude
-.architectury-transformer
 # local working folders
 scratch/
 output/
