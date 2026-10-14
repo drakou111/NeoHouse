@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Teleport;
 import com.drakou111.neohouse.ui.EditorSuggestions.Suggestions;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,21 @@ class EditorSuggestionsTest {
         assertThat(s.get().items()).contains("onJoin").allMatch(name -> name.startsWith("onJ"));
         assertThat(s.get().typedLength()).isEqualTo(3);
         assertThat(s.get().insideString()).isFalse();
+    }
+
+    @Test
+    void everyEventRightAfterTheEventKeyword() {
+        Optional<Suggestions> s = EditorSuggestions.at("    event ");
+
+        assertThat(s).isPresent();
+        assertThat(s.get().items()).hasSize(Event.values().length);
+        assertThat(s.get().typedLength()).isZero();
+    }
+
+    @Test
+    void noEventsForAWordThatOnlyEndsInEvent() {
+        assertThat(EditorSuggestions.at("myevent ")).isEmpty();
+        assertThat(EditorSuggestions.at("event onJoin { x")).isEmpty();
     }
 
     @Test

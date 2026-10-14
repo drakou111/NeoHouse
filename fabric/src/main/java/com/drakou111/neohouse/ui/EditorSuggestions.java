@@ -29,7 +29,8 @@ final class EditorSuggestions {
 
     private static final Pattern PLACEHOLDER_PAT = Pattern.compile("ph\\.(\\w*)$");
     private static final Pattern TRAILING_WORD_PAT = Pattern.compile("([A-Za-z_]*)$");
-    private static final String EVENT_KEYWORD = "event";
+    // "event " at the start of a statement, then the (possibly empty) event name being typed.
+    private static final Pattern EVENT_NAME_PAT = Pattern.compile("(?:^|[\\s;{}])event\\s+(\\w*)$");
 
     private EditorSuggestions() {
     }
@@ -46,14 +47,12 @@ final class EditorSuggestions {
     }
 
     private static Optional<Suggestions> compute(String beforeCursor) {
-        String trimmed = beforeCursor.trim();
-        int lastSpace = trimmed.lastIndexOf(' ');
-        String lastWord = lastSpace >= 0 ? trimmed.substring(lastSpace + 1) : trimmed;
-        String beforeLast = lastSpace >= 0 ? trimmed.substring(0, lastSpace).trim() : "";
-        if (beforeLast.equals(EVENT_KEYWORD)) {
+        Matcher event = EVENT_NAME_PAT.matcher(beforeCursor);
+        if (event.find()) {
+            String partial = event.group(1);
             List<String> events = new ArrayList<>();
-            for (Event e : Event.values()) if (e.name.startsWith(lastWord)) events.add(e.name);
-            if (!events.isEmpty()) return Optional.of(new Suggestions(events, lastWord.length(), false));
+            for (Event e : Event.values()) if (e.name.startsWith(partial)) events.add(e.name);
+            return events.isEmpty() ? Optional.empty() : Optional.of(new Suggestions(events, partial.length(), false));
         }
 
         Matcher placeholder = PLACEHOLDER_PAT.matcher(beforeCursor);
