@@ -19,8 +19,12 @@ public class CompilerSession {
         return compiler.getLastWarnings();
     }
 
-    public Action compile(String source, Path scriptsRoot) throws CompilingException {
-        Action result = compiler.compile(source, scriptsRoot);
+    public ImportGraph getLastImportGraph() {
+        return compiler.getLastImportGraph();
+    }
+
+    public Action compile(String source, Path sourceFile) throws CompilingException {
+        Action result = compiler.compile(source, sourceFile);
         lastGoodResult = result;
         return result;
     }

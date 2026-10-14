@@ -8,6 +8,7 @@ import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.CompilerSession;
 import com.drakou111.neohouse.compiler.ScriptRunner;
+import com.drakou111.neohouse.compiler.ImportGraph;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.utils.MessageUtils;
@@ -122,11 +123,13 @@ public class CodeEditorScreen extends ScreenBase {
         String src = editor.getValue();
         for (int attempt = 0; attempt < 8; attempt++) {
             try {
-                CHECKER.compile(src, filePath.getParent());
+                CHECKER.compile(src, filePath);
                 break;
             } catch (CompilingException e) {
                 collected.add(e);
-                if (e.errorToken == null) break;
+                // Blank out the offending token and recompile to find further errors, but only for
+                // tokens in this file: an error inside an imported file can't be blanked out here.
+                if (e.errorToken == null || !CHECKER.getLastImportGraph().isRoot(e.errorToken.file)) break;
                 int offset = tokenOffset(src, e.errorToken);
                 if (offset < 0 || offset + e.errorToken.text.length() > src.length()) break;
                 src = src.substring(0, offset) + " ".repeat(e.errorToken.text.length()) + src.substring(offset + e.errorToken.text.length());
@@ -141,16 +144,10 @@ public class CodeEditorScreen extends ScreenBase {
             List<int[]> spans    = new ArrayList<>();
             List<String> messages = new ArrayList<>();
             for (CompilingException e : collected) {
-                messages.add(e.getMessage());
-                if (e.errorToken != null) {
-                    int line0     = e.errorToken.line - 1;
-                    int colStart0 = Math.max(0, e.errorToken.column - e.errorToken.text.length() - 1);
-                    spans.add(new int[]{line0, colStart0, e.errorToken.text.length()});
-                } else {
-                    spans.add(new int[]{-1, -1, 0});
-                }
+                messages.add(editorMessage(e.errorToken, e.detail));
+                spans.add(spanInThisFile(e.errorToken));
             }
-            editor.setErrors(spans, messages, collected.getFirst().getMessage());
+            editor.setErrors(spans, messages, messages.getFirst());
         }
     }
 
@@ -164,16 +161,34 @@ public class CodeEditorScreen extends ScreenBase {
         List<int[]> spans     = new ArrayList<>();
         List<String> messages = new ArrayList<>();
         for (var w : warnings) {
-            messages.add(w.message());
-            if (w.token() != null) {
-                int line0     = w.token().line - 1;
-                int colStart0 = Math.max(0, w.token().column - w.token().text.length() - 1);
-                spans.add(new int[]{line0, colStart0, w.token().text.length()});
-            } else {
-                spans.add(new int[]{-1, -1, 0});
-            }
+            messages.add(editorMessage(w.token(), w.message()));
+            spans.add(spanInThisFile(w.token()));
         }
-        editor.setWarnings(spans, messages, warnings.getFirst().message());
+        editor.setWarnings(spans, messages, messages.getFirst());
+    }
+
+    /**
+     * The text shown in the error bar. The editor already underlines the token, so only diagnostics
+     * from imported files (whose code isn't on screen) include the offending source line.
+     */
+    private static String editorMessage(Token token, String detail) {
+        if (token == null) return detail;
+        String message = CompilingException.location(token) + ": " + detail;
+        if (CHECKER.getLastImportGraph().isRoot(token.file) || token.lineContent == null || token.lineContent.isBlank())
+            return message;
+        return message + "\n" + token.lineContent.replace("\r", "").strip();
+    }
+
+    /**
+     * The {line, column, length} span (0-based) to underline for a diagnostic. A diagnostic inside an
+     * imported file underlines the import statement in this file that pulled that file in.
+     */
+    private static int[] spanInThisFile(Token token) {
+        if (token == null) return new int[]{-1, -1, 0};
+        ImportGraph imports = CHECKER.getLastImportGraph();
+        Token anchor = imports.isRoot(token.file) ? token : imports.getRootImportToken(token.file).orElse(null);
+        if (anchor == null) return new int[]{-1, -1, 0};
+        return new int[]{anchor.line - 1, Math.max(0, anchor.column - 1), anchor.text.length()};
     }
 
     private static int tokenOffset(String source, Token t) {
@@ -182,7 +197,7 @@ public class CodeEditorScreen extends ScreenBase {
         if (lineIdx < 0 || lineIdx >= lines.length) return -1;
         int offset = 0;
         for (int i = 0; i < lineIdx; i++) offset += lines[i].length() + 1;
-        offset += Math.max(0, t.column - t.text.length() - 1);
+        offset += Math.max(0, t.column - 1);
         return offset;
     }
 
@@ -203,7 +218,7 @@ public class CodeEditorScreen extends ScreenBase {
             ScriptRunner.INSTANCE.runScript(filePath);
             MessageUtils.debugToChat("Running: " + filePath.getFileName());
         } catch (Exception e) {
-            MessageUtils.errorToChat(e.getMessage() != null ? e.getMessage() : e.toString());
+            MessageUtils.errorToChat(e);
         }
     }
 

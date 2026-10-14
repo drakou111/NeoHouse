@@ -19,7 +19,7 @@ final class TestCompiler {
         return analyze(source, null, DEFAULT_OPTIONS);
     }
 
-    static MainNode analyze(String source, Path scriptsRoot, CompileOptions options) {
-        return new NHCompiler().analyze(source, scriptsRoot, options);
+    static MainNode analyze(String source, Path sourceFile, CompileOptions options) {
+        return new NHCompiler().analyze(source, sourceFile, options);
     }
 }

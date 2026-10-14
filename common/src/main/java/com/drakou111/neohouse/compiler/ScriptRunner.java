@@ -2,8 +2,6 @@ package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
-import com.drakou111.neohouse.compiler.enums.ActionParamKind;
-import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.exceptions.PermissionException;
 import com.drakou111.neohouse.utils.HousingCheck;
@@ -48,18 +46,10 @@ public class ScriptRunner {
             throw new CompilingException(null, "Failed reading script: " + nhFile);
         }
 
-        // Preprocess before the creative check so imported files are included in the scan
-        String preprocessed = new Preprocessor(nhFile.getParent()).process(src);
-
-        // Fast pre-compile check: scan source text before spending time on compilation
-        if (!isPlayerCreative() && sourceNeedsCreativeMode(preprocessed)) {
-            throw new PermissionException("This script uses item actions (giveItem / removeItem / dropItem / menus). You must be in creative mode to run it.");
-        }
-
-        Action scriptAction = compiler.compile(preprocessed);
+        Action scriptAction = compiler.compile(src, nhFile);
 
         for (var warning : compiler.getLastWarnings()) {
-            MessageUtils.warningToChat(warning.message());
+            MessageUtils.warningToChat(warning);
         }
 
         int helpers = compiler.getLastHelperCount();
@@ -92,16 +82,5 @@ public class ScriptRunner {
         return mc.player != null && mc.player.getAbilities().instabuild;
     }
 
-    private static boolean sourceNeedsCreativeMode(String source) {
-        for (AddAction action : AddAction.values()) {
-            if (action.params.stream().anyMatch(p -> p.kind() == ActionParamKind.ITEM_LITERAL)) {
-                if (source.contains(action.name + "(")) {
-                    return true;
-                }
-            }
-        }
-        // Menu slot declarations always require creative (items must be placed in the menu grid)
-        return source.matches("(?s).*slot\\d+\\s*:\\s*\\(.*");
-    }
 
 }

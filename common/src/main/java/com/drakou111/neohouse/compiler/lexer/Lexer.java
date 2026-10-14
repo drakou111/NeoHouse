@@ -8,13 +8,19 @@ import java.util.regex.Matcher;
 
 public class Lexer {
     private final String input;
+    private final String file;
     private final String[] lines;
     private int position = 0;
     private int line = 1;
     private int column = 1;
 
     public Lexer(String input) {
+        this(input, Token.UNNAMED_FILE);
+    }
+
+    public Lexer(String input, String file) {
         this.input = input;
+        this.file = file;
         this.lines = input.split("\n", -1);
     }
 
@@ -70,7 +76,7 @@ public class Lexer {
                     lineContent = lines[tokenLine - 1];
                 }
 
-                tokens.add(new Token(tt, lexeme, lineContent, tokenLine, tokenColumn));
+                tokens.add(new Token(tt, lexeme, lineContent, tokenLine, tokenColumn, file));
                 break;
             }
 
@@ -78,12 +84,12 @@ public class Lexer {
                 throw errorWithPointer();
             }
         }
-        tokens.add(new Token(TokenType.EOF, "", "", line, column));
+        tokens.add(new Token(TokenType.EOF, "", "", line, column, file));
         return tokens;
     }
 
     private TokenException errorWithPointer() {
         String lineContent = (line >= 1 && line <= lines.length) ? lines[line - 1] : "";
-        return new TokenException(new Token(TokenType.UNKNOWN, input.charAt(position) + "", lineContent, line, column), "Tokenization error");
+        return new TokenException(new Token(TokenType.UNKNOWN, input.charAt(position) + "", lineContent, line, column, file), "Tokenization error");
     }
 }

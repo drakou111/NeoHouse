@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.compiler.parser;
 
+import com.drakou111.neohouse.compiler.ImportGraph;
 import com.drakou111.neohouse.compiler.ast.expr.*;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.*;
@@ -22,10 +23,13 @@ import java.util.*;
 
 public class Parser {
     private final List<Token> tokens;
+    private final ImportGraph imports;
     private int pos = 0;
     private final HashMap<String, ConstantPrimitiveNode> constTable = new HashMap<>();
     /** enum name -> its members in declaration order (member index = ordinal value). */
     private final Map<String, List<String>> enumDefs = new HashMap<>();
+    /** enum name -> the token naming it in its declaration (used for import visibility). */
+    private final Map<String, Token> enumDeclTokens = new HashMap<>();
     /** full variable name (holder + "." + name) -> enum type name, for enum-typed variables. */
     private final Map<String, String> varEnumType = new HashMap<>();
     /** function name -> per-parameter enum type name (null entry = non-enum parameter). */
@@ -54,7 +58,18 @@ public class Parser {
     private record IconDescription(String icon, String description) {}
 
     public Parser(List<Token> tokens) {
+        this(tokens, ImportGraph.singleFile());
+    }
+
+    public Parser(List<Token> tokens, ImportGraph imports) {
         this.tokens = tokens;
+        this.imports = imports;
+    }
+
+    /** Rejects a reference to a constant or enum declared in a file the referencing file doesn't import. */
+    private void requireVisible(Token use, Token declaration, String what) {
+        if (imports.canSee(use.file, declaration.file)) return;
+        throw new ParsingException(use, "%s is declared in '%s', which '%s' does not import".formatted(what, declaration.file, use.file));
     }
 
     private boolean match(TokenType... types) {
@@ -305,6 +320,7 @@ public class Parser {
         if (check(TokenType.IDENT)) {
             ConstantPrimitiveNode c = constTable.get(peek().text);
             if (c != null && c.type == expected) {
+                requireVisible(peek(), c.token, "Constant '" + peek().text + "'");
                 Token t = advance();
                 return new ConstantPrimitiveNode(c.value, c.type, t);
             }
@@ -803,6 +819,7 @@ public class Parser {
             case IDENT: {
                 // Qualified enum access: Color.GREEN -> its ordinal, tagged with the enum name.
                 if (enumDefs.containsKey(token.text)) {
+                    requireVisible(token, enumDeclTokens.get(token.text), "Enum '" + token.text + "'");
                     if (!check(TokenType.DOT))
                         throw new ParsingException(token, "Enum '" + token.text + "' must be used as '" + token.text + ".MEMBER'");
                     advance(); // consume '.'
@@ -817,6 +834,7 @@ public class Parser {
 
                 ConstantPrimitiveNode constNode = constTable.get(token.text);
                 if (constNode != null) {
+                    requireVisible(token, constNode.token, "Constant '" + token.text + "'");
                     ConstantPrimitiveNode copy = new ConstantPrimitiveNode(constNode.value, constNode.type, token);
                     copy.enumName = constNode.enumName; // preserve enum identity for bare member refs
                     return copy;
@@ -1142,11 +1160,14 @@ public class Parser {
         if (members.isEmpty())
             throw new ParsingException(nameTok, "Enum '" + enumName + "' must declare at least one member");
         enumDefs.put(enumName, members);
+        enumDeclTokens.put(enumName, nameTok);
     }
 
     /** True if the token is an identifier naming a declared enum, usable as a type. */
     private boolean isEnumType(Token t) {
-        return t.type == TokenType.IDENT && enumDefs.containsKey(t.text);
+        if (t.type != TokenType.IDENT || !enumDefs.containsKey(t.text)) return false;
+        requireVisible(t, enumDeclTokens.get(t.text), "Enum '" + t.text + "'");
+        return true;
     }
 
     private UnaryExpressionNode makeUnary(UnaryOperator op, NormalExpressionNode operand, Token token) {

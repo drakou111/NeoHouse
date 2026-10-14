@@ -8,7 +8,8 @@ import java.nio.file.Path;
 public interface Compiler {
     Action compile(String source) throws CompilingException;
 
-    default Action compile(String source, Path scriptsRoot) throws CompilingException {
+    /** @param sourceFile the script's file, used to resolve its imports; {@code null} for an unsaved script */
+    default Action compile(String source, Path sourceFile) throws CompilingException {
         return compile(source);
     }
 }

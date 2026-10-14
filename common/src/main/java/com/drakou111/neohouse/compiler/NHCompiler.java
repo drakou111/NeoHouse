@@ -3,13 +3,13 @@ package com.drakou111.neohouse.compiler;
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
-import com.drakou111.neohouse.compiler.lexer.Lexer;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.parser.Parser;
 import com.drakou111.neohouse.compiler.visitors.*;
 import com.drakou111.neohouse.exceptions.CompilingException;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NHCompiler implements Compiler {
@@ -17,11 +17,14 @@ public class NHCompiler implements Compiler {
     private List<String> lastHelperNames = List.of();
     private List<String> lastExtraVariables = List.of();
     private List<CompileWarning> lastWarnings = List.of();
+    private ImportGraph lastImportGraph = ImportGraph.singleFile();
 
     public int getLastHelperCount() { return lastHelperCount; }
     public List<String> getLastHelperNames() { return lastHelperNames; }
     public List<String> getLastExtraVariables() { return lastExtraVariables; }
     public List<CompileWarning> getLastWarnings() { return lastWarnings; }
+    /** Import graph of the last compile, also set when that compile failed (as far as it got). */
+    public ImportGraph getLastImportGraph() { return lastImportGraph; }
 
     @Override
     public Action compile(String source) throws CompilingException {
@@ -29,19 +32,21 @@ public class NHCompiler implements Compiler {
     }
 
     @Override
-    public Action compile(String source, Path scriptsRoot) throws CompilingException {
+    public Action compile(String source, Path sourceFile) throws CompilingException {
         CompileOptions options = CompileOptions.fromConfig();
-        return new CodeGenerator(options.overrideMode()).generate(analyze(source, scriptsRoot, options));
+        return new CodeGenerator(options.overrideMode()).generate(analyze(source, sourceFile, options));
     }
 
     /** Runs every front-end pass and returns the final, lowered AST that the code generator consumes. */
-    public MainNode analyze(String source, Path scriptsRoot, CompileOptions options) throws CompilingException {
-        source = new Preprocessor(scriptsRoot).process(source);
+    public MainNode analyze(String source, Path sourceFile, CompileOptions options) throws CompilingException {
+        List<CompileWarning> warnings = new ArrayList<>();
+        lastWarnings = warnings;
 
-        Lexer lexer = new Lexer(source);
-        List<Token> tokens = lexer.tokenize();
+        SourceResolver resolver = new SourceResolver(sourceFile, warnings);
+        lastImportGraph = resolver.getGraph();
+        List<Token> tokens = resolver.resolve(source);
 
-        Parser parser = new Parser(tokens);
+        Parser parser = new Parser(tokens, lastImportGraph);
         MainNode node = parser.parseMain();
 
         // Enum nominal-type checks run first, on the raw AST where enum tags are still present.
@@ -53,8 +58,7 @@ public class NHCompiler implements Compiler {
         LinkFunctionVisitor linkFunctionVisitor = new LinkFunctionVisitor(node);
         node = linkFunctionVisitor.analyze(node);
 
-        List<CompileWarning> warnings = new java.util.ArrayList<>();
-        lastWarnings = warnings;
+        new ImportVisibilityVisitor(lastImportGraph, node).analyze(node);
 
         new RecursionCheckVisitor(options.recursionMode(), warnings).analyze(node);
 
