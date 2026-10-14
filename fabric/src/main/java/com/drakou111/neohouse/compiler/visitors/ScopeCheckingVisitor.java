@@ -8,14 +8,32 @@ import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.ParameterListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.*;
-import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.ast.main_statements.CommandNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.GlobalDeclarationNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.MenuNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.SlotNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
+import com.drakou111.neohouse.compiler.ast.statement.ConditionalNode;
+import com.drakou111.neohouse.compiler.ast.statement.DeclarationNode;
+import com.drakou111.neohouse.compiler.ast.statement.RandomNode;
+import com.drakou111.neohouse.compiler.ast.statement.RepeatNode;
 import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
 import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ScopeCheckingVisitor extends DefaultVisitor {
     private final Map<String, VariableType> globalDecls;

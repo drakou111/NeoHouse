@@ -2,8 +2,51 @@ package com.drakou111.neohouse.factories;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.compiler.enums.Holder;
-import com.drakou111.neohouse.constants.*;
-import com.drakou111.neohouse.constants.actions.*;
+import com.drakou111.neohouse.constants.AddAction;
+import com.drakou111.neohouse.constants.Enchant;
+import com.drakou111.neohouse.constants.Gamemode;
+import com.drakou111.neohouse.constants.InventorySlots;
+import com.drakou111.neohouse.constants.Lobby;
+import com.drakou111.neohouse.constants.Operator;
+import com.drakou111.neohouse.constants.Others;
+import com.drakou111.neohouse.constants.Potion;
+import com.drakou111.neohouse.constants.RestrictedOperator;
+import com.drakou111.neohouse.constants.RestrictionAction;
+import com.drakou111.neohouse.constants.Teleport;
+import com.drakou111.neohouse.constants.Time;
+import com.drakou111.neohouse.constants.Weather;
+import com.drakou111.neohouse.constants.actions.ActionBarInputs;
+import com.drakou111.neohouse.constants.actions.ApplyPotionInputs;
+import com.drakou111.neohouse.constants.actions.ChangeVelocityInputs;
+import com.drakou111.neohouse.constants.actions.ChatMessageInputs;
+import com.drakou111.neohouse.constants.actions.CompassTargetInputs;
+import com.drakou111.neohouse.constants.actions.ConditionInputs;
+import com.drakou111.neohouse.constants.actions.DisplayMenuInputs;
+import com.drakou111.neohouse.constants.actions.DropItemInputs;
+import com.drakou111.neohouse.constants.actions.EnchantHeldInputs;
+import com.drakou111.neohouse.constants.actions.FailParkourInputs;
+import com.drakou111.neohouse.constants.actions.GamemodeInputs;
+import com.drakou111.neohouse.constants.actions.GiveExperienceInputs;
+import com.drakou111.neohouse.constants.actions.GiveItemInputs;
+import com.drakou111.neohouse.constants.actions.HealthInputs;
+import com.drakou111.neohouse.constants.actions.HungerInputs;
+import com.drakou111.neohouse.constants.actions.LaunchTargetInputs;
+import com.drakou111.neohouse.constants.actions.LayoutInputs;
+import com.drakou111.neohouse.constants.actions.MaxHealthInputs;
+import com.drakou111.neohouse.constants.actions.NameTagInputs;
+import com.drakou111.neohouse.constants.actions.PauseInputs;
+import com.drakou111.neohouse.constants.actions.PlaySoundInputs;
+import com.drakou111.neohouse.constants.actions.PlayerGroupInputs;
+import com.drakou111.neohouse.constants.actions.RandomInputs;
+import com.drakou111.neohouse.constants.actions.RemoveItemInputs;
+import com.drakou111.neohouse.constants.actions.SendLobbyInputs;
+import com.drakou111.neohouse.constants.actions.SetTimeInputs;
+import com.drakou111.neohouse.constants.actions.SetVariableInputs;
+import com.drakou111.neohouse.constants.actions.SetWeatherInputs;
+import com.drakou111.neohouse.constants.actions.TeamInputs;
+import com.drakou111.neohouse.constants.actions.TeleportInputs;
+import com.drakou111.neohouse.constants.actions.TitleInputs;
+import com.drakou111.neohouse.constants.actions.TriggerFunctionInputs;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.factories.params.DropItemParams;
 import com.drakou111.neohouse.factories.params.PlaySoundParams;
@@ -30,7 +73,6 @@ public class ActionFactory {
         for (InputParam p : params) p.apply(b);
         return b.clickSlotAndWait(backId, true).get();
     }
-
 
     public static Action addActionConditional(RestrictionAction state, boolean matchAny, Action conditions, Action ifs, Action elses, String note) {
         if (!state.isAllowed(AddAction.CONDITIONAL)) throw new InterruptActionException("Cannot add action 'Conditional' here.");

@@ -2,7 +2,9 @@ package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
-import com.drakou111.neohouse.compiler.ast.expr.constants.*;
+import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
+import com.drakou111.neohouse.compiler.ast.expr.constants.DoubleValue;
+import com.drakou111.neohouse.compiler.ast.expr.constants.LongValue;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;

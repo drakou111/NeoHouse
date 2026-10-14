@@ -7,11 +7,20 @@ import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
-import com.drakou111.neohouse.compiler.ast.main.*;
+import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
+import com.drakou111.neohouse.compiler.ast.main.MainNode;
+import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
-import com.drakou111.neohouse.compiler.ast.statement.*;
+import com.drakou111.neohouse.compiler.ast.statement.ActionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
+import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
+import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
 import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.exceptions.SemanticException;
@@ -26,7 +35,6 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     private final Map<String, VoidFunctionNode> voidFunctions = new HashMap<>();
     private final Map<String, TypedFunctionNode> typedFunctions = new HashMap<>();
     private final Map<String, TupleFunctionNode> tupleFunctions = new HashMap<>();
-
 
     public FunctionCallLoweringVisitor(MainNode main) {
         for (MainStatementNode top : main.statements) {

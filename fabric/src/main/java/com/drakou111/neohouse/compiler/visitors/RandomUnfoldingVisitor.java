@@ -1,7 +1,11 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
-import com.drakou111.neohouse.compiler.ast.main.*;
+import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
+import com.drakou111.neohouse.compiler.ast.main.MainNode;
+import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
+import com.drakou111.neohouse.compiler.ast.main.ParameterListNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.RandomNode;
 import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;

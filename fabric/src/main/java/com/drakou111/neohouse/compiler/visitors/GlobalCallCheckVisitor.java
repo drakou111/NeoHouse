@@ -2,7 +2,10 @@ package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
-import com.drakou111.neohouse.compiler.ast.main_statements.*;
+import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
 import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
 import com.drakou111.neohouse.config.GlobalCallMode;

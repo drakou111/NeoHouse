@@ -1,15 +1,62 @@
 package com.drakou111.neohouse.compiler.parser;
 
 import com.drakou111.neohouse.compiler.ImportGraph;
-import com.drakou111.neohouse.compiler.ast.expr.*;
+import com.drakou111.neohouse.compiler.ast.expr.BinaryExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.BooleanExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.ConditionCallNode;
+import com.drakou111.neohouse.compiler.ast.expr.ConditionExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.ExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.LogicalExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.UnaryExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
-import com.drakou111.neohouse.compiler.ast.expr.constants.*;
+import com.drakou111.neohouse.compiler.ast.expr.constants.BoolValue;
+import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitive;
+import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
+import com.drakou111.neohouse.compiler.ast.expr.constants.DoubleValue;
+import com.drakou111.neohouse.compiler.ast.expr.constants.LongValue;
+import com.drakou111.neohouse.compiler.ast.expr.constants.StringValue;
 import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
-import com.drakou111.neohouse.compiler.ast.main.*;
-import com.drakou111.neohouse.compiler.ast.main_statements.*;
-import com.drakou111.neohouse.compiler.ast.statement.*;
-import com.drakou111.neohouse.compiler.enums.*;
+import com.drakou111.neohouse.compiler.ast.main.ArgumentListNode;
+import com.drakou111.neohouse.compiler.ast.main.ConstantPrimitiveList;
+import com.drakou111.neohouse.compiler.ast.main.MainNode;
+import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
+import com.drakou111.neohouse.compiler.ast.main.ParameterListNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.CommandNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.FunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.GlobalDeclarationNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.MenuNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.SlotNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
+import com.drakou111.neohouse.compiler.ast.statement.ActionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
+import com.drakou111.neohouse.compiler.ast.statement.ConditionalNode;
+import com.drakou111.neohouse.compiler.ast.statement.DeclarationNode;
+import com.drakou111.neohouse.compiler.ast.statement.GlobalFunctionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.RandomNode;
+import com.drakou111.neohouse.compiler.ast.statement.RepeatNode;
+import com.drakou111.neohouse.compiler.ast.statement.ReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleDestructureNode;
+import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
+import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
+import com.drakou111.neohouse.compiler.ast.statement.VoidReturnNode;
+import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
+import com.drakou111.neohouse.compiler.enums.BinaryOperator;
+import com.drakou111.neohouse.compiler.enums.BooleanOperator;
+import com.drakou111.neohouse.compiler.enums.Holder;
+import com.drakou111.neohouse.compiler.enums.LogicalOperator;
+import com.drakou111.neohouse.compiler.enums.Param;
+import com.drakou111.neohouse.compiler.enums.Precedence;
+import com.drakou111.neohouse.compiler.enums.UnaryOperator;
+import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.compiler.lexer.TokenType;
 import com.drakou111.neohouse.constants.AddAction;
@@ -19,7 +66,12 @@ import com.drakou111.neohouse.constants.ReservedCommands;
 import com.drakou111.neohouse.constants.Teleport;
 import com.drakou111.neohouse.exceptions.ParsingException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Parser {
     private final List<Token> tokens;
@@ -454,8 +506,6 @@ public class Parser {
         }
         return new ConditionalNode(condition, new StatementListNode(thenBranch), new StatementListNode(elseBranch), token);
     }
-
-
 
     public RandomNode parseRandom() {
         Token randomToken = consume(TokenType.RANDOM, "Expected 'random' keyword");
@@ -1223,7 +1273,6 @@ public class Parser {
             default -> throw new ParsingException(token, "Expected a constant value. Did you mean \"" + token.text + "\"?");
         };
     }
-
 
     /** Every place 'var' was written as a type (declarations, parameters, return types). */
     public List<Token> getVarTypeTokens() {

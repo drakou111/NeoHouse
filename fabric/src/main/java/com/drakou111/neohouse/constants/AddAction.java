@@ -1,7 +1,34 @@
 package com.drakou111.neohouse.constants;
 
 import com.drakou111.neohouse.compiler.enums.Param;
-import com.drakou111.neohouse.constants.actions.*;
+import com.drakou111.neohouse.constants.actions.ActionBarInputs;
+import com.drakou111.neohouse.constants.actions.ApplyPotionInputs;
+import com.drakou111.neohouse.constants.actions.ChangeVelocityInputs;
+import com.drakou111.neohouse.constants.actions.ChatMessageInputs;
+import com.drakou111.neohouse.constants.actions.CompassTargetInputs;
+import com.drakou111.neohouse.constants.actions.DisplayMenuInputs;
+import com.drakou111.neohouse.constants.actions.DropItemInputs;
+import com.drakou111.neohouse.constants.actions.EnchantHeldInputs;
+import com.drakou111.neohouse.constants.actions.FailParkourInputs;
+import com.drakou111.neohouse.constants.actions.GamemodeInputs;
+import com.drakou111.neohouse.constants.actions.GiveExperienceInputs;
+import com.drakou111.neohouse.constants.actions.GiveItemInputs;
+import com.drakou111.neohouse.constants.actions.HealthInputs;
+import com.drakou111.neohouse.constants.actions.HungerInputs;
+import com.drakou111.neohouse.constants.actions.LaunchTargetInputs;
+import com.drakou111.neohouse.constants.actions.LayoutInputs;
+import com.drakou111.neohouse.constants.actions.MaxHealthInputs;
+import com.drakou111.neohouse.constants.actions.NameTagInputs;
+import com.drakou111.neohouse.constants.actions.PauseInputs;
+import com.drakou111.neohouse.constants.actions.PlaySoundInputs;
+import com.drakou111.neohouse.constants.actions.PlayerGroupInputs;
+import com.drakou111.neohouse.constants.actions.RemoveItemInputs;
+import com.drakou111.neohouse.constants.actions.SendLobbyInputs;
+import com.drakou111.neohouse.constants.actions.SetTimeInputs;
+import com.drakou111.neohouse.constants.actions.SetWeatherInputs;
+import com.drakou111.neohouse.constants.actions.TeamInputs;
+import com.drakou111.neohouse.constants.actions.TeleportInputs;
+import com.drakou111.neohouse.constants.actions.TitleInputs;
 
 import java.util.Arrays;
 import java.util.List;

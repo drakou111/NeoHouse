@@ -1,7 +1,27 @@
 package com.drakou111.neohouse.constants;
 
 import com.drakou111.neohouse.compiler.enums.Param;
-import com.drakou111.neohouse.constants.conditions.*;
+import com.drakou111.neohouse.constants.conditions.BlockTypeInputs;
+import com.drakou111.neohouse.constants.conditions.DamageAmountInputs;
+import com.drakou111.neohouse.constants.conditions.DamageCauseInputs;
+import com.drakou111.neohouse.constants.conditions.DoingParkourInputs;
+import com.drakou111.neohouse.constants.conditions.EffectInputs;
+import com.drakou111.neohouse.constants.conditions.FishingEnvironmentInputs;
+import com.drakou111.neohouse.constants.conditions.FlyingInputs;
+import com.drakou111.neohouse.constants.conditions.GamemodeInputs;
+import com.drakou111.neohouse.constants.conditions.GroupInputs;
+import com.drakou111.neohouse.constants.conditions.HasItemInputs;
+import com.drakou111.neohouse.constants.conditions.HealthInputs;
+import com.drakou111.neohouse.constants.conditions.HungerInputs;
+import com.drakou111.neohouse.constants.conditions.IsItemInputs;
+import com.drakou111.neohouse.constants.conditions.MaxHealthInputs;
+import com.drakou111.neohouse.constants.conditions.PermissionInputs;
+import com.drakou111.neohouse.constants.conditions.PlaceholderInputs;
+import com.drakou111.neohouse.constants.conditions.PortalTypeInputs;
+import com.drakou111.neohouse.constants.conditions.PvpEnabledInputs;
+import com.drakou111.neohouse.constants.conditions.RegionInputs;
+import com.drakou111.neohouse.constants.conditions.SneakingInputs;
+import com.drakou111.neohouse.constants.conditions.TeamInputs;
 
 import java.util.Arrays;
 import java.util.List;
