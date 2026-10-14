@@ -26,9 +26,10 @@ public final class MusicPlayer {
 
     public boolean isLooping() { return loop; }
 
+    /** Plays from {@code fromTick}, or from the start when that is at or past the end of the song. */
     public void play(int fromTick) {
         if (project == null) return;
-        this.startTick = Math.max(0, fromTick);
+        this.startTick = fromTick >= project.lengthTicks() ? 0 : Math.max(0, fromTick);
         this.lastPlayedTick = startTick - 1;
         this.startNanos = System.nanoTime();
         this.playing = true;
@@ -38,9 +39,26 @@ public final class MusicPlayer {
         playing = false;
     }
 
-    public void toggle(int fromTick) {
+    /** Stops, or plays from the start cursor; a stopped player rests on its start cursor. */
+    public void toggle() {
         if (playing) stop();
-        else play(fromTick);
+        else play(startTick);
+    }
+
+    /** The tick playback starts from (and returns to when stopped). */
+    public int getStartTick() {
+        return startTick;
+    }
+
+    /** Moves the start cursor; while playing, playback jumps there. */
+    public void seek(int tick) {
+        int clamped = Math.max(0, tick);
+        if (playing && clamped < project.lengthTicks()) {
+            play(clamped);
+            return;
+        }
+        playing = false;
+        startTick = clamped;
     }
 
     public double currentTick() {
@@ -62,7 +80,7 @@ public final class MusicPlayer {
         lastPlayedTick = Math.max(lastPlayedTick, upTo);
 
         if (head >= end) {
-            if (loop) play(0);
+            if (loop) play(startTick);
             else stop();
         }
     }

@@ -36,8 +36,10 @@ import java.nio.file.Path;
  *
  * <p>Melodic (note-block) tracks are edited on a 25-row semitone grid; other
  * tracks are edited as one-shot lanes with free volume/pitch. Left-click places
- * or selects a note, drag moves it, right-click deletes it. Space toggles
- * playback; Ctrl+C/Ctrl+V copy/paste the selected note at the playhead; Delete
+ * or selects a note, drag moves it, right-click deletes it. Clicking or dragging
+ * the ruler above the grid moves the start cursor (Home resets it); Space plays
+ * from it and stopping returns to it. Ctrl+C/Ctrl+V copy/paste the selected note
+ * at the playhead; Delete
  * removes it; Ctrl+S saves. Each track shows its sound's item icon plus compact
  * mute/sound/rename/delete buttons in the left panel.</p>
  */
@@ -51,6 +53,8 @@ public class MusicEditorScreen extends ScreenBase {
     private static final int LEFT_W = 122;
     private static final int FOOTER_H = 24;
     private static final int HSB_H = 9;          // horizontal scrollbar strip height
+    private static final int RULER_H = 10;       // timeline strip above the grid where the start cursor is set
+    private static final int CURSOR_COLOR = 0xFFFF5555;
     private static final int MIN_TICK_W = 3;
     private static final int MAX_TICK_W = 28;
     private static final int SEMITONES = 25;
@@ -72,6 +76,7 @@ public class MusicEditorScreen extends ScreenBase {
 
     private MusicNote selected;
     private boolean dragging = false;
+    private boolean rulerDragging = false;
     private boolean dirty = false;
     private boolean wasPlaying = false;
 
@@ -105,9 +110,10 @@ public class MusicEditorScreen extends ScreenBase {
 
     // ---- layout helpers ----
     private int gridX0() { return LEFT_W; }
-    private int gridY0() { return HEADER_H; }
+    private int rulerY0() { return HEADER_H; }
+    private int gridY0() { return HEADER_H + RULER_H; }
     private int gridW()  { return width - LEFT_W - PAD; }
-    private int gridH()  { return height - HEADER_H - FOOTER_H - HSB_H; }
+    private int gridH()  { return height - HEADER_H - RULER_H - FOOTER_H - HSB_H; }
     private int rowH()   { return Math.max(6, gridH() / SEMITONES); }
     private int visibleTicks() { return Math.max(1, gridW() / tickW); }
 
@@ -135,7 +141,7 @@ public class MusicEditorScreen extends ScreenBase {
 
         // Row 2: playback, tracks and view, grouped with small gaps between the groups.
         x = PAD;
-        x = addTop(player.isPlaying() ? "■ Stop" : "▶ Play", 48, x, TOOLBAR_ROW_2_Y, b -> { player.toggle(0); rebuildAll(); }, "Play or stop the preview");
+        x = addTop(player.isPlaying() ? "■ Stop" : "▶ Play", 48, x, TOOLBAR_ROW_2_Y, b -> { player.toggle(); rebuildAll(); }, "Play or stop the preview (Space). Click the ruler above the notes to pick where it starts");
         x = addTop(player.isLooping() ? "Loop: On" : "Loop: Off", 58, x, TOOLBAR_ROW_2_Y, b -> { player.setLoop(!player.isLooping()); rebuildAll(); }, "Repeat the preview");
         x += TOOLBAR_GROUP_GAP;
         x = addTop("+ Track", 52, x, TOOLBAR_ROW_2_Y, b -> addTrack(), "Add a track");
@@ -186,6 +192,7 @@ public class MusicEditorScreen extends ScreenBase {
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
 
         renderGrid(g, t);
+        renderRuler(g, t);
         renderHScroll(g, t);
         renderTrackPanel(g, t);
 
@@ -252,9 +259,42 @@ public class MusicEditorScreen extends ScreenBase {
         }
         drawTrackNotes(g, tr, gx0, gy0, gw, gh, rh, false);
 
+        // while playing, the start cursor stays visible (dimmed) so it's clear where Stop returns to
+        int cx = gx0 + (player.getStartTick() - tickOffset) * tickW;
+        if (player.isPlaying() && cx >= gx0 && cx <= gx0 + gw) g.fill(cx, gy0, cx + 1, gy0 + gh, 0x66FF5555);
+
         double head = player.currentTick();
         int hx = gx0 + (int) Math.round((head - tickOffset) * tickW);
-        if (hx >= gx0 && hx <= gx0 + gw) g.fill(hx, gy0, hx + 1, gy0 + gh, 0xFFFF5555);
+        if (hx >= gx0 && hx <= gx0 + gw) g.fill(hx, gy0, hx + 1, gy0 + gh, CURSOR_COLOR);
+    }
+
+    /** Timeline strip with beat marks and the start cursor; clicking or dragging it moves the cursor. */
+    private void renderRuler(Gfx g, UITheme t) {
+        int gx0 = gridX0(), gw = gridW(), ry = rulerY0();
+        g.fill(gx0, ry, gx0 + gw, ry + RULER_H, 0x55000000);
+        g.fill(gx0, ry + RULER_H - 1, gx0 + gw, ry + RULER_H, t.accentTint(0x44));
+
+        int beatEvery = Math.max(1, project.gridDivision);
+        if (beatEvery * tickW >= 4) {
+            for (int tick = tickOffset - Math.floorMod(tickOffset, beatEvery); tick <= tickOffset + visibleTicks(); tick += beatEvery) {
+                int xx = cellX(tick);
+                if (xx < gx0 || xx > gx0 + gw) continue;
+                g.fill(xx, ry + RULER_H / 2, xx + 1, ry + RULER_H - 1, t.accentTint(0x88));
+            }
+        }
+
+        int cx = cellX(player.getStartTick());
+        if (cx < gx0 || cx > gx0 + gw) return;
+        // a small downward-pointing marker
+        for (int row = 0; row < RULER_H / 2; row++) {
+            int half = RULER_H / 2 - 1 - row;
+            g.fill(cx - half, ry + 1 + row, cx + half + 1, ry + 2 + row, CURSOR_COLOR);
+        }
+        g.fill(cx, ry, cx + 1, ry + RULER_H, CURSOR_COLOR);
+    }
+
+    private boolean inRuler(double mx, double my) {
+        return my >= rulerY0() && my < rulerY0() + RULER_H && mx >= gridX0() && mx <= gridX0() + gridW();
     }
 
     private void drawTrackNotes(Gfx g, MusicTrack tr, int gx0, int gy0, int gw, int gh, int rh, boolean dim) {
@@ -386,6 +426,12 @@ public class MusicEditorScreen extends ScreenBase {
             return true;
         }
 
+        if (button == 0 && inRuler(mx, my)) {
+            player.seek(Math.max(0, tickAt(mx)));
+            rulerDragging = true;
+            return true;
+        }
+
         // track panel row selection (icon/name area)
         if (mx < LEFT_W && my >= HEADER_H && my < height - FOOTER_H) {
             int idx = (int) ((my - (HEADER_H + 4)) / TRACK_ROW_H);
@@ -435,6 +481,11 @@ public class MusicEditorScreen extends ScreenBase {
             if (slide > 0) tickOffset = clampOff(hsbDragStartOffset + (int) Math.round((mx - hsbDragStartX) * (double) maxOff / slide), maxOff);
             return true;
         }
+        if (rulerDragging && button == 0) {
+            int tick = Math.max(0, tickAt(mx));
+            if (tick != player.getStartTick()) player.seek(tick);
+            return true;
+        }
         if (dragging && selected != null && button == 0) {
             selected.tick = Math.max(0, tickAt(mx));
             selected.semitone = semitoneAt(my);
@@ -447,6 +498,7 @@ public class MusicEditorScreen extends ScreenBase {
     @Override
     protected boolean onMouseReleased(double mx, double my, int button) {
         if (hsbDragging && button == 0) { hsbDragging = false; return true; }
+        if (rulerDragging && button == 0) { rulerDragging = false; return true; }
         if (dragging && button == 0) { dragging = false; return true; }
         return superMouseReleased(mx, my, button);
     }
@@ -501,12 +553,13 @@ public class MusicEditorScreen extends ScreenBase {
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
         boolean ctrl = (mods & Keys.MOD_CONTROL) != 0;
-        if (key == 32) { player.toggle(0); rebuildAll(); return true; }
+        if (key == Keys.SPACE) { player.toggle(); rebuildAll(); return true; }
+        if (key == Keys.HOME) { player.seek(0); tickOffset = 0; return true; }
         if (key == Keys.DELETE && selected != null) {
             active().notes.remove(selected); selected = null; markDirty(); return true;
         }
-        if (ctrl && key == 67 && selected != null) { clipboard = selected.copy(); return true; }
-        if (ctrl && key == 86 && clipboard != null) {
+        if (ctrl && key == Keys.C && selected != null) { clipboard = selected.copy(); return true; }
+        if (ctrl && key == Keys.V && clipboard != null) {
             MusicNote n = clipboard.copy();
             n.tick = (int) Math.floor(player.currentTick());
             active().notes.add(n);
@@ -514,7 +567,7 @@ public class MusicEditorScreen extends ScreenBase {
             markDirty();
             return true;
         }
-        if (ctrl && key == 83) { save(); return true; }
+        if (ctrl && key == Keys.S) { save(); return true; }
         return superKeyPressed(key, scan, mods);
     }
 

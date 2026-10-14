@@ -28,6 +28,7 @@ public final class Keys {
     public static final int PAGE_DOWN = GLFW.GLFW_KEY_PAGE_DOWN;
     public static final int PAGE_UP = GLFW.GLFW_KEY_PAGE_UP;
     public static final int RIGHT = GLFW.GLFW_KEY_RIGHT;
+    public static final int SPACE = GLFW.GLFW_KEY_SPACE;
     public static final int TAB = GLFW.GLFW_KEY_TAB;
     public static final int UP = GLFW.GLFW_KEY_UP;
 

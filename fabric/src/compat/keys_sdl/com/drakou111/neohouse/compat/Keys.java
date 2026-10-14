@@ -28,6 +28,7 @@ public final class Keys {
     public static final int PAGE_DOWN = InputConstants.KEY_PAGEDOWN;
     public static final int PAGE_UP = InputConstants.KEY_PAGEUP;
     public static final int RIGHT = InputConstants.KEY_RIGHT;
+    public static final int SPACE = InputConstants.KEY_SPACE;
     public static final int TAB = InputConstants.KEY_TAB;
     public static final int UP = InputConstants.KEY_UP;
 
