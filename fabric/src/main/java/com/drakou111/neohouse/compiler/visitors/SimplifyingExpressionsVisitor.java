@@ -249,6 +249,9 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                     constantNode = new ConstantPrimitiveNode(new DoubleValue(value), VariableType.DOUBLE, un.token);
                 }
                 case BOOL, STRING -> throw new SemanticException(un.token, "Cannot apply '" + un.operator + "' to type " + varType);
+                // Negating or stepping a long uses 1, a double 1.0, so an untyped var can't be lowered.
+                case VAR -> throw new SemanticException(un.token,
+                        "Cannot apply '" + un.operator + "' to a var: cast it with (long) or (double) first");
                 default -> throw new SemanticException(un.token, "Unknown VariableType: " + varType);
             }
 
