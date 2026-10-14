@@ -1,8 +1,5 @@
 package com.drakou111.neohouse.compiler;
 
-import com.drakou111.neohouse.config.MultiCallMode;
-import com.drakou111.neohouse.config.NeoHouseConfig;
-
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
@@ -33,6 +30,12 @@ public class NHCompiler implements Compiler {
 
     @Override
     public Action compile(String source, Path scriptsRoot) throws CompilingException {
+        CompileOptions options = CompileOptions.fromConfig();
+        return new CodeGenerator(options.overrideMode()).generate(analyze(source, scriptsRoot, options));
+    }
+
+    /** Runs every front-end pass and returns the final, lowered AST that the code generator consumes. */
+    public MainNode analyze(String source, Path scriptsRoot, CompileOptions options) throws CompilingException {
         source = new Preprocessor(scriptsRoot).process(source);
 
         Lexer lexer = new Lexer(source);
@@ -53,12 +56,11 @@ public class NHCompiler implements Compiler {
         List<CompileWarning> warnings = new java.util.ArrayList<>();
         lastWarnings = warnings;
 
-        new RecursionCheckVisitor(NeoHouseConfig.get().recursionMode, warnings).analyze(node);
+        new RecursionCheckVisitor(options.recursionMode(), warnings).analyze(node);
 
-        new GlobalCallCheckVisitor(NeoHouseConfig.get().globalCallMode, warnings).analyze(node);
+        new GlobalCallCheckVisitor(options.globalCallMode(), warnings).analyze(node);
 
-        MultiCallMode multiCallMode = NeoHouseConfig.get().multiCallMode;
-        node = new FunctionDeduplicationVisitor(multiCallMode).analyze(node);
+        node = new FunctionDeduplicationVisitor(options.multiCallMode()).analyze(node);
 
         RepeatUnrollingVisitor repeatUnroller = new RepeatUnrollingVisitor();
         node = repeatUnroller.analyze(node);
@@ -111,7 +113,6 @@ public class NHCompiler implements Compiler {
         node = actionRestrictionVisitor.analyze(node);
 
         lastExtraVariables = new ExtraVariableCollectorVisitor().collect(node);
-
-        return new CodeGenerator().generate(node);
+        return node;
     }
 }

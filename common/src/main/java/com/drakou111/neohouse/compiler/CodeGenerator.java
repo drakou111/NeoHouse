@@ -1,6 +1,5 @@
 package com.drakou111.neohouse.compiler;
 
-import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.OverrideMode;
 
 import com.drakou111.neohouse.actions.Action;
@@ -32,10 +31,14 @@ import com.drakou111.neohouse.utils.ActionBuilder;
 import java.util.*;
 
 public class CodeGenerator {
+    private final OverrideMode mode;
+
+    public CodeGenerator(OverrideMode mode) {
+        this.mode = Objects.requireNonNull(mode);
+    }
 
     public Action generate(MainNode main) {
         List<Action> parts = new ArrayList<>();
-        OverrideMode mode = NeoHouseConfig.get().overrideMode;
 
         // Pass 0: emit global/team variable initializers
         for (MainStatementNode stmt : main.statements) {
