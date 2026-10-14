@@ -54,7 +54,7 @@ public final class CommandActions {
         try {
             return action.getAsInt();
         } catch (Exception e) {
-            MessageUtils.errorToChat(e.getMessage() != null ? e.getMessage() : e.toString());
+            MessageUtils.errorToChat(e);
             return 0;
         }
     }
@@ -239,7 +239,7 @@ public final class CommandActions {
             MessageUtils.debugToChat("Running: " + scriptFile.getFileName());
             return 1;
         } catch (Exception e) {
-            MessageUtils.errorToChat(e.getMessage() != null ? e.getMessage() : e.toString());
+            MessageUtils.errorToChat(e);
             return 0;
         }
     }

@@ -374,7 +374,7 @@ public class FileBrowserScreen extends ScreenBase {
             ScriptRunner.INSTANCE.runScript(file);
             MessageUtils.debugToChat("Running: " + file.getFileName());
         } catch (Exception e) {
-            MessageUtils.errorToChat(e.getMessage() != null ? e.getMessage() : e.toString());
+            MessageUtils.errorToChat(e);
         }
     }
 

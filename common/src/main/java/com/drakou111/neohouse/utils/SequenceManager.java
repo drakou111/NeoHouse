@@ -76,7 +76,7 @@ public class SequenceManager {
         try {
             finished = currentAction.run(mc);
         } catch (InterruptActionException e) {
-            MessageUtils.errorToChat(e.getMessage() != null ? e.getMessage() : e.toString());
+            MessageUtils.errorToChat(e);
             currentAction = null;
             return;
         } catch (Exception e) {
