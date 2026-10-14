@@ -1,11 +1,69 @@
 package com.drakou111.neohouse.ui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Text scans the editor uses to tell a call split over several lines from one still being typed. */
 public final class CallSpan {
 
+    /** An argument position to label: the column its hint goes at and which parameter it is. */
+    public record ArgSlot(int column, int argIndex) {}
+
     private CallSpan() {
+    }
+
+    /**
+     * The argument slots of a call on {@code line}, starting at column {@code start} (just past the
+     * '(' or the start of a continuation line) with argument {@code firstArgIndex}. A slot with text
+     * is labelled where its text starts; an empty one only while the text cursor
+     * ({@code cursorColumn}, -1 when it isn't on this line) is in it, so the next parameter's name
+     * shows as soon as ',' is typed. Stops at the call's ')'; a ';' outside brackets means the line
+     * isn't part of the call, so nothing is returned.
+     */
+    public static List<ArgSlot> argumentSlots(String line, int start, int firstArgIndex, int cursorColumn) {
+        List<ArgSlot> slots = new ArrayList<>();
+        int argIndex = firstArgIndex;
+        int slotStart = start;
+        int i = start;
+        int depth = 0;
+        boolean slotOpen = true;
+        while (true) {
+            if (slotOpen) {
+                while (i < line.length() && line.charAt(i) == ' ') i++;
+                boolean empty = i >= line.length() || line.charAt(i) == ')' || line.charAt(i) == ','
+                        || (line.charAt(i) == '/' && i + 1 < line.length() && line.charAt(i + 1) == '/');
+                if (!empty || (cursorColumn >= slotStart && cursorColumn <= i)) slots.add(new ArgSlot(i, argIndex));
+                slotOpen = false;
+            }
+            if (i >= line.length()) return slots;
+            char c = line.charAt(i);
+            if (c == '/' && i + 1 < line.length() && line.charAt(i + 1) == '/') return slots;
+            if (c == '"') {
+                i++;
+                while (i < line.length() && line.charAt(i) != '"') i++;
+                if (i < line.length()) i++;
+                continue;
+            }
+            switch (c) {
+                case '(', '[', '{' -> depth++;
+                case ')', ']', '}' -> {
+                    if (depth == 0) return slots;
+                    depth--;
+                }
+                case ';' -> {
+                    if (depth == 0) return List.of();
+                }
+                case ',' -> {
+                    if (depth == 0) {
+                        argIndex++;
+                        slotStart = i + 1;
+                        slotOpen = true;
+                    }
+                }
+                default -> { }
+            }
+            i++;
+        }
     }
 
     /**

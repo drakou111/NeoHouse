@@ -36,6 +36,10 @@ public class SyntaxEditorWidget extends WidgetBase {
     private int  lastClickPos  = -1;
 
     private List<String> lineCache   = null;
+    // cursorColumnOn's cache of the cursor's {line, column}, valid for these lines and offset
+    private List<String> cursorLcLines = null;
+    private int cursorLcOffset = -1;
+    private int[] cursorLc = {0, 0};
     private int[]        offsetCache = null;
 
     private record ErrorSpan(int line, int colStart, int tokenLen, String message) {}
@@ -490,13 +494,9 @@ public class SyntaxEditorWidget extends WidgetBase {
                     String funcName = line.substring(nameStart, i);
                     List<String> paramLabels = resolveParamNames(funcName);
                     if (paramLabels != null && !paramLabels.isEmpty()) {
-                        List<Integer> argStarts = findArgStartsInLine(line, j + 1);
-                        for (int k = 0; k < Math.min(argStarts.size(), paramLabels.size()); k++) {
-                            String label = paramLabels.get(k);
-                            int colon = label.indexOf(':');
-                            String name = (colon >= 0 ? label.substring(0, colon) : label).trim();
-                            boolean isActive = funcName.equals(activeFuncName) && k == activeParamIdx;
-                            hints.add(new InlineHint(argStarts.get(k), name + ": ", isActive));
+                        for (CallSpan.ArgSlot slot : CallSpan.argumentSlots(line, j + 1, 0, cursorColumnOn(allLines, lineIndex))) {
+                            if (slot.argIndex() < paramLabels.size())
+                                hints.add(paramHint(paramLabels, slot.argIndex(), slot.column(), funcName, activeFuncName, activeParamIdx));
                         }
                     }
                     i = j + 1;
@@ -565,40 +565,11 @@ public class SyntaxEditorWidget extends WidgetBase {
         List<String> paramLabels = resolveParamNames(funcName);
         if (paramLabels == null || paramLabels.isEmpty()) return List.of();
 
-        int argIndex = call[3];
-        List<InlineHint> hints = new ArrayList<>();
         String curLine = allLines.get(lineIndex);
-        int col = 0;
-        while (col < curLine.length() && curLine.charAt(col) == ' ') col++;
-        if (col < curLine.length() && curLine.charAt(col) != ')' && argIndex < paramLabels.size())
-            hints.add(paramHint(paramLabels, argIndex, col, funcName, activeFuncName, activeParamIdx));
-
-        int depth = 0;
-        while (col < curLine.length()) {
-            char c = curLine.charAt(col);
-            if (c == '/' && col + 1 < curLine.length() && curLine.charAt(col + 1) == '/') break;
-            if (c == '"') {
-                col++;
-                while (col < curLine.length() && curLine.charAt(col) != '"') col++;
-                if (col < curLine.length()) col++;
-            } else if (c == '(' || c == '[' || c == '{') {
-                depth++;
-                col++;
-            } else if (c == ')' || c == ']' || c == '}') {
-                if (depth == 0) break;
-                depth--;
-                col++;
-            } else if (c == ';') {
-                return List.of(); // a statement of its own, not part of the call
-            } else if (c == ',' && depth == 0) {
-                argIndex++;
-                col++;
-                while (col < curLine.length() && curLine.charAt(col) == ' ') col++;
-                if (col < curLine.length() && curLine.charAt(col) != ')' && argIndex < paramLabels.size())
-                    hints.add(paramHint(paramLabels, argIndex, col, funcName, activeFuncName, activeParamIdx));
-            } else {
-                col++;
-            }
+        List<InlineHint> hints = new ArrayList<>();
+        for (CallSpan.ArgSlot slot : CallSpan.argumentSlots(curLine, 0, call[3], cursorColumnOn(allLines, lineIndex))) {
+            if (slot.argIndex() < paramLabels.size())
+                hints.add(paramHint(paramLabels, slot.argIndex(), slot.column(), funcName, activeFuncName, activeParamIdx));
         }
         return hints;
     }
@@ -611,32 +582,18 @@ public class SyntaxEditorWidget extends WidgetBase {
         return new InlineHint(col, name + ": ", funcName.equals(activeFuncName) && argIndex == activeParamIdx);
     }
 
-    private List<Integer> findArgStartsInLine(String line, int start) {
-        List<Integer> result = new ArrayList<>();
-        int i = start;
-        int depth = 0;
-        while (i < line.length() && line.charAt(i) == ' ') i++;
-        if (i < line.length() && line.charAt(i) != ')') result.add(i);
-        while (i < line.length()) {
-            char c = line.charAt(i);
-            if (c == '"') {
-                i++;
-                while (i < line.length() && line.charAt(i) != '"') i++;
-                if (i < line.length()) i++;
-            } else if (c == '(' || c == '[' || c == '{') {
-                depth++; i++;
-            } else if (c == ')' || c == ']' || c == '}') {
-                if (depth == 0) break;
-                depth--; i++;
-            } else if (c == ',' && depth == 0) {
-                i++;
-                while (i < line.length() && line.charAt(i) == ' ') i++;
-                if (i < line.length() && line.charAt(i) != ')') result.add(i);
-            } else {
-                i++;
-            }
+    /**
+     * The text cursor's column when it is on line {@code lineIndex} of the focused editor, else -1.
+     * Hints are computed per visible line every frame, so the cursor's line/column is cached.
+     */
+    private int cursorColumnOn(List<String> lines, int lineIndex) {
+        if (!isFocused()) return -1;
+        if (lines != cursorLcLines || cursor != cursorLcOffset) {
+            cursorLc = offsetToLC(cursor, lines);
+            cursorLcLines = lines;
+            cursorLcOffset = cursor;
         }
-        return result;
+        return cursorLc[0] == lineIndex ? cursorLc[1] : -1;
     }
 
     private int lineColToPixelX(Font font, String line, int col, List<InlineHint> hints) {

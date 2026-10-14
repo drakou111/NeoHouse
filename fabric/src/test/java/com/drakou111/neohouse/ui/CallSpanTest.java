@@ -82,6 +82,53 @@ class CallSpanTest {
         assertThat(continues(0, 1, "foo(", "1,", "2)")).isTrue();
     }
 
+    private static List<CallSpan.ArgSlot> slots(String line, int cursorColumn) {
+        return CallSpan.argumentSlots(line, line.indexOf('(') + 1, 0, cursorColumn);
+    }
+
+    @Test
+    void filledArgumentsAreLabelledWhereTheirTextStarts() {
+        assertThat(slots("foo(1, \"a,b\", bar(2, 3))", -1)).containsExactly(
+                new CallSpan.ArgSlot(4, 0), new CallSpan.ArgSlot(7, 1), new CallSpan.ArgSlot(14, 2));
+    }
+
+    @Test
+    void emptySlotAfterACommaIsLabelledWhileTheCursorIsInIt() {
+        String line = "foo(1, ";
+        assertThat(slots(line, line.length())).containsExactly(
+                new CallSpan.ArgSlot(4, 0), new CallSpan.ArgSlot(7, 1));
+        assertThat(slots("foo(1,", 6)).containsExactly(
+                new CallSpan.ArgSlot(4, 0), new CallSpan.ArgSlot(6, 1));
+    }
+
+    @Test
+    void emptySlotIsNotLabelledWhenTheCursorIsElsewhere() {
+        assertThat(slots("foo(1, ", -1)).containsExactly(new CallSpan.ArgSlot(4, 0));
+        assertThat(slots("foo(1, ", 2)).containsExactly(new CallSpan.ArgSlot(4, 0));
+    }
+
+    @Test
+    void emptyFirstArgumentIsLabelledRightAfterTheParen() {
+        assertThat(slots("foo(", 4)).containsExactly(new CallSpan.ArgSlot(4, 0));
+        assertThat(slots("foo()", 4)).containsExactly(new CallSpan.ArgSlot(4, 0));
+    }
+
+    @Test
+    void anEmptySlotDoesNotShiftTheLaterLabels() {
+        assertThat(slots("foo(, x)", -1)).containsExactly(new CallSpan.ArgSlot(6, 1));
+    }
+
+    @Test
+    void continuationLineStartsAtTheGivenArgument() {
+        assertThat(CallSpan.argumentSlots("    \"x\", ", 0, 2, 9)).containsExactly(
+                new CallSpan.ArgSlot(4, 2), new CallSpan.ArgSlot(9, 3));
+    }
+
+    @Test
+    void statementLineIsNotPartOfTheCall() {
+        assertThat(CallSpan.argumentSlots("p.x = 1;", 0, 1, -1)).isEmpty();
+    }
+
     @Test
     void scanStopsAfterMaxLines() {
         assertThat(CallSpan.closesBeforeStatementEnds(List.of("foo(", "1,", "2,", ")"), 1, 2)).isFalse();
