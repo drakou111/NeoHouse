@@ -285,6 +285,15 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             stmts.addAll(leftRes.stmts());
             stmts.addAll(rightRes.stmts());
 
+            // Housing compares a variable (left) against a value (right). When only the right side is a
+            // variable, e.g. ph.playerName() == p.name, mirror the comparison instead of copying the
+            // left side into a temp variable.
+            if (!(leftRes.simple instanceof VariableNode) && rightRes.simple instanceof VariableNode rightVar) {
+                BooleanExpressionNode mirrored = new BooleanExpressionNode(rightVar,
+                        (NormalExpressionNode) leftRes.simple, mirror(be.operator), be.token);
+                return new LowerResult(mirrored, stmts);
+            }
+
             VariableNode leftVar;
             if (leftRes.simple instanceof VariableNode lv && isTempVar(lv)) {
                 leftVar = lv;
@@ -351,6 +360,17 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
         }
 
         return new LowerResult(expr, List.of());
+    }
+
+    /** The operator that keeps a comparison true when its two sides swap places (a < b is b > a). */
+    private static BooleanOperator mirror(BooleanOperator operator) {
+        return switch (operator) {
+            case EQUALS, NOT_EQUALS -> operator;
+            case LESS_THAN -> BooleanOperator.GREATER_THAN;
+            case GREATER_THAN -> BooleanOperator.LESS_THAN;
+            case LESS_THAN_EQUALS -> BooleanOperator.GREATER_THAN_EQUALS;
+            case GREATER_THAN_EQUALS -> BooleanOperator.LESS_THAN_EQUALS;
+        };
     }
 
     private record FoldResult(String template, List<StatementNode> stmts) {}
