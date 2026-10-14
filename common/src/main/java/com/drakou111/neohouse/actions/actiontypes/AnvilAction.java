@@ -38,6 +38,8 @@ public class AnvilAction extends Action {
                 .orElse(null);
 
         if (edit == null) return false;
+        // The server sends the item being renamed after opening the anvil; typing earlier is lost.
+        if (!anvil.getMenu().getSlot(0).hasItem()) return false;
 
         if (!nameSet) {
             String current = edit.getValue();

@@ -32,8 +32,7 @@ public class IfContainerEmptyAction extends Action {
     private final Predicate<AbstractContainerMenu> isEmpty;
     private final Action ifEmpty;
     private final Action ifNotEmpty;
-    private List<String> lastSnapshot = null;
-    private int stableTicks = 0;
+    private final MenuSettling settling = new MenuSettling(STABLE_TICKS);
     private int waitedTicks = 0;
     private boolean decided = false;
     private Action active = null;
@@ -93,23 +92,10 @@ public class IfContainerEmptyAction extends Action {
         if (++this.waitedTicks > LOAD_TIMEOUT_TICKS)
             throw new InterruptActionException("Timed out waiting for the " + this.description + " to load.");
         if (!this.isLoaded.test(menu)) {
-            this.stableTicks = 0;
-            this.lastSnapshot = null;
+            this.settling.reset();
             return false;
         }
-        List<String> snapshot = snapshot(menu);
-        if (!snapshot.equals(this.lastSnapshot)) {
-            this.lastSnapshot = snapshot;
-            this.stableTicks = 0;
-            return false;
-        }
-        return ++this.stableTicks >= STABLE_TICKS;
-    }
-
-    private static List<String> snapshot(AbstractContainerMenu menu) {
-        List<String> names = new ArrayList<>();
-        for (Slot slot : containerSlots(menu)) names.add(slot.hasItem() ? slot.getItem().getHoverName().getString() : "");
-        return names;
+        return this.settling.update(MenuSettling.snapshot(menu));
     }
 
     private static List<Slot> containerSlots(AbstractContainerMenu menu) {
