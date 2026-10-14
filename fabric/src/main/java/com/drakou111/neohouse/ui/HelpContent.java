@@ -382,6 +382,11 @@ final class HelpContent {
                 new Text("The Override mode setting decides what happens to functions, events, loops, commands and menus "
                         + "that already exist. Override If Empty (the default) only fills ones that are still empty. "
                         + "Always Override recreates them from scratch. Never Override leaves them as they are."),
+                new Text("Append adds the script's actions after the ones already there. It first reads every page of "
+                        + "the existing actions, and skips the part with a warning if any action type would go over its "
+                        + "Housing limit (for example a 26th Conditional). For menus it fills only the slots that are "
+                        + "still empty. Functions the compiler makes (names with $) are replaced instead. Running an "
+                        + "Append script twice adds its actions twice."),
                 new Heading("Lag"),
                 new Text("NeoHouse waits for each menu to finish loading, and waits longer when the server is slow. If a "
                         + "menu or page never arrives, the run stops with a message instead of guessing; run the script "

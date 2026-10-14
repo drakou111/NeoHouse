@@ -8,8 +8,10 @@ import com.drakou111.neohouse.actions.actiontypes.CheckListLimitAction;
 import com.drakou111.neohouse.actions.actiontypes.CheckNamesExistAction;
 import com.drakou111.neohouse.actions.actiontypes.ClientMessageAction;
 import com.drakou111.neohouse.actions.actiontypes.DeleteAllAction;
+import com.drakou111.neohouse.actions.actiontypes.FillEmptyMenuSlotsAction;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
 import com.drakou111.neohouse.actions.actiontypes.IfContainerEmptyAction;
+import com.drakou111.neohouse.actions.actiontypes.IfActionsFitAction;
 import com.drakou111.neohouse.actions.actiontypes.IfExistsAction;
 import com.drakou111.neohouse.actions.actiontypes.MarkCreatedAction;
 import com.drakou111.neohouse.actions.actiontypes.ReadListNamesAction;
@@ -56,6 +58,8 @@ import com.drakou111.neohouse.compiler.enums.BooleanOperator;
 import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.compiler.enums.LogicalOperator;
 import com.drakou111.neohouse.compiler.enums.UnaryOperator;
+import com.drakou111.neohouse.compiler.visitors.ActionCountSplittingVisitor;
+import com.drakou111.neohouse.compiler.visitors.CompilerNames;
 import com.drakou111.neohouse.compiler.visitors.HousingNameCollector;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
@@ -102,6 +106,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class CodeGenerator {
     private final OverrideMode mode;
@@ -148,7 +153,8 @@ public class CodeGenerator {
         }
 
         // Pass 2: write the bodies. ALWAYS writes everything; NEVER only what Pass 1 created;
-        // IF_EMPTY also fills existing entries that turn out to be empty.
+        // IF_EMPTY also fills existing entries that turn out to be empty; APPEND adds to existing
+        // entries when their actions stay within Housing's limits, and fills a menu's empty slots.
         Map<String, VoidFunctionNode> fnByName = collectFunctions(main);
         FunctionCopies fnCopies = findFunctionCopies(main, fnByName);
         for (MainStatementNode stmt : main.statements) {
@@ -158,14 +164,19 @@ public class CodeGenerator {
                     List<String> copies = fnCopies.copiesOf().getOrDefault(fn.name, List.of());
                     yield copies.isEmpty() ? generateFunction(fn) : generateFunctionWithCopies(fn, copies);
                 }
-                case VoidFunctionNode fn -> fillPreserving(fnKey(fn.name), generateFunction(fn), generateFunctionIfEmpty(fn));
+                case VoidFunctionNode fn -> fillPreserving(fnKey(fn.name), generateFunction(fn),
+                        () -> generateFunctionIfEmpty(fn), () -> generateFunctionAppend(fn));
                 case LoopNode loop when this.mode == OverrideMode.ALWAYS -> generateLoop(loop);
-                case LoopNode loop -> fillPreserving(fnKey(loop.name), generateLoop(loop), generateLoopIfEmpty(loop));
+                case LoopNode loop -> fillPreserving(fnKey(loop.name), generateLoop(loop),
+                        () -> generateLoopIfEmpty(loop), () -> generateLoopAppend(loop));
                 case CommandNode cmd when this.mode == OverrideMode.ALWAYS -> generateCommand(cmd);
-                case CommandNode cmd -> fillPreserving(commandKey(cmd.name), generateCommand(cmd), generateCommandIfEmpty(cmd));
+                case CommandNode cmd -> fillPreserving(commandKey(cmd.name), generateCommand(cmd),
+                        () -> generateCommandIfEmpty(cmd), () -> generateCommandAppend(cmd));
                 case MenuNode menu when this.mode == OverrideMode.ALWAYS -> generateMenu(menu);
-                case MenuNode menu -> fillPreserving(menuKey(menu.name), generateMenu(menu), generateMenuIfEmpty(menu));
+                case MenuNode menu -> fillPreserving(menuKey(menu.name), generateMenu(menu),
+                        () -> generateMenuIfEmpty(menu), () -> generateMenuAppend(menu));
                 case EventNode event when this.mode == OverrideMode.ALWAYS -> generateEvent(event);
+                case EventNode event when this.mode == OverrideMode.APPEND -> generateEventAppend(event);
                 case EventNode event -> generateEventIfEmpty(event);
                 default -> null;
             };
@@ -201,20 +212,30 @@ public class CodeGenerator {
 
     /**
      * Pass 2 for the modes that keep existing content: a fresh shell from Pass 1 is always filled; an
-     * entry that already existed is left alone (NEVER) or filled only if it turns out to be empty (IF_EMPTY).
+     * entry that already existed is left alone (NEVER), filled only if it turns out to be empty
+     * (IF_EMPTY) or added to (APPEND).
      */
-    private Action fillPreserving(String createdKey, Action fill, Action fillIfEmpty) {
-        Action otherwise = this.mode == OverrideMode.IF_EMPTY ? fillIfEmpty : null;
+    private Action fillPreserving(String createdKey, Action fill, Supplier<Action> fillIfEmpty, Supplier<Action> append) {
+        Action otherwise = switch (this.mode) {
+            case IF_EMPTY -> fillIfEmpty.get();
+            case APPEND -> append.get();
+            case ALWAYS, NEVER -> null;
+        };
         if (fill == null && otherwise == null) return null;
         return new RunIfCreatedAction(createdKey, fill, otherwise);
     }
 
-    /** The Pass 1 step for an existing entry: ALWAYS replaces it, NEVER skips it with a warning, IF_EMPTY defers to Pass 2. */
+    /**
+     * The Pass 1 step for an existing entry: ALWAYS replaces it, NEVER skips it with a warning,
+     * IF_EMPTY and APPEND defer to Pass 2. APPEND replaces compiler-made functions instead, since
+     * adding to them on every run would pile up stale copies of the script's own helpers.
+     */
     private Action existingEntryStep(HousingList list, String name, Action replace) {
         return switch (this.mode) {
             case ALWAYS -> replace;
             case NEVER -> skippedWarning(list.singularName + " '" + list.displayName(name) + "'", "it already exists");
             case IF_EMPTY -> null;
+            case APPEND -> CompilerNames.isCompilerMade(name) ? replace : null;
         };
     }
 
@@ -234,6 +255,7 @@ public class CodeGenerator {
                 .sendChatAndWait(Commands.FUNCTIONS)
                 .removeFunctionIfPresent(name)
                 .textInput(name, Others.GENERAL_ADD_H6)
+                .append(new MarkCreatedAction(fnKey(name)))
                 .get();
         return new IfExistsAction(HousingList.FUNCTIONS, name, existingEntryStep(HousingList.FUNCTIONS, name, replace), create);
     }
@@ -367,6 +389,18 @@ public class CodeGenerator {
                 IfContainerEmptyAction.actionList(new GroupAction(fill), keepExisting("function '" + fn.name + "'"))));
     }
 
+    /** APPEND for a function that already existed: add the body after its actions if every limit allows. */
+    private Action generateFunctionAppend(VoidFunctionNode fn) {
+        if (fn.statements.statements.isEmpty()) return null;
+        List<Action> fill = new ArrayList<>();
+        fill.add(generateAppended(fn.statements, RestrictionAction.NONE, RestrictionCondition.NONE));
+        fill.add(MovementFactory.exit(true));
+        addIfPresent(fill, setFunctionMeta(fn.name, fn.description, fn.icon));
+        return new GroupAction(List.of(
+                MovementFactory.goToFunction(true, fn.name),
+                ifActionsFit("function '" + fn.name + "'", fn.statements, RestrictionAction.NONE, new GroupAction(fill))));
+    }
+
     private Action generateEvent(EventNode event) {
         RestrictionAction ra = RestrictionAction.valueOf("EVENT_" + event.event.name());
         RestrictionCondition rc = ra.conditionContext();
@@ -388,6 +422,41 @@ public class CodeGenerator {
                 IfContainerEmptyAction.actionList(fill, keepExisting("event '" + event.event.name() + "'"))));
     }
 
+    private Action generateEventAppend(EventNode event) {
+        if (event.statements.statements.isEmpty()) return null;
+        RestrictionAction ra = RestrictionAction.valueOf("EVENT_" + event.event.name());
+        RestrictionCondition rc = ra.conditionContext();
+        Action fill = new GroupAction(List.of(generateAppended(event.statements, ra, rc), MovementFactory.exit(true)));
+        return new GroupAction(List.of(
+                MovementFactory.goToEvent(event.event),
+                ifActionsFit("event '" + event.event.name() + "'", event.statements, ra, fill)));
+    }
+
+    /** Runs {@code fill} in the open action editor if the existing actions plus {@code statements} stay within every limit. */
+    private static Action ifActionsFit(String what, StatementListNode statements, RestrictionAction ra, Action fill) {
+        return new IfActionsFitAction(what, topLevelActionCounts(statements, ra), fill, MovementFactory.exit(true));
+    }
+
+    /** How many actions of each type {@code statements} adds to the list they're written into (not to nested lists). */
+    static Map<AddAction, Integer> topLevelActionCounts(StatementListNode statements, RestrictionAction ra) {
+        Map<AddAction, Integer> counts = new EnumMap<>(AddAction.class);
+        for (StatementNode statement : statements.statements) {
+            // A return at the top of a function adds no action (see generateStatement).
+            if (statement instanceof VoidReturnNode && ra == RestrictionAction.NONE) continue;
+            AddAction kind = ActionCountSplittingVisitor.actionKindOf(statement);
+            if (kind != null) counts.merge(kind, 1, Integer::sum);
+        }
+        return counts;
+    }
+
+    /**
+     * Writes {@code statements} after the actions already in the open editor. Repeats are written out
+     * instead of copied and pasted, because Housing copies the whole list, existing actions included.
+     */
+    private Action generateAppended(StatementListNode statements, RestrictionAction ra, RestrictionCondition rc) {
+        return generateStatements(statements, ra, rc, false);
+    }
+
     /** Closes the editor and warns that an existing entry with content was left as it is. */
     private static Action keepExisting(String what) {
         return new GroupAction(List.of(MovementFactory.exit(true), skippedWarning(what, "it already has content")));
@@ -401,6 +470,16 @@ public class CodeGenerator {
         }
         parts.add(loopConfig(loop));
         return new GroupAction(parts);
+    }
+
+    private Action generateLoopAppend(LoopNode loop) {
+        if (loop.statements.statements.isEmpty()) return null;
+        Action fill = new GroupAction(List.of(
+                generateAppended(loop.statements, RestrictionAction.NONE, RestrictionCondition.NONE),
+                loopConfig(loop)));
+        return new GroupAction(List.of(
+                MovementFactory.goToFunction(true, loop.name),
+                ifActionsFit("loop '" + loop.name + "'", loop.statements, RestrictionAction.NONE, fill)));
     }
 
     private Action generateLoopIfEmpty(LoopNode loop) {
@@ -444,6 +523,16 @@ public class CodeGenerator {
                 IfContainerEmptyAction.actionList(fill, keepExisting("command '/" + cmd.name + "'"))));
     }
 
+    private Action generateCommandAppend(CommandNode cmd) {
+        if (cmd.statements.statements.isEmpty()) return null;
+        Action fill = new GroupAction(List.of(
+                generateAppended(cmd.statements, RestrictionAction.NONE, RestrictionCondition.NONE),
+                MovementFactory.exit(true)));
+        return new GroupAction(List.of(
+                new ActionBuilder().gotoCommand(true, cmd.name, true).get(),
+                ifActionsFit("command '/" + cmd.name + "'", cmd.statements, RestrictionAction.NONE, fill)));
+    }
+
     private Action generateMenu(MenuNode menu) {
         if (menu.slots.isEmpty()) return null;
         return new GroupAction(List.of(MovementFactory.goToMenuGrid(menu.name), generateSlots(menu)));
@@ -459,6 +548,17 @@ public class CodeGenerator {
         return new GroupAction(List.of(
                 MovementFactory.goToMenuGrid(menu.name),
                 IfContainerEmptyAction.menuGrid(fill, keepExisting("menu '" + menu.name + "'"))));
+    }
+
+    /** APPEND for a menu that already existed: fill only the script's slots that are still empty. */
+    private Action generateMenuAppend(MenuNode menu) {
+        if (menu.slots.isEmpty()) return null;
+        Map<Integer, Action> slotFills = new LinkedHashMap<>();
+        for (SlotNode slot : menu.slots) slotFills.put(slot.slotId, generateSlot(slot));
+        Action grow = new GroupAction(List.of(MovementFactory.setMenuSize(menu.name, menu.rows), MovementFactory.goToMenuGrid(menu.name)));
+        return new GroupAction(List.of(
+                MovementFactory.goToMenuGrid(menu.name),
+                new FillEmptyMenuSlotsAction(menu.rows, slotFills, grow, MovementFactory.exit(true))));
     }
 
     private Action generateSlots(MenuNode menu) {
@@ -529,9 +629,14 @@ public class CodeGenerator {
     }
 
     private Action generateStatements(StatementListNode stmts, RestrictionAction ra, RestrictionCondition rc) {
+        return generateStatements(stmts, ra, rc, true);
+    }
+
+    /** {@code intoEmptyList} allows copying and pasting a leading repeat, which copies the whole list. */
+    private Action generateStatements(StatementListNode stmts, RestrictionAction ra, RestrictionCondition rc, boolean intoEmptyList) {
         List<StatementNode> list = stmts.statements;
         List<Action> actions = new ArrayList<>();
-        boolean containerEmpty = true;
+        boolean containerEmpty = intoEmptyList;
         int i = 0;
         while (i < list.size()) {
             if (containerEmpty) {

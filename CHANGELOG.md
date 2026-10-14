@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Running scripts
+- New override mode Append: adds the script's actions after the ones already in existing functions, loops, commands and events. It reads every page of the existing actions first and skips that part with a warning if an action type would go over its Housing limit. Existing menus only get their empty slots filled, and a smaller menu is grown to the script's size.
+
 ## 1.1.1
 
 ### Changes that can affect existing scripts

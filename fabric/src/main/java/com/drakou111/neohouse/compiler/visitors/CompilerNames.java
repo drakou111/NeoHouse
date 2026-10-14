@@ -51,6 +51,11 @@ public final class CompilerNames {
         return "0".repeat(CODE_LENGTH - digits.length()) + digits;
     }
 
+    /** Whether the compiler made this name (a helper, copy or temp): scripts can't use '$' in their own names. */
+    public static boolean isCompilerMade(String name) {
+        return name.indexOf('$') >= 0;
+    }
+
     /** A function copy's original name: {@code f$1} is a copy of {@code f}. */
     public static String baseName(String function) {
         int idx = function.lastIndexOf('$');

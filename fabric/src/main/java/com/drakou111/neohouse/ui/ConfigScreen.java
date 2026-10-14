@@ -97,7 +97,8 @@ public class ConfigScreen extends ScreenBase {
 
         list.add(enumRow(Tab.COMPILER, "Override on run:",
                 "Always Override: recreate all functions, events, commands and menus from scratch. Never Override: skip "
-                        + "everything that already exists. Override If Empty: fill existing ones only when they have no content yet.",
+                        + "everything that already exists. Override If Empty: fill existing ones only when they have no content yet. "
+                        + "Append: add to existing ones (skipped if a Housing limit would be exceeded); menus get only their empty slots filled.",
                 OverrideMode.values(), m -> m.displayName, cfg.overrideMode, m -> cfg.overrideMode = m));
         list.add(enumRow(Tab.COMPILER, "Multi-call mode:",
                 "Housing won't run a function twice in one execution. Off: no check. Warn: allowed but reported. Error: "

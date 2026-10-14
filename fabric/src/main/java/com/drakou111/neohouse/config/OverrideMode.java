@@ -3,7 +3,8 @@ package com.drakou111.neohouse.config;
 public enum OverrideMode {
     ALWAYS("Always Override"),
     NEVER("Never Override"),
-    IF_EMPTY("Override If Empty");
+    IF_EMPTY("Override If Empty"),
+    APPEND("Append");
 
     public final String displayName;
 
