@@ -106,6 +106,9 @@ public class NHCompiler implements Compiler {
         NeutralStatementRemovalVisitor neutralRemoval = new NeutralStatementRemovalVisitor();
         node = neutralRemoval.analyze(node);
 
+        // Calls are plain void calls from here on; before random arms and long bodies become helpers.
+        node = new TempIsolationVisitor().analyze(node);
+
         RandomUnfoldingVisitor randomUnfoldingVisitor = new RandomUnfoldingVisitor();
         node = randomUnfoldingVisitor.analyze(node);
 
