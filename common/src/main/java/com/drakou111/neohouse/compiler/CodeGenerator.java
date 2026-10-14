@@ -793,6 +793,7 @@ public class CodeGenerator {
             case LEFT_SHIFT_ASSIGN -> Operator.LEFT_SHIFT;
             case RIGHT_SHIFT_ASSIGN -> Operator.ARITHMETIC_RIGHT_SHIFT;
             case UNSIGNED_RIGHT_SHIFT_ASSIGN -> Operator.LOGICAL_RIGHT_SHIFT;
+            case MOD_ASSIGN -> throw new IllegalStateException("'%=' must be lowered before code generation");
         };
     }
 

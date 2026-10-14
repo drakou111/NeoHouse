@@ -168,12 +168,13 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Operators"));
-        l.add(new HelpLine(COL_C, "  Arithmetic:   + - * /"));
+        l.add(new HelpLine(COL_C, "  Arithmetic:   + - * / %"));
         l.add(new HelpLine(COL_C, "  Bitwise:      & | ^ << >> >>>"));
         l.add(new HelpLine(COL_C, "  Unary:        a++  a--  -a  !a"));
         l.add(new HelpLine(COL_C, "  Comparison:   == != < <= > >="));
         l.add(new HelpLine(COL_C, "  Logical:      && ||"));
-        l.add(new HelpLine(COL_C, "  Assignment:   = += -= *= /= &= |= ^= <<= >>= >>>="));
+        l.add(new HelpLine(COL_C, "  Assignment:   = += -= *= /= %= &= |= ^= <<= >>= >>>="));
+        l.add(new HelpLine(COL_C, "  Numbers:      42  1_000  0xFF00  0b1010  1.5"));
         l.add(new HelpLine(COL_D, "  Constants:    PI  E  HALF_PI  TWO_PI  PHI  SQRT_TWO"));
         l.add(new HelpLine(COL_D, ""));
 

@@ -5,6 +5,7 @@ public enum BinaryOperator {
     SUBTRACT,               // int - int [or] double - double
     MULTIPLY,               // int * int [or] double * double
     DIVIDE,                 // int / int [or] double / double
+    MODULO,                 // int % int [or] double % double  (lowered to /, *, -)
     BITWISE_OR,             // |
     BITWISE_AND,            // &
     BITWISE_XOR,            // ^

@@ -81,6 +81,11 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 stmts.add(new AssignationNode(accVar, AssignmentOperator.ASSIGN, (NormalExpressionNode) leftRes.simple, bin.token));
             }
 
+            if (bin.operator == BinaryOperator.MODULO) {
+                stmts.addAll(lowerModulo(accVar, (NormalExpressionNode) rightRes.simple, bin.token));
+                return new LowerResult(accVar, stmts);
+            }
+
             AssignmentOperator opAssign = switch (bin.operator) {
                 case ADD                -> AssignmentOperator.ADD_ASSIGN;
                 case SUBTRACT           -> AssignmentOperator.SUB_ASSIGN;
@@ -475,9 +480,47 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             throw new SemanticException(assignation.token, "Cannot assign a " + rhsType + " into a " + lhsType + " variable '" + lhsVar.name + "'");
         }
 
+        if (assignation.operator == AssignmentOperator.MOD_ASSIGN) {
+            stmts.addAll(lowerModulo(lhsVar, (NormalExpressionNode) lr.simple, assignation.token));
+            return new StatementListNode(stmts);
+        }
+
         stmts.add(new AssignationNode(lhsVar, assignation.operator, (NormalExpressionNode) lr.simple, assignation.token));
 
         return new StatementListNode(stmts);
+    }
+
+    /**
+     * {@code target %= divisor} using only the operations Housing has:
+     * {@code target -= trunc(target / divisor) * divisor}. Long division already truncates; for
+     * doubles the quotient is truncated with a long cast and turned back into a double, so the
+     * divisor itself is never truncated.
+     */
+    private List<StatementNode> lowerModulo(VariableNode target, NormalExpressionNode divisor, Token token) {
+        for (VariableType type : List.of(target.type, divisor.type)) {
+            if (type == VariableType.STRING || type == VariableType.BOOL)
+                throw new SemanticException(token, "'%' needs long or double operands, got " + type);
+        }
+        boolean isDouble = target.type == VariableType.DOUBLE || divisor.type == VariableType.DOUBLE;
+        VariableNode quotient = makeTemp(token, isDouble ? VariableType.DOUBLE : VariableType.LONG);
+        List<StatementNode> stmts = new ArrayList<>();
+        stmts.add(new AssignationNode(quotient, AssignmentOperator.ASSIGN, readOf(target, null), token));
+        stmts.add(new AssignationNode(quotient, AssignmentOperator.DIV_ASSIGN, divisor, token));
+        if (isDouble) {
+            stmts.add(new AssignationNode(quotient, AssignmentOperator.ASSIGN, readOf(quotient, "L"), token));
+            stmts.add(new AssignationNode(quotient, AssignmentOperator.ASSIGN, readOf(quotient, "D"), token));
+        }
+        stmts.add(new AssignationNode(quotient, AssignmentOperator.MUL_ASSIGN, divisor, token));
+        stmts.add(new AssignationNode(target, AssignmentOperator.SUB_ASSIGN, readOf(quotient, null), token));
+        return stmts;
+    }
+
+    /** A separate node reading {@code variable}, optionally cast, so the written node is never mutated. */
+    private static VariableNode readOf(VariableNode variable, String castSuffix) {
+        VariableNode read = new VariableNode(variable.type, variable.holder, variable.name, variable.teamName, variable.token);
+        read.fallback = variable.fallback;
+        read.castSuffix = castSuffix;
+        return read;
     }
 
     @Override

@@ -946,7 +946,7 @@ public class Parser {
         return switch (type) {
             case LPAREN -> Precedence.CALL;
             case PLUS, MINUS -> Precedence.TERM;
-            case STAR, SLASH -> Precedence.FACTOR;
+            case STAR, SLASH, PERCENT -> Precedence.FACTOR;
             case BAR, AMPERSAND, CARET, LEFT_SHIFT, RIGHT_SHIFT, UNSIGNED_RIGHT_SHIFT -> Precedence.BITWISE;
             default -> Precedence.NONE;
         };
@@ -1242,13 +1242,14 @@ public class Parser {
             case MINUS_EQ -> AssignmentOperator.SUB_ASSIGN;
             case STAR_EQ -> AssignmentOperator.MUL_ASSIGN;
             case SLASH_EQ -> AssignmentOperator.DIV_ASSIGN;
+            case PERCENT_EQ -> AssignmentOperator.MOD_ASSIGN;
             case BAR_EQ -> AssignmentOperator.BITWISE_OR_ASSIGN;
             case AMP_EQ -> AssignmentOperator.BITWISE_AND_ASSIGN;
             case CARET_EQ -> AssignmentOperator.BITWISE_XOR_ASSIGN;
             case LEFT_SHIFT_EQ -> AssignmentOperator.LEFT_SHIFT_ASSIGN;
             case RIGHT_SHIFT_EQ -> AssignmentOperator.RIGHT_SHIFT_ASSIGN;
             case UNSIGNED_RIGHT_SHIFT_EQ -> AssignmentOperator.UNSIGNED_RIGHT_SHIFT_ASSIGN;
-            default -> throw new ParsingException(operator, "Invalid operator type, expected '=', '+=', '-=', '*=', '/=', '|=', '&=', '^=', '<<=', '>>=' or '>>>='");
+            default -> throw new ParsingException(operator, "Invalid operator type, expected '=', '+=', '-=', '*=', '/=', '%=', '|=', '&=', '^=', '<<=', '>>=' or '>>>='");
         };
     }
 
@@ -1258,13 +1259,14 @@ public class Parser {
             case MINUS -> BinaryOperator.SUBTRACT;
             case STAR -> BinaryOperator.MULTIPLY;
             case SLASH -> BinaryOperator.DIVIDE;
+            case PERCENT -> BinaryOperator.MODULO;
             case BAR -> BinaryOperator.BITWISE_OR;
             case AMPERSAND -> BinaryOperator.BITWISE_AND;
             case CARET -> BinaryOperator.BITWISE_XOR;
             case LEFT_SHIFT -> BinaryOperator.LEFT_SHIFT;
             case RIGHT_SHIFT -> BinaryOperator.RIGHT_SHIFT;
             case UNSIGNED_RIGHT_SHIFT -> BinaryOperator.UNSIGNED_RIGHT_SHIFT;
-            default -> throw new ParsingException(operator, "Invalid binary operator, expected '+', '-', '*', '/', '|', '&', '^', '<<', '>>' or '>>>'");
+            default -> throw new ParsingException(operator, "Invalid binary operator, expected '+', '-', '*', '/', '%', '|', '&', '^', '<<', '>>' or '>>>'");
         };
     }
 

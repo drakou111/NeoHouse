@@ -6,6 +6,7 @@ public enum AssignmentOperator {
     SUB_ASSIGN,                      // -=
     MUL_ASSIGN,                      // *=
     DIV_ASSIGN,                      // /=
+    MOD_ASSIGN,                      // %=  (lowered to /, *, - before code generation)
     BITWISE_OR_ASSIGN,               // |=
     BITWISE_AND_ASSIGN,              // &=
     BITWISE_XOR_ASSIGN,              // ^=
