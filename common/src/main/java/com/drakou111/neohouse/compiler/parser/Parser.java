@@ -332,7 +332,7 @@ public class Parser {
             case LONG_LITERAL -> {
                 ConstantPrimitiveNode c = tryConstArg(VariableType.LONG);
                 Token t = c != null ? c.token : consume(TokenType.LONG_VALUE, ctx + " param #" + paramNumber + " must be a LONG literal");
-                long val = c != null ? ((LongValue) c.value).value : Long.parseLong(t.text);
+                long val = c != null ? ((LongValue) c.value).value : NumberLiterals.parseLong(t);
                 if (!param.inRange(val)) throw new ParsingException(t,
                         "Value " + val + " is out of range for " + ctx + " param #" + paramNumber + ". Must be between " + param.rangeMin() + " and " + param.rangeMax() + ".");
                 yield new ConstantPrimitiveNode(new LongValue(val), VariableType.LONG, t);
@@ -340,7 +340,7 @@ public class Parser {
             case DOUBLE_LITERAL -> {
                 ConstantPrimitiveNode c = tryConstArg(VariableType.DOUBLE);
                 Token t = c != null ? c.token : consume(TokenType.DOUBLE_VALUE, ctx + " param #" + paramNumber + " must be a DOUBLE literal");
-                double val = c != null ? ((DoubleValue) c.value).value : Double.parseDouble(t.text);
+                double val = c != null ? ((DoubleValue) c.value).value : NumberLiterals.parseDouble(t);
                 if (!param.inRange(val)) throw new ParsingException(t,
                         "Value " + val + " is out of range for " + ctx + " param #" + paramNumber + ". Must be between " + param.decimalMin() + " and " + param.decimalMax() + ".");
                 yield new ConstantPrimitiveNode(new DoubleValue(val), VariableType.DOUBLE, t);
@@ -413,7 +413,7 @@ public class Parser {
 
         // Only allow a long constant
         Token countToken = consume(TokenType.LONG_VALUE, "Expected long constant as repeat count");
-        long count = Long.parseLong(countToken.text);
+        long count = NumberLiterals.parseLong(countToken);
 
         consume(TokenType.RPAREN, "Expected ')' after repeat count");
         consume(TokenType.LBRACE, "Expected '{' to begin repeat block");
@@ -466,11 +466,7 @@ public class Parser {
             long weight = 1;
             if (check(TokenType.LONG_VALUE) && checkTwo(TokenType.STAR)) {
                 Token weightToken = advance();
-                try {
-                    weight = Long.parseLong(weightToken.text);
-                } catch (NumberFormatException e) {
-                    throw new ParsingException(weightToken, "Random weight is too large: " + weightToken.text);
-                }
+                weight = NumberLiterals.parseLong(weightToken);
                 if (weight <= 0)
                     throw new ParsingException(weightToken, "Random weight must be a positive integer, got " + weight);
                 advance(); // consume '*'
@@ -523,7 +519,7 @@ public class Parser {
         long delay = 4;
         if (check(TokenType.LONG_VALUE)) {
             Token delayToken = advance();
-            delay = Long.parseLong(delayToken.text);
+            delay = NumberLiterals.parseLong(delayToken);
             if (delay < 4) {
                 throw new ParsingException(delayToken, "Loops must have a delay of at least 4 ticks (currently set to " + delay + " ticks).");
             }
@@ -563,9 +559,10 @@ public class Parser {
                 switch (nToken.text) {
                     case "priority" -> {
                         Token priorityToken = consume(TokenType.LONG_VALUE, "Expected integer (0-20) for 'priority'");
-                        priority = (int) Long.parseLong(priorityToken.text);
-                        if (priority < 0 || priority > 20)
-                            throw new ParsingException(priorityToken, "Priority must be between 0 and 20, got " + priority);
+                        long priorityValue = NumberLiterals.parseLong(priorityToken);
+                        if (priorityValue < 0 || priorityValue > 20)
+                            throw new ParsingException(priorityToken, "Priority must be between 0 and 20, got " + priorityValue);
+                        priority = (int) priorityValue;
                     }
                     case "listed" -> {
                         if (match(TokenType.TRUE))       listed = true;
@@ -601,9 +598,10 @@ public class Parser {
 
         consume(TokenType.LPAREN, "Expected '(' after menu name");
         Token rowsToken = consume(TokenType.LONG_VALUE, "Expected number of rows (1-6)");
-        int rows = (int) Long.parseLong(rowsToken.text);
-        if (rows < 1 || rows > 6)
-            throw new ParsingException(rowsToken, "Menu rows must be between 1 and 6, got " + rows);
+        long rowsValue = NumberLiterals.parseLong(rowsToken);
+        if (rowsValue < 1 || rowsValue > 6)
+            throw new ParsingException(rowsToken, "Menu rows must be between 1 and 6, got " + rowsValue);
+        int rows = (int) rowsValue;
         consume(TokenType.RPAREN, "Expected ')' after row count");
 
         consume(TokenType.LBRACE, "Expected '{' to begin menu body");
@@ -775,11 +773,11 @@ public class Parser {
             case MINUS:
                 if (check(TokenType.LONG_VALUE)) {
                     Token numTok = advance();
-                    return new ConstantPrimitiveNode(new LongValue(-Long.parseLong(numTok.text)), VariableType.LONG, token);
+                    return new ConstantPrimitiveNode(new LongValue(NumberLiterals.parseNegatedLong(numTok)), VariableType.LONG, token);
                 }
                 if (check(TokenType.DOUBLE_VALUE)) {
                     Token numTok = advance();
-                    return new ConstantPrimitiveNode(new DoubleValue(-Double.parseDouble(numTok.text)), VariableType.DOUBLE, token);
+                    return new ConstantPrimitiveNode(new DoubleValue(-NumberLiterals.parseDouble(numTok)), VariableType.DOUBLE, token);
                 }
                 return makeUnary(parseUnaryOperatorFromToken(token), parsePrecedence(Precedence.UNARY), token);
             case LONG_CAST:
@@ -794,9 +792,9 @@ public class Parser {
             case STRING_VALUE:
                 return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)), VariableType.STRING, token);
             case LONG_VALUE:
-                return new ConstantPrimitiveNode(new LongValue(Long.parseLong(token.text)), VariableType.LONG, token);
+                return new ConstantPrimitiveNode(new LongValue(NumberLiterals.parseLong(token)), VariableType.LONG, token);
             case DOUBLE_VALUE:
-                return new ConstantPrimitiveNode(new DoubleValue(Double.parseDouble(token.text)), VariableType.DOUBLE, token);
+                return new ConstantPrimitiveNode(new DoubleValue(NumberLiterals.parseDouble(token)), VariableType.DOUBLE, token);
             case TRUE:
                 return new ConstantPrimitiveNode(new BoolValue(true), VariableType.BOOL, token);
             case FALSE:
@@ -1203,8 +1201,8 @@ public class Parser {
         Token token = advance();
         return switch (token.type) {
             case STRING_VALUE -> new StringValue(token.text.substring(1, token.text.length() - 1));
-            case LONG_VALUE -> new LongValue(Long.parseLong(token.text));
-            case DOUBLE_VALUE -> new DoubleValue(Double.parseDouble(token.text));
+            case LONG_VALUE -> new LongValue(NumberLiterals.parseLong(token));
+            case DOUBLE_VALUE -> new DoubleValue(NumberLiterals.parseDouble(token));
             case TRUE -> new BoolValue(true);
             case FALSE -> new BoolValue(false);
             case CONST_IDENT -> {
