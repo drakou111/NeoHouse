@@ -1,10 +1,12 @@
 package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
+import com.drakou111.neohouse.compiler.ast.expr.constants.DoubleValue;
 import com.drakou111.neohouse.compiler.ast.expr.constants.LongValue;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
+import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -15,11 +17,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class NumberLiteralTest {
 
-    private static long assignedValue(String literal) {
+    private static ConstantPrimitiveNode assignedConstant(String literal) {
         MainNode main = TestCompiler.analyze("function f() { p.x = " + literal + "; }");
         VoidFunctionNode function = (VoidFunctionNode) main.statements.getFirst();
         AssignationNode assignment = (AssignationNode) function.statements.statements.getFirst();
-        return ((LongValue) ((ConstantPrimitiveNode) assignment.value).value).value;
+        return (ConstantPrimitiveNode) assignment.value;
+    }
+
+    private static long assignedValue(String literal) {
+        return ((LongValue) assignedConstant(literal).value).value;
     }
 
     @ParameterizedTest
@@ -36,6 +42,21 @@ class NumberLiteralTest {
     })
     void parsesLongLiterals(String literal, long expected) {
         assertThat(assignedValue(literal)).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1d, 1.0", "1D, 1.0", "2_000d, 2000.0", "1.5d, 1.5", "1.5D, 1.5", "1.5, 1.5"})
+    void parsesDoubleLiterals(String literal, double expected) {
+        ConstantPrimitiveNode constant = assignedConstant(literal);
+
+        assertThat(constant.type).isEqualTo(VariableType.DOUBLE);
+        assertThat(((DoubleValue) constant.value).value).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1dx", "1d_"})
+    void rejectsASuffixRunningIntoAName(String literal) {
+        assertThatThrownBy(() -> assignedConstant(literal)).isInstanceOf(CompilingException.class);
     }
 
     @ParameterizedTest

@@ -14,7 +14,8 @@ public enum TokenType {
     TRUE("true(?![a-zA-Z0-9_$])"), FALSE("false(?![a-zA-Z0-9_$])"),
     LONG("long(?![a-zA-Z0-9_$])"), DOUBLE("double(?![a-zA-Z0-9_$])"), STRING("string(?![a-zA-Z0-9_$])"), BOOL("bool(?![a-zA-Z0-9_$])"), VAR("var(?![a-zA-Z0-9_$])"),
 
-    DOUBLE_VALUE("\\d(?:_?\\d)*\\.\\d(?:_?\\d)*(?:[dD])?"),
+    // 1.5, 1.5d, or a whole number made a double by its suffix: 1d / 1D.
+    DOUBLE_VALUE("\\d(?:_?\\d)*(?:\\.\\d(?:_?\\d)*(?:[dD])?|[dD])(?![0-9a-zA-Z_$])"),
     // Hex (0xFF) and binary (0b101) before decimal; '_' may separate digits (1_000, 0xFF_FF).
     LONG_VALUE("0[xX][0-9a-fA-F](?:_?[0-9a-fA-F])*(?![0-9a-zA-Z_$])|0[bB][01](?:_?[01])*(?![0-9a-zA-Z_$])|\\d(?:_?\\d)*"),
     STRING_VALUE("\"([^\"\\\\]|\\\\.)*\""),
