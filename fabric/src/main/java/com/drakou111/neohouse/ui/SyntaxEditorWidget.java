@@ -341,8 +341,8 @@ public class SyntaxEditorWidget extends WidgetBase {
                 curX = r[0]; charDrawn = r[1]; hintPtr = r[2];
             }
         }
-        if (charDrawn < line.length())
-            drawSegment(g, font, line, charDrawn, line.length(), TEXT_COLOR, lineHints, hintPtr, curX, y);
+        // to = length + 1 so a hint at the very end of the line (an empty argument being typed) is drawn too.
+        drawSegment(g, font, line, charDrawn, line.length() + 1, TEXT_COLOR, lineHints, hintPtr, curX, y);
     }
 
     /** Draws columns {@code [from, to)} with the hints inside them; returns {x after, to, next hint index}. */
