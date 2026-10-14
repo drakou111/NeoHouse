@@ -139,9 +139,31 @@ function double atan(double x) {
 
 function double atan2(double x, double y) {
     if (x > 0.0)                { return atan(y / x); }
-    if (x < 0.0 && y >= 0.0)    { return atan(y / x) + 3.14159632679; }
-    if (x < 0.0 && y < 0.0)     { return atan(y / x) - 3.14159632679; }
+    if (x < 0.0 && y >= 0.0)    { return atan(y / x) + 3.14159265359; }
+    if (x < 0.0 && y < 0.0)     { return atan(y / x) - 3.14159265359; }
     if (y > 0.0)                { return  1.57079632679; }
     if (y < 0.0)                { return -1.57079632679; }
     return 0.0;
+}
+
+// The unit vector the player is looking along, as (x, y, z), from their yaw and pitch.
+function (double, double, double) getFacingVector() {
+    p.yawRad = 0.01745329251 * ph.playerPosYaw();
+    p.pitchRad = 0.01745329251 * ph.playerPosPitch();
+    p.cosyaw = cos(p.yawRad);
+    p.sinyaw = sin(p.yawRad);
+
+    // sin and cos can't be called a second time here (Housing won't run a function twice in one
+    // execution). Pitch is within [-pi/2, pi/2], so both reduce to B(t) on [0, pi] directly.
+    // cos(pitch) = B(pitch + pi/2)
+    p.temp2 = p.pitchRad + 1.57079632679;
+    p.cospitch = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
+
+    // sin(pitch) = sign(pitch) * B(|pitch|)
+    p.temp2 = p.pitchRad;
+    if (p.temp2 < 0.0) { p.temp2 *= -1.0; }
+    p.sinpitch = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
+    if (p.pitchRad < 0.0) { p.sinpitch *= -1.0; }
+
+    return ((double)(p.sinyaw * p.cospitch * -1.0), (double)(p.sinpitch * -1.0), (double)(p.cosyaw * p.cospitch));
 }
