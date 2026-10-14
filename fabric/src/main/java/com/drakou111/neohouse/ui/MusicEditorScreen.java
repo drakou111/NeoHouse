@@ -18,13 +18,11 @@ import com.drakou111.neohouse.music.MusicTrack;
 import com.drakou111.neohouse.music.SoundEventResolver;
 import com.drakou111.neohouse.music.SoundIcon;
 import com.drakou111.neohouse.utils.MessageUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;

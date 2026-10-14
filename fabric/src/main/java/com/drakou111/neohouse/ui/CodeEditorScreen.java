@@ -6,7 +6,8 @@ import com.drakou111.neohouse.compat.Gfx;
 import com.drakou111.neohouse.compat.Keys;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
-import com.drakou111.neohouse.compiler.CompilerSession;
+import com.drakou111.neohouse.compiler.NHCompiler;
+import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
 import com.drakou111.neohouse.compiler.ImportGraph;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.compiler.lexer.Token;
@@ -19,7 +20,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CodeEditorScreen extends ScreenBase {
-    private static final CompilerSession CHECKER = new CompilerSession();
+    // Compiles the script as it is edited, for errors and warnings.
+    private final NHCompiler checker = new NHCompiler();
 
     private static final int HEADER_H = 28;
     private static final int BACK_X = 6;
@@ -131,13 +132,13 @@ public class CodeEditorScreen extends ScreenBase {
         String src = editor.getValue();
         for (int attempt = 0; attempt < 8; attempt++) {
             try {
-                CHECKER.compile(src, filePath);
+                this.checker.compile(src, filePath);
                 break;
             } catch (CompilingException e) {
                 collected.add(e);
                 // Blank out the offending token and recompile to find further errors, but only for
                 // tokens in this file: an error inside an imported file can't be blanked out here.
-                if (e.errorToken == null || !CHECKER.getLastImportGraph().isRoot(e.errorToken.file)) break;
+                if (e.errorToken == null || !this.checker.getLastImportGraph().isRoot(e.errorToken.file)) break;
                 int offset = tokenOffset(src, e.errorToken);
                 if (offset < 0 || offset + e.errorToken.text.length() > src.length()) break;
                 src = src.substring(0, offset) + " ".repeat(e.errorToken.text.length()) + src.substring(offset + e.errorToken.text.length());
@@ -161,7 +162,7 @@ public class CodeEditorScreen extends ScreenBase {
 
     /** After a clean compile, show any compiler warnings (yellow) or clear the bar entirely. */
     private void showWarningsOrClear() {
-        var warnings = CHECKER.getLastWarnings();
+        List<CompileWarning> warnings = this.checker.getLastWarnings();
         if (warnings.isEmpty()) {
             editor.clearError();
             return;
@@ -179,10 +180,10 @@ public class CodeEditorScreen extends ScreenBase {
      * The text shown in the error bar. The editor already underlines the token, so only diagnostics
      * from imported files (whose code isn't on screen) include the offending source line.
      */
-    private static String editorMessage(Token token, String detail) {
+    private String editorMessage(Token token, String detail) {
         if (token == null) return detail;
         String message = CompilingException.location(token) + ": " + detail;
-        if (CHECKER.getLastImportGraph().isRoot(token.file) || token.lineContent == null || token.lineContent.isBlank())
+        if (this.checker.getLastImportGraph().isRoot(token.file) || token.lineContent == null || token.lineContent.isBlank())
             return message;
         return message + "\n" + token.lineContent.replace("\r", "").strip();
     }
@@ -191,9 +192,9 @@ public class CodeEditorScreen extends ScreenBase {
      * The {line, column, length} span (0-based) to underline for a diagnostic. A diagnostic inside an
      * imported file underlines the import statement in this file that pulled that file in.
      */
-    private static int[] spanInThisFile(Token token) {
+    private int[] spanInThisFile(Token token) {
         if (token == null) return new int[]{-1, -1, 0};
-        ImportGraph imports = CHECKER.getLastImportGraph();
+        ImportGraph imports = this.checker.getLastImportGraph();
         Token anchor = imports.isRoot(token.file) ? token : imports.getRootImportToken(token.file).orElse(null);
         if (anchor == null) return new int[]{-1, -1, 0};
         return new int[]{anchor.line - 1, Math.max(0, anchor.column - 1), anchor.text.length()};

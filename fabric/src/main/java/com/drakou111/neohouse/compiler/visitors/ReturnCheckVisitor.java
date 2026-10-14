@@ -8,7 +8,6 @@ import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.ConditionalNode;
 import com.drakou111.neohouse.compiler.ast.statement.RandomNode;
 import com.drakou111.neohouse.compiler.ast.statement.ReturnNode;
-import com.drakou111.neohouse.compiler.ast.statement.TupleReturnNode;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 public class ReturnCheckVisitor extends EmptyVisitor<Void> {

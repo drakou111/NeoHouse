@@ -47,10 +47,6 @@ final class EditorDocument {
         return this.cursor;
     }
 
-    int getSelAnchor() {
-        return this.selAnchor;
-    }
-
     boolean hasSelection() {
         return this.cursor != this.selAnchor;
     }

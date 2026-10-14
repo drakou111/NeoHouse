@@ -12,11 +12,6 @@ import net.minecraft.network.chat.MutableComponent;
 
 public class MessageUtils {
 
-    public static void rawLogToChat(String message) {
-        if (Minecraft.getInstance().player != null) {
-            ClientMessages.show(Component.literal(message));
-        }
-    }
 
     private static final String ERROR_PREFIX = "[ERROR] ";
     private static final String WARNING_PREFIX = "[WARNING] ";

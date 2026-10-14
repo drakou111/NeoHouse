@@ -84,7 +84,6 @@ import com.drakou111.neohouse.constants.Weather;
 import com.drakou111.neohouse.constants.WhatCheck;
 import com.drakou111.neohouse.constants.WhereCheck;
 import com.drakou111.neohouse.constants.Comparator;
-import com.drakou111.neohouse.constants.others.CustomMenuInputs;
 import com.drakou111.neohouse.constants.others.FunctionInputs;
 import com.drakou111.neohouse.factories.ActionFactory;
 import com.drakou111.neohouse.factories.ConditionFactory;

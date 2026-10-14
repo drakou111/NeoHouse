@@ -1,7 +1,6 @@
 package com.drakou111.neohouse.ui.hint;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ServerData;
 
 import java.util.function.Predicate;
 

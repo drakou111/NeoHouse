@@ -93,7 +93,6 @@ public class Parser {
 
     public Map<String, List<String>> getFunctionParamEnums() { return functionParamEnums; }
     public Map<String, String> getFunctionReturnEnums() { return functionReturnEnums; }
-    public Map<String, List<String>> getEnumDefs() { return enumDefs; }
 
     // Built-in math constants. Single source of truth for the values; the names are
     // also listed in the CONST_IDENT lexer pattern.
