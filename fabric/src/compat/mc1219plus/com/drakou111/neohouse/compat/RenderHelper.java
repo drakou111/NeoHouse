@@ -1,9 +1,9 @@
 package com.drakou111.neohouse.compat;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -14,15 +14,15 @@ import org.jetbrains.annotations.Nullable;
 public final class RenderHelper {
     private RenderHelper() {}
 
-    public static void renderOutline(GuiGraphics g, int x, int y, int w, int h, int color) {
-        g.submitOutline(x, y, w, h, color);
+    public static void renderOutline(Gfx g, int x, int y, int w, int h, int color) {
+        g.graphics().submitOutline(x, y, w, h, color);
     }
 
-    public static void renderLogo(GuiGraphics g, int x, int y, int size, int argbColor) {
+    public static void renderLogo(Gfx g, int x, int y, int size, int argbColor) {
         // Call the real API directly (compiled against this MC version so it remaps for
         // Fabric production). Routing through name-based reflection broke on Fabric because
         // production runtime uses intermediary names, so the logo never resolved.
-        g.blitSprite(RenderPipelines.GUI_TEXTURED,
+        g.graphics().blitSprite(RenderPipelines.GUI_TEXTURED,
                 ResourceLocation.fromNamespaceAndPath("neohouse", "logo"), x, y, size, size, argbColor);
     }
 
@@ -46,8 +46,8 @@ public final class RenderHelper {
         } catch (Exception e) { return null; }
     }
 
-    public static void renderSpinningEntity(GuiGraphics gfx, Minecraft mc, LivingEntity entity, int cx, int cy, int scale, float angleDeg) {
+    public static void renderSpinningEntity(Gfx gfx, Minecraft mc, LivingEntity entity, int cx, int cy, int scale, float angleDeg) {
         org.joml.Quaternionf q = com.mojang.math.Axis.YP.rotationDegrees(angleDeg);
-        InventoryScreen.renderEntityInInventory(gfx, cx - scale, cy - scale * 2, cx + scale, cy, (float) scale, new org.joml.Vector3f(0, 0, 0), q, new org.joml.Quaternionf(), entity);
+        InventoryScreen.renderEntityInInventory(gfx.graphics(), cx - scale, cy - scale * 2, cx + scale, cy, (float) scale, new org.joml.Vector3f(0, 0, 0), q, new org.joml.Quaternionf(), entity);
     }
 }

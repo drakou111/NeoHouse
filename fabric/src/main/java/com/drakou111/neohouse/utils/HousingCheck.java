@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.utils;
 
+import com.drakou111.neohouse.compat.ClientUi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.network.chat.Component;
@@ -35,7 +36,7 @@ public class HousingCheck {
 
     private static boolean hasHousingFooter(Minecraft mc) {
         try {
-            var tabList = mc.gui.getTabList();
+            var tabList = ClientUi.tabList(mc);
             for (var f : tabList.getClass().getDeclaredFields()) {
                 if (!Component.class.isAssignableFrom(f.getType())) continue;
                 f.setAccessible(true);

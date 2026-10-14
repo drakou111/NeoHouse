@@ -1,8 +1,8 @@
 package com.drakou111.neohouse;
 
+import com.drakou111.neohouse.compat.FabricHooks;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 
@@ -20,36 +20,36 @@ public class ClientCommandHandler {
     }
 
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String name) {
-        return ClientCommandManager.literal(name)
+        return FabricHooks.literal(name)
            .executes(ctx -> CommandActions.openHome())
-           .then(ClientCommandManager.literal("files").executes(ctx -> CommandActions.openFiles()))
-           .then(ClientCommandManager.literal("music").executes(ctx -> CommandActions.openMusic()))
-           .then(ClientCommandManager.literal("help").executes(ctx -> CommandActions.openHelp()))
-           .then(ClientCommandManager.literal("config").executes(ctx -> CommandActions.openConfig()))
-           .then(ClientCommandManager.literal("nuke").executes(ctx -> CommandActions.guarded(CommandActions::handleNuke)))
-           .then(ClientCommandManager.literal("delete")
-                 .then(ClientCommandManager.literal("functions").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteFunctions)))
-                 .then(ClientCommandManager.literal("events").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteEvents)))
-                 .then(ClientCommandManager.literal("commands").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteCommands)))
-                 .then(ClientCommandManager.literal("menus").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteMenus)))
+           .then(FabricHooks.literal("files").executes(ctx -> CommandActions.openFiles()))
+           .then(FabricHooks.literal("music").executes(ctx -> CommandActions.openMusic()))
+           .then(FabricHooks.literal("help").executes(ctx -> CommandActions.openHelp()))
+           .then(FabricHooks.literal("config").executes(ctx -> CommandActions.openConfig()))
+           .then(FabricHooks.literal("nuke").executes(ctx -> CommandActions.guarded(CommandActions::handleNuke)))
+           .then(FabricHooks.literal("delete")
+                 .then(FabricHooks.literal("functions").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteFunctions)))
+                 .then(FabricHooks.literal("events").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteEvents)))
+                 .then(FabricHooks.literal("commands").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteCommands)))
+                 .then(FabricHooks.literal("menus").executes(ctx -> CommandActions.guarded(CommandActions::handleDeleteMenus)))
             )
-           .then(ClientCommandManager.literal("copyitem").executes(ctx -> CommandActions.copyHeldItem()))
-           .then(ClientCommandManager.literal("rerun").executes(ctx -> CommandActions.rerunLast()))
-           .then(ClientCommandManager.literal("giveitem")
+           .then(FabricHooks.literal("copyitem").executes(ctx -> CommandActions.copyHeldItem()))
+           .then(FabricHooks.literal("rerun").executes(ctx -> CommandActions.rerunLast()))
+           .then(FabricHooks.literal("giveitem")
                  .executes(ctx -> CommandActions.giveItemDialog())
-                 .then(ClientCommandManager.argument("item", StringArgumentType.greedyString())
+                 .then(FabricHooks.argument("item", StringArgumentType.greedyString())
                        .executes(ctx -> {
                            CommandActions.handleGiveItem(StringArgumentType.getString(ctx, "item").trim());
                            return 1;
                        })
                  )
             )
-           .then(ClientCommandManager.literal("list")
-                 .then(ClientCommandManager.literal("functions").executes(ctx -> CommandActions.listHelperFunctions()))
-                 .then(ClientCommandManager.literal("variables").executes(ctx -> CommandActions.listExtraVariables()))
+           .then(FabricHooks.literal("list")
+                 .then(FabricHooks.literal("functions").executes(ctx -> CommandActions.listHelperFunctions()))
+                 .then(FabricHooks.literal("variables").executes(ctx -> CommandActions.listExtraVariables()))
             )
-           .then(ClientCommandManager.literal("run")
-                 .then(ClientCommandManager.argument("path", StringArgumentType.greedyString())
+           .then(FabricHooks.literal("run")
+                 .then(FabricHooks.argument("path", StringArgumentType.greedyString())
                        .suggests((ctx, builder) -> {
                            CommandActions.scriptSuggestions(builder.getRemaining()).forEach(builder::suggest);
                            return builder.buildFuture();

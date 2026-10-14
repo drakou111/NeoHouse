@@ -1,16 +1,16 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.config.NeoHouseConfig;
-import com.drakou111.neohouse.config.UIOpacity;
-import com.drakou111.neohouse.config.UITheme;
-
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.ScriptRunner;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.UIOpacity;
+import com.drakou111.neohouse.config.UITheme;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -124,10 +124,10 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         UITheme t   = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
@@ -152,10 +152,10 @@ public class FileBrowserScreen extends ScreenBase {
         renderList(g, mouseX, mouseY);
         renderScrollbar(g, t);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
     }
 
-    private void renderFooterInfo(GuiGraphics g, UITheme t) {
+    private void renderFooterInfo(Gfx g, UITheme t) {
         int textY = height - FOOTER_H + (FOOTER_H - 8) / 2;
         if (selectedIdx >= 0 && selectedIdx < entries.size()) {
             Path    entry = entries.get(selectedIdx);
@@ -169,7 +169,7 @@ public class FileBrowserScreen extends ScreenBase {
         }
     }
 
-    private void renderScrollbar(GuiGraphics g, UITheme t) {
+    private void renderScrollbar(Gfx g, UITheme t) {
         int total   = entries.size();
         int maxRows = maxVisibleRows();
         if (total <= maxRows) return;
@@ -186,7 +186,7 @@ public class FileBrowserScreen extends ScreenBase {
         g.fill(trackX, thumbY, trackX + SB_W, thumbY + thumbH, thumbColor);
     }
 
-    private void renderList(GuiGraphics g, int mouseX, int mouseY) {
+    private void renderList(Gfx g, int mouseX, int mouseY) {
         int listBottom = height - FOOTER_H - 2;
         int maxRows    = maxVisibleRows();
         int end        = Math.min(scrollOffset + maxRows, entries.size());
@@ -346,7 +346,7 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     private void goBack() {
-        if (parent != null) minecraft.setScreen(parent);
+        if (parent != null) ClientUi.setScreen(minecraft, parent);
         else onClose();
     }
 
@@ -365,7 +365,7 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     private void editFile(Path file) {
-        Minecraft.getInstance().setScreen(new CodeEditorScreen(file, this));
+        ClientUi.setScreen(Minecraft.getInstance(), new CodeEditorScreen(file, this));
     }
 
     private void runFile(Path file) {
@@ -380,7 +380,7 @@ public class FileBrowserScreen extends ScreenBase {
 
     private void renameEntry(Path entry) {
         String current = entry.getFileName().toString();
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "Rename \"" + current + "\" to:", current, this,
                 newName -> {
                     if (!newName.isEmpty() && !newName.equals(current)) {
@@ -393,7 +393,7 @@ public class FileBrowserScreen extends ScreenBase {
 
     private void moveFile(Path file) {
         String relPath = rootPath.relativize(file).toString().replace('\\', '/');
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "Move to:", relPath, this,
                 newPath -> {
                     if (!newPath.isEmpty()) {
@@ -409,7 +409,7 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     private void deleteEntry(Path entry) {
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "Delete \"" + entry.getFileName() + "\"?", this,
                 () -> {
                     try { deleteRecursive(entry); }
@@ -428,7 +428,7 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     private void newFile() {
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "New file name:", "new.nh", this,
                 name -> {
                     if (!name.endsWith(".nh")) name += ".nh";
@@ -441,7 +441,7 @@ public class FileBrowserScreen extends ScreenBase {
     }
 
     private void newFolder() {
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "New folder name:", "folder", this,
                 name -> {
                     Path target = currentPath.resolve(name);

@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.compat;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -32,4 +33,12 @@ public abstract class WidgetBase extends AbstractWidget {
     protected final boolean superMouseReleased(double mx, double my, int btn) {
         return _rme != null && super.mouseReleased(_rme);
     }
+
+    // Rendering goes through Gfx so the widget is written once for every Minecraft version.
+    @Override
+    public final void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderContent(new Gfx(graphics), mouseX, mouseY, partialTick);
+    }
+
+    protected abstract void renderContent(Gfx g, int mouseX, int mouseY, float partialTick);
 }

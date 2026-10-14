@@ -1,14 +1,14 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
-
-import com.drakou111.neohouse.compat.RenderHelper;
-import com.drakou111.neohouse.compat.ScreenBase;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -94,12 +94,12 @@ public class InputDialogScreen extends ScreenBase {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         int x  = (this.width  - dialogW) / 2;
         int y  = (this.height - dialogH) / 2;
         int cx = x + dialogW / 2;
 
-        if (parent != null) parent.render(g, -1, -1, partialTick);
+        if (parent != null) g.render(parent, -1, -1, partialTick);
         UITheme t   = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fill(0, 0, this.width, this.height, o.dimAlpha << 24);
@@ -117,11 +117,11 @@ public class InputDialogScreen extends ScreenBase {
             g.drawCenteredString(this.font, lines[i], cx, y + TITLE_H + PAD + i * LINE_H, 0xFFCCCCCC);
         }
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     protected boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
@@ -131,15 +131,15 @@ public class InputDialogScreen extends ScreenBase {
     }
 
     private void confirm() {
-        Screen before = Minecraft.getInstance().screen;
+        Screen before = ClientUi.screen(Minecraft.getInstance());
         onConfirm.accept(inputBox != null ? inputBox.getValue().trim() : "");
-        if (Minecraft.getInstance().screen == before) {
-            Minecraft.getInstance().setScreen(parent);
+        if (ClientUi.screen(Minecraft.getInstance()) == before) {
+            ClientUi.setScreen(Minecraft.getInstance(), parent);
         }
     }
 
     private void cancel() {
-        Minecraft.getInstance().setScreen(parent);
+        ClientUi.setScreen(Minecraft.getInstance(), parent);
     }
 
     @Override

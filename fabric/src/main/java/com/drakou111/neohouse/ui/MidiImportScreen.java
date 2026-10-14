@@ -1,5 +1,7 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -11,7 +13,6 @@ import com.drakou111.neohouse.music.MusicProject;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -66,11 +67,11 @@ public class MidiImportScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        if (parent != null) parent.render(g, -1, -1, partialTick);
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
+        if (parent != null) g.render(parent, -1, -1, partialTick);
         UITheme t = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fill(0, 0, width, height, o.dimAlpha << 24);
@@ -85,7 +86,7 @@ public class MidiImportScreen extends ScreenBase {
         g.drawString(font, "Importing: " + midiFile.getFileName(), dialogX + PAD, ty, t.muted(), false);
         g.drawString(font, "Save as (.nhm):", dialogX + PAD, ty + LINE_H, 0xFFCCCCCC, false);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -101,7 +102,7 @@ public class MidiImportScreen extends ScreenBase {
         String base = MusicIO.stripExtension(raw);
         Path target = targetDir.resolve(base + MusicIO.EXTENSION);
         if (Files.exists(target)) {
-            Minecraft.getInstance().setScreen(new InputDialogScreen(
+            ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                     "\"" + base + MusicIO.EXTENSION + "\" already exists. Overwrite?", parent,
                     () -> write(base, target)));
         } else {
@@ -115,14 +116,14 @@ public class MidiImportScreen extends ScreenBase {
             MusicIO.save(target, project);
             MessageUtils.debugToChat("Imported " + project.totalNotes() + " notes across "
                     + project.tracks.size() + " tracks into " + target.getFileName());
-            Minecraft.getInstance().setScreen(new MusicEditorScreen(target, parent));
+            ClientUi.setScreen(Minecraft.getInstance(), new MusicEditorScreen(target, parent));
         } catch (Exception e) {
             MessageUtils.errorToChat("MIDI import failed: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
         }
     }
 
     private void cancel() {
-        Minecraft.getInstance().setScreen(parent);
+        ClientUi.setScreen(Minecraft.getInstance(), parent);
     }
 
     @Override

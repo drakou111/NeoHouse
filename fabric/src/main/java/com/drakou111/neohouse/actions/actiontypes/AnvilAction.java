@@ -1,13 +1,13 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.config.NeoHouseConfig;
-
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.ContainerClicks;
+import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
-import net.minecraft.world.inventory.ClickType;
 
 public class AnvilAction extends Action {
     private static final int STABLE_TICKS  = 3;
@@ -28,7 +28,7 @@ public class AnvilAction extends Action {
     public String getDebugName() { return "Anvil input: " + name; }
 
     public boolean run(Minecraft mc) {
-        if (!(mc.screen instanceof AnvilScreen anvil)) throw new InterruptActionException("Not in anvil screen.");
+        if (!(ClientUi.screen(mc) instanceof AnvilScreen anvil)) throw new InterruptActionException("Not in anvil screen.");
         if (++ticks > NeoHouseConfig.get().actionTimeoutTicks) throw new InterruptActionException("Timed out waiting for anvil.");
 
         EditBox edit = anvil.children().stream()
@@ -68,7 +68,7 @@ public class AnvilAction extends Action {
 
         if (!anvil.getMenu().getSlot(2).hasItem()) return false;
 
-        mc.gameMode.handleInventoryMouseClick(anvil.getMenu().containerId, 2, 0, ClickType.PICKUP, mc.player);
+        ContainerClicks.pickup(mc, anvil.getMenu().containerId, 2, 0);
         return true;
     }
 }

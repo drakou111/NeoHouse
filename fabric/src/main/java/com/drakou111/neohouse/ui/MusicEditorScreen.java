@@ -1,7 +1,9 @@
 package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.CommandActions;
-import com.drakou111.neohouse.compat.PoseHelper;
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.Keys;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -19,7 +21,6 @@ import com.drakou111.neohouse.music.SoundIcon;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -163,10 +164,10 @@ public class MusicEditorScreen extends ScreenBase {
 
     // ---- rendering ----
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         player.update();
         if (player.isPlaying() != wasPlaying) { wasPlaying = player.isPlaying(); rebuildAll(); }
 
@@ -198,10 +199,10 @@ public class MusicEditorScreen extends ScreenBase {
                 project.lengthTicks() / (double) MusicProject.TICKS_PER_SECOND);
         g.drawString(font, hint, width - PAD - font.width(hint), fY, t.muted(), false);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
     }
 
-    private void renderGrid(GuiGraphics g, UITheme t) {
+    private void renderGrid(Gfx g, UITheme t) {
         int gx0 = gridX0(), gy0 = gridY0(), gw = gridW(), gh = gridH();
         g.fill(gx0, gy0, gx0 + gw, gy0 + gh, 0x66000000);
 
@@ -244,7 +245,7 @@ public class MusicEditorScreen extends ScreenBase {
         if (hx >= gx0 && hx <= gx0 + gw) g.fill(hx, gy0, hx + 1, gy0 + gh, 0xFFFF5555);
     }
 
-    private void drawTrackNotes(GuiGraphics g, MusicTrack tr, int gx0, int gy0, int gw, int gh, int rh, boolean dim) {
+    private void drawTrackNotes(Gfx g, MusicTrack tr, int gx0, int gy0, int gw, int gh, int rh, boolean dim) {
         ItemStack icon = SoundIcon.iconFor(soundOf(tr));
         int rgb = trackColor(tr) & 0xFFFFFF;
         for (MusicNote n : tr.notes) {
@@ -273,13 +274,13 @@ public class MusicEditorScreen extends ScreenBase {
         }
     }
 
-    private void renderIcon(GuiGraphics g, ItemStack stack, int x, int y, int size) {
+    private void renderIcon(Gfx g, ItemStack stack, int x, int y, int size) {
         float s = size / 16f;
-        PoseHelper.push(g);
-        PoseHelper.translate(g, x, y);
-        PoseHelper.scale(g, s, s);
+        g.pushPose();
+        g.translate(x, y);
+        g.scale(s, s);
         g.renderItem(stack, 0, 0);
-        PoseHelper.pop(g);
+        g.popPose();
     }
 
     private int trackColor(MusicTrack tr) {
@@ -289,7 +290,7 @@ public class MusicEditorScreen extends ScreenBase {
         return tr.muted ? (base & 0x55FFFFFF) : base;
     }
 
-    private void renderTrackPanel(GuiGraphics g, UITheme t) {
+    private void renderTrackPanel(Gfx g, UITheme t) {
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fill(0, HEADER_H, LEFT_W, height - FOOTER_H, t.panel(o.panelAlpha));
         g.fill(LEFT_W - 1, HEADER_H, LEFT_W, height - FOOTER_H, t.accent());
@@ -324,7 +325,7 @@ public class MusicEditorScreen extends ScreenBase {
                 && mx >= gridX0() && mx <= gridX0() + gridW();
     }
 
-    private void renderHScroll(GuiGraphics g, UITheme t) {
+    private void renderHScroll(Gfx g, UITheme t) {
         int y0 = height - FOOTER_H - HSB_H, y1 = height - FOOTER_H;
         int gx0 = gridX0(), gw = gridW();
         g.fill(gx0, y0, gx0 + gw, y1, 0x22FFFFFF);
@@ -487,7 +488,7 @@ public class MusicEditorScreen extends ScreenBase {
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
-        boolean ctrl = (mods & 0x2) != 0; // GLFW_MOD_CONTROL
+        boolean ctrl = (mods & Keys.MOD_CONTROL) != 0;
         if (key == 32) { player.toggle(0); rebuildAll(); return true; }
         if (key == 261 && selected != null) {
             active().notes.remove(selected); selected = null; markDirty(); return true;
@@ -538,13 +539,13 @@ public class MusicEditorScreen extends ScreenBase {
     }
 
     private void renameTrack(MusicTrack tr) {
-        minecraft.setScreen(new InputDialogScreen("Rename track:", tr.name, this, name -> {
+        ClientUi.setScreen(minecraft, new InputDialogScreen("Rename track:", tr.name, this, name -> {
             if (!name.isBlank()) { tr.name = name; markDirty(); }
         }));
     }
 
     private void pickSoundFor(MusicTrack tr) {
-        minecraft.setScreen(new SoundPickerScreen(this, false, soundOf(tr), s -> {
+        ClientUi.setScreen(minecraft, new SoundPickerScreen(this, false, soundOf(tr), s -> {
             tr.sound = s.name();
             tr.melodic = SoundEventResolver.isMelodic(s);
             markDirty();
@@ -563,13 +564,13 @@ public class MusicEditorScreen extends ScreenBase {
 
     private void exportFunction() {
         String suggested = MusicFunctionExporter.sanitizeFunctionName(project.name);
-        minecraft.setScreen(new InputDialogScreen(
+        ClientUi.setScreen(minecraft, new InputDialogScreen(
                 "Export as function - file name:", suggested, this,
                 raw -> {
                     String fnName = MusicFunctionExporter.sanitizeFunctionName(raw);
                     Path target = CommandActions.getScriptsDir().resolve(fnName + ".nh");
                     if (Files.exists(target)) {
-                        minecraft.setScreen(new InputDialogScreen(
+                        ClientUi.setScreen(minecraft, new InputDialogScreen(
                                 "\"" + fnName + ".nh\" already exists. Overwrite?", this,
                                 () -> writeExport(fnName, target)));
                     } else {
@@ -593,7 +594,7 @@ public class MusicEditorScreen extends ScreenBase {
     public void onClose() {
         player.stop();
         if (dirty) {
-            minecraft.setScreen(new InputDialogScreen(
+            ClientUi.setScreen(minecraft, new InputDialogScreen(
                     "Unsaved changes. Discard?", this,
                     this::gotoParent));
         } else {
@@ -602,8 +603,8 @@ public class MusicEditorScreen extends ScreenBase {
     }
 
     private void gotoParent() {
-        if (parent != null) minecraft.setScreen(parent);
-        else minecraft.setScreen(null);
+        if (parent != null) ClientUi.setScreen(minecraft, parent);
+        else ClientUi.setScreen(minecraft, null);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.constants.Others;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.SequenceManager;
@@ -59,7 +60,7 @@ public class IfContainerEmptyAction extends Action {
         return new IfContainerEmptyAction("menu elements",
                 menu -> !containerSlots(menu).stream().allMatch(slot -> !slot.hasItem()),
                 menu -> containerSlots(menu).stream()
-                        .allMatch(slot -> !slot.hasItem() || slot.getItem().is(Items.GRAY_STAINED_GLASS_PANE)),
+                        .allMatch(slot -> !slot.hasItem() || ClientUi.isGrayGlassPane(slot.getItem())),
                 ifEmpty, ifNotEmpty);
     }
 

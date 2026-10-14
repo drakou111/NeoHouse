@@ -1,10 +1,10 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ContainerClicks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 
 public class DeleteAllAction extends Action {
@@ -35,7 +35,7 @@ public class DeleteAllAction extends Action {
 
         if (s.getItem().isEmpty()) return true;
 
-        mc.gameMode.handleInventoryMouseClick(menu.containerId, slotIndex, 1, ClickType.PICKUP, mc.player);
+        ContainerClicks.pickup(mc, menu.containerId, slotIndex, 1);
         this.waiting = true;
         return false;
     }

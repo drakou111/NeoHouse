@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
@@ -59,13 +60,13 @@ public class TextEntryAction extends Action {
         if (++this.waitedTicks > NeoHouseConfig.get().actionTimeoutTicks)
             throw new InterruptActionException("Timed out waiting for the input prompt for '" + this.text + "'.");
 
-        if (mc.screen instanceof AnvilScreen) {
+        if (ClientUi.screen(mc) instanceof AnvilScreen) {
             if (!this.anvilAllowed) throw new InterruptActionException(CHAT_INPUTS_HINT);
             this.anvil = new AnvilAction(this.text);
             this.step = Step.ANVIL;
             return;
         }
-        if (mc.screen instanceof ContainerScreen) {
+        if (ClientUi.screen(mc) instanceof ContainerScreen) {
             this.closedTicks = 0;
             return;
         }

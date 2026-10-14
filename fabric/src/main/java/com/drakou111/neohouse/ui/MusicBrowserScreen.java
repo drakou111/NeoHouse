@@ -1,6 +1,8 @@
 package com.drakou111.neohouse.ui;
 
 import com.drakou111.neohouse.CommandActions;
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -12,7 +14,6 @@ import com.drakou111.neohouse.music.MusicProject;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -116,10 +117,10 @@ public class MusicBrowserScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         UITheme t = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
@@ -142,10 +143,10 @@ public class MusicBrowserScreen extends ScreenBase {
         renderList(g, mouseX, mouseY);
         renderScrollbar(g, t);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
     }
 
-    private void renderFooterInfo(GuiGraphics g, UITheme t) {
+    private void renderFooterInfo(Gfx g, UITheme t) {
         int textY = height - FOOTER_H + (FOOTER_H - 8) / 2;
         if (selectedIdx >= 0 && selectedIdx < entries.size()) {
             Path entry = entries.get(selectedIdx);
@@ -158,7 +159,7 @@ public class MusicBrowserScreen extends ScreenBase {
         }
     }
 
-    private void renderScrollbar(GuiGraphics g, UITheme t) {
+    private void renderScrollbar(Gfx g, UITheme t) {
         int total = entries.size();
         int maxRows = maxVisibleRows();
         if (total <= maxRows) return;
@@ -173,7 +174,7 @@ public class MusicBrowserScreen extends ScreenBase {
         g.fill(trackX, thumbY, trackX + SB_W, thumbY + thumbH, thumbColor);
     }
 
-    private void renderList(GuiGraphics g, int mouseX, int mouseY) {
+    private void renderList(Gfx g, int mouseX, int mouseY) {
         int listBottom = height - FOOTER_H - 2;
         int maxRows = maxVisibleRows();
         int end = Math.min(scrollOffset + maxRows, entries.size());
@@ -328,7 +329,7 @@ public class MusicBrowserScreen extends ScreenBase {
     }
 
     private void goBack() {
-        if (parent != null) minecraft.setScreen(parent);
+        if (parent != null) ClientUi.setScreen(minecraft, parent);
         else onClose();
     }
 
@@ -347,7 +348,7 @@ public class MusicBrowserScreen extends ScreenBase {
     }
 
     private void openEditor(Path file) {
-        Minecraft.getInstance().setScreen(new MusicEditorScreen(file, this));
+        ClientUi.setScreen(Minecraft.getInstance(), new MusicEditorScreen(file, this));
     }
 
     private void exportFile(Path file) {
@@ -359,13 +360,13 @@ public class MusicBrowserScreen extends ScreenBase {
             return;
         }
         String suggested = MusicFunctionExporter.sanitizeFunctionName(project.name);
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "Export as function - file name:", suggested, this,
                 raw -> {
                     String fnName = MusicFunctionExporter.sanitizeFunctionName(raw);
                     Path target = CommandActions.getScriptsDir().resolve(fnName + ".nh");
                     if (Files.exists(target)) {
-                        Minecraft.getInstance().setScreen(new InputDialogScreen(
+                        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                                 "\"" + fnName + ".nh\" already exists. Overwrite?", this,
                                 () -> writeExport(project, fnName, target)));
                     } else {
@@ -385,7 +386,7 @@ public class MusicBrowserScreen extends ScreenBase {
 
     private void renameEntry(Path entry) {
         String current = entry.getFileName().toString();
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "Rename \"" + current + "\" to:", current, this,
                 newName -> {
                     if (!newName.isEmpty() && !newName.equals(current)) {
@@ -396,7 +397,7 @@ public class MusicBrowserScreen extends ScreenBase {
     }
 
     private void deleteEntry(Path entry) {
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "Delete \"" + entry.getFileName() + "\"?", this,
                 () -> {
                     try { deleteRecursive(entry); }
@@ -414,7 +415,7 @@ public class MusicBrowserScreen extends ScreenBase {
     }
 
     private void newMusic() {
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "New music name:", "new.nhm", this,
                 name -> {
                     if (!name.endsWith(MusicIO.EXTENSION)) name += MusicIO.EXTENSION;
@@ -428,11 +429,11 @@ public class MusicBrowserScreen extends ScreenBase {
     }
 
     private void importMidi(Path midi) {
-        Minecraft.getInstance().setScreen(new MidiImportScreen(this, midi, currentPath));
+        ClientUi.setScreen(Minecraft.getInstance(), new MidiImportScreen(this, midi, currentPath));
     }
 
     private void newFolder() {
-        Minecraft.getInstance().setScreen(new InputDialogScreen(
+        ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                 "New folder name:", "folder", this,
                 name -> {
                     Path target = currentPath.resolve(name);

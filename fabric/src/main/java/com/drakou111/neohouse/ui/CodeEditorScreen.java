@@ -1,25 +1,25 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.NeoHouseScreens;
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.Keys;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
+import com.drakou111.neohouse.compiler.CompilerSession;
+import com.drakou111.neohouse.compiler.ImportGraph;
+import com.drakou111.neohouse.compiler.ScriptRunner;
+import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
-
-import com.drakou111.neohouse.compat.RenderHelper;
-import com.drakou111.neohouse.compat.ScreenBase;
-import com.drakou111.neohouse.NeoHouseScreens;
-import com.drakou111.neohouse.compiler.CompilerSession;
-import com.drakou111.neohouse.compiler.ScriptRunner;
-import com.drakou111.neohouse.compiler.ImportGraph;
-import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -231,14 +231,14 @@ public class CodeEditorScreen extends ScreenBase {
     }
 
     private void discard() {
-        Minecraft.getInstance().setScreen(parent);
+        ClientUi.setScreen(Minecraft.getInstance(), parent);
     }
 
     /** Return to the parent screen (e.g. the file browser), prompting if there are unsaved changes. */
     private void goBack() {
         if (isDirty()) {
             pendingContent = editor.getValue();
-            Minecraft.getInstance().setScreen(new InputDialogScreen(
+            ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                     "Unsaved changes. Discard?",
                     this,
                     () -> {
@@ -253,20 +253,20 @@ public class CodeEditorScreen extends ScreenBase {
 
     /** Exit the editor straight back to the game, without popping to the parent screen. */
     private void closeToGame() {
-        Minecraft.getInstance().setScreen(null);
+        ClientUi.setScreen(Minecraft.getInstance(), null);
     }
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
-        if (key == GLFW.GLFW_KEY_ESCAPE && editor != null && editor.isFindOpen()) {
+        if (key == Keys.ESCAPE && editor != null && editor.isFindOpen()) {
             editor.closeFindBar();
             return true;
         }
-        if (key == GLFW.GLFW_KEY_ESCAPE && editor != null && editor.hasSuggestions()) {
+        if (key == Keys.ESCAPE && editor != null && editor.hasSuggestions()) {
             editor.dismissSuggestions();
             return true;
         }
-        if ((mods & GLFW.GLFW_MOD_CONTROL) != 0 && key == GLFW.GLFW_KEY_S) {
+        if ((mods & Keys.MOD_CONTROL) != 0 && key == Keys.S) {
             save();
             return true;
         }
@@ -277,7 +277,7 @@ public class CodeEditorScreen extends ScreenBase {
     public void onClose() {
         if (isDirty()) {
             pendingContent = editor.getValue();
-            Minecraft.getInstance().setScreen(new InputDialogScreen(
+            ClientUi.setScreen(Minecraft.getInstance(), new InputDialogScreen(
                     "Unsaved changes. Discard?",
                     this,
                     () -> {
@@ -293,7 +293,7 @@ public class CodeEditorScreen extends ScreenBase {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         UITheme t   = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fill(0, 0, this.width, this.height, t.bgTop(o.bgAlpha));
@@ -317,11 +317,11 @@ public class CodeEditorScreen extends ScreenBase {
             name = font.plainSubstrByWidth(name, Math.max(0, maxNameWidth - font.width("..."))) + "...";
         g.drawString(this.font, name, textX, textY, dirty ? 0xFFDDCCBB : 0xFFCCCCCC, false);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     public boolean isPauseScreen() { return false; }

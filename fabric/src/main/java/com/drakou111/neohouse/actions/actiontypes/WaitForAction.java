@@ -1,8 +1,8 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.config.NeoHouseConfig;
-
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -29,13 +29,13 @@ public class WaitForAction extends Action {
     @Override
     public boolean run(Minecraft mc) {
         if (!initialized) {
-            screenAtStart = mc.screen;
+            screenAtStart = ClientUi.screen(mc);
             initialized = true;
         }
         if (++ticksWaited > NeoHouseConfig.get().actionTimeoutTicks) {
             throw new InterruptActionException("Timed out waiting for screen to " + (waitForOpen ? "open" : "close") + ".");
         }
-        Screen current = mc.screen;
+        Screen current = ClientUi.screen(mc);
         if (waitForOpen) {
             if (current == null || !screenClass.isAssignableFrom(current.getClass())) return false;
             boolean alreadyAtTargetOnInit = screenAtStart != null && screenClass.isAssignableFrom(screenAtStart.getClass());

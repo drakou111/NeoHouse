@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen;
@@ -29,7 +30,7 @@ public class SignAction extends Action {
 
     @Override
     public boolean run(Minecraft mc) {
-        if (!(mc.screen instanceof AbstractSignEditScreen sign))
+        if (!(ClientUi.screen(mc) instanceof AbstractSignEditScreen sign))
             throw new InterruptActionException("Not in sign edit screen.");
 
         if (MESSAGES_FIELD == null)

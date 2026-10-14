@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.utils;
 
 import com.drakou111.neohouse.compat.ClickEventHelper;
+import com.drakou111.neohouse.compat.ClientMessages;
 import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
 import com.drakou111.neohouse.compiler.lexer.Token;
 import com.drakou111.neohouse.exceptions.CompilingException;
@@ -13,7 +14,7 @@ public class MessageUtils {
 
     public static void rawLogToChat(String message) {
         if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.displayClientMessage(Component.literal(message), false);
+            ClientMessages.show(Component.literal(message));
         }
     }
 
@@ -30,7 +31,7 @@ public class MessageUtils {
             MutableComponent full = Component.empty()
                     .append(Component.literal(prefixText).withStyle(prefixColor))
                     .append(Component.literal(line).withStyle(bodyColor));
-            Minecraft.getInstance().player.displayClientMessage(full, false);
+            ClientMessages.show(full);
         }
     }
 
@@ -55,7 +56,7 @@ public class MessageUtils {
                 .append(Component.literal(printable(line.substring(0, start)).stripLeading()).withStyle(ChatFormatting.GRAY))
                 .append(Component.literal(printable(line.substring(start, end))).withStyle(style -> style.withColor(color).withUnderlined(true)))
                 .append(Component.literal(printable(line.substring(end))).withStyle(ChatFormatting.GRAY));
-        Minecraft.getInstance().player.displayClientMessage(excerpt, false);
+        ClientMessages.show(excerpt);
     }
 
     private static String printable(String text) {
@@ -98,6 +99,6 @@ public class MessageUtils {
                         .withColor(ChatFormatting.GOLD)
                         .withUnderlined(true)
                         .withClickEvent(ClickEventHelper.runCommand(command))));
-        Minecraft.getInstance().player.displayClientMessage(full, false);
+        ClientMessages.show(full);
     }
 }

@@ -1,13 +1,13 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ContainerClicks;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.constants.HousingList;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +76,7 @@ public class ReadListNamesAction extends Action {
 
         boolean hasNextPage = NEXT_PAGE_SLOT < menu.slots.size() && menu.slots.get(NEXT_PAGE_SLOT).hasItem();
         if (!hasNextPage || mc.gameMode == null) return true;
-        mc.gameMode.handleInventoryMouseClick(menu.containerId, NEXT_PAGE_SLOT, 0, ClickType.PICKUP, mc.player);
+        ContainerClicks.pickup(mc, menu.containerId, NEXT_PAGE_SLOT, 0);
         this.pageBeforeTurn = snapshot;
         this.stepTicks = 0;
         this.step = Step.TURN_PAGE;

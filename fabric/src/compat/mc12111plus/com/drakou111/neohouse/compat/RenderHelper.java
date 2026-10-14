@@ -1,9 +1,9 @@
 package com.drakou111.neohouse.compat;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
@@ -19,12 +19,12 @@ import org.joml.Vector3f;
 public final class RenderHelper {
     private RenderHelper() {}
 
-    public static void renderOutline(GuiGraphics g, int x, int y, int w, int h, int color) {
-        g.renderOutline(x, y, w, h, color);
+    public static void renderOutline(Gfx g, int x, int y, int w, int h, int color) {
+        g.graphics().renderOutline(x, y, w, h, color);
     }
 
-    public static void renderLogo(GuiGraphics g, int x, int y, int size, int argbColor) {
-        g.blitSprite(RenderPipelines.GUI_TEXTURED,
+    public static void renderLogo(Gfx g, int x, int y, int size, int argbColor) {
+        g.graphics().blitSprite(RenderPipelines.GUI_TEXTURED,
                 Identifier.fromNamespaceAndPath("neohouse", "logo"), x, y, size, size, argbColor);
     }
 
@@ -49,7 +49,7 @@ public final class RenderHelper {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void renderSpinningEntity(GuiGraphics gfx, Minecraft mc, LivingEntity entity, int cx, int cy, int scale, float angleDeg) {
+    public static void renderSpinningEntity(Gfx gfx, Minecraft mc, LivingEntity entity, int cx, int cy, int scale, float angleDeg) {
         try {
             EntityRenderer renderer = mc.getEntityRenderDispatcher().getRenderer(entity);
             EntityRenderState state = (EntityRenderState) renderer.createRenderState(entity, 1.0f);
@@ -66,7 +66,7 @@ public final class RenderHelper {
                 .rotateY((float) Math.toRadians(angleDeg));
             float offsetY = state.boundingBoxHeight / 2.0f;
             int vp = scale * 2;
-            gfx.submitEntityRenderState(state, (float) scale, new Vector3f(0, offsetY, 0),
+            gfx.graphics().submitEntityRenderState(state, (float) scale, new Vector3f(0, offsetY, 0),
                 spinQ, new Quaternionf(), cx - vp, cy - vp * 2, cx + vp, cy);
         } catch (Exception e) {
             float r = 400f;
@@ -74,7 +74,7 @@ public final class RenderHelper {
             float mx = cx + (float) Math.sin(rad) * r;
             float my = cy + (float) Math.cos(rad) * r;
             InventoryScreen.renderEntityInInventoryFollowsMouse(
-                gfx, cx - scale, cy - scale * 2, cx + scale, cy, scale, 0f, mx, my, entity);
+                gfx.graphics(), cx - scale, cy - scale * 2, cx + scale, cy, scale, 0f, mx, my, entity);
         }
     }
 }

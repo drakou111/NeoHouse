@@ -1,12 +1,13 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.config.NeoHouseConfig;
-import com.drakou111.neohouse.config.UITheme;
-
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.Keys;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.WidgetBase;
 import com.drakou111.neohouse.compiler.enums.ActionParamKind;
 import com.drakou111.neohouse.compiler.enums.Param;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.UITheme;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
@@ -15,11 +16,9 @@ import com.drakou111.neohouse.constants.Teleport;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -103,6 +102,15 @@ public class SyntaxEditorWidget extends WidgetBase {
     private int suggestionTypedLen = 0;
     private boolean  suggestionIsString = false;
     private static final int MAX_VISIBLE_SUGGESTIONS = 8;
+    private static final int CONTINUATION_SCAN_LINES = 30;
+    private static final int HSB_H = 4;
+    private static final int HSB_MIN_THUMB_W = 12;
+    private static final int H_SCROLL_STEP = 20;
+
+    /** Pixel width of the widest line (with its inline hints), or -1 when it must be measured again. */
+    private int contentWidthCache = -1;
+    private boolean hsbDragging = false;
+    private int hsbDragStartX, hsbDragStartScroll;
     private int suggPanelX = -1, suggPanelY = -1, suggPanelW = 0, suggPanelH = 0;
 
     private int    paramHintIndex = -1;
@@ -144,6 +152,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         selAnchor = 0;
         scrollLine = 0;
         scrollX = 0;
+        contentWidthCache = -1;
         lineCache = null;
         offsetCache = null;
         rebuildSpans();
@@ -238,7 +247,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     }
 
     @Override
-    public void renderWidget(GuiGraphics g, int mouseX, int mouseY, float pt) {
+    protected void renderContent(Gfx g, int mouseX, int mouseY, float pt) {
         Font font  = Minecraft.getInstance().font;
         int  x0    = getX(), y0 = getY();
         int  errorH = errorBarH();
@@ -250,8 +259,9 @@ public class SyntaxEditorWidget extends WidgetBase {
         g.fill(x0 + GUTTER_W, y0, x0 + GUTTER_W + 1, y0 + codeH, t.accent());
 
         List<String> lines = getLines();
-        int visLines = Math.max(1, (codeH - PAD_Y * 2) / LINE_H);
+        int visLines = visibleLines();
         scrollLine = clampScrollLine(scrollLine, lines.size(), visLines);
+        scrollX = Math.min(scrollX, maxScrollX());
         int[] lineOffsets = buildLineOffsets(lines);
 
         int[] curLC  = offsetToLC(cursor, lines);
@@ -342,6 +352,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
 
         renderScrollbar(g, x0, y0, codeH, lines.size(), visLines, t);
+        renderHorizontalScrollbar(g, codeH, t);
 
         if (errorMsg != null) {
             String displayMsg = getActiveErrorMsg();
@@ -375,7 +386,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         renderSuggestions(g, font, x0, y0, lines);
     }
 
-    private void renderScrollbar(GuiGraphics g, int x0, int y0, int codeH, int totalLines, int visLines, UITheme t) {
+    private void renderScrollbar(Gfx g, int x0, int y0, int codeH, int totalLines, int visLines, UITheme t) {
         if (totalLines <= visLines) return;
         int trackX = x0 + width - SB_W - SB_PAD;
         g.fill(trackX, y0, trackX + SB_W, y0 + codeH, 0x33FFFFFF);
@@ -384,6 +395,49 @@ public class SyntaxEditorWidget extends WidgetBase {
         int thumbY = y0 + (maxOff > 0 ? (codeH - thumbH) * scrollLine / maxOff : 0);
         int color = sbDragging ? 0xCCDDDDDD : (0x99000000 | (t.muted() & 0xFFFFFF));
         g.fill(trackX, thumbY, trackX + SB_W, thumbY + thumbH, color);
+    }
+
+    private void renderHorizontalScrollbar(Gfx g, int codeH, UITheme t) {
+        int maxScroll = maxScrollX();
+        if (maxScroll <= 0) return;
+        int[] track = hsbTrack(codeH);
+        int thumbW = hsbThumbWidth(track[2]);
+        int thumbX = track[0] + (track[2] - thumbW) * scrollX / maxScroll;
+        g.fill(track[0], track[1], track[0] + track[2], track[1] + HSB_H, 0x33FFFFFF);
+        int color = hsbDragging ? 0xCCDDDDDD : (0x99000000 | (t.muted() & 0xFFFFFF));
+        g.fill(thumbX, track[1], thumbX + thumbW, track[1] + HSB_H, color);
+    }
+
+    /** {x, y, width} of the horizontal scrollbar track along the bottom of the code area. */
+    private int[] hsbTrack(int codeH) {
+        int left = getX() + GUTTER_W + 1;
+        int right = getX() + width - SB_W - SB_PAD * 2;
+        return new int[]{left, getY() + codeH - HSB_H - 1, right - left};
+    }
+
+    private int hsbThumbWidth(int trackW) {
+        int viewW = codeViewWidth();
+        return Math.max(HSB_MIN_THUMB_W, trackW * viewW / Math.max(viewW, contentWidth()));
+    }
+
+    /** Width available for code text between the gutter and the vertical scrollbar. */
+    private int codeViewWidth() {
+        return Math.max(20, width - GUTTER_W - 1 - PAD_X * 2 - SB_W - SB_PAD * 2);
+    }
+
+    private int contentWidth() {
+        if (contentWidthCache >= 0) return contentWidthCache;
+        List<String> lines = getLines();
+        int widest = 0;
+        for (int i = 1; i < lines.size(); i++) if (lines.get(i).length() > lines.get(widest).length()) widest = i;
+        String line = lines.get(widest);
+        Font font = Minecraft.getInstance().font;
+        contentWidthCache = lineColToPixelX(font, line, line.length(), computeLineHints(lines, widest, null, -1)) + PAD_X;
+        return contentWidthCache;
+    }
+
+    private int maxScrollX() {
+        return Math.max(0, contentWidth() - codeViewWidth());
     }
 
     private int codeX() { return getX() + GUTTER_W + 1 + PAD_X; }
@@ -453,7 +507,7 @@ public class SyntaxEditorWidget extends WidgetBase {
             i++;
         }
 
-        List<InlineHint> contHints = computeContinuationHints(allLines, lineIndex, getCachedOffsets(), activeFuncName, activeParamIdx);
+        List<InlineHint> contHints = computeContinuationHints(allLines, lineIndex, activeFuncName, activeParamIdx);
         if (!contHints.isEmpty()) {
             hints.addAll(contHints);
             hints.sort(Comparator.comparingInt(InlineHint::charOffset));
@@ -462,109 +516,98 @@ public class SyntaxEditorWidget extends WidgetBase {
         return hints;
     }
 
-    private List<InlineHint> computeContinuationHints(List<String> allLines, int lineIndex, int[] offs, String activeFuncName, int activeParamIdx) {
-        int lineStart = offs[lineIndex];
-        if (lineStart == 0) return List.of();
+    /**
+     * Hints for a line that continues a call's argument list from an earlier line. Only applies when
+     * the previous code ends with ',' or '(' inside a still-open call and this line doesn't hold a
+     * statement of its own, so an unfinished call being typed doesn't label the lines below it.
+     * Scans a bounded window of earlier lines, skipping strings and comments.
+     */
+    private List<InlineHint> computeContinuationHints(List<String> allLines, int lineIndex, String activeFuncName, int activeParamIdx) {
+        if (lineIndex == 0) return List.of();
 
-        String fullText = text.toString();
-
-        int depth = 0;
-        int funcParenPos = -1;
-        for (int i = lineStart - 1; i >= 0; i--) {
-            char c = fullText.charAt(i);
-            if (c == '"') {
-                i--;
-                while (i >= 0 && fullText.charAt(i) != '"') i--;
-            } else if (c == ')') {
-                depth++;
-            } else if (c == '(' && depth > 0) {
-                depth--;
-            } else if (c == '(') {
-                funcParenPos = i;
-                break;
+        // Open brackets as {bracket char, line, column, argument index}, innermost on top.
+        Deque<int[]> open = new ArrayDeque<>();
+        char lastSignificant = 0;
+        for (int li = Math.max(0, lineIndex - CONTINUATION_SCAN_LINES); li < lineIndex; li++) {
+            String line = allLines.get(li);
+            for (int i = 0; i < line.length(); i++) {
+                char c = line.charAt(i);
+                if (c == '/' && i + 1 < line.length() && line.charAt(i + 1) == '/') break;
+                if (c == '"') {
+                    i++;
+                    while (i < line.length() && line.charAt(i) != '"') i++;
+                    lastSignificant = '"';
+                    continue;
+                }
+                if (Character.isWhitespace(c)) continue;
+                lastSignificant = c;
+                switch (c) {
+                    case '(', '[', '{' -> open.push(new int[]{c, li, i, 0});
+                    case ')', ']', '}' -> { if (!open.isEmpty()) open.pop(); }
+                    case ',' -> { if (!open.isEmpty()) open.peek()[3]++; }
+                    case ';' -> open.clear(); // a finished statement: nothing before it is still open
+                    default -> { }
+                }
             }
         }
-        if (funcParenPos < 0) return List.of();
+        if (open.isEmpty() || open.peek()[0] != '(' || (lastSignificant != ',' && lastSignificant != '(')) return List.of();
 
-        int nameEnd = funcParenPos;
-        while (nameEnd > 0 && fullText.charAt(nameEnd - 1) == ' ') nameEnd--;
+        int[] call = open.peek();
+        String callLine = allLines.get(call[1]);
+        int nameEnd = call[2];
+        while (nameEnd > 0 && callLine.charAt(nameEnd - 1) == ' ') nameEnd--;
         int nameStart = nameEnd;
-        while (nameStart > 0 && (Character.isLetterOrDigit(fullText.charAt(nameStart - 1)) || fullText.charAt(nameStart - 1) == '_'))
+        while (nameStart > 0 && (Character.isLetterOrDigit(callLine.charAt(nameStart - 1)) || callLine.charAt(nameStart - 1) == '_'))
             nameStart--;
         if (nameStart >= nameEnd) return List.of();
-        String funcName = fullText.substring(nameStart, nameEnd);
-
+        String funcName = callLine.substring(nameStart, nameEnd);
         List<String> paramLabels = resolveParamNames(funcName);
         if (paramLabels == null || paramLabels.isEmpty()) return List.of();
 
-        int argIndex = 0;
-        int scanDepth = 0;
-        boolean atArgStart = true;
-
-        for (int i = funcParenPos + 1; i < lineStart; i++) {
-            char c = fullText.charAt(i);
-            if (c == '"') {
-                atArgStart = false;
-                i++;
-                while (i < lineStart && fullText.charAt(i) != '"') i++;
-            } else if (c == '(' || c == '[' || c == '{') {
-                scanDepth++;
-                atArgStart = false;
-            } else if (c == ')' || c == ']' || c == '}') {
-                if (scanDepth == 0) return List.of();
-                scanDepth--;
-            } else if (c == ',' && scanDepth == 0) {
-                argIndex++;
-                atArgStart = true;
-            } else if (c != ' ' && c != '\n' && c != '\r' && c != '\t') {
-                atArgStart = false;
-            }
-        }
-
+        int argIndex = call[3];
         List<InlineHint> hints = new ArrayList<>();
         String curLine = allLines.get(lineIndex);
         int col = 0;
-
         while (col < curLine.length() && curLine.charAt(col) == ' ') col++;
+        if (col < curLine.length() && curLine.charAt(col) != ')' && argIndex < paramLabels.size())
+            hints.add(paramHint(paramLabels, argIndex, col, funcName, activeFuncName, activeParamIdx));
 
-        if (atArgStart && col < curLine.length() && curLine.charAt(col) != ')' && argIndex < paramLabels.size()) {
-            String label = paramLabels.get(argIndex);
-            int colon = label.indexOf(':');
-            String name = (colon >= 0 ? label.substring(0, colon) : label).trim();
-            boolean isActive = funcName.equals(activeFuncName) && argIndex == activeParamIdx;
-            hints.add(new InlineHint(col, name + ": ", isActive));
-        }
-
+        int depth = 0;
         while (col < curLine.length()) {
             char c = curLine.charAt(col);
+            if (c == '/' && col + 1 < curLine.length() && curLine.charAt(col + 1) == '/') break;
             if (c == '"') {
                 col++;
                 while (col < curLine.length() && curLine.charAt(col) != '"') col++;
                 if (col < curLine.length()) col++;
             } else if (c == '(' || c == '[' || c == '{') {
-                scanDepth++;
+                depth++;
                 col++;
             } else if (c == ')' || c == ']' || c == '}') {
-                if (scanDepth == 0) break;
-                scanDepth--;
+                if (depth == 0) break;
+                depth--;
                 col++;
-            } else if (c == ',' && scanDepth == 0) {
+            } else if (c == ';') {
+                return List.of(); // a statement of its own, not part of the call
+            } else if (c == ',' && depth == 0) {
                 argIndex++;
                 col++;
                 while (col < curLine.length() && curLine.charAt(col) == ' ') col++;
-                if (col < curLine.length() && curLine.charAt(col) != ')' && argIndex < paramLabels.size()) {
-                    String label = paramLabels.get(argIndex);
-                    int colon = label.indexOf(':');
-                    String name = (colon >= 0 ? label.substring(0, colon) : label).trim();
-                    boolean isActive = funcName.equals(activeFuncName) && argIndex == activeParamIdx;
-                    hints.add(new InlineHint(col, name + ": ", isActive));
-                }
+                if (col < curLine.length() && curLine.charAt(col) != ')' && argIndex < paramLabels.size())
+                    hints.add(paramHint(paramLabels, argIndex, col, funcName, activeFuncName, activeParamIdx));
             } else {
                 col++;
             }
         }
-
         return hints;
+    }
+
+    private static InlineHint paramHint(List<String> paramLabels, int argIndex, int col,
+                                        String funcName, String activeFuncName, int activeParamIdx) {
+        String label = paramLabels.get(argIndex);
+        int colon = label.indexOf(':');
+        String name = (colon >= 0 ? label.substring(0, colon) : label).trim();
+        return new InlineHint(col, name + ": ", funcName.equals(activeFuncName) && argIndex == activeParamIdx);
     }
 
     private List<Integer> findArgStartsInLine(String line, int start) {
@@ -636,7 +679,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         return line.length();
     }
 
-    private void renderHighlightedLine(GuiGraphics g, Font font,
+    private void renderHighlightedLine(Gfx g, Font font,
                                        String line, int lineStart,
                                        int x, int y, List<InlineHint> hints) {
         int lineEnd   = lineStart + line.length();
@@ -671,7 +714,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
     }
 
-    private int[] drawSegment(GuiGraphics g, Font font, String line,
+    private int[] drawSegment(Gfx g, Font font, String line,
                                int from, int to, int color,
                                List<InlineHint> hints, int hintPtr,
                                int curX, int y) {
@@ -723,41 +766,41 @@ public class SyntaxEditorWidget extends WidgetBase {
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
-        boolean ctrl  = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
-        boolean shift = (mods & GLFW.GLFW_MOD_SHIFT)   != 0;
+        boolean ctrl  = (mods & Keys.MOD_CONTROL) != 0;
+        boolean shift = (mods & Keys.MOD_SHIFT)   != 0;
 
         // The find bar only takes keys while one of its fields has focus; clicking the code gives
         // the editor its shortcuts (Ctrl+A, Ctrl+C, ...) back without closing the bar.
         if (fr.mode > 0 && fr.focused != FOCUS_CODE && handleFindBarKey(key, mods)) return true;
 
-        if (ctrl && key == GLFW.GLFW_KEY_F) { openFind(); return true; }
-        if (ctrl && key == GLFW.GLFW_KEY_R) { openReplace(); return true; }
+        if (ctrl && key == Keys.F) { openFind(); return true; }
+        if (ctrl && key == Keys.R) { openReplace(); return true; }
 
         if (!ctrl && !shift && activeSuggestions != null && activeSuggestions.length > 0) {
-            if (key == GLFW.GLFW_KEY_TAB)    { applySuggestion(); return true; }
-            if (key == GLFW.GLFW_KEY_UP)     { suggestionIndex = (suggestionIndex - 1 + activeSuggestions.length) % activeSuggestions.length; clampSuggestionScroll(); return true; }
-            if (key == GLFW.GLFW_KEY_DOWN)   { suggestionIndex = (suggestionIndex + 1) % activeSuggestions.length; clampSuggestionScroll(); return true; }
-            if (key == GLFW.GLFW_KEY_ESCAPE) { dismissSuggestions(); return true; }
+            if (key == Keys.TAB)    { applySuggestion(); return true; }
+            if (key == Keys.UP)     { suggestionIndex = (suggestionIndex - 1 + activeSuggestions.length) % activeSuggestions.length; clampSuggestionScroll(); return true; }
+            if (key == Keys.DOWN)   { suggestionIndex = (suggestionIndex + 1) % activeSuggestions.length; clampSuggestionScroll(); return true; }
+            if (key == Keys.ESCAPE) { dismissSuggestions(); return true; }
         }
 
         if (ctrl) {
             switch (key) {
-                case GLFW.GLFW_KEY_A -> { selectAll();           return true; }
-                case GLFW.GLFW_KEY_C -> { copySelection();       return true; }
-                case GLFW.GLFW_KEY_X -> { cutSelection();        return true; }
-                case GLFW.GLFW_KEY_V -> { pasteClipboard();      return true; }
-                case GLFW.GLFW_KEY_Z -> { if (shift) redo(); else undo(); return true; }
-                case GLFW.GLFW_KEY_Y -> { redo();                return true; }
-                case GLFW.GLFW_KEY_HOME  -> { moveCursor(0,             shift); return true; }
-                case GLFW.GLFW_KEY_END   -> { moveCursor(text.length(), shift); return true; }
-                case GLFW.GLFW_KEY_LEFT      -> { moveWordLeft(shift);       return true; }
-                case GLFW.GLFW_KEY_RIGHT     -> { moveWordRight(shift);      return true; }
-                case GLFW.GLFW_KEY_BACKSPACE -> { deleteWordBackward();       return true; }
+                case Keys.A -> { selectAll();           return true; }
+                case Keys.C -> { copySelection();       return true; }
+                case Keys.X -> { cutSelection();        return true; }
+                case Keys.V -> { pasteClipboard();      return true; }
+                case Keys.Z -> { if (shift) redo(); else undo(); return true; }
+                case Keys.Y -> { redo();                return true; }
+                case Keys.HOME  -> { moveCursor(0,             shift); return true; }
+                case Keys.END   -> { moveCursor(text.length(), shift); return true; }
+                case Keys.LEFT      -> { moveWordLeft(shift);       return true; }
+                case Keys.RIGHT     -> { moveWordRight(shift);      return true; }
+                case Keys.BACKSPACE -> { deleteWordBackward();       return true; }
             }
         }
 
         switch (key) {
-            case GLFW.GLFW_KEY_TAB -> {
+            case Keys.TAB -> {
                 if (hasSelection()) {
                     if (shift) dedentSelection(); else indentSelection();
                 } else {
@@ -765,18 +808,18 @@ public class SyntaxEditorWidget extends WidgetBase {
                 }
                 return true;
             }
-            case GLFW.GLFW_KEY_BACKSPACE -> { deleteBackward(); return true; }
-            case GLFW.GLFW_KEY_DELETE    -> { deleteForward();  return true; }
-            case GLFW.GLFW_KEY_ENTER,
-                 GLFW.GLFW_KEY_KP_ENTER  -> { insertChar('\n'); return true; }
-            case GLFW.GLFW_KEY_LEFT      -> { moveHoriz(-1, shift); return true; }
-            case GLFW.GLFW_KEY_RIGHT     -> { moveHoriz( 1, shift); return true; }
-            case GLFW.GLFW_KEY_UP        -> { moveVert(-1, shift);  return true; }
-            case GLFW.GLFW_KEY_DOWN      -> { moveVert( 1, shift);  return true; }
-            case GLFW.GLFW_KEY_HOME      -> { moveToLineEdge(true,  shift); return true; }
-            case GLFW.GLFW_KEY_END       -> { moveToLineEdge(false, shift); return true; }
-            case GLFW.GLFW_KEY_PAGE_UP   -> { moveVert(-visibleLines(), shift); return true; }
-            case GLFW.GLFW_KEY_PAGE_DOWN -> { moveVert( visibleLines(), shift); return true; }
+            case Keys.BACKSPACE -> { deleteBackward(); return true; }
+            case Keys.DELETE    -> { deleteForward();  return true; }
+            case Keys.ENTER,
+                 Keys.KP_ENTER  -> { insertChar('\n'); return true; }
+            case Keys.LEFT      -> { moveHoriz(-1, shift); return true; }
+            case Keys.RIGHT     -> { moveHoriz( 1, shift); return true; }
+            case Keys.UP        -> { moveVert(-1, shift);  return true; }
+            case Keys.DOWN      -> { moveVert( 1, shift);  return true; }
+            case Keys.HOME      -> { moveToLineEdge(true,  shift); return true; }
+            case Keys.END       -> { moveToLineEdge(false, shift); return true; }
+            case Keys.PAGE_UP   -> { moveVert(-visibleLines(), shift); return true; }
+            case Keys.PAGE_DOWN -> { moveVert( visibleLines(), shift); return true; }
         }
         return false;
     }
@@ -837,7 +880,25 @@ public class SyntaxEditorWidget extends WidgetBase {
         int errorH = errorBarH();
         int codeH  = height - errorH;
         List<String> lines = getLines();
-        int visLines = Math.max(1, (codeH - PAD_Y * 2) / LINE_H);
+        int visLines = visibleLines();
+
+        int maxScroll = maxScrollX();
+        if (maxScroll > 0 && btn == 0) {
+            int[] track = hsbTrack(codeH);
+            if (mx >= track[0] && mx < track[0] + track[2] && my >= track[1] - 2 && my <= track[1] + HSB_H + 2) {
+                int thumbW = hsbThumbWidth(track[2]);
+                int thumbX = track[0] + (track[2] - thumbW) * scrollX / maxScroll;
+                if (mx < thumbX || mx >= thumbX + thumbW) {
+                    int slideW = Math.max(1, track[2] - thumbW);
+                    scrollX = Math.max(0, Math.min(maxScroll, (int) ((mx - track[0] - thumbW / 2.0) * maxScroll / slideW)));
+                }
+                hsbDragging = true;
+                hsbDragStartX = (int) mx;
+                hsbDragStartScroll = scrollX;
+                return true;
+            }
+        }
+
         if (lines.size() > visLines) {
             int trackX = x0 + width - SB_W - SB_PAD;
             if (mx >= trackX - 2 && mx <= trackX + SB_W + 2 && my >= y0 && my < y0 + codeH) {
@@ -893,17 +954,25 @@ public class SyntaxEditorWidget extends WidgetBase {
                 selAnchor = pos;
             }
         }
-        updateSuggestions();
+        dismissSuggestions();
+        computeParamHint();
         return true;
     }
 
     @Override
     protected boolean onMouseDragged(double mx, double my, int btn, double dx, double dy) {
+        if (hsbDragging && btn == 0) {
+            int[] track = hsbTrack(height - errorBarH());
+            int slideW = track[2] - hsbThumbWidth(track[2]);
+            if (slideW > 0)
+                scrollX = Math.max(0, Math.min(maxScrollX(), hsbDragStartScroll + (int) (mx - hsbDragStartX) * maxScrollX() / slideW));
+            return true;
+        }
         if (sbDragging && btn == 0) {
             int errorH = errorBarH();
             int codeH  = height - errorH;
             List<String> lines = getLines();
-            int visLines = Math.max(1, (codeH - PAD_Y * 2) / LINE_H);
+            int visLines = visibleLines();
             int thumbH   = Math.max(8, codeH * visLines / lines.size());
             int maxOff   = Math.max(0, lines.size() - visLines);
             int slideH   = codeH - thumbH;
@@ -925,6 +994,7 @@ public class SyntaxEditorWidget extends WidgetBase {
 
     @Override
     protected boolean onMouseReleased(double mx, double my, int btn) {
+        if (hsbDragging && btn == 0) { hsbDragging = false; return true; }
         if (sbDragging && btn == 0) { sbDragging = false; return true; }
         return superMouseReleased(mx, my, btn);
     }
@@ -951,8 +1021,9 @@ public class SyntaxEditorWidget extends WidgetBase {
             return true;
         }
 
-        if (RenderHelper.hasShiftDown()) {
-            scrollX = Math.max(0, scrollX - (int) Math.signum(dy) * 20);
+        if (RenderHelper.hasShiftDown() || dx != 0) {
+            double amount = dx != 0 ? dx : dy;
+            scrollX = Math.max(0, Math.min(maxScrollX(), scrollX - (int) Math.signum(amount) * H_SCROLL_STEP));
             return true;
         }
         scrollLine = clampScrollLine(scrollLine - (int) Math.signum(dy),
@@ -1152,7 +1223,9 @@ public class SyntaxEditorWidget extends WidgetBase {
     private void onTextChanged() {
         lineCache   = null;
         offsetCache = null;
+        contentWidthCache = -1;
         rebuildSpans();
+        if (fr.mode > 0) updateFindMatches();
         updateSuggestions();
         if (onChange != null) onChange.run();
     }
@@ -1162,7 +1235,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         cursor = pos;
         if (!select) selAnchor = pos;
         ensureCursorVisible();
-        updateSuggestions();
+        refreshOpenSuggestions();
     }
 
     private void moveHoriz(int dir, boolean select) {
@@ -1170,6 +1243,7 @@ public class SyntaxEditorWidget extends WidgetBase {
             cursor    = dir < 0 ? Math.min(cursor, selAnchor) : Math.max(cursor, selAnchor);
             selAnchor = cursor;
             ensureCursorVisible();
+            refreshOpenSuggestions();
             return;
         }
         moveCursor(cursor + dir, select);
@@ -1314,15 +1388,16 @@ public class SyntaxEditorWidget extends WidgetBase {
         if (viewW < 20) viewW = 20;
         if (cursorPx < scrollX)              scrollX = cursorPx;
         if (cursorPx > scrollX + viewW - 4)  scrollX = cursorPx - viewW + 4;
-        if (scrollX < 0) scrollX = 0;
+        scrollX = Math.max(0, Math.min(scrollX, maxScrollX()));
     }
 
     private int clampScrollLine(int s, int lineCount, int vis) {
         return Math.max(0, Math.min(s, Math.max(0, lineCount - vis)));
     }
 
+    /** Lines that fit in the code area, leaving room for the horizontal scrollbar when it shows. */
     private int visibleLines() {
-        int codeH = height - errorBarH();
+        int codeH = height - errorBarH() - (maxScrollX() > 0 ? HSB_H + 1 : 0);
         return Math.max(1, (codeH - PAD_Y * 2) / LINE_H);
     }
 
@@ -1392,10 +1467,21 @@ public class SyntaxEditorWidget extends WidgetBase {
         suggPanelX             = -1;
     }
 
+    /** Recomputes the suggestion list while it's open (closing it if nothing matches); never opens it. */
+    private void refreshOpenSuggestions() {
+        if (activeSuggestions != null) updateSuggestions();
+        else computeParamHint();
+    }
+
     private void updateSuggestions() {
         String[] prev    = activeSuggestions;
         int      prevIdx = suggestionIndex;
         activeSuggestions = computeSuggestionsAtCursor();
+        // Nothing to offer when the only suggestion is exactly what's already typed.
+        if (activeSuggestions != null && activeSuggestions.length == 1 && !suggestionIsString
+                && suggestionTypedLen <= cursor
+                && text.substring(cursor - suggestionTypedLen, cursor).equals(activeSuggestions[0]))
+            activeSuggestions = null;
         if (activeSuggestions == null) {
             suggestionIndex        = 0;
             suggestionScrollOffset = 0;
@@ -1629,7 +1715,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         suggestionScrollOffset = Math.max(0, Math.min(maxOff, suggestionScrollOffset));
     }
 
-    private void renderSuggestions(GuiGraphics g, Font font, int x0, int y0, List<String> lines) {
+    private void renderSuggestions(Gfx g, Font font, int x0, int y0, List<String> lines) {
         UITheme t = NeoHouseConfig.get().uiTheme;
         if (activeSuggestions == null || activeSuggestions.length == 0 || !isFocused()) {
             suggPanelX = -1;
@@ -1655,8 +1741,9 @@ public class SyntaxEditorWidget extends WidgetBase {
         for (String s : activeSuggestions) panelW = Math.max(panelW, font.width(s) + 10);
         int panelH = maxVis * LINE_H + 4;
 
-        int px = Math.min(cx, x0 + width - panelW - 1);
-        int py = (cy + panelH > y0 + height) ? cy - panelH - LINE_H : cy;
+        int codeBottom = y0 + height - errorBarH();
+        int px = Math.max(x0 + GUTTER_W + 1, Math.min(cx, x0 + width - panelW - 1));
+        int py = (cy + panelH > codeBottom) ? Math.max(y0, cy - panelH - LINE_H) : cy;
 
         suggPanelX = px; suggPanelY = py; suggPanelW = panelW; suggPanelH = panelH;
 
@@ -1789,29 +1876,29 @@ public class SyntaxEditorWidget extends WidgetBase {
     }
 
     private boolean handleFindBarKey(int key, int mods) {
-        boolean shift = (mods & GLFW.GLFW_MOD_SHIFT)   != 0;
-        boolean ctrl  = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
+        boolean shift = (mods & Keys.MOD_SHIFT)   != 0;
+        boolean ctrl  = (mods & Keys.MOD_CONTROL) != 0;
 
-        if (key == GLFW.GLFW_KEY_ESCAPE) { closeFindBar(); return true; }
+        if (key == Keys.ESCAPE) { closeFindBar(); return true; }
 
-        if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
+        if (key == Keys.ENTER || key == Keys.KP_ENTER) {
             if (fr.focused == 1) { replaceOne(); return true; }
             if (shift) findPrev(); else findNext();
             return true;
         }
 
-        if (key == GLFW.GLFW_KEY_TAB && fr.mode == 2) {
+        if (key == Keys.TAB && fr.mode == 2) {
             fr.focused = 1 - fr.focused;
             return true;
         }
 
-        if (ctrl && key == GLFW.GLFW_KEY_H) { replaceAll(); return true; }
-        if (ctrl && key == GLFW.GLFW_KEY_F) { fr.focused = 0; fr.mode = Math.max(1, fr.mode); return true; }
-        if (ctrl && key == GLFW.GLFW_KEY_R) { fr.mode = 2; fr.focused = 1; return true; }
-        if (ctrl && key == GLFW.GLFW_KEY_C) { copyFindField(); return true; }
-        if (ctrl && key == GLFW.GLFW_KEY_X) { cutFindField(); return true; }
-        if (ctrl && key == GLFW.GLFW_KEY_V) { pasteFindField(); return true; }
-        if (ctrl && key == GLFW.GLFW_KEY_A) { selectAllFindField(); return true; }
+        if (ctrl && key == Keys.H) { replaceAll(); return true; }
+        if (ctrl && key == Keys.F) { fr.focused = 0; fr.mode = Math.max(1, fr.mode); return true; }
+        if (ctrl && key == Keys.R) { fr.mode = 2; fr.focused = 1; return true; }
+        if (ctrl && key == Keys.C) { copyFindField(); return true; }
+        if (ctrl && key == Keys.X) { cutFindField(); return true; }
+        if (ctrl && key == Keys.V) { pasteFindField(); return true; }
+        if (ctrl && key == Keys.A) { selectAllFindField(); return true; }
 
         StringBuilder active  = fr.focused == 0 ? fr.query    : fr.replace;
         int curVal             = fr.focused == 0 ? fr.cursor    : fr.replaceCursor;
@@ -1819,29 +1906,29 @@ public class SyntaxEditorWidget extends WidgetBase {
         boolean hasSel         = curVal != anchorVal;
         boolean changed        = false;
 
-        if (key == GLFW.GLFW_KEY_BACKSPACE) {
+        if (key == Keys.BACKSPACE) {
             if (hasSel) {
                 int lo = Math.min(curVal, anchorVal), hi = Math.max(curVal, anchorVal);
                 active.delete(lo, hi); curVal = lo; anchorVal = lo; changed = true;
             } else if (curVal > 0) {
                 active.deleteCharAt(curVal - 1); curVal--; anchorVal = curVal; changed = true;
             }
-        } else if (key == GLFW.GLFW_KEY_DELETE) {
+        } else if (key == Keys.DELETE) {
             if (hasSel) {
                 int lo = Math.min(curVal, anchorVal), hi = Math.max(curVal, anchorVal);
                 active.delete(lo, hi); curVal = lo; anchorVal = lo; changed = true;
             } else if (curVal < active.length()) {
                 active.deleteCharAt(curVal); changed = true;
             }
-        } else if (key == GLFW.GLFW_KEY_LEFT) {
+        } else if (key == Keys.LEFT) {
             if (!shift && hasSel) { curVal = Math.min(curVal, anchorVal); anchorVal = curVal; }
             else { curVal = ctrl ? findWordLeft(active, curVal) : Math.max(0, curVal - 1); if (!shift) anchorVal = curVal; }
-        } else if (key == GLFW.GLFW_KEY_RIGHT) {
+        } else if (key == Keys.RIGHT) {
             if (!shift && hasSel) { curVal = Math.max(curVal, anchorVal); anchorVal = curVal; }
             else { curVal = ctrl ? findWordRight(active, curVal) : Math.min(active.length(), curVal + 1); if (!shift) anchorVal = curVal; }
-        } else if (key == GLFW.GLFW_KEY_HOME) {
+        } else if (key == Keys.HOME) {
             curVal = 0; if (!shift) anchorVal = 0;
-        } else if (key == GLFW.GLFW_KEY_END) {
+        } else if (key == Keys.END) {
             curVal = active.length(); if (!shift) anchorVal = curVal;
         } else return false;
 
@@ -1936,7 +2023,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         return true;
     }
 
-    private void renderFindBar(GuiGraphics g, Font font) {
+    private void renderFindBar(Gfx g, Font font) {
         if (fr.mode == 0) return;
         UITheme t = NeoHouseConfig.get().uiTheme;
         int x0 = getX(), y0 = getY();
@@ -1981,7 +2068,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         }
     }
 
-    private void renderFindButton(GuiGraphics g, Font font, UITheme t, int bx, int by, int bw, String label) {
+    private void renderFindButton(Gfx g, Font font, UITheme t, int bx, int by, int bw, String label) {
         int bh = 11;
         g.fill(bx, by, bx + bw, by + bh, t.panel(0xFF));
         g.fill(bx, by, bx + bw, by + 1, t.accent());
@@ -1992,7 +2079,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         g.drawString(font, label, bx + (bw - lw) / 2, by + 2, 0xFFCCCCCC, false);
     }
 
-    private void renderFindField(GuiGraphics g, Font font, UITheme t,
+    private void renderFindField(Gfx g, Font font, UITheme t,
                                   int fx, int fy, int fieldW,
                                   StringBuilder value, int cur, int anchor, boolean focused, String placeholder) {
         g.fill(fx, fy, fx + fieldW, fy + FIND_FIELD_H, focused ? 0xFF2A2A3A : 0xFF222222);

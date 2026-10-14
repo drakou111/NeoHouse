@@ -1,6 +1,7 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
 import com.drakou111.neohouse.actions.Action;
+import com.drakou111.neohouse.compat.ContainerClicks;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import com.drakou111.neohouse.utils.SequenceManager;
@@ -9,7 +10,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -119,7 +119,7 @@ public class SearchAction extends Action {
             Slot slot = menu.getSlot(index);
             if (!matches(slot.getItem()) || mc.gameMode == null) continue;
 
-            mc.gameMode.handleInventoryMouseClick(menu.containerId, index, this.leftClick ? 0 : 1, ClickType.PICKUP, mc.player);
+            ContainerClicks.pickup(mc, menu.containerId, index, this.leftClick ? 0 : 1);
             this.step = Step.WAIT_FOUND;
             return;
         }
@@ -134,7 +134,7 @@ public class SearchAction extends Action {
             return;
         }
 
-        mc.gameMode.handleInventoryMouseClick(menu.containerId, arrow.index, 0, ClickType.PICKUP, mc.player);
+        ContainerClicks.pickup(mc, menu.containerId, arrow.index, 0);
         this.pageBeforeTurn = page;
         this.stepTicks = 0;
         this.step = Step.TURN_PAGE;

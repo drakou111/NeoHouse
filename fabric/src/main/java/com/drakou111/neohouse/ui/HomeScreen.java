@@ -1,16 +1,16 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.*;
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
-
-import com.drakou111.neohouse.*;
-import com.drakou111.neohouse.compat.PoseHelper;
-import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.platform.Platforms;
 import com.drakou111.neohouse.ui.hint.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
 
-public class HomeScreen extends Screen implements NeoHouseScreen {
+public class HomeScreen extends ScreenBase {
     private final Supplier<Path> scriptsDir;
     private final Random random = new Random();
     private String hintText = "";
@@ -97,7 +97,7 @@ public class HomeScreen extends Screen implements NeoHouseScreen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         UITheme t   = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
@@ -116,10 +116,10 @@ public class HomeScreen extends Screen implements NeoHouseScreen {
         String title = "NeoHouse";
         int titleW = font.width(title) * titleScale;
         int titleY = cardY + 10 + logoSize + 8;
-        PoseHelper.push(g);
-        PoseHelper.scale(g, titleScale, titleScale);
+        g.pushPose();
+        g.scale(titleScale, titleScale);
         g.drawString(font, title, (cx - titleW / 2) / titleScale, titleY / titleScale, 0xFFFFFFFF, false);
-        PoseHelper.pop(g);
+        g.popPose();
         int subtitleY = titleY + font.lineHeight * titleScale + 4;
         g.drawCenteredString(font, "Housing Script Compiler", cx, subtitleY, t.muted());
         int divW = cardW - 48;
@@ -127,30 +127,30 @@ public class HomeScreen extends Screen implements NeoHouseScreen {
         g.fill(cx - divW / 2, divY, cx + divW / 2, divY + 1, t.divider());
         String meta = getVersion() + " · by Drakou111 · " + BuildConstants.BUILD_DATE;
         g.drawCenteredString(font, meta, cx, divY + 4, t.accent());
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
         String disclaimer = "Not affiliated with Hypixel, Mojang, or Microsoft.";
         g.drawCenteredString(font, disclaimer, cx, cardY + cardH + 6, t.divider());
         g.drawCenteredString(font, hintText, cx, height - 14, t.divider());
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {
     }
 
     private void openFiles() {
-        minecraft.setScreen(new FileBrowserScreen(scriptsDir.get(), this));
+        ClientUi.setScreen(minecraft, new FileBrowserScreen(scriptsDir.get(), this));
     }
 
     private void openMusic() {
-        minecraft.setScreen(new MusicBrowserScreen(CommandActions.getMusicDir(), this));
+        ClientUi.setScreen(minecraft, new MusicBrowserScreen(CommandActions.getMusicDir(), this));
     }
 
     private void openHelp() {
-        minecraft.setScreen(new HelpScreen(this));
+        ClientUi.setScreen(minecraft, new HelpScreen(this));
     }
 
     private void openConfig() {
-        minecraft.setScreen(new ConfigScreen(this));
+        ClientUi.setScreen(minecraft, new ConfigScreen(this));
     }
 
     @Override

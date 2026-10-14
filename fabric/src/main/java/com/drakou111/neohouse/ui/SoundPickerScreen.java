@@ -1,5 +1,7 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -11,7 +13,6 @@ import com.drakou111.neohouse.music.SoundEventResolver;
 import com.drakou111.neohouse.music.SoundIcon;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -97,10 +98,10 @@ public class SoundPickerScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         UITheme t = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
@@ -120,10 +121,10 @@ public class SoundPickerScreen extends ScreenBase {
         renderList(g, mouseX, mouseY, t);
         renderScrollbar(g, t);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
     }
 
-    private void renderList(GuiGraphics g, int mouseX, int mouseY, UITheme t) {
+    private void renderList(Gfx g, int mouseX, int mouseY, UITheme t) {
         int listBottom = height - FOOTER_H - 2;
         int maxRows = maxVisibleRows();
         int end = Math.min(scrollOffset + maxRows, filtered.size());
@@ -147,7 +148,7 @@ public class SoundPickerScreen extends ScreenBase {
         }
     }
 
-    private void renderScrollbar(GuiGraphics g, UITheme t) {
+    private void renderScrollbar(Gfx g, UITheme t) {
         int total = filtered.size();
         int maxRows = maxVisibleRows();
         if (total <= maxRows) return;
@@ -257,11 +258,11 @@ public class SoundPickerScreen extends ScreenBase {
 
     private void confirm() {
         if (selected != null) onPick.accept(selected);
-        Minecraft.getInstance().setScreen(parent);
+        ClientUi.setScreen(Minecraft.getInstance(), parent);
     }
 
     private void cancel() {
-        Minecraft.getInstance().setScreen(parent);
+        ClientUi.setScreen(Minecraft.getInstance(), parent);
     }
 
     private int maxVisibleRows() {

@@ -55,6 +55,12 @@ sourceSets.main.java.srcDir(unobfuscated || itemApiVersions.contains(mcVer) ? 's
 def oldClickInv = mcVer in ['1.21.2', '1.21.3', '1.21.4']
 sourceSets.main.java.srcDir(oldClickInv ? 'src/compat/click_old' : 'src/compat/click_new')
 sourceSets.main.java.srcDir(oldClickInv ? 'src/compat/inv_field' : 'src/compat/inv_getter')
+// 26.1 renamed inventory clicks (ContainerInput) and the Fabric key, command and HUD APIs.
+sourceSets.main.java.srcDir(unobfuscated ? 'src/compat/api26' : 'src/compat/api121')
+// 26.2 moved the open screen and the tab list from Minecraft onto Gui.
+sourceSets.main.java.srcDir(unobfuscated && mcVer != '26.1' ? 'src/compat/client_new' : 'src/compat/client_old')
+// 26.3 replaced GLFW keyboard input with SDL: different key codes and no org.lwjgl.glfw.
+sourceSets.main.java.srcDir(unobfuscated && !(mcVer in ['26.1', '26.2']) ? 'src/compat/keys_sdl' : 'src/compat/keys_glfw')
 sourceSets.main.java.srcDir(
     unobfuscated                                     ? 'src/compat/mc261plus'   :
     mcVer == '1.21.11'                               ? 'src/compat/mc12111plus' :

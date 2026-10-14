@@ -1,22 +1,22 @@
 package com.drakou111.neohouse.ui;
 
-import com.drakou111.neohouse.config.NeoHouseConfig;
-import com.drakou111.neohouse.config.SyntaxTheme;
-import com.drakou111.neohouse.config.UIOpacity;
-import com.drakou111.neohouse.config.UITheme;
-
-import com.drakou111.neohouse.compat.PoseHelper;
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.Keys;
 import com.drakou111.neohouse.compat.RegistryHelper;
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.compiler.enums.ActionParamKind;
 import com.drakou111.neohouse.compiler.enums.VariableType;
+import com.drakou111.neohouse.config.NeoHouseConfig;
+import com.drakou111.neohouse.config.SyntaxTheme;
+import com.drakou111.neohouse.config.UIOpacity;
+import com.drakou111.neohouse.config.UITheme;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.AddCondition;
 import com.drakou111.neohouse.constants.Event;
 import com.drakou111.neohouse.constants.Placeholder;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -24,7 +24,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
@@ -671,7 +670,7 @@ public class HelpScreen extends ScreenBase {
 
     @Override
     protected void init() {
-        addRenderableWidget(Button.builder(Component.literal("< Back"), b -> minecraft.setScreen(parent))
+        addRenderableWidget(Button.builder(Component.literal("< Back"), b -> ClientUi.setScreen(minecraft, parent))
                 .bounds(PAD, 5, 52, 18).build());
         addRenderableWidget(Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), b -> onClose())
                 .bounds(this.width - PAD - 18, 5, 18, 18).build());
@@ -687,7 +686,7 @@ public class HelpScreen extends ScreenBase {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         UITheme t   = NeoHouseConfig.get().uiTheme;
         UIOpacity o = NeoHouseConfig.get().uiOpacity;
         g.fillGradient(0, 0, this.width, this.height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
@@ -712,7 +711,7 @@ public class HelpScreen extends ScreenBase {
         }
         g.fill(0, tabY + TAB_BTN_H, this.width, tabY + TAB_BTN_H + 1, t.accent());
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
 
         List<HelpLine> lines = TAB_LINES.get(activeTab);
         int scrollPx     = clampScroll(lines);
@@ -819,7 +818,7 @@ public class HelpScreen extends ScreenBase {
         renderScrollbar(g, totalHpx, scrollPx, listH, t);
     }
 
-    private void renderScrollbar(GuiGraphics g, int totalHpx, int scrollPx, int trackH, UITheme t) {
+    private void renderScrollbar(Gfx g, int totalHpx, int scrollPx, int trackH, UITheme t) {
         if (totalHpx <= trackH) return;
         int trackX = this.width - SB_W - SB_PAD;
         int trackY = CONTENT_Y;
@@ -840,17 +839,17 @@ public class HelpScreen extends ScreenBase {
         return cur;
     }
 
-    private void renderIcon(GuiGraphics g, String texture, int x, int y) {
+    private void renderIcon(Gfx g, String texture, int x, int y) {
         Item item = RegistryHelper.lookupItem(texture).orElse(Items.AIR);
         if (item == Items.AIR) return;
-        PoseHelper.push(g);
-        PoseHelper.translate(g, x, y);
-        PoseHelper.scale(g, 1.0f, 1.0f);
+        g.pushPose();
+        g.translate(x, y);
+        g.scale(1.0f, 1.0f);
         g.renderItem(new ItemStack(item), 0, 0);
-        PoseHelper.pop(g);
+        g.popPose();
     }
 
-    private void renderSyntaxLine(GuiGraphics g, String text, int x, int y) {
+    private void renderSyntaxLine(Gfx g, String text, int x, int y) {
         SyntaxTheme st = NeoHouseConfig.get().syntaxTheme;
         List<SyntaxHighlighter.Span> spList = highlighter.buildSpans(text);
         int curX = x;
@@ -910,7 +909,7 @@ public class HelpScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     protected boolean onMouseClicked(double mouseX, double mouseY, int button) {
@@ -1007,7 +1006,7 @@ public class HelpScreen extends ScreenBase {
 
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
-        if (key == GLFW.GLFW_KEY_C && (mods & GLFW.GLFW_MOD_CONTROL) != 0) {
+        if (key == Keys.C && (mods & Keys.MOD_CONTROL) != 0) {
             if (selTab == activeTab && selAnchorLine >= 0 && selHeadLine >= 0) {
                 int[] sel = normalizedSel();
                 if (sel[0] != sel[2] || sel[1] != sel[3]) {
@@ -1025,7 +1024,7 @@ public class HelpScreen extends ScreenBase {
                 }
             }
         }
-        if (key == GLFW.GLFW_KEY_ESCAPE && selAnchorLine >= 0) {
+        if (key == Keys.ESCAPE && selAnchorLine >= 0) {
             selAnchorLine = selHeadLine = -1;
             selTab = null;
             return true;
@@ -1034,12 +1033,12 @@ public class HelpScreen extends ScreenBase {
         List<HelpLine> lines = TAB_LINES.get(activeTab);
         int listH = this.height - CONTENT_Y - 4;
         switch (key) {
-            case GLFW.GLFW_KEY_UP        -> { scrollPos.put(activeTab, cur - LINE_H);            return true; }
-            case GLFW.GLFW_KEY_DOWN      -> { scrollPos.put(activeTab, cur + LINE_H);            return true; }
-            case GLFW.GLFW_KEY_PAGE_UP   -> { scrollPos.put(activeTab, cur - listH);             return true; }
-            case GLFW.GLFW_KEY_PAGE_DOWN -> { scrollPos.put(activeTab, cur + listH);             return true; }
-            case GLFW.GLFW_KEY_HOME      -> { scrollPos.put(activeTab, 0);                       return true; }
-            case GLFW.GLFW_KEY_END       -> { scrollPos.put(activeTab, totalH(lines));           return true; }
+            case Keys.UP        -> { scrollPos.put(activeTab, cur - LINE_H);            return true; }
+            case Keys.DOWN      -> { scrollPos.put(activeTab, cur + LINE_H);            return true; }
+            case Keys.PAGE_UP   -> { scrollPos.put(activeTab, cur - listH);             return true; }
+            case Keys.PAGE_DOWN -> { scrollPos.put(activeTab, cur + listH);             return true; }
+            case Keys.HOME      -> { scrollPos.put(activeTab, 0);                       return true; }
+            case Keys.END       -> { scrollPos.put(activeTab, totalH(lines));           return true; }
         }
         return superKeyPressed(key, scan, mods);
     }

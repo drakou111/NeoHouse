@@ -1,5 +1,9 @@
 package com.drakou111.neohouse.ui;
 
+import com.drakou111.neohouse.compat.ClientUi;
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.RenderHelper;
+import com.drakou111.neohouse.compat.ScreenBase;
 import com.drakou111.neohouse.config.GlobalCallMode;
 import com.drakou111.neohouse.config.MultiCallMode;
 import com.drakou111.neohouse.config.NeoHouseConfig;
@@ -8,12 +12,7 @@ import com.drakou111.neohouse.config.RecursionMode;
 import com.drakou111.neohouse.config.SyntaxTheme;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
-
-import com.drakou111.neohouse.compat.RenderHelper;
-import com.drakou111.neohouse.compat.ScreenBase;
-import com.drakou111.neohouse.compat.TooltipHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
@@ -467,9 +466,9 @@ public class ConfigScreen extends ScreenBase {
     }
 
     @Override
-    public void onClose() { save(); minecraft.setScreen(null); }
+    public void onClose() { save(); ClientUi.setScreen(minecraft, null); }
 
-    private void closeAndSave() { save(); minecraft.setScreen(parent); }
+    private void closeAndSave() { save(); ClientUi.setScreen(minecraft, parent); }
 
     private void save() {
         captureActiveTab();
@@ -505,7 +504,7 @@ public class ConfigScreen extends ScreenBase {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderScreen(Gfx g, int mouseX, int mouseY, float partialTick) {
         UITheme t = activeUITheme;
         UIOpacity o = activeOpacity;
         g.fillGradient(0, 0, width, height, t.bgTop(o.bgAlpha), t.bgBottom(o.bgAlpha));
@@ -577,7 +576,7 @@ public class ConfigScreen extends ScreenBase {
             drawDropBtn(g, DROP_MOB, mobDropY, mobLabel, t, mouseX, mouseY);
         }
 
-        super.render(g, mouseX, mouseY, partialTick);
+        renderWidgets(g, mouseX, mouseY, partialTick);
 
         if (openDropdown == DROP_SYNTAX) {
             String[] names = new String[SyntaxTheme.values().length];
@@ -608,11 +607,11 @@ public class ConfigScreen extends ScreenBase {
         }
 
         if (hoveredTip != null) {
-            TooltipHelper.render(g, font, hoveredTip, mouseX, mouseY);
+            g.tooltip(font, hoveredTip, mouseX, mouseY);
         }
     }
 
-    private void drawTabs(GuiGraphics g, UITheme t, int mx, int my) {
+    private void drawTabs(Gfx g, UITheme t, int mx, int my) {
         int tw = tabWidth();
         for (int i = 0; i < TAB_NAMES.length; i++) {
             int x = tabX(i);
@@ -628,7 +627,7 @@ public class ConfigScreen extends ScreenBase {
         g.fill(0, TAB_Y + TAB_H, width, TAB_Y + TAB_H + 1, t.divider());
     }
 
-    private void drawDropBtn(GuiGraphics g, int dropId, int y, String label, UITheme t, int mx, int my) {
+    private void drawDropBtn(Gfx g, int dropId, int y, String label, UITheme t, int mx, int my) {
         boolean hovered = hit(mx, my, widgetX, y, DROP_W, DROP_H);
         boolean open    = openDropdown == dropId;
         g.fill(widgetX, y, widgetX + DROP_W, y + DROP_H,
@@ -640,7 +639,7 @@ public class ConfigScreen extends ScreenBase {
         g.drawString(font, open ? "▲" : "▼", widgetX + DROP_W - 11, y + (DROP_H - 8) / 2, 0xFF888899, false);
     }
 
-    private void drawDropList(GuiGraphics g, int x, int y, String[] items, int selectedIdx,
+    private void drawDropList(Gfx g, int x, int y, String[] items, int selectedIdx,
                                int scroll, int maxRows, UITheme t, int mx, int my) {
         int visible = Math.min(maxRows, items.length);
         int listH   = visible * DROP_ITEM_H + 4;
@@ -664,7 +663,7 @@ public class ConfigScreen extends ScreenBase {
             g.drawString(font, "▼", x + DROP_W - 10, y + listH - 10, 0xFFAAAAAA, false);
     }
 
-    private void drawOpacitySlider(GuiGraphics g, UITheme t, int mx, int my) {
+    private void drawOpacitySlider(Gfx g, UITheme t, int mx, int my) {
         UIOpacity[] vals = UIOpacity.values();
         int trackMidY = sliderY + KNOB_H / 2;
         int knobX     = knobX();
@@ -691,7 +690,7 @@ public class ConfigScreen extends ScreenBase {
         return sliderX + activeOpacity.ordinal() * (sliderW - KNOB_W) / (vals.length - 1);
     }
 
-    private void renderPreview(GuiGraphics g, int x, int y, int w) {
+    private void renderPreview(Gfx g, int x, int y, int w) {
         g.fill(x, y, x + w, y + PREVIEW_H, 0xFF1A1A1A);
         RenderHelper.renderOutline(g, x, y, w, PREVIEW_H, activeUITheme.accent());
 
@@ -714,7 +713,7 @@ public class ConfigScreen extends ScreenBase {
         drawCodeLine(g, left, lineY, activeTheme.plain, "}");
     }
 
-    private void drawCodeLine(GuiGraphics g, int x, int y, Object... parts) {
+    private void drawCodeLine(Gfx g, int x, int y, Object... parts) {
         int cx = x;
         for (int i = 0; i < parts.length; i += 2) {
             int color = (int) parts[i];
@@ -725,7 +724,7 @@ public class ConfigScreen extends ScreenBase {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
+    public void renderScreenBackground(Gfx g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     public boolean isPauseScreen() { return false; }

@@ -2,6 +2,7 @@ package com.drakou111.neohouse.compiler;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.actiontypes.GroupAction;
+import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.exceptions.PermissionException;
 import com.drakou111.neohouse.utils.HousingCheck;
@@ -73,7 +74,7 @@ public class ScriptRunner {
         }
 
         Minecraft mc = Minecraft.getInstance();
-        if (mc.screen != null) mc.setScreen(null);
+        if (ClientUi.screen(mc) != null) ClientUi.setScreen(mc, null);
         SequenceManager.startAction(new GroupAction(List.of(scriptAction)));
     }
 

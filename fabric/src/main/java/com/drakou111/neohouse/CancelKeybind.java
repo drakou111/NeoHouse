@@ -1,17 +1,17 @@
 package com.drakou111.neohouse;
 
+import com.drakou111.neohouse.compat.FabricHooks;
 import com.drakou111.neohouse.compat.KeyMappingCompat;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import org.lwjgl.glfw.GLFW;
+import com.drakou111.neohouse.compat.Keys;
 
 public class CancelKeybind {
 
-    public static final KeyMappingCompat CANCEL_KEY = (KeyMappingCompat) KeyBindingHelper.registerKeyBinding(
-            new KeyMappingCompat("key.neohouse.cancel", GLFW.GLFW_KEY_K)
+    public static final KeyMappingCompat CANCEL_KEY = FabricHooks.registerKey(
+            new KeyMappingCompat("key.neohouse.cancel", Keys.K)
     );
 
-    public static final KeyMappingCompat OPEN_KEY = (KeyMappingCompat) KeyBindingHelper.registerKeyBinding(
-            new KeyMappingCompat("key.neohouse.open", GLFW.GLFW_KEY_N)
+    public static final KeyMappingCompat OPEN_KEY = FabricHooks.registerKey(
+            new KeyMappingCompat("key.neohouse.open", Keys.N)
     );
 
     public static void register() {

@@ -1,12 +1,11 @@
 package com.drakou111.neohouse.utils;
 
+import com.drakou111.neohouse.compat.Gfx;
+import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.UITheme;
-
-import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.platform.Platforms;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +28,7 @@ public class ScriptOverlayRenderer {
     private static final int MOB_SCALE_MAX      = 55;
     private static final int MOB_BOX_GAP        = 2;
 
-    public static void render(GuiGraphics gfx, Minecraft mc, int screenW, int screenH) {
+    public static void render(Gfx gfx, Minecraft mc, int screenW, int screenH) {
         if (!SequenceManager.isRunning()) {
             windowHead = 0;
             windowSize = 0;
@@ -106,7 +105,7 @@ public class ScriptOverlayRenderer {
         renderScriptMob(gfx, mc, x + boxW / 2, y, now);
     }
 
-    private static void renderScriptMob(GuiGraphics gfx, Minecraft mc, int centerX, int boxTopY, long now) {
+    private static void renderScriptMob(Gfx gfx, Minecraft mc, int centerX, int boxTopY, long now) {
         NeoHouseConfig cfg = NeoHouseConfig.get();
         if (!cfg.showScriptMob || mc.level == null) return;
 

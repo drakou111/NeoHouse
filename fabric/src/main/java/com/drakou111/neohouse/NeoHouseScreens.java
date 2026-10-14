@@ -1,5 +1,6 @@
 package com.drakou111.neohouse;
 
+import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.ui.HomeScreen;
 import com.drakou111.neohouse.ui.InputDialogScreen;
 import com.drakou111.neohouse.ui.NeoHouseScreen;
@@ -17,7 +18,7 @@ public final class NeoHouseScreens {
 
     /** Call every client tick: remember the current screen while it's a NeoHouse menu. */
     public static void track() {
-        Screen current = Minecraft.getInstance().screen;
+        Screen current = ClientUi.screen(Minecraft.getInstance());
         // Skip transient input/confirm dialogs - they aren't a place worth restoring to.
         if (current instanceof NeoHouseScreen && !(current instanceof InputDialogScreen)) lastScreen = current;
     }
@@ -34,8 +35,8 @@ public final class NeoHouseScreens {
     public static void openOrRestore() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        if (mc.screen instanceof NeoHouseScreen) return;
+        if (ClientUi.screen(mc) instanceof NeoHouseScreen) return;
         Screen target = lastScreen != null ? lastScreen : new HomeScreen(CommandActions::getScriptsDir);
-        mc.setScreen(target);
+        ClientUi.setScreen(mc, target);
     }
 }
