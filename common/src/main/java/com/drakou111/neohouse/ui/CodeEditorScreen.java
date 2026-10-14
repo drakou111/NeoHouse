@@ -6,6 +6,7 @@ import com.drakou111.neohouse.config.UITheme;
 
 import com.drakou111.neohouse.compat.RenderHelper;
 import com.drakou111.neohouse.compat.ScreenBase;
+import com.drakou111.neohouse.NeoHouseScreens;
 import com.drakou111.neohouse.compiler.CompilerSession;
 import com.drakou111.neohouse.compiler.ScriptRunner;
 import com.drakou111.neohouse.compiler.ImportGraph;
@@ -31,6 +32,13 @@ public class CodeEditorScreen extends ScreenBase {
     private static final CompilerSession CHECKER = new CompilerSession();
 
     private static final int HEADER_H = 28;
+    private static final int BACK_X = 6;
+    private static final int BACK_W = 46;
+    private static final int LOGO_SIZE = 14;
+    private static final int HEADER_GAP = 4;
+    // Save, Save & Run and Close, with their gaps.
+    private static final int RIGHT_BUTTONS_W = 186;
+    private static final String DIRTY_MARK = "* ";
 
     private final Path   filePath;
     private final Screen parent;
@@ -59,13 +67,13 @@ public class CodeEditorScreen extends ScreenBase {
         int by = (HEADER_H - bh) / 2;
 
         saveBtn = addRenderableWidget(Button.builder(Component.literal("Save"), btn -> save())
-                .bounds(rx - 186, by, 46, bh).build());
+                .bounds(rx - RIGHT_BUTTONS_W, by, 46, bh).build());
         addRenderableWidget(Button.builder(Component.literal("Save & Run"), btn -> saveAndRun())
                 .bounds(rx - 136, by, 76, bh).build());
         addRenderableWidget(Button.builder(Component.literal("Close"), btn -> onClose())
                 .bounds(rx - 56, by, 56, bh).build());
         addRenderableWidget(Button.builder(Component.literal("< Back"), btn -> goBack())
-                .bounds(6, by, 46, bh).build());
+                .bounds(BACK_X, by, BACK_W, bh).build());
 
         editor = new SyntaxEditorWidget(4, HEADER_H + 2, this.width - 8, this.height - HEADER_H - 5);
         editor.setOnChange(() -> { scheduleCheck(); updateSaveBtn(); });
@@ -273,7 +281,9 @@ public class CodeEditorScreen extends ScreenBase {
                     "Unsaved changes. Discard?",
                     this,
                     () -> {
+                        // Reopening NeoHouse shows the file browser, not this editor with the discarded changes.
                         pendingContent = null;
+                        NeoHouseScreens.remember(parent);
                         closeToGame();
                     }
             ));
@@ -290,15 +300,22 @@ public class CodeEditorScreen extends ScreenBase {
         g.fill(0, 0, this.width, HEADER_H,    t.panel(o.panelAlpha));
         g.fill(0, HEADER_H, this.width, HEADER_H + 1, t.accent());
 
-        RenderHelper.renderLogo(g, 4, (HEADER_H - 14) / 2, 14, t.accent());
+        // Header, left to right: Back button, logo, file name; the name stops before the Save buttons.
+        int logoX = BACK_X + BACK_W + HEADER_GAP;
+        RenderHelper.renderLogo(g, logoX, (HEADER_H - LOGO_SIZE) / 2, LOGO_SIZE, t.accent());
 
         boolean dirty = isDirty();
-        String indicator = dirty ? "● " : "";
-        int indicatorColor = dirty ? 0xFFFF9944 : t.accent();
-        g.drawString(this.font, indicator, 52, (HEADER_H - 8) / 2, indicatorColor, false);
-        int nameX = 52 + (dirty ? font.width("● ") : 0);
-        g.drawString(this.font, filePath.getFileName().toString(), nameX, (HEADER_H - 8) / 2,
-                dirty ? 0xFFDDCCBB : 0xFFCCCCCC, false);
+        int textX = logoX + LOGO_SIZE + HEADER_GAP;
+        int textY = (HEADER_H - 8) / 2;
+        if (dirty) {
+            g.drawString(this.font, DIRTY_MARK, textX, textY, 0xFFFF9944, false);
+            textX += font.width(DIRTY_MARK);
+        }
+        int maxNameWidth = Math.max(0, this.width - 6 - RIGHT_BUTTONS_W - HEADER_GAP - textX);
+        String name = filePath.getFileName().toString();
+        if (font.width(name) > maxNameWidth)
+            name = font.plainSubstrByWidth(name, Math.max(0, maxNameWidth - font.width("..."))) + "...";
+        g.drawString(this.font, name, textX, textY, dirty ? 0xFFDDCCBB : 0xFFCCCCCC, false);
 
         super.render(g, mouseX, mouseY, partialTick);
     }

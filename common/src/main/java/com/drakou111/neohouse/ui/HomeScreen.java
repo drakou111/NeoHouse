@@ -28,7 +28,7 @@ public class HomeScreen extends Screen implements NeoHouseScreen {
 
     private static final List<HintProvider> HINTS = List.of(
             new TipHint("g. variables are shared by everyone, p. variables are per-player, t[team]. is per-team."),
-            new TipHint("Mark a function 'const' so it isn't overwritten when you re-run a script."),
+            new TipHint("By default, re-running a script only fills functions, commands and menus that are still empty."),
             new TipHint("random [ ... ] runs one block at random — weight an option with N*, like 3*{ ... }."),
             new TipHint("repeat(N) { ... } copies its body N times at compile time."),
             new TipHint("Split large scripts across files with: import \"lib/utils.nh\";"),

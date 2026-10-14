@@ -22,6 +22,11 @@ public final class NeoHouseScreens {
         if (current instanceof NeoHouseScreen && !(current instanceof InputDialogScreen)) lastScreen = current;
     }
 
+    /** Makes {@code screen} the one the keybind restores, e.g. after leaving another screen for good. */
+    public static void remember(Screen screen) {
+        lastScreen = screen;
+    }
+
     /**
      * Open NeoHouse via the keybind. If a NeoHouse menu is already open, do nothing.
      * Otherwise restore the last menu the player had open, or the home page if none.

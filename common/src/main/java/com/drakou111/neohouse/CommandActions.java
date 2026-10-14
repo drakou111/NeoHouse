@@ -65,11 +65,16 @@ public final class CommandActions {
         return 1;
     }
 
-    public static int openHome()   { return openScreen(() -> new HomeScreen(CommandActions::getScriptsDir)); }
-    public static int openFiles()  { return openScreen(() -> new FileBrowserScreen(getScriptsDir())); }
-    public static int openMusic()  { return openScreen(() -> new MusicBrowserScreen(getMusicDir())); }
-    public static int openHelp()   { return openScreen(() -> new HelpScreen(null)); }
-    public static int openConfig() { return openScreen(() -> new ConfigScreen(null)); }
+    // Screens opened by command get the home page as parent, so their Back button leads somewhere.
+    public static int openHome()   { return openScreen(CommandActions::home); }
+    public static int openFiles()  { return openScreen(() -> new FileBrowserScreen(getScriptsDir(), home())); }
+    public static int openMusic()  { return openScreen(() -> new MusicBrowserScreen(getMusicDir(), home())); }
+    public static int openHelp()   { return openScreen(() -> new HelpScreen(home())); }
+    public static int openConfig() { return openScreen(() -> new ConfigScreen(home())); }
+
+    private static HomeScreen home() {
+        return new HomeScreen(CommandActions::getScriptsDir);
+    }
 
     public static int handleNuke() {
         if (noPlayer()) return 0;
