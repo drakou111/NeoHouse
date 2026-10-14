@@ -36,7 +36,7 @@
 - More reliable menu searches and anvil input.
 - Chat error messages: one line per message, offending token highlighted inline.
 - Housing limits (300 functions, 50 commands, 200 menus): compile error when a script alone exceeds them, run stops when existing + new would.
-- `%` and `%=`.
+- `%` and `%=` (long or double operands only; a `var` must be cast first).
 - Shift+click selection in the editor.
 - Find bar no longer steals Ctrl+A and other shortcuts once the code is clicked.
 - Cleaned up messages; no em dashes or other non-ASCII punctuation.

@@ -518,7 +518,10 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
      */
     private List<StatementNode> lowerModulo(VariableNode target, NormalExpressionNode divisor, Token token) {
         for (VariableType type : List.of(target.type, divisor.type)) {
-            if (type == VariableType.STRING || type == VariableType.BOOL)
+            // The lowering differs for longs and doubles, so an untyped var can't be lowered.
+            if (type == VariableType.VAR)
+                throw new SemanticException(token, "'%' needs long or double operands, not var; cast it with (long) or (double)");
+            if (type != VariableType.LONG && type != VariableType.DOUBLE)
                 throw new SemanticException(token, "'%' needs long or double operands, got " + type);
         }
         boolean isDouble = target.type == VariableType.DOUBLE || divisor.type == VariableType.DOUBLE;

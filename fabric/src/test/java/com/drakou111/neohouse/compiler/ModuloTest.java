@@ -74,4 +74,23 @@ class ModuloTest {
     void moduloOfStringsIsRejected() {
         assertThatThrownBy(() -> loweredBody("string p.s;", "p.s %= \"x\";")).isInstanceOf(CompilingException.class);
     }
+
+    @Test
+    void moduloAssignmentOnVarIsRejected() {
+        assertThatThrownBy(() -> loweredBody("var p.v;", "p.v %= 3;"))
+                .isInstanceOf(CompilingException.class)
+                .hasMessageContaining("not var");
+    }
+
+    @Test
+    void moduloWithVarOperandIsRejected() {
+        assertThatThrownBy(() -> loweredBody("long p.a; var p.v;", "p.a = p.a % p.v;"))
+                .isInstanceOf(CompilingException.class)
+                .hasMessageContaining("not var");
+    }
+
+    @Test
+    void castVarCanBeUsedWithModulo() {
+        assertThat(loweredBody("long p.r; var p.v;", "p.r = (long) p.v % 3;")).endsWith("r ASSIGN t$0");
+    }
 }
