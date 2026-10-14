@@ -23,6 +23,7 @@ import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     private static final String TEMP_MARKER = "t$";
@@ -70,6 +71,9 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
             } else {
                 throw new SemanticException(bin.token, "Type mismatch in binary expression: left is " + leftType + ", right is " + rightType);
             }
+
+            Optional<ConstantPrimitiveNode> folded = ConstantFolding.fold(bin.operator, leftRes.simple, rightRes.simple, bin.token);
+            if (folded.isPresent()) return new LowerResult(folded.get(), stmts);
 
             VariableNode accVar;
             boolean reuseLeft = leftRes.simple instanceof VariableNode lv0 && isTempVar(lv0);
@@ -126,6 +130,8 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                     if (un.operand.type == VariableType.STRING) {
                         throw new SemanticException(un.token, "Cannot cast STRING to LONG");
                     }
+                    Optional<ConstantPrimitiveNode> constant = ConstantFolding.cast(opRes.simple(), VariableType.LONG, un.token);
+                    if (constant.isPresent()) return new LowerResult(constant.get(), stmts);
                     // Apply L suffix to the source so the assignment reads it as a long.
                     // t$ temps are single-use and safe to mutate; user variables get a copy
                     // to avoid polluting other references to the same VariableNode.
@@ -150,6 +156,8 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                     if (un.operand.type == VariableType.STRING) {
                         throw new SemanticException(un.token, "Cannot cast STRING to DOUBLE");
                     }
+                    Optional<ConstantPrimitiveNode> constant = ConstantFolding.cast(opRes.simple(), VariableType.DOUBLE, un.token);
+                    if (constant.isPresent()) return new LowerResult(constant.get(), stmts);
                     boolean reuse = opRes.simple() instanceof VariableNode rv && isTempVar(rv);
                     VariableNode result;
                     if (reuse) {
