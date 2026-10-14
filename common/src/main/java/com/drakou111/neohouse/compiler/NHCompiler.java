@@ -116,6 +116,8 @@ public class NHCompiler implements Compiler {
         ActionRestrictionVisitor actionRestrictionVisitor = new ActionRestrictionVisitor();
         node = actionRestrictionVisitor.analyze(node);
 
+        HousingLimitCheck.check(node);
+
         lastExtraVariables = new ExtraVariableCollectorVisitor().collect(node);
         return node;
     }

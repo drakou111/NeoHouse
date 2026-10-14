@@ -42,3 +42,4 @@ versions/
 # local working folders
 scratch/
 output/
+logs/

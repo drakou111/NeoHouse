@@ -8,8 +8,8 @@ import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 public class VoidFunctionNode extends FunctionNode {
     public final ParameterListNode parameters;
 
-    public VoidFunctionNode(final String name, final String description, final String icon, ParameterListNode parameters, final StatementListNode statements, final boolean isConst, final Token token) {
-        super(name, description, icon, statements, isConst, token);
+    public VoidFunctionNode(final String name, final String description, final String icon, ParameterListNode parameters, final StatementListNode statements, final Token token) {
+        super(name, description, icon, statements, token);
         this.parameters = parameters;
         this.token = token;
     }

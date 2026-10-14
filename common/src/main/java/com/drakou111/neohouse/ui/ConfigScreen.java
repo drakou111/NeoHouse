@@ -521,7 +521,7 @@ public class ConfigScreen extends ScreenBase {
         if (activeTab == TAB_COMPILER) {
             g.drawString(font, "Override on run:", PAD, overrideLabelY, 0xFFCCCCCC);
             if (hit(mouseX, mouseY, PAD, overrideLabelY - 2, LABEL_W, 13))
-                hoveredTip = "Always Override: recreate all functions/events/commands/menus from scratch. Never Override: skip everything that already exists. Skip Const: only skip items marked with the 'const' keyword.";
+                hoveredTip = "Always Override: recreate all functions, events, commands and menus from scratch. Never Override: skip everything that already exists. Override If Empty: fill existing ones only when they have no content yet.";
             drawDropBtn(g, DROP_OVERRIDE, overrideDropY, activeOverrideMode.displayName, t, mouseX, mouseY);
 
             g.drawString(font, "Multi-call mode:", PAD, multiCallLabelY, 0xFFCCCCCC);

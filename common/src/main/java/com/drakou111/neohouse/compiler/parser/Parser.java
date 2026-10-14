@@ -130,30 +130,19 @@ public class Parser {
 
         while (!isAtEnd()) {
             if (check(TokenType.FUNCTION)) {
-                nodes.add(parseFunction(false));
+                nodes.add(parseFunction());
             } else if (check(TokenType.LOOP)) {
-                nodes.add(parseLoop(false));
+                nodes.add(parseLoop());
             } else if (check(TokenType.EVENT)) {
-                nodes.add(parseEvent(false));
+                nodes.add(parseEvent());
             } else if (check(TokenType.COMMAND)) {
-                nodes.add(parseCommand(false));
+                nodes.add(parseCommand());
             } else if (check(TokenType.MENU)) {
-                nodes.add(parseMenu(false));
+                nodes.add(parseMenu());
             } else if (check(TokenType.ENUM)) {
                 parseEnumDeclaration();
             } else if (check(TokenType.CONST)) {
-                TokenType nextType = (pos + 1 < tokens.size()) ? tokens.get(pos + 1).type : TokenType.EOF;
-                if (nextType == TokenType.FUNCTION || nextType == TokenType.LOOP || nextType == TokenType.EVENT
-                        || nextType == TokenType.COMMAND || nextType == TokenType.MENU) {
-                    advance(); // consume 'const'
-                    if      (check(TokenType.FUNCTION)) nodes.add(parseFunction(true));
-                    else if (check(TokenType.LOOP))     nodes.add(parseLoop(true));
-                    else if (check(TokenType.EVENT))    nodes.add(parseEvent(true));
-                    else if (check(TokenType.COMMAND))  nodes.add(parseCommand(true));
-                    else                                nodes.add(parseMenu(true));
-                } else {
-                    parseConstDeclaration();
-                }
+                parseConstDeclaration();
             } else if (isType(peek()) || isEnumType(peek())) {
                 nodes.add(parseGlobalDeclaration());
             } else {
@@ -164,7 +153,7 @@ public class Parser {
         return new MainNode(nodes);
     }
 
-    public EventNode parseEvent(boolean isConst) {
+    public EventNode parseEvent() {
         Token eventToken = consume(TokenType.EVENT, "Expected 'event' keyword");
 
         Token nameToken = consume(TokenType.IDENT, "Expected event name");
@@ -184,10 +173,10 @@ public class Parser {
 
         consume(TokenType.RBRACE, "Expected '}' after event body");
 
-        return new EventNode(event, new StatementListNode(body), isConst, eventToken);
+        return new EventNode(event, new StatementListNode(body), eventToken);
     }
 
-    public FunctionNode parseFunction(boolean isConst) {
+    public FunctionNode parseFunction() {
         Token functionToken = consume(TokenType.FUNCTION, "Expected 'function' keyword");
 
         VariableType returnType = null;
@@ -278,11 +267,11 @@ public class Parser {
         ParameterListNode parameterList = new ParameterListNode(parameters);
 
         if (tupleReturnTypes != null) {
-            return new TupleFunctionNode(functionName, description, icon, tupleReturnTypes, parameterList, bodyList, isConst, functionToken);
+            return new TupleFunctionNode(functionName, description, icon, tupleReturnTypes, parameterList, bodyList, functionToken);
         } else if (returnType == null) {
-            return new VoidFunctionNode(functionName, description, icon, parameterList, bodyList, isConst, functionToken);
+            return new VoidFunctionNode(functionName, description, icon, parameterList, bodyList, functionToken);
         } else {
-            return new TypedFunctionNode(functionName, description, icon, returnType, parameterList, bodyList, isConst, functionToken);
+            return new TypedFunctionNode(functionName, description, icon, returnType, parameterList, bodyList, functionToken);
         }
     }
 
@@ -520,7 +509,7 @@ public class Parser {
         return a;
     }
 
-    public LoopNode parseLoop(boolean isConst) {
+    public LoopNode parseLoop() {
         Token loopToken = consume(TokenType.LOOP, "Expected 'loop' keyword");
 
         String name = consume(TokenType.IDENT, "Expected loop name").text;
@@ -551,10 +540,10 @@ public class Parser {
 
         consume(TokenType.RBRACE, "Expected '}' after loop body");
 
-        return new LoopNode(name, description, icon, new StatementListNode(body), delay, isConst, loopToken);
+        return new LoopNode(name, description, icon, new StatementListNode(body), delay, loopToken);
     }
 
-    public CommandNode parseCommand(boolean isConst) {
+    public CommandNode parseCommand() {
         Token cmdToken = consume(TokenType.COMMAND, "Expected 'command' keyword");
         Token nameToken = consume(TokenType.IDENT, "Expected command name");
         if (nameToken.text.length() < 3)
@@ -602,10 +591,10 @@ public class Parser {
         }
         consume(TokenType.RBRACE, "Expected '}' after command body");
 
-        return new CommandNode(name, targeted, priority, listed, new StatementListNode(body), isConst, cmdToken);
+        return new CommandNode(name, targeted, priority, listed, new StatementListNode(body), cmdToken);
     }
 
-    public MenuNode parseMenu(boolean isConst) {
+    public MenuNode parseMenu() {
         Token menuToken = consume(TokenType.MENU, "Expected 'menu' keyword");
         Token nameToken = consume(TokenType.IDENT, "Expected menu name");
         String name = nameToken.text;
@@ -650,7 +639,7 @@ public class Parser {
         }
 
         consume(TokenType.RBRACE, "Expected '}' after menu body");
-        return new MenuNode(name, rows, slots, isConst, menuToken);
+        return new MenuNode(name, rows, slots, menuToken);
     }
 
     public StatementNode parseStatement() {

@@ -12,6 +12,10 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+
 public class SearchAction extends Action {
     private final int[] primarySlots;
     private final String targetName;
@@ -201,5 +205,10 @@ public class SearchAction extends Action {
         lastNonEmptyCount = -1;
         stableTicks      = 0;
         totalSearchTicks = 0;
+    }
+
+    @Override
+    public List<Action> getChildren() {
+        return Stream.of(this.onFound, this.onNotFound).filter(Objects::nonNull).toList();
     }
 }

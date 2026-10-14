@@ -374,8 +374,7 @@ public class FunctionDeduplicationVisitor {
                 VoidFunctionNode orig = voidDefs.get(baseName);
                 for (String copyName : names) {
                     VoidFunctionNode copy = new VoidFunctionNode(
-                            copyName, orig.description, orig.icon, orig.parameters, orig.statements,
-                            orig.isConst, orig.token);
+                            copyName, orig.description, orig.icon, orig.parameters, orig.statements, orig.token);
                     extraVoidCopies.add(copy);
                 }
             } else if (typedDefs.containsKey(baseName)) {
@@ -383,7 +382,7 @@ public class FunctionDeduplicationVisitor {
                 for (String copyName : names) {
                     TypedFunctionNode copy = new TypedFunctionNode(
                             copyName, orig.description, orig.icon, orig.returnType, orig.parameters,
-                            orig.statements, orig.isConst, orig.token);
+                            orig.statements, orig.token);
                     extraTypedCopies.add(copy);
                 }
             }
@@ -534,26 +533,26 @@ public class FunctionDeduplicationVisitor {
                                                     Map<String, Map<String, Integer>> profiles) {
         if (stmt instanceof EventNode ev) {
             StatementListNode body = rewriteBody(ev.statements, copyNames, profiles);
-            return new EventNode(ev.event, body, ev.isConst, ev.token);
+            return new EventNode(ev.event, body, ev.token);
         } else if (stmt instanceof CommandNode cmd) {
             StatementListNode body = rewriteBody(cmd.statements, copyNames, profiles);
-            return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.isConst, cmd.token);
+            return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.token);
         } else if (stmt instanceof LoopNode loop) {
             StatementListNode body = rewriteBody(loop.statements, copyNames, profiles);
-            return new LoopNode(loop.name, loop.description, loop.icon, body, loop.tickDelay, loop.isConst, loop.token);
+            return new LoopNode(loop.name, loop.description, loop.icon, body, loop.tickDelay, loop.token);
         } else if (stmt instanceof MenuNode menu) {
             List<SlotNode> slots = new ArrayList<>();
             for (SlotNode slot : menu.slots) {
                 StatementListNode body = rewriteBody(slot.statements, copyNames, profiles);
                 slots.add(new SlotNode(slot.slotId, slot.item, body, slot.token));
             }
-            return new MenuNode(menu.name, menu.rows, slots, menu.isConst, menu.token);
+            return new MenuNode(menu.name, menu.rows, slots, menu.token);
         } else if (stmt instanceof VoidFunctionNode vf) {
             StatementListNode body = rewriteBody(vf.statements, copyNames, profiles);
-            return new VoidFunctionNode(vf.name, vf.description, vf.icon, vf.parameters, body, vf.isConst, vf.token);
+            return new VoidFunctionNode(vf.name, vf.description, vf.icon, vf.parameters, body, vf.token);
         } else if (stmt instanceof TypedFunctionNode tf) {
             StatementListNode body = rewriteBody(tf.statements, copyNames, profiles);
-            return new TypedFunctionNode(tf.name, tf.description, tf.icon, tf.returnType, tf.parameters, body, tf.isConst, tf.token);
+            return new TypedFunctionNode(tf.name, tf.description, tf.icon, tf.returnType, tf.parameters, body, tf.token);
         }
         return stmt;
     }

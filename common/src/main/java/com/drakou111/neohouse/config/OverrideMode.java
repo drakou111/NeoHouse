@@ -3,7 +3,7 @@ package com.drakou111.neohouse.config;
 public enum OverrideMode {
     ALWAYS("Always Override"),
     NEVER("Never Override"),
-    SKIP_CONST("Skip Const");
+    IF_EMPTY("Override If Empty");
 
     public final String displayName;
 
@@ -13,6 +13,6 @@ public enum OverrideMode {
 
     public static OverrideMode byId(String id) {
         for (OverrideMode m : values()) if (m.name().equals(id)) return m;
-        return SKIP_CONST;
+        return IF_EMPTY;
     }
 }

@@ -36,13 +36,10 @@ public class MovementFactory {
     }
 
 
-    // Creates (or recreates) a command with the given settings, ending with an open screen.
-    public static Action goAndRecreateCommand(String name, boolean targeted, int priority, boolean listed) {
+    // Adds a command to the open Commands list and applies its settings.
+    public static Action createCommand(String name, boolean targeted, int priority, boolean listed) {
         boolean needsConfigure = targeted || priority != 0 || !listed;
         return new ActionBuilder()
-                .closeAll()
-                .sendChatAndWait(Commands.COMMANDS)
-                .removeCommandIfPresent(name)
                 .anvilInput(name, Others.GENERAL_ADD_H6)
                 .onlyIf(needsConfigure, () -> new ActionBuilder()
                         .gotoCommand(true, name, false)
@@ -53,22 +50,27 @@ public class MovementFactory {
                         .onlyIf(!listed, () -> new ActionBuilder()
                                 .search(CommandInputs.LISTED))
                 )
+                .closeAll()
                 .get();
     }
 
-    // Creates (or recreates) a custom menu with the given name and row count.
-    public static Action goAndRecreateMenu(String name, int rows) {
+    // Adds a custom menu to the open Custom Menus list and gives it the requested size.
+    public static Action createMenu(String name, int rows) {
+        return new ActionBuilder()
+                .anvilInput(name, Others.GENERAL_ADD_H6)
+                .onlyIf(rows != 1, () -> new ActionBuilder().append(setMenuSize(name, rows)))
+                .closeAll()
+                .get();
+    }
+
+    // Opens a custom menu's settings and changes its row count.
+    public static Action setMenuSize(String name, int rows) {
         String rowsLabel = rows == 1 ? "1 Row" : rows + " Rows";
         return new ActionBuilder()
+                .gotoCustomMenu(name, true)
+                .search(CustomMenuInputs.CHANGE_SIZE)
+                .search(rowsLabel)
                 .closeAll()
-                .sendChatAndWait(Commands.CUSTOM_MENUS)
-                .removeMenuIfPresent(name)
-                .anvilInput(name, Others.GENERAL_ADD_H6)
-                .onlyIf(rows != 1, () -> new ActionBuilder()
-                        .gotoCustomMenu(name, true)
-                        .search(CustomMenuInputs.CHANGE_SIZE)
-                        .search(rowsLabel)
-                )
                 .get();
     }
 

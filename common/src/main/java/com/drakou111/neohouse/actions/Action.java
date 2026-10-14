@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.actions;
 
+import java.util.List;
 import net.minecraft.client.Minecraft;
 
 public abstract class Action {
@@ -20,5 +21,10 @@ public abstract class Action {
 
     public boolean isContainer() {
         return false;
+    }
+
+    /** Nested actions this action may run, for inspecting a generated action tree. */
+    public List<Action> getChildren() {
+        return List.of();
     }
 }

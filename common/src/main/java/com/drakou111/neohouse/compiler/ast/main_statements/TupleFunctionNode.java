@@ -15,8 +15,8 @@ public class TupleFunctionNode extends FunctionNode {
 
     public TupleFunctionNode(final String name, final String description, final String icon,
                               final List<VariableType> returnTypes, final ParameterListNode parameters,
-                              final StatementListNode statements, final boolean isConst, final Token token) {
-        super(name, description, icon, statements, isConst, token);
+                              final StatementListNode statements, final Token token) {
+        super(name, description, icon, statements, token);
         this.returnTypes = returnTypes;
         this.parameters = parameters;
     }

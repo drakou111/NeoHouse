@@ -38,7 +38,7 @@ public class FunctionParamLoweringVisitor extends DefaultVisitor {
 
         StatementListNode rewrittenBody = (StatementListNode) new FunctionBodyRewriter(renameMap).visitStatements(function.statements);
 
-        return new VoidFunctionNode(function.name, function.description, function.icon, new ParameterListNode(List.of()), rewrittenBody, function.isConst, function.token);
+        return new VoidFunctionNode(function.name, function.description, function.icon, new ParameterListNode(List.of()), rewrittenBody, function.token);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class FunctionParamLoweringVisitor extends DefaultVisitor {
 
         StatementListNode rewrittenBody = (StatementListNode) new FunctionBodyRewriter(renameMap).visitStatements(function.statements);
 
-        return new VoidFunctionNode(function.name, function.description, function.icon, new ParameterListNode(List.of()), rewrittenBody, function.isConst, function.token);
+        return new VoidFunctionNode(function.name, function.description, function.icon, new ParameterListNode(List.of()), rewrittenBody, function.token);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class FunctionParamLoweringVisitor extends DefaultVisitor {
 
         StatementListNode rewrittenBody = (StatementListNode) new FunctionBodyRewriter(renameMap).visitStatements(function.statements);
 
-        return new VoidFunctionNode(function.name, function.description, function.icon, new ParameterListNode(List.of()), rewrittenBody, function.isConst, function.token);
+        return new VoidFunctionNode(function.name, function.description, function.icon, new ParameterListNode(List.of()), rewrittenBody, function.token);
     }
 
 }

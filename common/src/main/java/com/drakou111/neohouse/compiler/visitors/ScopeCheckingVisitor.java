@@ -87,7 +87,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
             newParams.add(new VariableNode(param.type, param.holder, param.name, param.teamName, param.token));
         }
         ParameterListNode newParamList = new ParameterListNode(newParams);
-        return new TypedFunctionNode(fn.name, fn.description, fn.icon, fn.returnType, newParamList, newBody, fn.isConst, fn.token);
+        return new TypedFunctionNode(fn.name, fn.description, fn.icon, fn.returnType, newParamList, newBody, fn.token);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         for (VariableNode param : fn.parameters.parameters) {
             newParams.add(new VariableNode(param.type, param.holder, param.name, param.teamName, param.token));
         }
-        return new TupleFunctionNode(fn.name, fn.description, fn.icon, fn.returnTypes, new ParameterListNode(newParams), newBody, fn.isConst, fn.token);
+        return new TupleFunctionNode(fn.name, fn.description, fn.icon, fn.returnTypes, new ParameterListNode(newParams), newBody, fn.token);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         }
         ParameterListNode newParamList = new ParameterListNode(newParams);
 
-        return new VoidFunctionNode(fn.name, fn.description, fn.icon, newParamList, newBody, fn.isConst, fn.token);
+        return new VoidFunctionNode(fn.name, fn.description, fn.icon, newParamList, newBody, fn.token);
     }
 
     @Override public ASTNode visitDeclaration(DeclarationNode decl) {
@@ -201,7 +201,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         StatementListNode newBody = (StatementListNode) loop.statements.accept(this);
         scopeStack.pop();
 
-        return new LoopNode(loop.name, loop.description, loop.icon, newBody, loop.tickDelay, loop.isConst, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, newBody, loop.tickDelay, loop.token);
     }
 
     @Override
@@ -214,7 +214,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         scopeStack.pop();
 
         inFunction = saved;
-        return new EventNode(event.event, newBody, event.isConst, event.token);
+        return new EventNode(event.event, newBody, event.token);
     }
 
     @Override
@@ -222,7 +222,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         scopeStack.push(new HashMap<>());
         StatementListNode newBody = (StatementListNode) cmd.statements.accept(this);
         scopeStack.pop();
-        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, newBody, cmd.isConst, cmd.token);
+        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, newBody, cmd.token);
     }
 
     @Override
@@ -231,7 +231,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         for (SlotNode slot : menu.slots) {
             newSlots.add((SlotNode) slot.accept(this));
         }
-        return new MenuNode(menu.name, menu.rows, newSlots, menu.isConst, menu.token);
+        return new MenuNode(menu.name, menu.rows, newSlots, menu.token);
     }
 
     @Override

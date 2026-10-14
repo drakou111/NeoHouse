@@ -3,39 +3,39 @@
 // ─────────────────────────────────────────
 
 // Returns the absolute value of x.
-const function long long_abs(long x) {
+function long long_abs(long x) {
     if (x < 0) { return -x; }
     return x;
 }
 
 // Returns the smaller of a and b.
-const function long long_min(long a, long b) {
+function long long_min(long a, long b) {
     if (a < b) { return a; }
     return b;
 }
 
 // Returns the larger of a and b.
-const function long long_max(long a, long b) {
+function long long_max(long a, long b) {
     if (a > b) { return a; }
     return b;
 }
 
 // Clamps x to the range [lo, hi].
-const function long long_clamp(long x, long lo, long hi) {
+function long long_clamp(long x, long lo, long hi) {
     if (x < lo) { return lo; }
     if (x > hi) { return hi; }
     return x;
 }
 
 // Sign of x: returns -1, 0, or 1.
-const function long long_sign(long x) {
+function long long_sign(long x) {
     if (x < 0) { return -1; }
     if (x > 0) { return 1; }
     return 0;
 }
 
 // Remainder of x divided by n.
-const function long long_mod(long x, long n) {
+function long long_mod(long x, long n) {
     p.temp = (long)(x / n);
     p.temp = x - n * p.temp;
 

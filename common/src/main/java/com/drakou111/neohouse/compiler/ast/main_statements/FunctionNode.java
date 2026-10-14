@@ -11,14 +11,12 @@ public abstract class FunctionNode extends MainStatementNode {
     public final String description;
     public final String icon; // nullable SNBT string
     public final StatementListNode statements;
-    public final boolean isConst;
 
-    public FunctionNode(final String name, final String description, final String icon, final StatementListNode statements, final boolean isConst, final Token token) {
+    public FunctionNode(final String name, final String description, final String icon, final StatementListNode statements, final Token token) {
         this.name = name;
         this.description = description;
         this.icon = icon;
         this.statements = statements;
-        this.isConst = isConst;
         this.token = token;
 
         if (name.length() > 50)

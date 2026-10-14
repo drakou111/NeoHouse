@@ -2,6 +2,7 @@ package com.drakou111.neohouse.utils;
 
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.actions.ChatEvents;
+import com.drakou111.neohouse.constants.HousingList;
 import com.drakou111.neohouse.exceptions.InterruptActionException;
 import net.minecraft.client.Minecraft;
 
@@ -18,18 +19,27 @@ public class SequenceManager {
     public static void markCreated(String name) { createdThisRun.add(name); }
     public static boolean wasCreated(String name) { return createdThisRun.contains(name); }
 
-    // Names of functions that already existed in Housing when this run started (populated by a
-    // ReadFunctionNamesAction at the start of Phase 1). Lets the delete pass skip searching for
-    // functions that aren't there.
-    private static final java.util.Set<String> existingFunctions = new java.util.HashSet<>();
+    // Entries of each Housing list that already existed when this run started, recorded by
+    // ReadListNamesAction. Lets later steps decide delete/create/skip without searching the list.
+    private static final java.util.Map<HousingList, java.util.Set<String>> existingEntries = new java.util.EnumMap<>(HousingList.class);
 
-    public static void recordExistingFunction(String name) { existingFunctions.add(name); }
-    public static boolean functionExists(String name) { return existingFunctions.contains(name); }
+    /** Records an entry by the item name the list shows for it (e.g. {@code /name} for commands). */
+    public static boolean recordExisting(HousingList list, String displayName) {
+        return existingEntries.computeIfAbsent(list, k -> new java.util.HashSet<>()).add(displayName);
+    }
+
+    public static boolean exists(HousingList list, String name) {
+        return existingEntries.getOrDefault(list, java.util.Set.of()).contains(list.displayName(name));
+    }
+
+    public static java.util.Set<String> existingDisplayNames(HousingList list) {
+        return java.util.Collections.unmodifiableSet(existingEntries.getOrDefault(list, java.util.Set.of()));
+    }
 
     public static void startAction(Action action) {
         ChatEvents.clear(); // drop any listeners left over from a previous run
         createdThisRun.clear();
-        existingFunctions.clear();
+        existingEntries.clear();
         currentAction = action;
         startTimeMs = System.currentTimeMillis();
         totalSteps = action.countSteps();

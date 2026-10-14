@@ -1,12 +1,12 @@
 package com.drakou111.neohouse.actions.actiontypes;
 
-import com.drakou111.neohouse.config.NeoHouseConfig;
-
 import com.drakou111.neohouse.actions.Action;
 import com.drakou111.neohouse.utils.MessageUtils;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 
+import java.util.Collections;
+import com.drakou111.neohouse.config.NeoHouseConfig;
 import java.util.List;
 
 public class GroupAction extends Action {
@@ -50,4 +50,9 @@ public class GroupAction extends Action {
 
     @Override
     public boolean isContainer() { return true; }
+
+    @Override
+    public List<Action> getChildren() {
+        return Collections.unmodifiableList(this.actions);
+    }
 }

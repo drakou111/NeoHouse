@@ -27,7 +27,7 @@ public class NeoHouseConfig {
     public boolean showArgumentHints          = true;
     public boolean showArgumentRecommendations = true;
     public boolean autoIndent                 = true;
-    public OverrideMode  overrideMode         = OverrideMode.SKIP_CONST;
+    public OverrideMode  overrideMode         = OverrideMode.IF_EMPTY;
     public MultiCallMode multiCallMode        = MultiCallMode.FIX;
     public RecursionMode  recursionMode       = RecursionMode.WARN;
     public GlobalCallMode globalCallMode      = GlobalCallMode.ERROR;
@@ -66,8 +66,9 @@ public class NeoHouseConfig {
 
     private NeoHouseConfig() {}
 
+    /** The loaded settings; without a running client (e.g. in tests) the defaults are used. */
     public static NeoHouseConfig get() {
-        if (!loaded) { load(); loaded = true; }
+        if (!loaded && Minecraft.getInstance() != null) { load(); loaded = true; }
         return INSTANCE;
     }
 

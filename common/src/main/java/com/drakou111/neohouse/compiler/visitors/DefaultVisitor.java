@@ -77,19 +77,19 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
     @Override public ASTNode visitTypedFunction(TypedFunctionNode function) {
         ParameterListNode params = (ParameterListNode)function.parameters.accept(this);
         StatementListNode stmts = (StatementListNode)function.statements.accept(this);
-        return new TypedFunctionNode(function.name, function.description, function.icon, function.returnType, params, stmts, function.isConst, function.token);
+        return new TypedFunctionNode(function.name, function.description, function.icon, function.returnType, params, stmts, function.token);
     }
 
     @Override public ASTNode visitTupleFunction(TupleFunctionNode function) {
         ParameterListNode params = (ParameterListNode)function.parameters.accept(this);
         StatementListNode stmts = (StatementListNode)function.statements.accept(this);
-        return new TupleFunctionNode(function.name, function.description, function.icon, function.returnTypes, params, stmts, function.isConst, function.token);
+        return new TupleFunctionNode(function.name, function.description, function.icon, function.returnTypes, params, stmts, function.token);
     }
 
     @Override public ASTNode visitVoidFunction(VoidFunctionNode function) {
         ParameterListNode params = (ParameterListNode)function.parameters.accept(this);
         StatementListNode stmts = (StatementListNode)function.statements.accept(this);
-        return new VoidFunctionNode(function.name, function.description, function.icon, params, stmts, function.isConst, function.token);
+        return new VoidFunctionNode(function.name, function.description, function.icon, params, stmts, function.token);
     }
 
     @Override public ASTNode visitTupleReturn(TupleReturnNode ret) {
@@ -100,17 +100,17 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
 
     @Override public ASTNode visitLoop(LoopNode loop) {
         StatementListNode stmts = (StatementListNode)loop.statements.accept(this);
-        return new LoopNode(loop.name, loop.description, loop.icon, stmts, loop.tickDelay, loop.isConst, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, stmts, loop.tickDelay, loop.token);
     }
 
     @Override public ASTNode visitEvent(EventNode event) {
         StatementListNode stmts = (StatementListNode)event.statements.accept(this);
-        return new EventNode(event.event, stmts, event.isConst, event.token);
+        return new EventNode(event.event, stmts, event.token);
     }
 
     @Override public ASTNode visitCommand(CommandNode command) {
         StatementListNode stmts = (StatementListNode)command.statements.accept(this);
-        return new CommandNode(command.name, command.targeted, command.priority, command.listed, stmts, command.isConst, command.token);
+        return new CommandNode(command.name, command.targeted, command.priority, command.listed, stmts, command.token);
     }
 
     @Override public ASTNode visitMenu(MenuNode menu) {
@@ -118,7 +118,7 @@ public abstract class DefaultVisitor extends EmptyVisitor<ASTNode> {
         for (SlotNode slot : menu.slots) {
             slots.add((SlotNode) slot.accept(this));
         }
-        return new MenuNode(menu.name, menu.rows, slots, menu.isConst, menu.token);
+        return new MenuNode(menu.name, menu.rows, slots, menu.token);
     }
 
     @Override public ASTNode visitSlot(SlotNode slot) {

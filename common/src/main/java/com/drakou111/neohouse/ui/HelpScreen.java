@@ -245,18 +245,13 @@ public class HelpScreen extends ScreenBase {
         l.add(new HelpLine(COL_D, "  Use && (AND) or || (OR) — not both in one expression."));
         l.add(new HelpLine(COL_D, ""));
 
-        l.add(new HelpLine(COL_H, "Const Modifier"));
-        l.add(new HelpLine(COL_T, "  Mark a function, event, loop, command or menu as"));
-        l.add(new HelpLine(COL_T, "  immutable when using 'Skip Const' override mode:"));
-        l.add(new HelpLine(COL_CODE, "    const function greet() { ... }"));
-        l.add(new HelpLine(COL_CODE, "    const event onJoin { ... }"));
-        l.add(new HelpLine(COL_CODE, "    const loop clock(20) { ... }"));
-        l.add(new HelpLine(COL_CODE, "    const command coins(listed: true) { ... }"));
-        l.add(new HelpLine(COL_CODE, "    const menu shop(3) { ... }"));
-        l.add(new HelpLine(COL_D, "  In 'Skip Const' mode, const items are never recreated."));
-        l.add(new HelpLine(COL_D, "  Non-const items are always recreated from scratch."));
-        l.add(new HelpLine(COL_D, "  Useful for protecting hand-crafted Housing functions"));
-        l.add(new HelpLine(COL_D, "  that should not be overwritten on each import."));
+        l.add(new HelpLine(COL_H, "Override Modes"));
+        l.add(new HelpLine(COL_T, "  Set in the config. Decides what happens to functions,"));
+        l.add(new HelpLine(COL_T, "  events, loops, commands and menus that already exist:"));
+        l.add(new HelpLine(COL_D, "  Always Override: recreate everything from scratch."));
+        l.add(new HelpLine(COL_D, "  Never Override: leave existing ones untouched."));
+        l.add(new HelpLine(COL_D, "  Override If Empty: fill existing ones only when they"));
+        l.add(new HelpLine(COL_D, "  have no content yet (the default)."));
         l.add(new HelpLine(COL_D, ""));
 
         l.add(new HelpLine(COL_H, "Loops"));

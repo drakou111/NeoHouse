@@ -573,14 +573,14 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     public ASTNode visitLoop(LoopNode loop) {
         tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(loop.statements);
-        return new LoopNode(loop.name, loop.description, loop.icon, newBody, loop.tickDelay, loop.isConst, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, newBody, loop.tickDelay, loop.token);
     }
 
     @Override
     public ASTNode visitCommand(CommandNode command) {
         tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(command.statements);
-        return new CommandNode(command.name, command.targeted, command.priority, command.listed, newBody, command.isConst, command.token);
+        return new CommandNode(command.name, command.targeted, command.priority, command.listed, newBody, command.token);
     }
 
     @Override
@@ -603,28 +603,28 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
     public ASTNode visitTypedFunction(TypedFunctionNode function) {
         tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new TypedFunctionNode(function.name, function.description, function.icon, function.returnType, function.parameters, newBody, function.isConst, function.token);
+        return new TypedFunctionNode(function.name, function.description, function.icon, function.returnType, function.parameters, newBody, function.token);
     }
 
     @Override
     public ASTNode visitTupleFunction(TupleFunctionNode function) {
         tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new TupleFunctionNode(function.name, function.description, function.icon, function.returnTypes, function.parameters, newBody, function.isConst, function.token);
+        return new TupleFunctionNode(function.name, function.description, function.icon, function.returnTypes, function.parameters, newBody, function.token);
     }
 
     @Override
     public ASTNode visitVoidFunction(VoidFunctionNode function) {
         tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(function.statements);
-        return new VoidFunctionNode(function.name, function.description, function.icon, function.parameters, newBody, function.isConst, function.token);
+        return new VoidFunctionNode(function.name, function.description, function.icon, function.parameters, newBody, function.token);
     }
 
     @Override
     public ASTNode visitEvent(EventNode event) {
         tempCounter = 0;
         StatementListNode newBody = (StatementListNode)visitStatements(event.statements);
-        return new EventNode(event.event, newBody, event.isConst, event.token);
+        return new EventNode(event.event, newBody, event.token);
     }
 }
 

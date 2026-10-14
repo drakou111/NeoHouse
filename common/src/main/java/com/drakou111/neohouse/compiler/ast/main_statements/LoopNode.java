@@ -7,8 +7,8 @@ import com.drakou111.neohouse.compiler.visitors.ASTVisitor;
 public class LoopNode extends FunctionNode {
     public final long tickDelay;
 
-    public LoopNode(final String name, final String description, final String icon, final StatementListNode statements, final long delay, final boolean isConst, final Token token) {
-        super(name, description, icon, statements, isConst, token);
+    public LoopNode(final String name, final String description, final String icon, final StatementListNode statements, final long delay, final Token token) {
+        super(name, description, icon, statements, token);
         this.tickDelay = delay;
         this.token = token;
     }

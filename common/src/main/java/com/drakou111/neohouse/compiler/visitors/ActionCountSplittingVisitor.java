@@ -36,7 +36,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         currentScopeName = fn.name;
         StatementListNode stmts = (StatementListNode)fn.statements.accept(this);
         StatementListNode body = splitIfNeeded(stmts, false);
-        return new VoidFunctionNode(fn.name, fn.description, fn.icon, fn.parameters, body, fn.isConst, fn.token);
+        return new VoidFunctionNode(fn.name, fn.description, fn.icon, fn.parameters, body, fn.token);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         currentScopeName = ev.event.name().toLowerCase();
         StatementListNode stmts = (StatementListNode)ev.statements.accept(this);
         StatementListNode body = splitIfNeeded(stmts, false);
-        return new EventNode(ev.event, body, ev.isConst, ev.token);
+        return new EventNode(ev.event, body, ev.token);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         currentScopeName = loop.name;
         StatementListNode statements = (StatementListNode)loop.statements.accept(this);
         StatementListNode body = splitIfNeeded(statements, false);
-        return new LoopNode(loop.name, loop.description, loop.icon, body, loop.tickDelay, loop.isConst, loop.token);
+        return new LoopNode(loop.name, loop.description, loop.icon, body, loop.tickDelay, loop.token);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         currentScopeName = cmd.name;
         StatementListNode stmts = (StatementListNode)cmd.statements.accept(this);
         StatementListNode body = splitIfNeeded(stmts, false);
-        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.isConst, cmd.token);
+        return new CommandNode(cmd.name, cmd.targeted, cmd.priority, cmd.listed, body, cmd.token);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
             currentScopeName = menu.name + "_slot" + slot.slotId;
             slots.add((SlotNode) slot.accept(this));
         }
-        return new MenuNode(menu.name, menu.rows, slots, menu.isConst, menu.token);
+        return new MenuNode(menu.name, menu.rows, slots, menu.token);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
             int slot = all.size();
             all.add(null);
             StatementListNode helperBody = splitIfNeeded(new StatementListNode(tail), false);
-            VoidFunctionNode helper = new VoidFunctionNode(helperName, "", null, new ParameterListNode(List.of()), helperBody, false, tail.getFirst().token);
+            VoidFunctionNode helper = new VoidFunctionNode(helperName, "", null, new ParameterListNode(List.of()), helperBody, tail.getFirst().token);
             all.set(slot, helper);
             result.add(new VoidFunctionCallNode(helperName, new ArgumentListNode(List.of()), tail.getFirst().token));
             return new StatementListNode(result);
