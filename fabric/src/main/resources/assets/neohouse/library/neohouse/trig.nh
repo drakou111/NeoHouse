@@ -2,6 +2,19 @@
 //   NeoHouse built-in library
 // ─────────────────────────────────────────
 
+// Working variables of this file, declared so scripts that require declarations can import it.
+double p.trigTemp;
+double p.trigTemp2;
+double p.trigTemp3;
+double p.trigTemp4;
+double p.trigTemp5;
+double p.trigYaw;
+double p.trigPitch;
+double p.trigCosYaw;
+double p.trigCosPitch;
+double p.trigSinYaw;
+double p.trigSinPitch;
+
 // We use Bhāskara I's approximation, which is extremely precise for values [0,π].
 // sin(x) ≈ B(x) = (16x(π-x)) / (5π^2-4x(π-x)).
 // To extend to ]-∞, ∞[, we can do this:
@@ -10,55 +23,55 @@
 // sin(x) ≈ sign(π - y) * B(t)
 function double sin(double x) {
     // y = mod(x, 2π)
-    p.temp = (double)((long)(x / TWO_PI));
-    p.temp = x - TWO_PI * p.temp;
-    if (p.temp < 0.0) {
-        p.temp += TWO_PI;
+    p.trigTemp = (double)((long)(x / TWO_PI));
+    p.trigTemp = x - TWO_PI * p.trigTemp;
+    if (p.trigTemp < 0.0) {
+        p.trigTemp += TWO_PI;
     }
 
     // t = π - abs(π - y)
-    p.temp2 = PI - p.temp;
-    if (p.temp2 < 0.0) { p.temp2 *= -1.0; }
-    p.temp2 = PI - p.temp2;
+    p.trigTemp2 = PI - p.trigTemp;
+    if (p.trigTemp2 < 0.0) { p.trigTemp2 *= -1.0; }
+    p.trigTemp2 = PI - p.trigTemp2;
 
     // B(t)
-    p.temp3 = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
+    p.trigTemp3 = (16.0 * p.trigTemp2 * (PI - p.trigTemp2)) / (49.3480220054 - 4.0 * p.trigTemp2 * (PI - p.trigTemp2));
 
     // sign(π - y)
-    p.temp4 = 0.0;
-    if (p.temp < PI) { p.temp4 = 1.0; }
-    if (p.temp > PI) { p.temp4 = -1.0; }
+    p.trigTemp4 = 0.0;
+    if (p.trigTemp < PI) { p.trigTemp4 = 1.0; }
+    if (p.trigTemp > PI) { p.trigTemp4 = -1.0; }
 
     // sin(x) ≈ sign(π - y) * B(t)
-    return (double)(p.temp4 * p.temp3);
+    return (double)(p.trigTemp4 * p.trigTemp3);
 }
 
 // cos(x) = sin(x + π/2), written out instead of calling sin: Housing won't run a function
 // twice in one execution, and tan needs both sin and cos.
 function double cos(double x) {
-    p.temp5 = x + 1.57079632679;
+    p.trigTemp5 = x + 1.57079632679;
 
     // y = mod(x + π/2, 2π)
-    p.temp = (double)((long)(p.temp5 / TWO_PI));
-    p.temp = p.temp5 - TWO_PI * p.temp;
-    if (p.temp < 0.0) {
-        p.temp += TWO_PI;
+    p.trigTemp = (double)((long)(p.trigTemp5 / TWO_PI));
+    p.trigTemp = p.trigTemp5 - TWO_PI * p.trigTemp;
+    if (p.trigTemp < 0.0) {
+        p.trigTemp += TWO_PI;
     }
 
     // t = π - abs(π - y)
-    p.temp2 = PI - p.temp;
-    if (p.temp2 < 0.0) { p.temp2 *= -1.0; }
-    p.temp2 = PI - p.temp2;
+    p.trigTemp2 = PI - p.trigTemp;
+    if (p.trigTemp2 < 0.0) { p.trigTemp2 *= -1.0; }
+    p.trigTemp2 = PI - p.trigTemp2;
 
     // B(t)
-    p.temp3 = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
+    p.trigTemp3 = (16.0 * p.trigTemp2 * (PI - p.trigTemp2)) / (49.3480220054 - 4.0 * p.trigTemp2 * (PI - p.trigTemp2));
 
     // sign(π - y)
-    p.temp4 = 0.0;
-    if (p.temp < PI) { p.temp4 = 1.0; }
-    if (p.temp > PI) { p.temp4 = -1.0; }
+    p.trigTemp4 = 0.0;
+    if (p.trigTemp < PI) { p.trigTemp4 = 1.0; }
+    if (p.trigTemp > PI) { p.trigTemp4 = -1.0; }
 
-    return (double)(p.temp4 * p.temp3);
+    return (double)(p.trigTemp4 * p.trigTemp3);
 }
 
 // tan(x) = sin(x)/cos(x).
@@ -73,39 +86,39 @@ function double tan(double x) {
 // ))
 function double asin(double x) {
     // (1-|x|)/2
-    p.temp = x;
-    if (p.temp < 0.0) { p.temp *= -1.0; }
-    p.temp = (1.0 - p.temp) / 2.0;
+    p.trigTemp = x;
+    if (p.trigTemp < 0.0) { p.trigTemp *= -1.0; }
+    p.trigTemp = (1.0 - p.trigTemp) / 2.0;
 
     // u = sqrt((1-|x|)/2)
-    p.temp2 = 0.0316;
-    if (p.temp <= 0.0) { p.temp2 = 0.0; }
-    if (p.temp >= 0.03) { p.temp2 = 0.5; }
-    if (p.temp >= 0.001 && p.temp < 0.03) { p.temp2 = 0.1; }
-    if (p.temp > 0.0) {
+    p.trigTemp2 = 0.0316;
+    if (p.trigTemp <= 0.0) { p.trigTemp2 = 0.0; }
+    if (p.trigTemp >= 0.03) { p.trigTemp2 = 0.5; }
+    if (p.trigTemp >= 0.001 && p.trigTemp < 0.03) { p.trigTemp2 = 0.1; }
+    if (p.trigTemp > 0.0) {
         repeat(4) {
-            p.temp2 += p.temp / p.temp2;
-            p.temp2 *= 0.5;
+            p.trigTemp2 += p.trigTemp / p.trigTemp2;
+            p.trigTemp2 *= 0.5;
         }
     }
     else {
-        p.temp2 = 0.0;
+        p.trigTemp2 = 0.0;
     }
 
     // The polynomial
-    p.temp3 = p.temp2 * p.temp2;
-    p.temp = 0.09460451869;
-    p.temp = p.temp * p.temp3 - 0.0220605251;
-    p.temp = p.temp * p.temp3 + 0.05996102211;
-    p.temp = p.temp * p.temp3 + 0.07308794137;
-    p.temp = p.temp * p.temp3 + 0.1667511541;
-    p.temp = p.temp * p.temp3 + 0.9999994098;
+    p.trigTemp3 = p.trigTemp2 * p.trigTemp2;
+    p.trigTemp = 0.09460451869;
+    p.trigTemp = p.trigTemp * p.trigTemp3 - 0.0220605251;
+    p.trigTemp = p.trigTemp * p.trigTemp3 + 0.05996102211;
+    p.trigTemp = p.trigTemp * p.trigTemp3 + 0.07308794137;
+    p.trigTemp = p.trigTemp * p.trigTemp3 + 0.1667511541;
+    p.trigTemp = p.trigTemp * p.trigTemp3 + 0.9999994098;
 
     // asin(x) ≈ sign(x) * (π/2 - 2*u*(...))
-    p.temp = 1.57079632679 - 2.0 * p.temp2 * p.temp;
-    if (x < 0.0) { p.temp *= -1.0; }
+    p.trigTemp = 1.57079632679 - 2.0 * p.trigTemp2 * p.trigTemp;
+    if (x < 0.0) { p.trigTemp *= -1.0; }
 
-    return (double)p.temp;
+    return (double)p.trigTemp;
 }
 
 // acos(x) = π/2 - asin(x).
@@ -116,25 +129,25 @@ function double acos(double x) {
 // atan(x) = asin(x / sqrt(1 + x^2))
 function double atan(double x) {
     // 1 + x^2
-    p.temp = 1.0 + x * x;
+    p.trigTemp = 1.0 + x * x;
 
     // sqrt(1 + x^2)
-    p.temp2 = 0.0316;
-    if (p.temp <= 0.0) { p.temp2 = 0.0; }
-    if (p.temp >= 0.03) { p.temp2 = 0.5; }
-    if (p.temp >= 0.001 && p.temp < 0.03) { p.temp2 = 0.1; }
-    if (p.temp > 0.0) {
+    p.trigTemp2 = 0.0316;
+    if (p.trigTemp <= 0.0) { p.trigTemp2 = 0.0; }
+    if (p.trigTemp >= 0.03) { p.trigTemp2 = 0.5; }
+    if (p.trigTemp >= 0.001 && p.trigTemp < 0.03) { p.trigTemp2 = 0.1; }
+    if (p.trigTemp > 0.0) {
         repeat(4) {
-            p.temp2 += p.temp / p.temp2;
-            p.temp2 *= 0.5;
+            p.trigTemp2 += p.trigTemp / p.trigTemp2;
+            p.trigTemp2 *= 0.5;
         }
     }
     else {
-        p.temp2 = 0.0;
+        p.trigTemp2 = 0.0;
     }
 
     // atan(x) = asin(x / sqrt(1 + x^2))
-    return asin(x / p.temp2);
+    return asin(x / p.trigTemp2);
 }
 
 function double atan2(double x, double y) {
@@ -148,22 +161,22 @@ function double atan2(double x, double y) {
 
 // The unit vector the player is looking along, as (x, y, z), from their yaw and pitch.
 function (double, double, double) getFacingVector() {
-    p.yawRad = 0.01745329251 * ph.playerPosYaw();
-    p.pitchRad = 0.01745329251 * ph.playerPosPitch();
-    p.cosyaw = cos(p.yawRad);
-    p.sinyaw = sin(p.yawRad);
+    p.trigYaw = 0.01745329251 * ph.playerPosYaw();
+    p.trigPitch = 0.01745329251 * ph.playerPosPitch();
+    p.trigCosYaw = cos(p.trigYaw);
+    p.trigSinYaw = sin(p.trigYaw);
 
     // sin and cos can't be called a second time here (Housing won't run a function twice in one
     // execution). Pitch is within [-pi/2, pi/2], so both reduce to B(t) on [0, pi] directly.
     // cos(pitch) = B(pitch + pi/2)
-    p.temp2 = p.pitchRad + 1.57079632679;
-    p.cospitch = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
+    p.trigTemp2 = p.trigPitch + 1.57079632679;
+    p.trigCosPitch = (16.0 * p.trigTemp2 * (PI - p.trigTemp2)) / (49.3480220054 - 4.0 * p.trigTemp2 * (PI - p.trigTemp2));
 
     // sin(pitch) = sign(pitch) * B(|pitch|)
-    p.temp2 = p.pitchRad;
-    if (p.temp2 < 0.0) { p.temp2 *= -1.0; }
-    p.sinpitch = (16.0 * p.temp2 * (PI - p.temp2)) / (49.3480220054 - 4.0 * p.temp2 * (PI - p.temp2));
-    if (p.pitchRad < 0.0) { p.sinpitch *= -1.0; }
+    p.trigTemp2 = p.trigPitch;
+    if (p.trigTemp2 < 0.0) { p.trigTemp2 *= -1.0; }
+    p.trigSinPitch = (16.0 * p.trigTemp2 * (PI - p.trigTemp2)) / (49.3480220054 - 4.0 * p.trigTemp2 * (PI - p.trigTemp2));
+    if (p.trigPitch < 0.0) { p.trigSinPitch *= -1.0; }
 
-    return ((double)(p.sinyaw * p.cospitch * -1.0), (double)(p.sinpitch * -1.0), (double)(p.cosyaw * p.cospitch));
+    return ((double)(p.trigSinYaw * p.trigCosPitch * -1.0), (double)(p.trigSinPitch * -1.0), (double)(p.trigCosYaw * p.trigCosPitch));
 }

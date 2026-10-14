@@ -2,6 +2,9 @@
 //   NeoHouse built-in library
 // ─────────────────────────────────────────
 
+// Working variables of this file, declared so scripts that require declarations can import it.
+double p.doubleTemp;
+
 // Returns the absolute value of x.
 function double double_abs(double x) {
     if (x < 0.0) { return -x; }
@@ -36,29 +39,29 @@ function double double_sign(double x) {
 
 // Remainder of x divided by n.
 function double double_mod(double x, double n) {
-    p.temp = (double)((long)(x / n));
-    p.temp = x - n * p.temp;
+    p.doubleTemp = (double)((long)(x / n));
+    p.doubleTemp = x - n * p.doubleTemp;
 
-    if (p.temp < 0.0) {
-        p.temp += n;
+    if (p.doubleTemp < 0.0) {
+        p.doubleTemp += n;
     }
 
-    return (double)p.temp;
+    return (double)p.doubleTemp;
 }
 
 // Square root of x.
 function double sqrt(double x) {
-    p.temp = 0.001;
-    if (x <= 0.0) { p.temp = 0.0; }
-    if (x >= 0.03) { p.temp = 0.5; }
-    if (x >= 0.001 && x < 0.03) { p.temp = 0.1; }
+    p.doubleTemp = 0.001;
+    if (x <= 0.0) { p.doubleTemp = 0.0; }
+    if (x >= 0.03) { p.doubleTemp = 0.5; }
+    if (x >= 0.001 && x < 0.03) { p.doubleTemp = 0.1; }
     if (x > 0.0) {
         repeat(8) {
-            p.temp = (p.temp + x / p.temp) * 0.5;
+            p.doubleTemp = (p.doubleTemp + x / p.doubleTemp) * 0.5;
         }
     }
     else {
-        p.temp = 0.0;
+        p.doubleTemp = 0.0;
     }
-    return (double)p.temp;
+    return (double)p.doubleTemp;
 }

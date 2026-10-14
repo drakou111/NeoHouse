@@ -2,6 +2,9 @@
 //   NeoHouse built-in library
 // ─────────────────────────────────────────
 
+// Working variables of this file, declared so scripts that require declarations can import it.
+long p.longTemp;
+
 // Returns the absolute value of x.
 function long long_abs(long x) {
     if (x < 0) { return -x; }
@@ -36,12 +39,12 @@ function long long_sign(long x) {
 
 // Remainder of x divided by n.
 function long long_mod(long x, long n) {
-    p.temp = (long)(x / n);
-    p.temp = x - n * p.temp;
+    p.longTemp = (long)(x / n);
+    p.longTemp = x - n * p.longTemp;
 
-    if (p.temp < 0) {
-        p.temp += n;
+    if (p.longTemp < 0) {
+        p.longTemp += n;
     }
 
-    return (long)p.temp;
+    return (long)p.longTemp;
 }
