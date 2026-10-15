@@ -211,10 +211,30 @@ final class HelpContent {
                 new Text("% works on long and double values but not on an untyped var, because the steps it compiles to "
                         + "depend on the type; cast first: (long) p.v % 3. The same goes for -x, x++ and x-- on a var."),
                 new Heading("Casting"),
+                new Text("Types never mix on their own: a long and a double can't be added, compared or stored in "
+                        + "each other. A cast converts a value: write the type in parentheses in front of it."),
+                new Preformatted("""
+                        (long) x      to a whole number, dropping the decimals: 2.7 becomes 2
+                        (double) x    to a decimal: 3 becomes 3.0
+                        (string) x    to text: 3 becomes "3\""""),
                 new Code("""
-                        p.whole = (long) p.speed;     // drops the decimals
-                        p.speed = (double) p.whole;
-                        p.label = (string) p.whole;"""),
+                        long p.whole;
+                        double p.speed;
+                        double p.total;
+                        string p.label;
+
+                        event onJoin {
+                            p.speed = 2.7;
+                            p.whole = (long) p.speed;              // 2
+                            p.total = p.speed + (double) p.whole;  // both sides are doubles
+                            p.label = (string) p.whole;            // "2"
+                            if ((long) p.speed > 1) {
+                                message("Speed: " + p.speed);      // no cast needed when joining text
+                            }
+                        }"""),
+                new Text("Text can't be cast to a number. Joining with + already turns numbers into text, so "
+                        + "messages don't need (string). On an untyped var, (long) or (double) also tells the compiler "
+                        + "which type to use, which %, -x, x++ and x-- need."),
                 new Heading("Computed while compiling"),
                 new Text("Arithmetic on constants is done by the compiler: p.x = 1.0 / 2.0 becomes p.x = 0.5, and "
                         + "(long) 2.7 becomes 2. Division by a constant zero is left for Housing.")));
