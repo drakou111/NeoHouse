@@ -48,6 +48,7 @@ public class HelpScreen extends ScreenBase {
     private static final int CODE_H = 10;
     private static final int ENTRY_H = 18;
     private static final int GAP_H = 6;
+    private static final int TABLE_COLUMN_GAP = 10;
     private static final int ICON_SIZE = 16;
     private static final int SB_W = 4;
     private static final int SCROLL_STEP = 24;
@@ -60,14 +61,18 @@ public class HelpScreen extends ScreenBase {
     private static final int COL_TEXT = 0xFFCCCCCC;
     private static final int COL_DIM = 0xFF999999;
 
-    private enum Kind { TITLE, HEADING, TEXT, CODE, PRE, SIGNATURE, DETAIL, GAP }
+    private enum Kind { TITLE, HEADING, TEXT, CODE, PRE, SIGNATURE, SIGNATURE_MORE, DETAIL, GAP }
 
     /**
      * One laid-out line of the page. {@code copy} is set on the first line of a code example and
      * holds what its Copy button copies; {@code icon} is an item id drawn before a signature.
      */
-    private record Row(Kind kind, String text, int height, String icon, String copy) {
-        static Row of(Kind kind, String text, int height) { return new Row(kind, text, height, null, null); }
+    /** A table cell placed {@code x} pixels from the left of its block. */
+    private record PlacedCell(int x, String text) {}
+
+    /** One line of the page; {@code cells} is set for a line of a preformatted table. */
+    private record Row(Kind kind, String text, int height, String icon, String copy, List<PlacedCell> cells) {
+        static Row of(Kind kind, String text, int height) { return new Row(kind, text, height, null, null, null); }
     }
 
     private final Screen parent;
@@ -173,7 +178,7 @@ public class HelpScreen extends ScreenBase {
                     out.add(Row.of(Kind.GAP, "", GAP_H));
                 }
                 case Preformatted p -> {
-                    for (String line : p.text().split("\n", -1)) out.add(Row.of(Kind.PRE, line, CODE_H));
+                    layoutTable(out, p.text());
                     out.add(Row.of(Kind.GAP, "", GAP_H));
                 }
                 case Entry e -> layoutEntry(out, e);
@@ -183,8 +188,11 @@ public class HelpScreen extends ScreenBase {
     }
 
     private void layoutEntry(List<Row> out, Entry e) {
-        out.add(new Row(Kind.SIGNATURE, e.signature(), ENTRY_H, e.icon(), null));
         int indent = textWidth() - ICON_SIZE - 4;
+        List<String> signature = CodeWrap.wrap(e.signature(), indent, this.font::width);
+        out.add(new Row(Kind.SIGNATURE, signature.getFirst(), ENTRY_H, e.icon(), null, null));
+        for (String line : signature.subList(1, signature.size())) out.add(Row.of(Kind.SIGNATURE_MORE, line, CODE_H));
+        if (signature.size() > 1) out.add(Row.of(Kind.GAP, "", GAP_H / 2));
         if (!e.description().isEmpty()) {
             for (String line : wrap(e.description(), indent)) out.add(Row.of(Kind.DETAIL, line, TEXT_H));
             out.add(Row.of(Kind.GAP, "", GAP_H));
@@ -198,10 +206,26 @@ public class HelpScreen extends ScreenBase {
         out.add(Row.of(Kind.GAP, "", GAP_H * 2));
     }
 
-    private static void layoutCode(List<Row> out, String code, Kind kind) {
-        String[] lines = code.split("\n", -1);
-        for (int i = 0; i < lines.length; i++)
-            out.add(new Row(kind, lines[i], CODE_H, null, i == 0 ? code : null));
+    private void layoutTable(List<Row> out, String text) {
+        List<List<TextTable.Cell>> table = TextTable.parse(text);
+        int[] columnX = TextTable.columnX(table, this.font::width, TABLE_COLUMN_GAP);
+        for (List<TextTable.Cell> line : table) {
+            List<PlacedCell> cells = new ArrayList<>();
+            for (TextTable.Cell cell : line) cells.add(new PlacedCell(columnX[cell.column()], cell.text()));
+            out.add(new Row(Kind.PRE, "", CODE_H, null, null, cells));
+        }
+    }
+
+    /** Code lines, wrapped to leave room for the Copy button, which the first row carries. */
+    private void layoutCode(List<Row> out, String code, Kind kind) {
+        int maxWidth = textWidth() - COPY_W - 8;
+        boolean first = true;
+        for (String line : code.split("\n", -1)) {
+            for (String piece : CodeWrap.wrap(line, maxWidth, this.font::width)) {
+                out.add(new Row(kind, piece, CODE_H, null, first ? code : null, null));
+                first = false;
+            }
+        }
     }
 
     /** {@code text} split into lines no wider than {@code maxWidth}, breaking at spaces. */
@@ -318,9 +342,10 @@ public class HelpScreen extends ScreenBase {
                 g.fill(x - 4, y - (first ? 3 : 0), right - PAD, y + row.height() + (last ? 3 : 0), t.surface(0xAA));
                 g.fill(x - 4, y - (first ? 3 : 0), x - 3, y + row.height() + (last ? 3 : 0), t.accentTint(0xCC));
                 if (row.kind() == Kind.CODE) drawCode(g, row.text(), x, y + 1);
-                else g.drawString(this.font, row.text(), x, y + 1, COL_TEXT, false);
+                else for (PlacedCell cell : row.cells()) g.drawString(this.font, cell.text(), x + cell.x(), y + 1, COL_TEXT, false);
                 if (row.copy() != null) drawCopyButton(g, row.copy(), right - PAD - COPY_W - 2, y - 2, mouseX, mouseY, t);
             }
+            case SIGNATURE_MORE -> drawCode(g, row.text(), x + ICON_SIZE + 4, y + 1);
             case SIGNATURE -> {
                 if (row.icon() != null) drawIcon(g, row.icon(), x, y + 1);
                 drawCode(g, row.text(), x + ICON_SIZE + 4, y + 5);

@@ -16,6 +16,7 @@
 - Settings tooltips put each option on its own line.
 - Help: holders, types, settings and override modes are shown as tables, and long paragraphs are split up. The example scripts no longer trigger warnings.
 - Help reference entries have space under their description.
+- Help tables line up in columns, and long reference signatures and example lines (like dropItem) wrap instead of running off the page.
 
 ## 1.1.1
 

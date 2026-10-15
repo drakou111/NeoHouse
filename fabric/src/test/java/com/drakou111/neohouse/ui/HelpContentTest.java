@@ -12,6 +12,7 @@ import com.drakou111.neohouse.ui.HelpContent.Block;
 import com.drakou111.neohouse.ui.HelpContent.Code;
 import com.drakou111.neohouse.ui.HelpContent.Entry;
 import com.drakou111.neohouse.ui.HelpContent.Heading;
+import com.drakou111.neohouse.ui.HelpContent.Preformatted;
 import com.drakou111.neohouse.ui.HelpContent.Topic;
 import org.junit.jupiter.api.Test;
 
@@ -73,6 +74,20 @@ class HelpContentTest {
                 warned.add(compiler.getLastWarnings().getFirst().message() + "\n" + script);
         }
         assertThat(warned).isEmpty();
+    }
+
+    /** A stray double space inside a cell would split it into a column of its own. */
+    @Test
+    void everyTableHasAtMostThreeColumns() {
+        for (Topic topic : HelpContent.topics()) {
+            for (Block block : topic.blocks()) {
+                if (!(block instanceof Preformatted table)) continue;
+                int columns = 0;
+                for (List<TextTable.Cell> line : TextTable.parse(table.text()))
+                    for (TextTable.Cell cell : line) columns = Math.max(columns, cell.column() + 1);
+                assertThat(columns).as(topic.title() + ":\n" + table.text()).isLessThanOrEqualTo(3);
+            }
+        }
     }
 
     @Test

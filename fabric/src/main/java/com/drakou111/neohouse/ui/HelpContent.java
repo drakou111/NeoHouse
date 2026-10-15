@@ -206,7 +206,7 @@ final class HelpContent {
                         bitwise       & | ^ << >> >>>
                         comparison    == != < <= > >=
                         logical       && ||
-                        unary         -x  !x  x++  x--
+                        unary         -x !x x++ x--
                         assignment    = += -= *= /= %= &= |= ^= <<= >>= >>>="""),
                 new Text("% works on long and double values but not on an untyped var, because the steps it compiles to "
                         + "depend on the type; cast first: (long) p.v % 3. The same goes for -x, x++ and x-- on a var."),
