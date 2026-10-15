@@ -11,12 +11,16 @@
 - New setting Never-set variables (Warn by default, or Error or Off): warns when the script uses a variable (in a calculation, a condition, an action argument, or with `+=` and the like) that it never gives a value with `=` and that has no fallback, since any condition on an unset variable is false.
 - Fixed: a fallback on the compared variable of a condition (`if (p.lives?3 > 0)`) was dropped; it now fills the condition's Fallback Value field.
 
+### Help
+- Holders, types, settings and override modes are shown as tables that line up in columns, and long paragraphs are split up.
+- Casting is explained: what each cast does, when one is needed, and a full example.
+- Unset variables and fallbacks are explained in plainer words, with commented examples.
+- The example scripts no longer trigger warnings.
+- Reference entries have space under their description, and long signatures and example lines (like dropItem) wrap instead of running off the page.
+
 ### Interface
 - The editor's bottom bar shows a warning only while the cursor is on it; errors still always show.
 - Settings tooltips put each option on its own line.
-- Help: holders, types, settings and override modes are shown as tables, and long paragraphs are split up. The example scripts no longer trigger warnings.
-- Help reference entries have space under their description.
-- Help tables line up in columns, and long reference signatures and example lines (like dropItem) wrap instead of running off the page.
 
 ## 1.1.1
 
