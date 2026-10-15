@@ -171,8 +171,8 @@ final class HelpContent {
                         + "p.test == \"\"). Add ?value to a read to use that value while the variable is unset. The "
                         + "fallback must be a constant of the variable's type (anything for a var). It binds tightly: "
                         + "p.test?0 + 2 is (p.test?0) + 2. In a condition, a fallback on the compared variable fills the "
-                        + "condition's Fallback Value field. The Never-set variables setting warns about a condition "
-                        + "on a variable the script never sets and that has no fallback."),
+                        + "condition's Fallback Value field. The Never-set variables setting warns when the script "
+                        + "reads a variable it never sets, without a fallback."),
                 new Code("""
                         p.apple = p.test?0 + 2;
                         if (p.lives?3 > 0) {
@@ -416,8 +416,8 @@ final class HelpContent {
                 new Text("Multi-call mode: calling a function twice in one execution (Error, Warn, Fix or Off). "
                         + "Recursion: functions calling themselves (Warn, Error or Off). Global call rules: global calls "
                         + "inside globally called functions or loops (Error, Warn or Off). Undeclared variables: using a "
-                        + "variable without declaring it (Allow, Warn or Error). Never-set variables: a condition on a "
-                        + "variable the script never sets and that has no fallback (Warn, Error or Off). Ban the var type: reject var everywhere, "
+                        + "variable without declaring it (Allow, Warn or Error). Never-set variables: reading a "
+                        + "variable the script never sets, without a fallback (Warn, Error or Off). Ban the var type: reject var everywhere, "
                         + "including the implicit var of an undeclared variable."),
                 new Heading("Editor"),
                 new Text("Tab width, parameter hints, value suggestions, auto indent, the number of error lines shown, "

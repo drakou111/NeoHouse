@@ -8,7 +8,7 @@
 
 ### Compiler
 - Fixed: a fallback on the compared variable of a condition (`if (p.lives?3 > 0)`) was dropped; it now fills the condition's Fallback Value field.
-- New setting Never-set variables (Warn by default, or Error or Off): reports a condition on a variable the script never sets and that has no fallback, since Housing treats such a condition as false.
+- New setting Never-set variables (Warn by default, or Error or Off): reports reading a variable the script never sets (in a calculation, an argument or a condition) without a fallback, since an unset variable has no value and a condition on it is false.
 
 ### Interface
 - Settings tooltips put each option on its own line.

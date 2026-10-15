@@ -17,7 +17,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** The setting for conditions on variables the script never sets. */
+/** The setting for reads of variables the script never sets. */
 class UnsetVariableCheckTest {
 
     private static List<String> warningsOf(String source, UnsetVariableMode mode) {
@@ -37,7 +37,7 @@ class UnsetVariableCheckTest {
         assertThat(warningsOf("long p.x; long p.y;\nfunction f() { if (p.x == 1) { p.y = 1; } }"))
                 .singleElement()
                 .satisfies(message -> assertThat(message)
-                        .contains("'p.x' is never set")
+                        .contains("'p.x' is read but never set")
                         .contains("p.x?0"));
     }
 
@@ -45,18 +45,43 @@ class UnsetVariableCheckTest {
     void theVariableIsFoundOnEitherSideOfTheComparison() {
         assertThat(warningsOf("long p.x; long p.y;\nfunction f() { if (3 < p.x) { p.y = 1; } }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.x' is never set"));
+                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
     }
 
     @Test
     void aBoolUsedAsTheConditionIsReported() {
         assertThat(warningsOf("bool p.vip; long p.y;\nfunction f() { if (p.vip) { p.y = 1; } }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.vip' is never set"));
+                .satisfies(message -> assertThat(message).contains("'p.vip' is read but never set"));
+    }
+
+    @Test
+    void aReadInACalculationIsReported() {
+        assertThat(warningsOf("long p.x; long p.y;\nfunction f() { p.y = p.x + 1; }"))
+                .singleElement()
+                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
+    }
+
+    @Test
+    void theComparedValueIsAReadToo() {
+        assertThat(warningsOf("long p.x; long p.y;\nfunction f() { p.y = 2; if (p.y == p.x) { p.y = 1; } }"))
+                .singleElement()
+                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
+    }
+
+    @Test
+    void anArgumentIsAReadToo() {
+        assertThat(warningsOf("double p.hp;\nfunction f() { setHealth(p.hp, \"SET\"); }"))
+                .singleElement()
+                .satisfies(message -> assertThat(message).contains("'p.hp' is read but never set"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
+            // a compound assignment sets the variable
+            "long p.x;\nfunction f() { p.x += 1; }",
+            // a fallback on a read in a calculation
+            "long p.x; long p.y;\nfunction f() { p.y = p.x?0 + 1; }",
             // set later or elsewhere in the script
             "long p.x; long p.y;\nfunction f() { if (p.x == 1) { p.y = 1; } }\nfunction g() { p.x += 1; }",
             // a fallback covers the unset case
@@ -82,7 +107,7 @@ class UnsetVariableCheckTest {
     void canBeAnError() {
         assertThatThrownBy(() -> warningsOf("long p.x; long p.y;\nfunction f() { if (p.x == 1) { p.y = 1; } }", UnsetVariableMode.ERROR))
                 .isInstanceOf(CompilingException.class)
-                .hasMessageContaining("'p.x' is never set");
+                .hasMessageContaining("'p.x' is read but never set");
     }
 
     @Test
