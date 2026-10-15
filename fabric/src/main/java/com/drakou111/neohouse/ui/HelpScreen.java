@@ -185,11 +185,16 @@ public class HelpScreen extends ScreenBase {
     private void layoutEntry(List<Row> out, Entry e) {
         out.add(new Row(Kind.SIGNATURE, e.signature(), ENTRY_H, e.icon(), null));
         int indent = textWidth() - ICON_SIZE - 4;
-        if (!e.description().isEmpty())
+        if (!e.description().isEmpty()) {
             for (String line : wrap(e.description(), indent)) out.add(Row.of(Kind.DETAIL, line, TEXT_H));
+            out.add(Row.of(Kind.GAP, "", GAP_H));
+        }
         for (String detail : e.details())
             for (String line : wrap(detail, indent)) out.add(Row.of(Kind.DETAIL, line, TEXT_H));
-        if (e.example() != null) layoutCode(out, e.example(), Kind.CODE);
+        if (e.example() != null) {
+            if (!e.details().isEmpty()) out.add(Row.of(Kind.GAP, "", GAP_H));
+            layoutCode(out, e.example(), Kind.CODE);
+        }
         out.add(Row.of(Kind.GAP, "", GAP_H * 2));
     }
 
