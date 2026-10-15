@@ -6,6 +6,7 @@ import com.drakou111.neohouse.config.MultiCallMode;
 import com.drakou111.neohouse.config.OverrideMode;
 import com.drakou111.neohouse.config.RecursionMode;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
+import com.drakou111.neohouse.config.UnsetVariableMode;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -111,7 +112,9 @@ class DeclarationRulesTest {
         Files.writeString(main, imports + "double p.r;\nlong p.n;\n"
                 + "event onJoin { p.r = sin(1.0) + double_abs(-2.0) + sqrt(4.0); p.n = long_max(1, 2); }");
 
-        assertThatCode(() -> new NHCompiler().analyze(Files.readString(main), main, options(UndeclaredVariableMode.ERROR, true)))
+        CompileOptions strictest = new CompileOptions(MultiCallMode.ERROR, RecursionMode.WARN, GlobalCallMode.ERROR, OverrideMode.IF_EMPTY,
+                UndeclaredVariableMode.ERROR, true, UnsetVariableMode.ERROR);
+        assertThatCode(() -> new NHCompiler().analyze(Files.readString(main), main, strictest))
                 .doesNotThrowAnyException();
     }
 }

@@ -6,6 +6,7 @@ import com.drakou111.neohouse.config.NeoHouseConfig;
 import com.drakou111.neohouse.config.OverrideMode;
 import com.drakou111.neohouse.config.RecursionMode;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
+import com.drakou111.neohouse.config.UnsetVariableMode;
 
 import java.util.Objects;
 
@@ -15,7 +16,8 @@ import java.util.Objects;
  */
 public record CompileOptions(MultiCallMode multiCallMode, RecursionMode recursionMode,
                              GlobalCallMode globalCallMode, OverrideMode overrideMode,
-                             UndeclaredVariableMode undeclaredVariableMode, boolean forbidVarType) {
+                             UndeclaredVariableMode undeclaredVariableMode, boolean forbidVarType,
+                             UnsetVariableMode unsetVariableMode) {
 
     public CompileOptions {
         Objects.requireNonNull(multiCallMode);
@@ -23,6 +25,14 @@ public record CompileOptions(MultiCallMode multiCallMode, RecursionMode recursio
         Objects.requireNonNull(globalCallMode);
         Objects.requireNonNull(overrideMode);
         Objects.requireNonNull(undeclaredVariableMode);
+        Objects.requireNonNull(unsetVariableMode);
+    }
+
+    /** No check for conditions on never-set variables, as before that setting existed. */
+    public CompileOptions(MultiCallMode multiCallMode, RecursionMode recursionMode,
+                          GlobalCallMode globalCallMode, OverrideMode overrideMode,
+                          UndeclaredVariableMode undeclaredVariableMode, boolean forbidVarType) {
+        this(multiCallMode, recursionMode, globalCallMode, overrideMode, undeclaredVariableMode, forbidVarType, UnsetVariableMode.OFF);
     }
 
     /** Undeclared variables allowed and var permitted, as before those settings existed. */
@@ -34,6 +44,6 @@ public record CompileOptions(MultiCallMode multiCallMode, RecursionMode recursio
     public static CompileOptions fromConfig() {
         NeoHouseConfig config = NeoHouseConfig.get();
         return new CompileOptions(config.multiCallMode, config.recursionMode, config.globalCallMode, config.overrideMode,
-                config.undeclaredVariableMode, config.forbidVarType);
+                config.undeclaredVariableMode, config.forbidVarType, config.unsetVariableMode);
     }
 }

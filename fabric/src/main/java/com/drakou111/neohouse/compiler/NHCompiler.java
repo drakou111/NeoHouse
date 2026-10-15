@@ -34,6 +34,7 @@ import com.drakou111.neohouse.compiler.visitors.SimplifyingExpressionsVisitor;
 import com.drakou111.neohouse.compiler.visitors.StringLengthCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.TempOptimizationVisitor;
 import com.drakou111.neohouse.compiler.visitors.TypeInferringVisitor;
+import com.drakou111.neohouse.compiler.visitors.UnsetVariableCheckVisitor;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.exceptions.SemanticException;
@@ -159,6 +160,8 @@ public class NHCompiler implements Compiler {
 
         HousingLimitCheck.check(node);
         new ConditionLimitVisitor().analyze(node);
+
+        new UnsetVariableCheckVisitor(options.unsetVariableMode(), warnings).analyze(node);
 
         lastExtraVariables = new ExtraVariableCollectorVisitor().collect(node);
         return node;

@@ -13,6 +13,7 @@ import com.drakou111.neohouse.config.SyntaxTheme;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
+import com.drakou111.neohouse.config.UnsetVariableMode;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
@@ -129,6 +130,14 @@ public class ConfigScreen extends ScreenBase {
                         + "Warn: reported.\n"
                         + "Error: compilation fails.",
                 UndeclaredVariableMode.values(), m -> m.displayName, cfg.undeclaredVariableMode, m -> cfg.undeclaredVariableMode = m));
+        list.add(enumRow(Tab.COMPILER, "Never-set variables:",
+                "A condition on a variable that was never set is always false, unless the variable has a fallback "
+                        + "like p.x?0. This checks for conditions on variables the script never sets (another script "
+                        + "may still set them).\n\n"
+                        + "Off: no check.\n"
+                        + "Warn: reported.\n"
+                        + "Error: compilation fails.",
+                UnsetVariableMode.values(), m -> m.displayName, cfg.unsetVariableMode, m -> cfg.unsetVariableMode = m));
         list.add(new BoolRow(Tab.COMPILER, "Ban the var type:",
                 "Reject the var type everywhere: in declarations, parameters and return types.\n\n"
                         + "Undeclared variables are vars, so they become errors too.",
