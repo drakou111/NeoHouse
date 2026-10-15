@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.2
 
 ### Running scripts
 - New override mode Append: adds the script's actions after the ones already in existing functions, loops, commands and events. It reads every page of the existing actions first and skips that part with a warning if an action type would go over its Housing limit. Existing menus only get their empty slots filled, and a smaller menu is grown to the script's size.
@@ -8,12 +8,12 @@
 - Fixed: setting a loop's tick delay stopped the run, because Housing asks for it in an anvil even with chat inputs on.
 
 ### Compiler
-- Fixed: a fallback on the compared variable of a condition (`if (p.lives?3 > 0)`) was dropped; it now fills the condition's Fallback Value field.
 - New setting Never-set variables (Warn by default, or Error or Off): reports reading a variable the script never sets (in a calculation, an argument, a condition, or a compound assignment like `+=`) without a fallback, since an unset variable has no value and a condition on it is false.
+- Fixed: a fallback on the compared variable of a condition (`if (p.lives?3 > 0)`) was dropped; it now fills the condition's Fallback Value field.
 
 ### Interface
-- Settings tooltips put each option on its own line.
 - The editor's bottom bar shows a warning only while the cursor is on it; errors still always show.
+- Settings tooltips put each option on its own line.
 
 ## 1.1.1
 
