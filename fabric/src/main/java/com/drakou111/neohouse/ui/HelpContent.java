@@ -167,8 +167,8 @@ final class HelpContent {
                         string g.motd = "Have fun";
                         bool p.vip;"""),
                 new Heading("Fallback values"),
-                new Text("A variable that was never set reads as an empty value (\"\"), so p.test == 0 is false until "
-                        + "p.test is set. Add ?value to a read to use that value while the variable is unset. The "
+                new Text("A condition on a variable that was never set is false, whatever it compares against (even "
+                        + "p.test == \"\"). Add ?value to a read to use that value while the variable is unset. The "
                         + "fallback must be a constant of the variable's type (anything for a var). It binds tightly: "
                         + "p.test?0 + 2 is (p.test?0) + 2. In a condition, a fallback on the compared variable fills the "
                         + "condition's Fallback Value field."),
