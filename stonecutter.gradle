@@ -84,6 +84,18 @@ verList.forEach { ver ->
     }
     prev = ver
 }
+// Building switches the active version, which rewrites this file; switch back to the version that
+// was active before, even when a build fails, so a build never leaves the working tree changed.
+tasks.register('restoreActiveVersion', Exec) {
+    group       = 'stonecutter'
+    description = "Switch back to MC ${activeVer}, the version active before building"
+    workingDir  = rootDir
+    commandLine(*gradlewCmd, "stonecutterSwitchTo${activeVer}")
+    verList.forEach { ver -> mustRunAfter "build-${ver.project}" }
+}
+verList.forEach { ver ->
+    tasks.named("switch-${ver.project}").configure { finalizedBy 'restoreActiveVersion' }
+}
 tasks.register('chiseledBuild') {
     group       = 'stonecutter'
     description = 'Build all MC versions sequentially'
