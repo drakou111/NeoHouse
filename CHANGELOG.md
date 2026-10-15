@@ -12,6 +12,7 @@
 
 ### Interface
 - Settings tooltips put each option on its own line.
+- The editor's bottom bar shows a warning only while the cursor is on it; errors still always show.
 
 ## 1.1.1
 

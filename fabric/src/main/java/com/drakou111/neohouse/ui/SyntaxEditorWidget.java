@@ -209,7 +209,7 @@ public class SyntaxEditorWidget extends WidgetBase {
 
         renderScrollbar(g, x0, y0, codeH, lines.size(), visLines, t);
         renderHorizontalScrollbar(g, codeH, t);
-        if (this.errorMsg != null) renderErrorBar(g, font, x0, y0 + codeH, errorH);
+        barMessage().ifPresent(message -> renderErrorBar(g, font, x0, y0 + codeH, errorH, message));
 
         int border = t.accent();
         g.fill(x0, y0, x0 + this.width, y0 + 1, border);
@@ -276,8 +276,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         return codeX() + lineColToPixelX(font, line, col, lineHints) - this.scrollX;
     }
 
-    private void renderErrorBar(Gfx g, Font font, int x0, int ey, int errorH) {
-        String displayMsg = getActiveErrorMsg().orElse(this.errorMsg);
+    private void renderErrorBar(Gfx g, Font font, int x0, int ey, int errorH, String displayMsg) {
         int barBg = this.warnMode ? 0xEE3B3111 : 0xEE3B1111;
         int barLine = this.warnMode ? 0xFFAAAA33 : 0xFFAA3333;
         int barText = this.warnMode ? 0xFFFFDD88 : 0xFFFF8888;
@@ -580,7 +579,7 @@ public class SyntaxEditorWidget extends WidgetBase {
     public boolean mouseScrolled(double mx, double my, double dx, double dy) {
         if (!isMouseOver(mx, my)) return false;
 
-        if (this.errorMsg != null && my >= getY() + this.height - errorBarH() && my < getY() + this.height) {
+        if (barMessage().isPresent() && my >= getY() + this.height - errorBarH() && my < getY() + this.height) {
             this.errorScroll -= (int) Math.signum(dy);
             return true;
         }
@@ -963,10 +962,21 @@ public class SyntaxEditorWidget extends WidgetBase {
         return Optional.empty();
     }
 
+    /**
+     * The message the bar at the bottom shows: an error always (the one under the cursor, else the
+     * first), a warning only while the cursor or selection is on it, so warnings don't take room.
+     */
+    private Optional<String> barMessage() {
+        if (this.errorMsg == null) return Optional.empty();
+        Optional<String> active = getActiveErrorMsg();
+        return this.warnMode ? active : Optional.of(active.orElse(this.errorMsg));
+    }
+
     private int errorBarH() {
-        if (this.errorMsg == null) return 0;
+        Optional<String> message = barMessage();
+        if (message.isEmpty()) return 0;
         Font font = Minecraft.getInstance().font;
-        int shownLines = Math.min(wrapErrorMsg(font, this.width - 8, this.errorMsg).size(), errorBarMaxLines());
+        int shownLines = Math.min(wrapErrorMsg(font, this.width - 8, message.get()).size(), errorBarMaxLines());
         return Math.max(ERROR_BAR_H_MIN, shownLines * 10 + 4);
     }
 
