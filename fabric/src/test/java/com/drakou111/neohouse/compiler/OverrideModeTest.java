@@ -5,12 +5,15 @@ import com.drakou111.neohouse.actions.actiontypes.IfActionsFitAction;
 import com.drakou111.neohouse.actions.actiontypes.IfContainerEmptyAction;
 import com.drakou111.neohouse.actions.actiontypes.IfExistsAction;
 import com.drakou111.neohouse.actions.actiontypes.RunIfCreatedAction;
+import com.drakou111.neohouse.actions.actiontypes.TextEntryAction;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.config.OverrideMode;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.RestrictionAction;
 import com.drakou111.neohouse.exceptions.CompilingException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -98,6 +101,17 @@ class OverrideModeTest {
     void emptyEventIsLeftAloneWhenPreserving() {
         assertThat(all("event onJoin { }", OverrideMode.IF_EMPTY)).hasSize(1);
         assertThat(Collections.frequency(names(all("event onJoin { }", OverrideMode.NEVER)), "Send chat: /eventaction")).isZero();
+    }
+
+    @ParameterizedTest
+    @EnumSource(OverrideMode.class)
+    void theLoopTickDelayMayBeTypedInAnAnvil(OverrideMode mode) {
+        List<TextEntryAction> delays = all("loop tick(37) { p.x = 1; }", mode).stream()
+                .filter(action -> action instanceof TextEntryAction entry && entry.getDebugName().equals("Enter text: 37"))
+                .map(TextEntryAction.class::cast)
+                .toList();
+
+        assertThat(delays).isNotEmpty().allMatch(TextEntryAction::isAnvilAllowed);
     }
 
     @Test

@@ -499,7 +499,8 @@ public class CodeGenerator {
                 .gotoFunction(true, loop.name, false)
                 .onlyIf(hasDesc, () -> new ActionBuilder().searchForText(FunctionInputs.DESCRIPTION, loop.description))
                 .onlyIf(loop.icon != null, () -> new ActionBuilder().search(FunctionInputs.ICON).customItem(loop.icon))
-                .searchForText(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay))
+                // Housing asks for the tick delay in an anvil even with chat inputs on.
+                .searchForText(FunctionInputs.AUTOMATIC_EXECUTION, String.valueOf(loop.tickDelay), true)
                 .closeAll()
                 .get();
     }

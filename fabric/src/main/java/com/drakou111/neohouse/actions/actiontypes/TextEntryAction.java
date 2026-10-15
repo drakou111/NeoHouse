@@ -36,6 +36,10 @@ public class TextEntryAction extends Action {
         this.anvilAllowed = anvilAllowed;
     }
 
+    public boolean isAnvilAllowed() {
+        return this.anvilAllowed;
+    }
+
     @Override
     public String getDebugName() {
         return "Enter text: " + this.text;
