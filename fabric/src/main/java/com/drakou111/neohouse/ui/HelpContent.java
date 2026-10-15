@@ -149,35 +149,45 @@ final class HelpContent {
     private static Topic variables() {
         return new Topic(GUIDE, "Variables and types", List.of(
                 new Heading("Holders"),
-                new Text("Every variable belongs to a holder: p.name is the player's own, g.name is shared by the whole "
-                        + "house, and t[team].name belongs to a team."),
+                new Text("Every variable belongs to a holder, written before its name:"),
+                new Preformatted("""
+                        p.name          the player's own
+                        g.name          shared by the whole house
+                        t[team].name    belongs to a team"""),
                 new Code("""
                         p.coins += 5;
                         g.round = 2;
                         t[red].score += 1;"""),
                 new Heading("Types"),
-                new Text("long: whole numbers. double: decimals. string: text. bool: true or false. var: untyped, "
-                        + "nothing is checked. Declare variables at the top of a file; only g. and t[] variables can "
-                        + "have a starting value. A variable that isn't declared is an untyped var; the Undeclared "
-                        + "variables setting can warn about that or make it an error, which catches typos, and Ban the "
-                        + "var type rejects var altogether."),
+                new Preformatted("""
+                        long      whole numbers          42, -7, 1_000
+                        double    decimals               1.5, 2d
+                        string    text                   "hello"
+                        bool      true or false          true
+                        var       anything, unchecked"""),
+                new Heading("Declaring"),
+                new Text("Declare variables at the top of a file, with their type. Only g. and t[] variables can have "
+                        + "a starting value."),
                 new Code("""
                         long p.coins;
                         double p.speed;
                         string g.motd = "Have fun";
                         bool p.vip;"""),
-                new Heading("Fallback values"),
-                new Text("A condition on a variable that was never set is false, whatever it compares against (even "
-                        + "p.test == \"\"). Add ?value to a read to use that value while the variable is unset. The "
-                        + "fallback must be a constant of the variable's type (anything for a var). It binds tightly: "
-                        + "p.test?0 + 2 is (p.test?0) + 2. In a condition, a fallback on the compared variable fills the "
-                        + "condition's Fallback Value field. The Never-set variables setting warns when the script "
-                        + "reads a variable it never sets with =, without a fallback; += and the like read it too."),
+                new Text("A variable used without a declaration becomes a var. To catch typos like p.cions, set "
+                        + "Undeclared variables to Warn or Error, or turn on Ban the var type."),
+                new Heading("Unset variables"),
+                new Text("A variable that was never set has no value. A condition on it is false, whatever it "
+                        + "compares against (even p.test == \"\")."),
+                new Text("Add ?value to a read to use that value while the variable is unset. The fallback must be a "
+                        + "constant of the variable's type. It binds tightly: p.test?0 + 2 is (p.test?0) + 2."),
                 new Code("""
                         p.apple = p.test?0 + 2;
                         if (p.lives?3 > 0) {
                             message("still alive");
                         }"""),
+                new Text("In a condition, the fallback of the compared variable goes in Housing's Fallback Value "
+                        + "field. The Never-set variables setting warns when the script reads a variable it never "
+                        + "sets with = (+= and the like count as reads)."),
                 new Heading("Names"),
                 new Text("Variable names are at most 16 characters (Housing's limit). '$' is reserved for the variables "
                         + "the compiler makes, so your own names can't contain it.")));
@@ -261,7 +271,7 @@ final class HelpContent {
                         }
 
                         event onJoin {
-                            (p.half, p.twice) = halfAndDouble(p.speed);
+                            (p.half, p.twice) = halfAndDouble(5.0);
                         }"""),
                 new Heading("Icon and description"),
                 new Text("Optional named settings go before the parameters and set the function's icon and description "
@@ -302,6 +312,8 @@ final class HelpContent {
                 new Text("A loop runs every N ticks (20 ticks is one second, the minimum is 4) for every player. "
                         + "Loops take no parameters; icon and description can go before the tick count."),
                 new Code("""
+                        long g.seconds = 0;
+
                         loop clock(20) {
                             g.seconds += 1;
                         }"""),
@@ -346,7 +358,7 @@ final class HelpContent {
                         const long MAX_SCORE = 100;
 
                         event onJoin {
-                            if (p.score >= MAX_SCORE) { message("Max!"); }
+                            if (p.score?0 >= MAX_SCORE) { message("Max!"); }
                         }"""),
                 new Heading("Enums"),
                 new Text("A named type whose members are numbered from 0. They're stored as longs but only compare with "
@@ -386,14 +398,17 @@ final class HelpContent {
                         + "reads the lists of functions, commands and menus the script touches, so it knows what already "
                         + "exists and that the house limits aren't exceeded. Then it creates or fills each part."),
                 new Heading("Existing parts"),
-                new Text("The Override mode setting decides what happens to functions, events, loops, commands and menus "
-                        + "that already exist. Override If Empty (the default) only fills ones that are still empty. "
-                        + "Always Override recreates them from scratch. Never Override leaves them as they are."),
-                new Text("Append adds the script's actions after the ones already there. It first reads every page of "
-                        + "the existing actions, and skips the part with a warning if any action type would go over its "
-                        + "Housing limit (for example a 26th Conditional). For menus it fills only the slots that are "
-                        + "still empty. Functions the compiler makes (names with $) are replaced instead. Running an "
-                        + "Append script twice adds its actions twice."),
+                new Text("The Override mode setting decides what happens to functions, events, loops, commands and "
+                        + "menus that already exist:"),
+                new Preformatted("""
+                        Override If Empty   fill only the ones still empty (default)
+                        Always Override     recreate them from scratch
+                        Never Override      leave them as they are
+                        Append              add the script's actions after theirs"""),
+                new Text("Append first reads every page of the existing actions and skips the part, with a warning, if "
+                        + "any action type would go over its Housing limit (for example a 26th Conditional). Menus only "
+                        + "get their empty slots filled. Functions the compiler makes (names with $) are replaced "
+                        + "instead. Running an Append script twice adds its actions twice."),
                 new Heading("Lag"),
                 new Text("NeoHouse waits for each menu to finish loading, and waits longer when the server is slow. If a "
                         + "menu or page never arrives, the run stops with a message instead of guessing; run the script "
@@ -407,18 +422,28 @@ final class HelpContent {
 
     private static Topic settings() {
         return new Topic(GUIDE, "Settings", List.of(
-                new Text("Open them with /nh config or Settings on the home screen."),
+                new Text("Open them with /nh config or Settings on the home screen. Hover a setting's name for "
+                        + "details. The first option listed is the default."),
                 new Heading("Running"),
-                new Text("Override mode: what happens to parts that already exist (see Running a script). Delay after "
-                        + "click: ticks to wait after each click. Action timeout: how many ticks to wait for a menu before "
-                        + "giving up."),
+                new Preformatted("""
+                        Override mode         what happens to parts that already exist
+                                              (see Running a script)
+                        Delay after click     ticks to wait after each click
+                        Action timeout        ticks to wait for a menu before giving up"""),
                 new Heading("Compiler"),
-                new Text("Multi-call mode: calling a function twice in one execution (Error, Warn, Fix or Off). "
-                        + "Recursion: functions calling themselves (Warn, Error or Off). Global call rules: global calls "
-                        + "inside globally called functions or loops (Error, Warn or Off). Undeclared variables: using a "
-                        + "variable without declaring it (Allow, Warn or Error). Never-set variables: reading a "
-                        + "variable the script never sets, without a fallback (Warn, Error or Off). Ban the var type: reject var everywhere, "
-                        + "including the implicit var of an undeclared variable."),
+                new Preformatted("""
+                        Multi-call mode         a function called twice in one execution
+                                                Error, Warn, Fix, Off
+                        Recursion               a function calling itself
+                                                Warn, Error, Off
+                        Global call rules       global calls inside globally called code
+                                                Error, Warn, Off
+                        Undeclared variables    a variable used without a declaration
+                                                Allow, Warn, Error
+                        Never-set variables     reading a variable the script never sets
+                                                Warn, Error, Off
+                        Ban the var type        reject var everywhere, including
+                                                undeclared variables"""),
                 new Heading("Editor"),
                 new Text("Tab width, parameter hints, value suggestions, auto indent, the number of error lines shown, "
                         + "and the syntax colours."),
@@ -444,9 +469,9 @@ final class HelpContent {
                 new Text("Grey hints show the name of each argument of a call, including the next one as soon as you type "
                         + "',' or '('. Suggestions offer event names after 'event ', placeholders after 'ph.', locations "
                         + "like INVOKER, and the allowed values of a text argument; Tab picks one."),
-                new Heading("Errors"),
-                new Text("Errors and warnings are underlined as you type and explained in the bar at the bottom; put the "
-                        + "cursor on one to read its message.")));
+                new Heading("Errors and warnings"),
+                new Text("Errors (red) and warnings (yellow) are underlined as you type. The bar at the bottom always "
+                        + "shows an error; a warning shows there while the cursor is on it.")));
     }
 
     private static Topic filesAndMusic() {
@@ -508,7 +533,7 @@ final class HelpContent {
                         long g.totalJoins = 0;
 
                         event onJoin {
-                            p.joins += 1;
+                            p.joins = p.joins?0 + 1;
                             g.totalJoins += 1;
                             message("Visit " + p.joins + " (house total: " + g.totalJoins + ")");
                         }"""),

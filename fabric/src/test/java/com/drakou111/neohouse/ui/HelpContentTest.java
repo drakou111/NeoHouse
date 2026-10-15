@@ -6,6 +6,8 @@ import com.drakou111.neohouse.config.GlobalCallMode;
 import com.drakou111.neohouse.config.MultiCallMode;
 import com.drakou111.neohouse.config.OverrideMode;
 import com.drakou111.neohouse.config.RecursionMode;
+import com.drakou111.neohouse.config.UndeclaredVariableMode;
+import com.drakou111.neohouse.config.UnsetVariableMode;
 import com.drakou111.neohouse.ui.HelpContent.Block;
 import com.drakou111.neohouse.ui.HelpContent.Code;
 import com.drakou111.neohouse.ui.HelpContent.Entry;
@@ -22,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class HelpContentTest {
 
     // The settings a new install starts with.
-    private static final CompileOptions DEFAULTS = new CompileOptions(
-            MultiCallMode.ERROR, RecursionMode.WARN, GlobalCallMode.ERROR, OverrideMode.IF_EMPTY);
+    private static final CompileOptions DEFAULTS = new CompileOptions(MultiCallMode.ERROR, RecursionMode.WARN,
+            GlobalCallMode.ERROR, OverrideMode.IF_EMPTY, UndeclaredVariableMode.ALLOW, false, UnsetVariableMode.WARN);
     private static final Pattern WHOLE_SCRIPT = Pattern.compile(
             "(?m)^(event|function|command|loop|menu|const|enum|long|double|string|bool|var) ");
 
@@ -57,6 +59,20 @@ class HelpContentTest {
             }
         }
         assertThat(failures).isEmpty();
+    }
+
+    /** Complete scripts (not snippets) are what people copy into a new file, so they shouldn't warn. */
+    @Test
+    void everyCompleteExampleCompilesWithoutWarnings() {
+        List<String> warned = new ArrayList<>();
+        for (String script : examples()) {
+            if (!WHOLE_SCRIPT.matcher(script).find() || script.startsWith("function helpExample()")) continue;
+            NHCompiler compiler = new NHCompiler();
+            compiler.analyze(script, null, DEFAULTS);
+            if (!compiler.getLastWarnings().isEmpty())
+                warned.add(compiler.getLastWarnings().getFirst().message() + "\n" + script);
+        }
+        assertThat(warned).isEmpty();
     }
 
     @Test

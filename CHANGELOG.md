@@ -14,6 +14,8 @@
 ### Interface
 - The editor's bottom bar shows a warning only while the cursor is on it; errors still always show.
 - Settings tooltips put each option on its own line.
+- Help: holders, types, settings and override modes are shown as tables, and long paragraphs are split up. The example scripts no longer trigger warnings.
+- Help reference entries have space under their description.
 
 ## 1.1.1
 
