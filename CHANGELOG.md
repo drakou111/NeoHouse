@@ -6,6 +6,9 @@
 - New override mode Append: adds the script's actions after the ones already in existing functions, loops, commands and events. It reads every page of the existing actions first and skips that part with a warning if an action type would go over its Housing limit. Existing menus only get their empty slots filled, and a smaller menu is grown to the script's size.
 - When a run ends (done, stopped by an error or cancelled) after warnings, chat shows a Show warnings link that lists them all again; `/nh list warnings` does the same.
 
+### Compiler
+- Fixed: a fallback on the compared variable of a condition (`if (p.lives?3 > 0)`) was dropped; it now fills the condition's Fallback Value field.
+
 ### Interface
 - Settings tooltips put each option on its own line.
 

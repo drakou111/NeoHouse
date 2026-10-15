@@ -739,7 +739,9 @@ public class CodeGenerator {
         String value = exprToValue(b.right);
         NormalExpressionNode left = b.left;
         if (left instanceof VariableNode v) {
-            return ConditionFactory.addConditionVariable(rc, invert, toHolder(v.holder), v.teamName ,v.name, comparator, value, null, null);
+            // The condition's Fallback Value field is what Housing compares while the variable is unset.
+            String fallback = v.fallback == null ? null : v.fallbackText();
+            return ConditionFactory.addConditionVariable(rc, invert, toHolder(v.holder), v.teamName, v.name, comparator, value, fallback, null);
         } else if (left instanceof PlaceholderNode p) {
             return ConditionFactory.addConditionPlaceholder(rc, invert, placeholderToString(p), comparator, value, null);
         }

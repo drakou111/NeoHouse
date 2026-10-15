@@ -26,8 +26,12 @@ public class VariableNode extends NormalExpressionNode {
     /** The space-prefixed fallback token embedded inside a {@code %var...%} placeholder,
      *  e.g. {@code " 0"}. Empty when there is no fallback. */
     public String fallbackToken() {
-        if (fallback == null) return "";
-        return " " + switch (fallback.value) {
+        return fallback == null ? "" : " " + fallbackText();
+    }
+
+    /** The fallback as Housing reads it (a bool as 1 or 0). Only call when there is one. */
+    public String fallbackText() {
+        return switch (fallback.value) {
             case LongValue l   -> l.toString();
             case DoubleValue d -> d.toString();
             case BoolValue b   -> b.value ? "1" : "0";
