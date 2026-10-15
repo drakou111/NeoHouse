@@ -96,35 +96,48 @@ public class ConfigScreen extends ScreenBase {
         List<Row> list = new ArrayList<>();
 
         list.add(enumRow(Tab.COMPILER, "Override on run:",
-                "Always Override: recreate all functions, events, commands and menus from scratch. Never Override: skip "
-                        + "everything that already exists. Override If Empty: fill existing ones only when they have no content yet. "
-                        + "Append: add to existing ones (skipped if a Housing limit would be exceeded); menus get only their empty slots filled.",
+                "What a run does with functions, events, commands and menus that already exist.\n\n"
+                        + "Always Override: recreate them from scratch.\n"
+                        + "Never Override: skip them.\n"
+                        + "Override If Empty: fill them only when they have no content yet.\n"
+                        + "Append: add the script's actions after theirs, skipped if a Housing limit would be exceeded. "
+                        + "Menus get only their empty slots filled.",
                 OverrideMode.values(), m -> m.displayName, cfg.overrideMode, m -> cfg.overrideMode = m));
         list.add(enumRow(Tab.COMPILER, "Multi-call mode:",
-                "Housing won't run a function twice in one execution. Off: no check. Warn: allowed but reported. Error: "
-                        + "compilation fails. Fix: auto-create copies ($0, $1, ...) so each call uses its own function.",
+                "Housing won't run a function twice in one execution.\n\n"
+                        + "Off: no check.\n"
+                        + "Warn: allowed but reported.\n"
+                        + "Error: compilation fails.\n"
+                        + "Fix: auto-create copies ($0, $1, ...) so each call uses its own function.",
                 MultiCallMode.values(), m -> m.displayName, cfg.multiCallMode, m -> cfg.multiCallMode = m));
         list.add(enumRow(Tab.COMPILER, "Recursion:",
-                "How to handle functions that call themselves directly or indirectly. Off: allowed silently. Warn: allowed "
-                        + "but reported. Error: compilation fails. Hypixel Housing does not officially support recursive functions.",
+                "How to handle functions that call themselves directly or indirectly. Hypixel Housing does not "
+                        + "officially support recursive functions.\n\n"
+                        + "Off: allowed silently.\n"
+                        + "Warn: allowed but reported.\n"
+                        + "Error: compilation fails.",
                 RecursionMode.values(), m -> m.displayName, cfg.recursionMode, m -> cfg.recursionMode = m));
         list.add(enumRow(Tab.COMPILER, "Global call rules:",
-                "How to handle a globally-called function (or loop) that itself contains 'global ...' calls. Off: allowed "
-                        + "silently. Warn: allowed but reported. Error: compilation fails.",
+                "How to handle a globally-called function (or loop) that itself contains 'global ...' calls.\n\n"
+                        + "Off: allowed silently.\n"
+                        + "Warn: allowed but reported.\n"
+                        + "Error: compilation fails.",
                 GlobalCallMode.values(), m -> m.displayName, cfg.globalCallMode, m -> cfg.globalCallMode = m));
         list.add(enumRow(Tab.COMPILER, "Undeclared variables:",
-                "A variable used without a declaration becomes an untyped var, which hides typos like p.cions. Allow: as "
-                        + "before. Warn: reported. Error: compilation fails.",
+                "A variable used without a declaration becomes an untyped var, which hides typos like p.cions.\n\n"
+                        + "Allow: no check.\n"
+                        + "Warn: reported.\n"
+                        + "Error: compilation fails.",
                 UndeclaredVariableMode.values(), m -> m.displayName, cfg.undeclaredVariableMode, m -> cfg.undeclaredVariableMode = m));
         list.add(new BoolRow(Tab.COMPILER, "Ban the var type:",
-                "Reject the var type everywhere: in declarations, parameters and return types. Undeclared variables are "
-                        + "vars, so they become errors too.",
+                "Reject the var type everywhere: in declarations, parameters and return types.\n\n"
+                        + "Undeclared variables are vars, so they become errors too.",
                 cfg.forbidVarType, v -> cfg.forbidVarType = v));
         list.add(new IntRow(Tab.COMPILER, "Delay after click (ticks):",
-                "How long to wait after each UI click (in game ticks). Lower = faster but might break.",
+                "How long to wait after each UI click, in game ticks.\n\nLower is faster but might break.",
                 cfg.clickDelay, 0, Integer.MAX_VALUE, v -> cfg.clickDelay = v));
         list.add(new IntRow(Tab.COMPILER, "Action timeout (ticks):",
-                "How many ticks to wait for a screen or anvil to respond before timing out. Increase if lagging.",
+                "How many ticks to wait for a screen or anvil to respond before timing out.\n\nIncrease it if the server lags.",
                 cfg.actionTimeoutTicks, 20, Integer.MAX_VALUE, v -> cfg.actionTimeoutTicks = v));
 
         list.add(new BoolRow(Tab.EDITOR, "Show argument hints:",
@@ -138,10 +151,10 @@ public class ConfigScreen extends ScreenBase {
                 cfg.autoIndent, v -> cfg.autoIndent = v));
         list.add(this.syntaxThemeRow);
         list.add(new IntRow(Tab.EDITOR, "Tab width (spaces):",
-                "Number of spaces inserted per Tab and used for auto-indent in the code editor (1-16, default: 4).",
+                "Number of spaces inserted per Tab and used for auto-indent in the code editor.\n\n1 to 16, default 4.",
                 cfg.tabWidth, 1, 16, v -> cfg.tabWidth = v));
         list.add(new IntRow(Tab.EDITOR, "Max error lines:",
-                "Maximum number of lines shown in the editor's error bar before it becomes scrollable (1-20, default: 5).",
+                "Maximum number of lines shown in the editor's error bar before it becomes scrollable.\n\n1 to 20, default 5.",
                 cfg.errorBarMaxLines, 1, 20, v -> cfg.errorBarMaxLines = v));
         list.add(new PreviewRow(Tab.EDITOR));
 

@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.compat;
 
+import com.drakou111.neohouse.utils.TooltipLines;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -91,6 +92,6 @@ public final class Gfx {
 
     /** A tooltip for {@code text} at the mouse, wrapped so it doesn't run off the screen. */
     public void tooltip(Font font, String text, int mouseX, int mouseY) {
-        this.graphics.setTooltipForNextFrame(font.split(Component.literal(text), TOOLTIP_MAX_WIDTH), mouseX, mouseY);
+        this.graphics.setTooltipForNextFrame(TooltipLines.wrap(font, text, TOOLTIP_MAX_WIDTH), mouseX, mouseY);
     }
 }
