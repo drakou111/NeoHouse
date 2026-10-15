@@ -52,8 +52,8 @@ public class UnsetVariableCheckVisitor extends DefaultVisitor {
             if (this.assigned.contains(key) || !reported.add(key)) continue;
 
             String name = read.sourceName();
-            String message = ("'%s' is read but never set in this script. While it's unset it has no value: a condition "
-                    + "on it is false and other reads get an empty value. Set it first, or give it a fallback such as %s?0.")
+            String message = ("'%s' is used here but never given a value with = in this script. While it's unset, any "
+                    + "condition that uses it is false. Set it first, or add a fallback such as %s?0.")
                     .formatted(name, name);
             if (this.mode == UnsetVariableMode.ERROR) throw new SemanticException(read.token, message);
             this.warnings.add(new CompileWarning(read.token, message));

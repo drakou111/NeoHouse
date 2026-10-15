@@ -37,7 +37,7 @@ class UnsetVariableCheckTest {
         assertThat(warningsOf("long p.x; long p.y;\nfunction f() { if (p.x == 1) { p.y = 1; } }"))
                 .singleElement()
                 .satisfies(message -> assertThat(message)
-                        .contains("'p.x' is read but never set")
+                        .contains("'p.x' is used here but never given a value")
                         .contains("p.x?0"));
     }
 
@@ -45,35 +45,35 @@ class UnsetVariableCheckTest {
     void theVariableIsFoundOnEitherSideOfTheComparison() {
         assertThat(warningsOf("long p.x; long p.y;\nfunction f() { if (3 < p.x) { p.y = 1; } }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
+                .satisfies(message -> assertThat(message).contains("'p.x' is used here but never given a value"));
     }
 
     @Test
     void aBoolUsedAsTheConditionIsReported() {
         assertThat(warningsOf("bool p.vip; long p.y;\nfunction f() { if (p.vip) { p.y = 1; } }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.vip' is read but never set"));
+                .satisfies(message -> assertThat(message).contains("'p.vip' is used here but never given a value"));
     }
 
     @Test
     void aReadInACalculationIsReported() {
         assertThat(warningsOf("long p.x; long p.y;\nfunction f() { p.y = p.x + 1; }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
+                .satisfies(message -> assertThat(message).contains("'p.x' is used here but never given a value"));
     }
 
     @Test
     void theComparedValueIsAReadToo() {
         assertThat(warningsOf("long p.x; long p.y;\nfunction f() { p.y = 2; if (p.y == p.x) { p.y = 1; } }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
+                .satisfies(message -> assertThat(message).contains("'p.x' is used here but never given a value"));
     }
 
     @Test
     void anArgumentIsAReadToo() {
         assertThat(warningsOf("double p.hp;\nfunction f() { setHealth(p.hp, \"SET\"); }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.hp' is read but never set"));
+                .satisfies(message -> assertThat(message).contains("'p.hp' is used here but never given a value"));
     }
 
     @ParameterizedTest
@@ -81,7 +81,7 @@ class UnsetVariableCheckTest {
     void aCompoundAssignmentReadsTheVariable(String statement) {
         assertThat(warningsOf("long p.x;\nfunction f() { " + statement + " }"))
                 .singleElement()
-                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
+                .satisfies(message -> assertThat(message).contains("'p.x' is used here but never given a value"));
     }
 
     @ParameterizedTest
@@ -115,7 +115,7 @@ class UnsetVariableCheckTest {
     void canBeAnError() {
         assertThatThrownBy(() -> warningsOf("long p.x; long p.y;\nfunction f() { if (p.x == 1) { p.y = 1; } }", UnsetVariableMode.ERROR))
                 .isInstanceOf(CompilingException.class)
-                .hasMessageContaining("'p.x' is read but never set");
+                .hasMessageContaining("'p.x' is used here but never given a value");
     }
 
     @Test

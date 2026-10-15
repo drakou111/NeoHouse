@@ -175,19 +175,20 @@ final class HelpContent {
                         bool p.vip;"""),
                 new Text("A variable used without a declaration becomes a var. To catch typos like p.cions, set "
                         + "Undeclared variables to Warn or Error, or turn on Ban the var type."),
-                new Heading("Unset variables"),
-                new Text("A variable that was never set has no value. A condition on it is false, whatever it "
-                        + "compares against (even p.test == \"\")."),
-                new Text("Add ?value to a read to use that value while the variable is unset. The fallback must be a "
-                        + "constant of the variable's type. It binds tightly: p.test?0 + 2 is (p.test?0) + 2."),
+                new Heading("Unset variables and fallbacks"),
+                new Text("A variable that was never given a value is unset. Any condition that uses an unset "
+                        + "variable is false, whatever it is compared to (even p.test == \"\")."),
+                new Text("Write ?value right after a variable to choose what to use while it is unset. The value "
+                        + "must be a constant of the variable's type."),
                 new Code("""
-                        p.apple = p.test?0 + 2;
-                        if (p.lives?3 > 0) {
+                        p.apple = p.test?0 + 2;    // 2 while p.test is unset
+                        if (p.lives?3 > 0) {       // an unset p.lives counts as 3
                             message("still alive");
                         }"""),
-                new Text("In a condition, the fallback of the compared variable goes in Housing's Fallback Value "
-                        + "field. The Never-set variables setting warns when the script reads a variable it never "
-                        + "sets with = (+= and the like count as reads)."),
+                new Text("The ?value only belongs to the variable just before it: p.test?0 + 2 means (p.test?0) + 2."),
+                new Text("The Never-set variables setting warns when the script uses a variable's value (in a "
+                        + "calculation, a condition, an action's argument, or with += and the like) but never gives it "
+                        + "one with =, and there is no ?value."),
                 new Heading("Names"),
                 new Text("Variable names are at most 16 characters (Housing's limit). '$' is reserved for the variables "
                         + "the compiler makes, so your own names can't contain it.")));
@@ -440,7 +441,7 @@ final class HelpContent {
                                                 Error, Warn, Off
                         Undeclared variables    a variable used without a declaration
                                                 Allow, Warn, Error
-                        Never-set variables     reading a variable the script never sets
+                        Never-set variables     using a variable the script never sets
                                                 Warn, Error, Off
                         Ban the var type        reject var everywhere, including
                                                 undeclared variables"""),

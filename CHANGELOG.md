@@ -8,7 +8,7 @@
 - Fixed: setting a loop's tick delay stopped the run, because Housing asks for it in an anvil even with chat inputs on.
 
 ### Compiler
-- New setting Never-set variables (Warn by default, or Error or Off): reports reading a variable the script never sets (in a calculation, an argument, a condition, or a compound assignment like `+=`) without a fallback, since an unset variable has no value and a condition on it is false.
+- New setting Never-set variables (Warn by default, or Error or Off): warns when the script uses a variable (in a calculation, a condition, an action argument, or with `+=` and the like) that it never gives a value with `=` and that has no fallback, since any condition on an unset variable is false.
 - Fixed: a fallback on the compared variable of a condition (`if (p.lives?3 > 0)`) was dropped; it now fills the condition's Fallback Value field.
 
 ### Interface

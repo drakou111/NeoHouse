@@ -131,9 +131,9 @@ public class ConfigScreen extends ScreenBase {
                         + "Error: compilation fails.",
                 UndeclaredVariableMode.values(), m -> m.displayName, cfg.undeclaredVariableMode, m -> cfg.undeclaredVariableMode = m));
         list.add(enumRow(Tab.COMPILER, "Never-set variables:",
-                "A variable that was never set has no value: a condition on it is false and other reads get an "
-                        + "empty value, unless the read has a fallback like p.x?0. This checks for reads of variables "
-                        + "the script never sets (another script may still set them).\n\n"
+                "A variable that was never given a value is unset, and any condition that uses it is false. "
+                        + "This warns when the script uses a variable it never sets with =, unless a fallback like "
+                        + "p.x?0 says what to use instead (another script may still set it).\n\n"
                         + "Off: no check.\n"
                         + "Warn: reported.\n"
                         + "Error: compilation fails.",
