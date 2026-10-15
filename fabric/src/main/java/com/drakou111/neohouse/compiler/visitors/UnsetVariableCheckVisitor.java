@@ -7,6 +7,7 @@ import com.drakou111.neohouse.compiler.ast.main_statements.GlobalDeclarationNode
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
 import com.drakou111.neohouse.compiler.ast.statement.DeclarationNode;
 import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
+import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.config.UnsetVariableMode;
 import com.drakou111.neohouse.exceptions.SemanticException;
@@ -66,10 +67,14 @@ public class UnsetVariableCheckVisitor extends DefaultVisitor {
         return variable;
     }
 
-    /** The target is written, not read (a compound assignment like += also sets it). */
+    /**
+     * Only a plain {@code =} sets a variable. A compound assignment like {@code +=} starts from the
+     * current value, so on an unset variable it reads nothing, like any other read.
+     */
     @Override
     public ASTNode visitAssignation(AssignationNode assignation) {
-        this.assigned.add(VarKey.of(assignation.variable));
+        if (assignation.operator == AssignmentOperator.ASSIGN) this.assigned.add(VarKey.of(assignation.variable));
+        else visitVariable(assignation.variable);
         assignation.value.accept(this);
         return assignation;
     }

@@ -77,13 +77,21 @@ class UnsetVariableCheckTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"p.x += 1;", "p.x -= 2;", "p.x *= 3;", "p.x++;", "p.x--;"})
+    void aCompoundAssignmentReadsTheVariable(String statement) {
+        assertThat(warningsOf("long p.x;\nfunction f() { " + statement + " }"))
+                .singleElement()
+                .satisfies(message -> assertThat(message).contains("'p.x' is read but never set"));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {
-            // a compound assignment sets the variable
-            "long p.x;\nfunction f() { p.x += 1; }",
+            // a compound assignment after the variable is set
+            "long p.x;\nfunction f() { p.x = 0; p.x += 1; }",
             // a fallback on a read in a calculation
             "long p.x; long p.y;\nfunction f() { p.y = p.x?0 + 1; }",
             // set later or elsewhere in the script
-            "long p.x; long p.y;\nfunction f() { if (p.x == 1) { p.y = 1; } }\nfunction g() { p.x += 1; }",
+            "long p.x; long p.y;\nfunction f() { if (p.x == 1) { p.y = 1; } }\nfunction g() { p.x = 1; }",
             // a fallback covers the unset case
             "long p.x; long p.y;\nfunction f() { if (p.x?0 == 1) { p.y = 1; } }",
             // a starting value counts as set

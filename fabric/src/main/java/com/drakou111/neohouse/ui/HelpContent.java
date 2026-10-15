@@ -172,7 +172,7 @@ final class HelpContent {
                         + "fallback must be a constant of the variable's type (anything for a var). It binds tightly: "
                         + "p.test?0 + 2 is (p.test?0) + 2. In a condition, a fallback on the compared variable fills the "
                         + "condition's Fallback Value field. The Never-set variables setting warns when the script "
-                        + "reads a variable it never sets, without a fallback."),
+                        + "reads a variable it never sets with =, without a fallback; += and the like read it too."),
                 new Code("""
                         p.apple = p.test?0 + 2;
                         if (p.lives?3 > 0) {
