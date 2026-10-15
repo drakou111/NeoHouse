@@ -22,6 +22,7 @@ import com.drakou111.neohouse.utils.HousingCheck;
 import com.drakou111.neohouse.utils.LibraryManager;
 import com.drakou111.neohouse.utils.MessageUtils;
 import com.drakou111.neohouse.utils.MusicFolderMerge;
+import com.drakou111.neohouse.utils.RunWarnings;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -244,6 +245,12 @@ public final class CommandActions {
         } else {
             MessageUtils.debugToChat("Helper functions (" + names.size() + "):\n" + String.join(", ", names));
         }
+        return 1;
+    }
+
+    public static int listRunWarnings() {
+        if (noPlayer()) return 0;
+        RunWarnings.replay();
         return 1;
     }
 

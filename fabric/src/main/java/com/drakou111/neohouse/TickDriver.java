@@ -2,7 +2,6 @@ package com.drakou111.neohouse;
 
 import com.drakou111.neohouse.compat.ClientUi;
 import com.drakou111.neohouse.compat.Keys;
-import com.drakou111.neohouse.utils.MessageUtils;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
@@ -31,8 +30,7 @@ public class TickDriver {
         int cancelKey = CancelKeybind.CANCEL_KEY.getKeyCode();
         boolean cancelKeyDown = Keys.isDown(cancelKey);
         if (cancelKeyDown && !cancelKeyWasDown && SequenceManager.isRunning()) {
-            SequenceManager.cancelAction();
-            MessageUtils.debugToChat("Script cancelled.");
+            SequenceManager.stop("Script cancelled.", false);
         }
         cancelKeyWasDown = cancelKeyDown;
 

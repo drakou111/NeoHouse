@@ -16,6 +16,7 @@ public class MessageUtils {
     private static final String ERROR_PREFIX = "[ERROR] ";
     private static final String WARNING_PREFIX = "[WARNING] ";
     private static final String TAB_AS_SPACES = "    ";
+    private static final String SHOW_WARNINGS_COMMAND = "/nh list warnings";
 
     /** Sends each line as its own chat message: a newline inside one component renders as a glyph. */
     private static void sendPrefixedMultiline(Object message, String prefixText,
@@ -76,24 +77,49 @@ public class MessageUtils {
     }
 
     public static void warningToChat(Object message) {
+        RunWarnings.record(() -> warningToChat(message));
         sendPrefixedMultiline(message, WARNING_PREFIX, ChatFormatting.YELLOW, ChatFormatting.YELLOW);
     }
 
     public static void warningToChat(CompileWarning warning) {
+        RunWarnings.record(() -> warningToChat(warning));
         sendDiagnostic(warning.token(), warning.message(), WARNING_PREFIX, ChatFormatting.YELLOW);
     }
 
     public static void warningToChatWithLink(String message, String linkText, String command) {
+        RunWarnings.record(() -> warningToChatWithLink(message, linkText, command));
         if (Minecraft.getInstance().player == null) return;
         MutableComponent full = Component.empty();
         full.append(Component.literal(WARNING_PREFIX).withStyle(ChatFormatting.YELLOW));
         full.append(Component.literal(message).withStyle(ChatFormatting.YELLOW));
         full.append(Component.literal(" "));
-        full.append(Component.literal("[" + linkText + "]")
+        full.append(link(linkText, command));
+        ClientMessages.show(full);
+    }
+
+    /**
+     * Ends a run's report: {@code message} (red when the run failed), followed by a link that shows
+     * the run's warnings again when there were any.
+     */
+    public static void runEndToChat(String message, boolean failed) {
+        RunWarnings.stop();
+        if (failed) errorToChat(message);
+        else debugToChat(message);
+        if (Minecraft.getInstance().player == null || RunWarnings.count() == 0) return;
+
+        int count = RunWarnings.count();
+        MutableComponent line = Component.empty()
+                .append(Component.literal("[NEOHOUSE] ").withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(count + " warning" + (count == 1 ? "" : "s") + " during this run. ").withStyle(ChatFormatting.GRAY))
+                .append(link("Show warnings", SHOW_WARNINGS_COMMAND));
+        ClientMessages.show(line);
+    }
+
+    private static MutableComponent link(String text, String command) {
+        return Component.literal("[" + text + "]")
                 .withStyle(style -> style
                         .withColor(ChatFormatting.GOLD)
                         .withUnderlined(true)
-                        .withClickEvent(ClickEventHelper.runCommand(command))));
-        ClientMessages.show(full);
+                        .withClickEvent(ClickEventHelper.runCommand(command)));
     }
 }

@@ -1,7 +1,6 @@
 package com.drakou111.neohouse.actions;
 
 import com.drakou111.neohouse.actions.actiontypes.WaitForChatAction;
-import com.drakou111.neohouse.utils.MessageUtils;
 import com.drakou111.neohouse.utils.SequenceManager;
 
 import java.util.Map;
@@ -39,8 +38,7 @@ public class ChatEvents {
         if (!SequenceManager.isRunning()) return;
         for (Map.Entry<String, String> trigger : STOP_TRIGGERS.entrySet()) {
             if (plainText.contains(trigger.getKey())) {
-                SequenceManager.cancelAction();
-                MessageUtils.errorToChat("Script stopped: " + trigger.getValue());
+                SequenceManager.stop("Script stopped: " + trigger.getValue(), true);
                 return;
             }
         }

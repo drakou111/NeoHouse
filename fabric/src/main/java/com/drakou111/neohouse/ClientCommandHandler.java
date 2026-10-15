@@ -47,6 +47,7 @@ public class ClientCommandHandler {
            .then(FabricHooks.literal("list")
                  .then(FabricHooks.literal("functions").executes(ctx -> CommandActions.listHelperFunctions()))
                  .then(FabricHooks.literal("variables").executes(ctx -> CommandActions.listExtraVariables()))
+                 .then(FabricHooks.literal("warnings").executes(ctx -> CommandActions.listRunWarnings()))
             )
            .then(FabricHooks.literal("run")
                  .then(FabricHooks.argument("path", StringArgumentType.greedyString())

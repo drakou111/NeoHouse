@@ -393,7 +393,9 @@ final class HelpContent {
                         + "again or raise Action timeout in the settings."),
                 new Heading("Afterwards"),
                 new Text("/nh rerun runs the last script again. /nh list functions and /nh list variables show the helper "
-                        + "functions and extra variables the last run created.")));
+                        + "functions and extra variables the last run created. When a run ends (done, stopped or "
+                        + "cancelled) after warnings, click Show warnings in chat, or use /nh list warnings, to see "
+                        + "them all again.")));
     }
 
     private static Topic settings() {
@@ -464,6 +466,7 @@ final class HelpContent {
                 /nh rerun               run the last script again
                 /nh list functions      helper functions of the last run
                 /nh list variables      extra variables of the last run
+                /nh list warnings       warnings of the last run again
                 /nh copyitem            copy the held item's data
                 /nh giveitem <data>     get an item from its data
                 /nh delete <kind>       delete all functions, events, commands or menus

@@ -38,6 +38,7 @@ public class SequenceManager {
 
     public static void startAction(Action action) {
         ChatEvents.clear(); // drop any listeners left over from a previous run
+        RunWarnings.startIfIdle();
         createdThisRun.clear();
         existingEntries.clear();
         currentAction = action;
@@ -49,6 +50,13 @@ public class SequenceManager {
     public static void cancelAction() {
         currentAction = null;
         ChatEvents.clear();
+        RunWarnings.stop();
+    }
+
+    /** Stops the run and reports why, with a link to the run's warnings. */
+    public static void stop(String message, boolean failed) {
+        cancelAction();
+        MessageUtils.runEndToChat(message, failed);
     }
 
     public static boolean isRunning() {
@@ -71,14 +79,12 @@ public class SequenceManager {
         if (currentAction == null) return;
 
         if (!HousingCheck.isInHousing()) {
-            MessageUtils.errorToChat("Script stopped: not in Housing.");
-            currentAction = null;
+            stop("Script stopped: not in Housing.", true);
             return;
         }
 
         if (mc.player != null && !mc.player.getAbilities().instabuild && currentAction.requiresCreative()) {
-            MessageUtils.errorToChat("Script stopped: creative mode is required for item actions.");
-            currentAction = null;
+            stop("Script stopped: creative mode is required for item actions.", true);
             return;
         }
 
@@ -86,19 +92,13 @@ public class SequenceManager {
         try {
             finished = currentAction.run(mc);
         } catch (InterruptActionException e) {
-            MessageUtils.errorToChat(e);
-            currentAction = null;
+            stop(e.getMessage() != null ? e.getMessage() : e.toString(), true);
             return;
         } catch (Exception e) {
-            MessageUtils.errorToChat("Script aborted due to unexpected error: " + e);
-            currentAction = null;
+            stop("Script aborted due to unexpected error: " + e, true);
             return;
         }
 
-        if (finished) {
-            MessageUtils.debugToChat("Done!");
-            currentAction = null;
-            ChatEvents.clear();
-        }
+        if (finished) stop("Done!", false);
     }
 }

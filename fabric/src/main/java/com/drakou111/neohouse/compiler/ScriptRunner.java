@@ -7,6 +7,7 @@ import com.drakou111.neohouse.exceptions.CompilingException;
 import com.drakou111.neohouse.exceptions.PermissionException;
 import com.drakou111.neohouse.utils.HousingCheck;
 import com.drakou111.neohouse.utils.MessageUtils;
+import com.drakou111.neohouse.utils.RunWarnings;
 import com.drakou111.neohouse.utils.SequenceManager;
 import net.minecraft.client.Minecraft;
 
@@ -35,7 +36,18 @@ public class ScriptRunner {
         return lastScript;
     }
 
+    /** Compiles and starts a script; warnings from here to the end of the run can be shown again afterwards. */
     public void runScript(Path nhFile) throws CompilingException, PermissionException {
+        RunWarnings.start();
+        try {
+            compileAndStart(nhFile);
+        } finally {
+            // A script that failed before starting has nothing left to log.
+            if (!SequenceManager.isRunning()) RunWarnings.stop();
+        }
+    }
+
+    private void compileAndStart(Path nhFile) throws CompilingException, PermissionException {
         lastScript = nhFile;
         if (!HousingCheck.isInHousing()) {
             throw new PermissionException("You must be in Hypixel Housing to run scripts.");
