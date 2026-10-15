@@ -23,6 +23,16 @@ public class VariableNode extends NormalExpressionNode {
      *  placeholder uses when the variable is undefined. Always a constant literal after parsing. */
     public ConstantPrimitiveNode fallback = null;
 
+    /** The variable as written in a script: p.x, g.x, t[team].x, or a bare name. */
+    public String sourceName() {
+        if (wasBare) return name;
+        return switch (holder) {
+            case PLAYER -> "p." + name;
+            case GLOBAL -> "g." + name;
+            case TEAM -> "t[" + teamName + "]." + name;
+        };
+    }
+
     /** The space-prefixed fallback token embedded inside a {@code %var...%} placeholder,
      *  e.g. {@code " 0"}. Empty when there is no fallback. */
     public String fallbackToken() {

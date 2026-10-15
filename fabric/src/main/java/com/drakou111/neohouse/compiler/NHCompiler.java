@@ -172,22 +172,12 @@ public class NHCompiler implements Compiler {
         UndeclaredVariableMode mode = options.forbidVarType() ? UndeclaredVariableMode.ERROR : options.undeclaredVariableMode();
         if (mode == UndeclaredVariableMode.ALLOW) return;
         for (VariableNode variable : undeclared) {
-            String name = displayName(variable);
+            String name = variable.sourceName();
             String message = options.forbidVarType()
                     ? "'%s' is not declared, so it would be a var, which is turned off; declare it with a type, e.g. long %s;".formatted(name, name)
                     : "'%s' is not declared; declare it at the top of the file, e.g. long %s;".formatted(name, name);
             if (mode == UndeclaredVariableMode.ERROR) throw new SemanticException(variable.token, message);
             warnings.add(new CompileWarning(variable.token, message));
         }
-    }
-
-    /** A variable as written in a script: p.x, g.x, t[team].x, or a bare name. */
-    private static String displayName(VariableNode variable) {
-        if (variable.wasBare) return variable.name;
-        return switch (variable.holder) {
-            case PLAYER -> "p." + variable.name;
-            case GLOBAL -> "g." + variable.name;
-            case TEAM -> "t[" + variable.teamName + "]." + variable.name;
-        };
     }
 }
