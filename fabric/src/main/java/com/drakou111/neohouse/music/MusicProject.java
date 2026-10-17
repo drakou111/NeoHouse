@@ -21,6 +21,12 @@ public class MusicProject {
 
     public boolean allowAllSounds = false;
 
+    /** Exported songs stop early when this variable is 1 (blank: no stop check). */
+    public String stopVariable = "";
+
+    /** Flips the stop check: the song plays only while {@link #stopVariable} is 1. */
+    public boolean stopVariableInverted = false;
+
     public List<MusicTrack> tracks = new ArrayList<>();
 
     public MusicProject() {}

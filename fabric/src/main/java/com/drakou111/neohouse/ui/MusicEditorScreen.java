@@ -19,6 +19,7 @@ import com.drakou111.neohouse.music.SoundEventResolver;
 import com.drakou111.neohouse.music.SoundIcon;
 import com.drakou111.neohouse.utils.MessageUtils;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -27,6 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Piano-roll editor for a {@code .nhm} music project.
@@ -56,6 +58,9 @@ public class MusicEditorScreen extends ScreenBase {
     private static final int MAX_TICK_W = 28;
     private static final int SEMITONES = 25;
     private static final int TRACK_ROW_H = 30;
+    private static final int STOP_BOX_W = 84;
+    private static final int STOP_TOGGLE_W = 62;
+    private static final int STOP_VARIABLE_MAX_LENGTH = 40;
 
     private final Path file;
     private final Screen parent;
@@ -78,6 +83,9 @@ public class MusicEditorScreen extends ScreenBase {
     private boolean wasPlaying = false;
 
     private MusicNote clipboard;
+    private EditBox stopVariableBox;
+    private int titleLeft;
+    private int titleRight;
 
     public MusicEditorScreen(Path file, Screen parent) {
         super(Component.literal("Music Editor"));
@@ -132,7 +140,17 @@ public class MusicEditorScreen extends ScreenBase {
         int x = PAD;
         x = addTop("< Back", 42, x, TOOLBAR_ROW_1_Y, b -> onClose(), "Back to the file browser");
         x = addTop("Save", 40, x, TOOLBAR_ROW_1_Y, b -> save(), "Save (Ctrl+S)");
-        addTop("Export", 48, x, TOOLBAR_ROW_1_Y, b -> exportFunction(), "Write the song as a playable .nh function next to it");
+        this.titleLeft = addTop("Export", 48, x, TOOLBAR_ROW_1_Y, b -> exportFunction(), "Write the song as a playable .nh function next to it");
+
+        // Row 1, right: the variable that can stop the exported song.
+        int toggleX = this.width - PAD - STOP_TOGGLE_W;
+        addTop(this.project.stopVariableInverted ? "Play if 1" : "Stop if 1", STOP_TOGGLE_W, toggleX, TOOLBAR_ROW_1_Y,
+                b -> { this.project.stopVariableInverted = !this.project.stopVariableInverted; markDirty(); rebuildAll(); },
+                this.project.stopVariableInverted
+                        ? "The exported song plays only while the stop variable is 1. Click to stop it when it is 1 instead"
+                        : "The exported song stops once the stop variable is 1. Click to play only while it is 1 instead");
+        addStopVariableBox(toggleX - 4 - STOP_BOX_W);
+        this.titleRight = toggleX - 4 - STOP_BOX_W - 4;
 
         // Row 2: playback, tracks and view, grouped with small gaps between the groups.
         x = PAD;
@@ -155,6 +173,33 @@ public class MusicEditorScreen extends ScreenBase {
             addPanelBtn("Ren", 60, by, "Rename this track", b -> { activeTrack(tr); renameTrack(tr); });
             addPanelBtn("Del", 88, by, "Delete this track", b -> { activeTrack(tr); deleteTrack(tr); });
         }
+    }
+
+    private void addStopVariableBox(int x) {
+        boolean wasFocused = this.stopVariableBox != null && this.stopVariableBox.isFocused();
+        this.stopVariableBox = new EditBox(this.font, x, TOOLBAR_ROW_1_Y, STOP_BOX_W, 16, Component.literal("Stop variable"));
+        this.stopVariableBox.setMaxLength(STOP_VARIABLE_MAX_LENGTH);
+        this.stopVariableBox.setHint(Component.literal("Stop variable"));
+        this.stopVariableBox.setValue(this.project.stopVariable);
+        this.stopVariableBox.setTooltip(Tooltip.create(Component.literal(stopVariableTooltip())));
+        this.stopVariableBox.setResponder(text -> {
+            if (text.equals(this.project.stopVariable)) return;
+            this.project.stopVariable = text;
+            this.stopVariableBox.setTooltip(Tooltip.create(Component.literal(stopVariableTooltip())));
+            markDirty();
+        });
+        addRenderableWidget(this.stopVariableBox);
+        if (wasFocused) {
+            setFocused(this.stopVariableBox);
+            this.stopVariableBox.setFocused(true);
+        }
+    }
+
+    private String stopVariableTooltip() {
+        Optional<String> problem = MusicFunctionExporter.stopVariableProblem(this.project.stopVariable);
+        if (problem.isPresent()) return problem.get();
+        return "A variable such as p.stop that can end the exported song early. It is checked before each "
+                + "block of notes. Leave it empty to always play the whole song.";
     }
 
     private int addTop(String label, int w, int x, int y, Button.OnPress onPress, String tooltip) {
@@ -198,6 +243,9 @@ public class MusicEditorScreen extends ScreenBase {
         g.fill(0, height - FOOTER_H, width, height - FOOTER_H + 1, t.accent());
 
         String title = project.name + (dirty ? " *" : "");
+        int titleWidth = 2 * Math.min(width / 2 - this.titleLeft, this.titleRight - width / 2);
+        if (font.width(title) > titleWidth)
+            title = font.plainSubstrByWidth(title, Math.max(0, titleWidth - font.width("..."))) + "...";
         g.drawCenteredString(font, title, width / 2, TOOLBAR_ROW_1_Y + 4, 0xFFFFFFFF);
         String info = String.format("%.0f BPM   %d notes   %.1fs", project.bpm, project.totalNotes(),
                 project.lengthTicks() / (double) MusicProject.TICKS_PER_SECOND);
@@ -403,6 +451,10 @@ public class MusicEditorScreen extends ScreenBase {
     protected boolean onMouseClicked(double mx, double my, int button) {
         // let all widgets (toolbar, per-track buttons, footer) fire first
         if (superMouseClicked(mx, my, button)) return true;
+        if (this.stopVariableBox.isFocused()) {
+            this.stopVariableBox.setFocused(false);
+            setFocused(null);
+        }
 
         // horizontal scrollbar
         if (button == 0 && inHScroll(mx, my)) {
@@ -548,6 +600,15 @@ public class MusicEditorScreen extends ScreenBase {
     @Override
     protected boolean onKeyPressed(int key, int scan, int mods) {
         boolean ctrl = (mods & Keys.MOD_CONTROL) != 0;
+        if (ctrl && key == Keys.S) { save(); return true; }
+        if (this.stopVariableBox.isFocused()) {
+            if (key == Keys.ESCAPE || key == Keys.ENTER) {
+                this.stopVariableBox.setFocused(false);
+                setFocused(null);
+                return true;
+            }
+            return superKeyPressed(key, scan, mods);
+        }
         if (key == Keys.SPACE) { player.toggle(); rebuildAll(); return true; }
         if (key == Keys.HOME) { player.seek(0); tickOffset = 0; return true; }
         if (key == Keys.DELETE && selected != null) {
@@ -562,7 +623,6 @@ public class MusicEditorScreen extends ScreenBase {
             markDirty();
             return true;
         }
-        if (ctrl && key == Keys.S) { save(); return true; }
         return superKeyPressed(key, scan, mods);
     }
 
@@ -643,7 +703,7 @@ public class MusicEditorScreen extends ScreenBase {
         try {
             Files.writeString(target, MusicFunctionExporter.toScript(project, fnName));
             MessageUtils.debugToChat("Exported " + target.getFileName() + " (" + project.totalNotes() + " notes) next to the song.");
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             MessageUtils.errorToChat("Export failed: " + e.getMessage());
         }
     }

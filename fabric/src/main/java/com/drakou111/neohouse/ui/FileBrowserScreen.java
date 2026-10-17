@@ -430,7 +430,7 @@ public class FileBrowserScreen extends ScreenBase {
         try {
             Files.writeString(target, MusicFunctionExporter.toScript(project, fnName));
             MessageUtils.debugToChat("Exported " + target.getFileName() + " - run it like any other script.");
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             MessageUtils.errorToChat("Export failed: " + e.getMessage());
         }
     }
