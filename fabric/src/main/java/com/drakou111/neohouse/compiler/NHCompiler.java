@@ -32,6 +32,7 @@ import com.drakou111.neohouse.compiler.visitors.ReturnContextChecker;
 import com.drakou111.neohouse.compiler.visitors.ReturnPlacementVisitor;
 import com.drakou111.neohouse.compiler.visitors.ScopeCheckingVisitor;
 import com.drakou111.neohouse.compiler.visitors.SimplifyingExpressionsVisitor;
+import com.drakou111.neohouse.compiler.visitors.StringAppendLoweringVisitor;
 import com.drakou111.neohouse.compiler.visitors.StringLengthCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.TempOptimizationVisitor;
 import com.drakou111.neohouse.compiler.visitors.TypeInferringVisitor;
@@ -119,6 +120,7 @@ public class NHCompiler implements Compiler {
         ScopeCheckingVisitor checker = new ScopeCheckingVisitor(collector.globalDecls, collector.allLocalNames);
         node = checker.analyze(node);
         reportUndeclared(checker.getUndeclared(), options, warnings);
+        node = new StringAppendLoweringVisitor().analyze(node);
 
         ReturnCheckVisitor returnCheck = new ReturnCheckVisitor();
         returnCheck.analyze(node);
