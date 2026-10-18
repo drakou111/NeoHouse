@@ -206,11 +206,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                     }
                     // Variable -> embed as in-game placeholder reference (avoids broken string +=)
                     if (opRes.simple() instanceof VariableNode v) {
-                        String ref = switch (v.holder) {
-                            case PLAYER -> "%var.player/" + v.name + v.fallbackToken() + "%";
-                            case GLOBAL -> "%var.global/" + v.name + v.fallbackToken() + "%";
-                            case TEAM   -> "%var.team/" + v.name + " " + v.teamName + v.fallbackToken() + "%";
-                        };
+                        String ref = v.placeholder();
                         return new LowerResult(new ConstantPrimitiveNode(
                                 new StringValue(ref), VariableType.STRING, un.token), opRes.stmts());
                     }
@@ -435,11 +431,7 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
                 case DoubleValue d -> d.toString();
                 case BoolValue b   -> b.toString();
             };
-            case VariableNode v -> switch (v.holder) {
-                case PLAYER -> "%var.player/" + v.name + v.fallbackToken() + "%";
-                case GLOBAL -> "%var.global/" + v.name + v.fallbackToken() + "%";
-                case TEAM   -> "%var.team/" + v.name + " " + v.teamName + v.fallbackToken() + "%";
-            };
+            case VariableNode v -> v.placeholder();
             case PlaceholderNode p -> {
                 Placeholder ph = Placeholder.requireByName(p.placeholder);
                 StringBuilder sb = new StringBuilder("%").append(ph.inGameName);

@@ -82,11 +82,7 @@ public class StringLengthCheckVisitor extends EmptyVisitor<Void> {
     private int housingLength(NormalExpressionNode expr) {
         return switch (expr) {
             case ConstantPrimitiveNode c -> primitiveLength(c.value);
-            case VariableNode v -> v.fallbackToken().length() + switch (v.holder) {
-                case PLAYER -> 13 + v.name.length(); // %var.player/name%
-                case GLOBAL -> 13 + v.name.length(); // %var.global/name%
-                case TEAM   -> 12 + v.name.length() + 1 + v.teamName.length(); // %var.team/name teamname%
-            };
+            case VariableNode v -> v.placeholder().length();
             case PlaceholderNode p -> placeholderLength(p);
             case BinaryExpressionNode b when b.operator == BinaryOperator.ADD ->
                 housingLength(b.left) + housingLength(b.right);

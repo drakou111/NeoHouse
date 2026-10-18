@@ -948,11 +948,7 @@ public class CodeGenerator {
 
     private String variableToString(VariableNode v) {
         String suffix = v.castSuffix != null ? v.castSuffix : "";
-        return switch (v.holder) {
-            case PLAYER -> "%var.player/" + v.name + v.fallbackToken() + "%" + suffix;
-            case GLOBAL -> "%var.global/" + v.name + v.fallbackToken() + "%" + suffix;
-            case TEAM -> "%var.team/" + v.name + " " + v.teamName + v.fallbackToken() + "%" + suffix;
-        };
+        return v.placeholder() + suffix;
     }
 
     private String placeholderToString(PlaceholderNode p) {

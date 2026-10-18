@@ -33,6 +33,15 @@ public class VariableNode extends NormalExpressionNode {
         };
     }
 
+    /** The Housing placeholder that reads this variable, e.g. {@code %var.player/coins 0%}. */
+    public String placeholder() {
+        return switch (holder) {
+            case PLAYER -> "%var.player/" + name + fallbackToken() + "%";
+            case GLOBAL -> "%var.global/" + name + fallbackToken() + "%";
+            case TEAM -> "%var.team/" + name + " " + teamName + fallbackToken() + "%";
+        };
+    }
+
     /** The space-prefixed fallback token embedded inside a {@code %var...%} placeholder,
      *  e.g. {@code " 0"}. Empty when there is no fallback. */
     public String fallbackToken() {
