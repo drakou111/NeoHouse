@@ -13,6 +13,7 @@ import com.drakou111.neohouse.compiler.visitors.ConstantConditionFoldingVisitor;
 import com.drakou111.neohouse.compiler.visitors.ConstantMistakeCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.DeadCodeCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.DeclarationCollectorVisitor;
+import com.drakou111.neohouse.compiler.visitors.DoubleIncrementVisitor;
 import com.drakou111.neohouse.compiler.visitors.DuplicateNameCheck;
 import com.drakou111.neohouse.compiler.visitors.EnumCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.ExtraVariableCollectorVisitor;
@@ -124,6 +125,7 @@ public class NHCompiler implements Compiler {
         node = checker.analyze(node);
         reportUndeclared(checker.getUndeclared(), options, warnings);
         node = new StringAppendLoweringVisitor().analyze(node);
+        node = new DoubleIncrementVisitor().analyze(node);
 
         ReturnCheckVisitor returnCheck = new ReturnCheckVisitor();
         returnCheck.analyze(node);

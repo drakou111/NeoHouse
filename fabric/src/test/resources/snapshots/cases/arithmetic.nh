@@ -18,6 +18,8 @@ function compute() {
     p.a = p.a | 3;
     p.a = p.a ^ 5;
     p.d = 1.5 * 4.0 + 0.25;
+    p.d++;
+    p.d--;
     p.d = (double) p.a / 2.0;
     p.a = (long) p.d;
     p.a = (long) -2.7;
