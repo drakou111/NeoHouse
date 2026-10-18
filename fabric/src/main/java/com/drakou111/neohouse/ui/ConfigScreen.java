@@ -71,6 +71,8 @@ public class ConfigScreen extends ScreenBase {
     }
 
     private final Screen parent;
+    // Escape normally closes every screen; opened from another mod's list it goes back there instead.
+    private final boolean escapeReturnsToParent;
     private final List<Row> rows;
     private final DropdownRow syntaxThemeRow;
     private final DropdownRow uiThemeRow;
@@ -82,8 +84,13 @@ public class ConfigScreen extends ScreenBase {
     private int scroll = 0;
 
     public ConfigScreen(Screen parent) {
+        this(parent, false);
+    }
+
+    public ConfigScreen(Screen parent, boolean escapeReturnsToParent) {
         super(Component.literal("NeoHouse Config"));
         this.parent = parent;
+        this.escapeReturnsToParent = escapeReturnsToParent;
         NeoHouseConfig cfg = NeoHouseConfig.get();
         this.syntaxThemeRow = enumRow(Tab.EDITOR, "Syntax theme:", null, SyntaxTheme.values(), t -> t.displayName,
                 cfg.syntaxTheme, t -> cfg.syntaxTheme = t);
@@ -332,7 +339,7 @@ public class ConfigScreen extends ScreenBase {
     @Override
     public void onClose() {
         save();
-        ClientUi.setScreen(this.minecraft, null);
+        ClientUi.setScreen(this.minecraft, this.escapeReturnsToParent ? this.parent : null);
     }
 
     private void closeAndSave() {

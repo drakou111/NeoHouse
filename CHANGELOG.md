@@ -18,6 +18,7 @@
 - Fixed: typing, deleting or pressing Enter past the right edge didn't scroll the editor to the cursor.
 
 ### Settings
+- Mod Menu support: NeoHouse's config button in Mod Menu opens the NeoHouse settings, and Escape or Back returns to Mod Menu. Mod Menu stays optional.
 - Options are colored by how strict they are, in the dropdowns and in the tooltips: Off and Allow green, Warn yellow, Error red, Fix aqua. Override modes go from Never Override (green) through Override If Empty (yellow) and Append (aqua) to Always Override (red).
 
 ### Music

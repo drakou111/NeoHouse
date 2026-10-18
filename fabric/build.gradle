@@ -52,6 +52,17 @@ dependencies {
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
+// Mod Menu's API is compiled against stand-ins in src/modmenuStubs (not packaged), so no Mod Menu
+// build is needed for each Minecraft version; when Mod Menu is installed, its own classes are used.
+sourceSets {
+    modmenuStubs {
+        compileClasspath += sourceSets.main.compileClasspath
+    }
+    main {
+        compileClasspath += sourceSets.modmenuStubs.output
+    }
+}
+
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 
 tasks.named("test", Test).configure {

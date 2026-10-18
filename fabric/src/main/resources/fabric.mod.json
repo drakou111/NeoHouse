@@ -9,7 +9,8 @@
   "icon": "neohouse_icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": ["com.drakou111.neohouse.NeoHouseFabric"]
+    "client": ["com.drakou111.neohouse.NeoHouseFabric"],
+    "modmenu": ["com.drakou111.neohouse.integration.ModMenuIntegration"]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
