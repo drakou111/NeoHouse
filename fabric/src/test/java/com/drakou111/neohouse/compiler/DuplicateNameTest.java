@@ -35,6 +35,17 @@ class DuplicateNameTest {
     }
 
     @Test
+    void twoBlocksForTheSameEvent() {
+        assertRejected("event onJoin { p.a = 1; }\nevent onJoin { p.b = 2; }", "There's already an onJoin event block (line 1)");
+    }
+
+    @Test
+    void differentEventsAreFine() {
+        assertThatCode(() -> TestCompiler.analyze("event onJoin { p.a = 1; }\nevent onQuit { p.b = 2; }"))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
     void aFunctionCommandAndMenuMayShareAName() {
         assertThatCode(() -> TestCompiler.analyze("function shop() { p.x = 1; }\ncommand shop { shop(); }\nmenu shop(1) { }"))
                 .doesNotThrowAnyException();
