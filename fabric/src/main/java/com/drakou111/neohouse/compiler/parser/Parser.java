@@ -80,6 +80,8 @@ public class Parser {
     private final HashMap<String, ConstantPrimitiveNode> constTable = new HashMap<>();
     // Parameters (the only bare-named variables), checked against the constants once all are known.
     private final List<Token> bareDeclarations = new ArrayList<>();
+    // The parameters of the function being parsed: the only names that may be written without a holder.
+    private Set<String> parameterNames = Set.of();
     /** enum name -> its members in declaration order (member index = ordinal value). */
     private final Map<String, List<String>> enumDefs = new HashMap<>();
     // Where 'var' was written as a type, for the setting that forbids it.
@@ -308,10 +310,14 @@ public class Parser {
             else varEnumType.remove(fullname);
         }
 
+        Set<String> names = new HashSet<>();
+        for (VariableNode param : parameters) names.add(param.name);
+        this.parameterNames = names;
         List<StatementNode> body = new ArrayList<>();
         while (!check(TokenType.RBRACE) && !isAtEnd()) {
             body.add(parseStatement());
         }
+        this.parameterNames = Set.of();
 
         for (Map.Entry<String, String> e : savedEnumTypes.entrySet()) {
             if (e.getValue() == null) varEnumType.remove(e.getKey());
@@ -910,6 +916,7 @@ public class Parser {
 
                 stepBack();
                 VariableNode readVar = parseVariable();
+                requireHolderOrParameter(readVar);
                 attachFallback(readVar);
                 return readVar;
             }
@@ -1023,6 +1030,7 @@ public class Parser {
         if (check(TokenType.IDENT) && constTable.containsKey(peek().text))
             throw new ParsingException(peek(), "Cannot assign to constant '" + peek().text + "'");
         VariableNode variableNode = parseVariable();
+        requireHolderOrParameter(variableNode);
         Token operatorToken = advance();
 
         // x++; and x--; as shorthand for x += 1 and x -= 1
@@ -1044,7 +1052,9 @@ public class Parser {
         Token openParen = consume(TokenType.LPAREN, "Expected '('");
         List<VariableNode> targets = new ArrayList<>();
         do {
-            targets.add(parseVariable());
+            VariableNode target = parseVariable();
+            requireHolderOrParameter(target);
+            targets.add(target);
         } while (match(TokenType.COMMA));
 
         if (targets.size() < 2)
@@ -1161,6 +1171,14 @@ public class Parser {
         variableNode.enumName = enumType;
         if (variableNode.wasBare) this.bareDeclarations.add(variableNode.token);
         return variableNode;
+    }
+
+    /** A name without a holder has to be a parameter of the function it is used in. */
+    private void requireHolderOrParameter(VariableNode variable) {
+        if (!variable.wasBare || this.parameterNames.contains(variable.name)) return;
+        throw new ParsingException(variable.token, ("Unknown name '%s': it isn't a constant or a parameter. For a "
+                + "variable, write p.%s (the player's), g.%s (the house's) or t[team].%s (a team's).")
+                .formatted(variable.name, variable.name, variable.name, variable.name));
     }
 
     /** Only parameters go without a holder; a declared variable has to say whose it is. */

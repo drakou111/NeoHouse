@@ -9,7 +9,7 @@
 - Two functions, commands or menus with the same name are now an error (the second used to replace the first in Housing). A loop can't share a function's name either, since loops are functions in Housing.
 - In strings, `\"` now means `"` and `\\` means `\`; before, the backslash was sent to Housing too. Other backslashes (like `\n`) are kept as written. Item data in `({...})` is unchanged.
 - A parameter can't be named like a constant or enum member any more (`const long x = 1;` with `function f(long x)`). Before, every `x` silently meant the constant, so the parameter was ignored. `p.x` is still fine.
-- Declaring a variable without a holder (`long test;`) is now an error; write `long p.test;`, `g.test` or `t[team].test`. It used to quietly become a player variable. Function parameters still have no holder.
+- Variables always need a holder now: declaring (`long test;`), assigning (`test = 5;`) or reading a bare `test` is an error; write `p.test`, `g.test` or `t[team].test`. A bare name used to quietly mean `p.test`. Only a function's own parameters are written without a holder, inside that function.
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor

@@ -29,6 +29,36 @@ class VariableHolderTest {
         assertNeedsHolder("enum Color { RED, BLUE }\nColor test;");
     }
 
+    private static void assertUnknownName(String source) {
+        assertThatThrownBy(() -> TestCompiler.analyze(source))
+                .isInstanceOf(CompilingException.class)
+                .hasMessageContaining("Unknown name 'test': it isn't a constant or a parameter");
+    }
+
+    @Test
+    void assigningABareNameIsAnError() {
+        assertUnknownName("event onJoin { test = 5; }");
+        assertUnknownName("event onJoin { test++; }");
+    }
+
+    @Test
+    void readingABareNameIsAnErrorEvenWhenThePlayerVariableExists() {
+        assertUnknownName("long p.test;\nevent onJoin { p.y = test + 1; }");
+    }
+
+    @Test
+    void aBareNameIsOnlyAParameterInsideItsOwnFunction() {
+        assertUnknownName("function f(long test) { p.y = test; }\nfunction g() { p.y = test; }");
+    }
+
+    @Test
+    void aBareTupleTargetIsAnError() {
+        assertUnknownName("""
+                function (long, long) pair() { return (1, 2); }
+                event onJoin { (test, p.b) = pair(); }
+                """);
+    }
+
     @Test
     void declarationsWithAHolderAndBareParametersAreFine() {
         assertThatCode(() -> TestCompiler.analyze("""
