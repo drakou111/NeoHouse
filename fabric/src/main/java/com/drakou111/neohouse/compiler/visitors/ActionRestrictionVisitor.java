@@ -29,6 +29,8 @@ import java.util.Deque;
 public class ActionRestrictionVisitor extends DefaultVisitor {
     private final Deque<RestrictionAction>    ctx   = new ArrayDeque<>();
     private final Deque<RestrictionCondition> rcCtx = new ArrayDeque<>();
+    // How many ifs and random blocks enclose the current statement.
+    private int nesting = 0;
 
     @Override
     public ASTNode visitVoidFunction(VoidFunctionNode fn) {
@@ -85,7 +87,9 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     public ASTNode visitConditional(ConditionalNode cond) {
         ensureAllowed(AddAction.CONDITIONAL, cond.token);
         ctx.push(deriveInner(ctx.peek())); rcCtx.push(rcCtx.isEmpty() ? RestrictionCondition.NONE : rcCtx.peek());
+        this.nesting++;
         super.visitConditional(cond);
+        this.nesting--;
         ctx.pop(); rcCtx.pop();
         return cond;
     }
@@ -106,7 +110,9 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
     public ASTNode visitRandom(RandomNode random) {
         ensureAllowed(AddAction.RANDOM, random.token);
         ctx.push(deriveInner(ctx.peek()));
+        this.nesting++;
         super.visitRandom(random);
+        this.nesting--;
         ctx.pop();
         return random;
     }
@@ -165,6 +171,12 @@ public class ActionRestrictionVisitor extends DefaultVisitor {
 
     private void ensureAllowed(AddAction action, Token t) {
         RestrictionAction restriction = ctx.peek();
+        if (!restriction.isAllowed(action) && this.nesting > 0
+                && (action == AddAction.CONDITIONAL || action == AddAction.RANDOM)) {
+            String what = action == AddAction.CONDITIONAL ? "An if" : "A random block";
+            throw new SemanticException(t, what + " can't go inside an if or a random block: Housing doesn't allow "
+                    + "a Conditional or Random Action there. Move it into a function and call that function instead.");
+        }
         if (!restriction.isAllowed(action)) {
             throw new SemanticException(t, "'" + action.displayName + "' cannot be used in this context");
         }

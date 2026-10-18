@@ -513,6 +513,9 @@ public class Parser {
 
         List<StatementNode> elseBranch = null;
         if (match(TokenType.ELSE)) {
+            if (check(TokenType.IF))
+                throw new ParsingException(peek(), "'else if' isn't supported: Housing can't put a conditional inside "
+                        + "another one. Use separate ifs, or move the second if into a function and call it from the else.");
             consume(TokenType.LBRACE, "Expected '{' to begin 'else' block");
             elseBranch = new ArrayList<>();
             while (!check(TokenType.RBRACE) && !isAtEnd()) {
