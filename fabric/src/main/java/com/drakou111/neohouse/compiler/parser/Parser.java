@@ -78,6 +78,8 @@ public class Parser {
     private final ImportGraph imports;
     private int pos = 0;
     private final HashMap<String, ConstantPrimitiveNode> constTable = new HashMap<>();
+    // Bare-named variables and parameters, checked against the constants once all are known.
+    private final List<Token> bareDeclarations = new ArrayList<>();
     /** enum name -> its members in declaration order (member index = ordinal value). */
     private final Map<String, List<String>> enumDefs = new HashMap<>();
     // Where 'var' was written as a type, for the setting that forbids it.
@@ -203,6 +205,7 @@ public class Parser {
             }
         }
 
+        requireNoConstantNames();
         return new MainNode(nodes);
     }
 
@@ -1155,7 +1158,27 @@ public class Parser {
         VariableNode variableNode = parseVariable();
         variableNode.type = variableType;
         variableNode.enumName = enumType;
+        if (variableNode.wasBare) this.bareDeclarations.add(variableNode.token);
         return variableNode;
+    }
+
+    /**
+     * A bare name that is a constant always means the constant, so a variable or parameter with that
+     * name could never be read: every use would silently become the constant's value.
+     */
+    private void requireNoConstantNames() {
+        for (Token declaration : this.bareDeclarations) {
+            ConstantPrimitiveNode constant = this.constTable.get(declaration.text);
+            if (constant == null || !imports.canSee(declaration.file, constant.token.file)) continue;
+            String kind = constant.enumName == null ? "constant" : "member of enum '" + constant.enumName + "'";
+            String where = constant.token.file.equals(declaration.file)
+                    ? "line " + constant.token.line
+                    : constant.token.file + ", line " + constant.token.line;
+            throw new ParsingException(declaration, ("'%s' is already a %s (%s), so a variable or parameter can't use "
+                    + "that name: every '%s' would mean the %s. Rename one of them.")
+                    .formatted(declaration.text, kind, where, declaration.text,
+                            constant.enumName == null ? "constant" : "enum member"));
+        }
     }
 
     PlaceholderNode parsePlaceholder() {

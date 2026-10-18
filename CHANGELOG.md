@@ -8,6 +8,7 @@
 
 - Two functions, commands or menus with the same name are now an error (the second used to replace the first in Housing). A loop can't share a function's name either, since loops are functions in Housing.
 - In strings, `\"` now means `"` and `\\` means `\`; before, the backslash was sent to Housing too. Other backslashes (like `\n`) are kept as written. Item data in `({...})` is unchanged.
+- A variable or parameter can't be named like a constant or enum member any more (`const long x = 1;` with `function f(long x)`). Before, every `x` silently meant the constant, so the parameter was ignored. `p.x` is still fine.
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor
