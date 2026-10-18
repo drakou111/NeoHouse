@@ -1,10 +1,12 @@
 package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
+import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.FunctionNode;
+import com.drakou111.neohouse.compiler.enums.Holder;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
 import java.util.ArrayList;
@@ -52,6 +54,14 @@ public class FunctionTempNamingVisitor extends DefaultVisitor {
         renamed.fallback = variable.fallback;
         renamed.castSuffix = variable.castSuffix;
         return renamed;
+    }
+
+    @Override
+    public ASTNode visitConstantPrimitive(ConstantPrimitiveNode constant) {
+        return PlaceholderText.renamed(constant, (holder, name) -> {
+            Matcher m = TEMP.matcher(name);
+            return holder == Holder.PLAYER && m.matches() ? CompilerNames.temp(this.function, Integer.parseInt(m.group(1))) : null;
+        });
     }
 
     /** Two long function names sharing a 6-character code would share temps and parameter slots. */

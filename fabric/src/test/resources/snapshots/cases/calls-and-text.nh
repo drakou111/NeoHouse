@@ -1,0 +1,42 @@
+// Calls nested in arguments and expressions, and parameters and temps read inside text.
+long p.total;
+
+function long add(long a, long b) {
+    return a + b;
+}
+
+function long sq(long a) {
+    return a * a;
+}
+
+function long neg(long a) {
+    return -a;
+}
+
+function string label(string name, long score) {
+    return name + ": " + (score * 10) + " pts";
+}
+
+function hello(string who) {
+    message("hi " + who + ", total " + (p.total + 1));
+}
+
+event onJoin {
+    p.total = add(sq(2), neg(3));
+}
+
+command nestedsum {
+    p.total = sq(2) + neg(3);
+}
+
+command twocalls {
+    message("x " + sq(4) + " y " + neg(5));
+}
+
+command labelled {
+    message(label("Ann", add(1, sq(3))));
+}
+
+event onQuit {
+    hello("Bob Smith");
+}

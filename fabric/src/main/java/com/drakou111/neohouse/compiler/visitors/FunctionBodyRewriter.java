@@ -2,6 +2,7 @@ package com.drakou111.neohouse.compiler.visitors;
 
 import com.drakou111.neohouse.compiler.ast.ASTNode;
 import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
+import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
@@ -33,6 +34,11 @@ public class FunctionBodyRewriter extends DefaultVisitor {
             return renamed;
         }
         return var;
+    }
+
+    @Override
+    public ASTNode visitConstantPrimitive(ConstantPrimitiveNode constant) {
+        return PlaceholderText.renamed(constant, (holder, name) -> renameMap.get(new HolderAndName(holder, name)));
     }
 
     @Override
