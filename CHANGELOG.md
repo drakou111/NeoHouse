@@ -6,8 +6,17 @@
 - Menus can have a quoted title with spaces and symbols: `menu "Item Shop"(3) { ... }`. Menu titles can't be colored, so the editor shows `&` codes in them as plain text.
 - New setting Unknown calls (Warn by default, or Error or Off): a script can call a function, or `displayMenu` a menu, that it doesn't define but the house already has. Before this it was always an error. A run checks that those functions and menus exist before changing anything, whatever the setting. Calls to such functions can't pass arguments.
 
+- Two functions, commands or menus with the same name are now an error (the second used to replace the first in Housing). A loop can't share a function's name either, since loops are functions in Housing.
+- Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
+
+### Editor
+- `&l`, `&m`, `&n` and `&o` in strings show as bold, strikethrough, underline and italic, adding up until a color code or `&r`, as in Minecraft.
+- The script's contents (functions, how many functions they compile into, loops, commands, menus, events) are shown under the file name.
+- Autocomplete ignores capitalisation: `i` suggests `INVOKER`.
+- Fixed: typing, deleting or pressing Enter past the right edge didn't scroll the editor to the cursor.
+
 ### Music
-- New stop variable field in the music editor (for example `p.stop`). When it is set, the exported song puts every block of notes in `if (p.stop?0 != 1) { ... } else { return; }`, so setting the variable to 1 cuts the song off. The Stop if 1 / Play if 1 button flips the check, so the song plays only while the variable is 1. Leave the field empty to export as before.
+- New stop variable field in the music editor (for example `p.stop`). When it is set, the exported song puts every block of notes in `if (p.stop?0 != 1) { ... } else { return; }`, so setting the variable to 1 cuts the song off. The "1 = stop" / "1 = play" button flips the check, so the song plays only while the variable is 1. Leave the field empty to export as before.
 - With a stop variable, the export lays the song out itself (blocks within Housing's limits, and extra functions `<name>_part2`, `<name>_part3`, ... when one function is full) instead of leaving the splitting to the compiler.
 
 ## 1.1.2
