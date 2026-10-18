@@ -1,0 +1,64 @@
+== source
+event onDamage {
+    if (isDamageAmount(false, "LESS_THAN", 1)) { }
+}
+== summary
+1 event
+== actions
+GroupAction
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 21 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check if action list is empty
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Conditional
+            Wait 2 ticks
+            Search: Conditions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Damage Amount
+                Wait 2 ticks
+                Search: Comparator
+                Wait 2 ticks
+                Search: Less Than
+                Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: 1
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: If Actions
+            Wait 2 ticks
+            GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        GroupAction
+          CloseScreenAction
+        Message: Skipped event 'DAMAGE': it already has content.

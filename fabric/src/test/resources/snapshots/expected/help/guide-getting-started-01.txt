@@ -1,0 +1,39 @@
+== source
+event onJoin {
+    message("Welcome to my house!");
+}
+== summary
+1 event
+== actions
+GroupAction
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 10 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check if action list is empty
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Send a Chat Message
+            Wait 2 ticks
+            Search: Message
+              GroupAction
+                Enter text: Welcome to my house!
+                Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        GroupAction
+          CloseScreenAction
+        Message: Skipped event 'JOIN': it already has content.

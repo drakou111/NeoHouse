@@ -1,0 +1,7 @@
+== source
+event onDropItem {
+}
+== summary
+1 event
+== actions
+GroupAction

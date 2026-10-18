@@ -1,0 +1,292 @@
+== source
+function helpExample() {
+p.apple = p.test?0 + 2;    // 2 while p.test is unset
+if (p.lives?3 > 0) {       // an unset p.lives counts as 3
+    message("still alive");
+}
+}
+== summary
+1 function
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: helpExample
+      Wait 2 ticks
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: helpExample$t0
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/test 0%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: helpExample$t0
+              Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: 2
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: apple
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/helpExample$t0%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Conditional
+          Wait 2 ticks
+          Search: Conditions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Variable Requirement
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: lives
+                  Wait 2 ticks
+              Search: Comparator
+              Wait 2 ticks
+              Search: Greater Than
+              Wait 2 ticks
+              Search: Compare Value
+                GroupAction
+                  Enter text: 0
+                  Wait 2 ticks
+              Search: Fallback Value
+                GroupAction
+                  Enter text: 3
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: If Actions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: still alive
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: helpExample$t0
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/test 0%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: helpExample$t0
+                  Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: 2
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: apple
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/helpExample$t0%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Conditional
+              Wait 2 ticks
+              Search: Conditions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Variable Requirement
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: lives
+                      Wait 2 ticks
+                  Search: Comparator
+                  Wait 2 ticks
+                  Search: Greater Than
+                  Wait 2 ticks
+                  Search: Compare Value
+                    GroupAction
+                      Enter text: 0
+                      Wait 2 ticks
+                  Search: Fallback Value
+                    GroupAction
+                      Enter text: 3
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: If Actions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Send a Chat Message
+                  Wait 2 ticks
+                  Search: Message
+                    GroupAction
+                      Enter text: still alive
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped function 'helpExample': it already has content.

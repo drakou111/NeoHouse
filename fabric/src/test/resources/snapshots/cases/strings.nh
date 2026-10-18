@@ -1,0 +1,20 @@
+// Text: joining, appending, escapes, number formatting and placeholders with spaces.
+string p.n;
+string p.s;
+long p.c;
+double p.r;
+
+event onJoin {
+    p.n = "Steve";
+    p.s = "";
+    p.c = 3;
+    p.r = 0.0001;
+    p.s += "in ";
+    p.s += p.c;
+    message("Hi " + p.n + ", you have " + p.c + " coins!");
+    message("say \"hi\" and \\o/");
+    message("ratio " + 0.0001 + " big " + 100000000.0 * 100000000.0);
+    message("fallback " + p.n?"no name" + " team " + t["red team"].score?0);
+    message("n=" + p.c + 1);
+    p.s = p.c + 1 + "!";
+}

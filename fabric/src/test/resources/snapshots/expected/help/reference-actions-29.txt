@@ -1,0 +1,133 @@
+== source
+menu example(1) {
+    slot0: ({id:"minecraft:stone"}) {
+    closeMenu();
+}
+}
+== summary
+1 menu
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /custommenu
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read menus list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /custommenu
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: example
+        Wait 2 ticks
+        CloseScreenAction
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: example
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 0 (right)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Wait 2 ticks
+            Click slot 1 (left) from end
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Click slot 0 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Close Menu
+              Wait 2 ticks
+          GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: example
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      Check if menu elements is empty
+        GroupAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: example
+            Search: Change Menu Size
+            Wait 2 ticks
+            Search: 1 Row
+            Wait 2 ticks
+            CloseScreenAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: example
+            Search: Edit Menu Elements
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              GroupAction
+                Click slot 0 (right)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Wait 2 ticks
+                Click slot 1 (left) from end
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Click slot 0 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Close Menu
+                  Wait 2 ticks
+              GroupAction
+                Click slot 49 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            GroupAction
+              CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped menu 'example': it already has content.

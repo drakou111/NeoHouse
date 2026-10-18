@@ -1,0 +1,360 @@
+== source
+// mode: APPEND
+// The same kinds of entry in Append mode: existing content is kept and added to.
+long p.visits;
+
+function greet() {
+    message("hello again");
+}
+
+event onJoin {
+    p.visits = 1;
+    greet();
+}
+
+command hellothere {
+    greet();
+}
+
+menu panel(2) {
+    slot4: ({id:"minecraft:clock"}) {
+        greet();
+    }
+}
+== summary
+1 function, 1 command, 1 menu, 1 event
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /command
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read commands list
+  CheckListLimitAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /custommenu
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read menus list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: greet
+      Wait 2 ticks
+      MarkCreatedAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /command
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: hellothere
+        Wait 2 ticks
+        CloseScreenAction
+      MarkCreatedAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /custommenu
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: panel
+        Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+          Wait 2 ticks
+          Send chat: /custommenu
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: panel
+          Search: Change Menu Size
+          Wait 2 ticks
+          Search: 2 Rows
+          Wait 2 ticks
+          CloseScreenAction
+        CloseScreenAction
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: greet
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Send a Chat Message
+          Wait 2 ticks
+          Search: Message
+            GroupAction
+              Enter text: hello again
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: greet
+        Wait 2 ticks
+      Check that the new actions fit in function 'greet'
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: hello again
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          CloseScreenAction
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 10 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check that the new actions fit in event 'JOIN'
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Change Variable
+            Wait 2 ticks
+            Search: Variable
+              GroupAction
+                Enter text: visits
+                Wait 2 ticks
+            Search: Operation
+            Wait 2 ticks
+            Search: Set
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Trigger Function
+            Wait 2 ticks
+            Search: Function
+            Wait 2 ticks
+            Search: greet
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        CloseScreenAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /hellothere
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Trigger Function
+          Wait 2 ticks
+          Search: Function
+          Wait 2 ticks
+          Search: greet
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /hellothere
+        Wait 2 ticks
+      Check that the new actions fit in command '/hellothere'
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Trigger Function
+              Wait 2 ticks
+              Search: Function
+              Wait 2 ticks
+              Search: greet
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          CloseScreenAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: panel
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 4 (right)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Wait 2 ticks
+            Click slot 1 (left) from end
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Click slot 4 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Trigger Function
+              Wait 2 ticks
+              Search: Function
+              Wait 2 ticks
+              Search: greet
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: panel
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      Fill the empty menu slots
+        GroupAction
+          GroupAction
+            Click slot 4 (right)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Wait 2 ticks
+            Click slot 1 (left) from end
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Click slot 4 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Trigger Function
+              Wait 2 ticks
+              Search: Function
+              Wait 2 ticks
+              Search: greet
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: panel
+            Search: Change Menu Size
+            Wait 2 ticks
+            Search: 2 Rows
+            Wait 2 ticks
+            CloseScreenAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: panel
+            Search: Edit Menu Elements
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction

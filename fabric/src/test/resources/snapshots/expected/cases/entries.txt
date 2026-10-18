@@ -1,0 +1,1098 @@
+== source
+// Every kind of entry: loop, command, menu with a quoted title, random, repeat and an early return.
+long g.round = 1;
+long p.coins;
+
+loop clock(20) {
+    g.round += 1;
+}
+
+command daily {
+    p.coins = p.coins?0 + 1;
+    random [ 3*{ p.coins = 10; } { p.coins = 50; } ]
+    repeat(3) { message("bonus"); }
+}
+
+function maybeStop() {
+    if (p.coins?0 > 100) {
+        return;
+    }
+    message("not rich yet");
+}
+
+menu "Item Shop"(3) {
+    slot13: ({id:"minecraft:diamond",count:1}) {
+        p.coins = p.coins?0 - 5;
+        maybeStop();
+        closeMenu();
+    }
+    slot0: ({id:"minecraft:stone"}) {
+        displayMenu("Item Shop");
+    }
+}
+== summary
+1 function, 1 loop, 1 command, 1 menu
+== actions
+GroupAction
+  Send chat: /variable global set round 1
+  WaitForChatAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /command
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read commands list
+  CheckListLimitAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /custommenu
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read menus list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: clock
+      Wait 2 ticks
+      MarkCreatedAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /command
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: daily
+        Wait 2 ticks
+        CloseScreenAction
+      MarkCreatedAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: maybeStop
+      Wait 2 ticks
+      MarkCreatedAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /custommenu
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: Item Shop
+        Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+          Wait 2 ticks
+          Send chat: /custommenu
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Item Shop
+          Search: Change Menu Size
+          Wait 2 ticks
+          Search: 3 Rows
+          Wait 2 ticks
+          CloseScreenAction
+        CloseScreenAction
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: clock
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Holder
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: round
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: clock
+        Wait 2 ticks
+        Search: Automatic Execution
+          GroupAction
+            Enter text: 20
+            Wait 2 ticks
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: clock
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Holder
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: round
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /function
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: clock
+            Wait 2 ticks
+            Search: Automatic Execution
+              GroupAction
+                Enter text: 20
+                Wait 2 ticks
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped loop 'clock': it already has content.
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /daily
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: t$0
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/coins 0%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: t$0
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: coins
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/t$0%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Random Action
+          Wait 2 ticks
+          Search: Actions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Change Variable
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: coins
+                    Wait 2 ticks
+                Search: Operation
+                Wait 2 ticks
+                Search: Set
+                Wait 2 ticks
+                Search: Value
+                  GroupAction
+                    Enter text: 10
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Change Variable
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: coins
+                    Wait 2 ticks
+                Search: Operation
+                Wait 2 ticks
+                Search: Set
+                Wait 2 ticks
+                Search: Value
+                  GroupAction
+                    Enter text: 10
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Change Variable
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: coins
+                    Wait 2 ticks
+                Search: Operation
+                Wait 2 ticks
+                Search: Set
+                Wait 2 ticks
+                Search: Value
+                  GroupAction
+                    Enter text: 10
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Change Variable
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: coins
+                    Wait 2 ticks
+                Search: Operation
+                Wait 2 ticks
+                Search: Set
+                Wait 2 ticks
+                Search: Value
+                  GroupAction
+                    Enter text: 50
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Send a Chat Message
+          Wait 2 ticks
+          Search: Message
+            GroupAction
+              Enter text: bonus
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Send a Chat Message
+          Wait 2 ticks
+          Search: Message
+            GroupAction
+              Enter text: bonus
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Send a Chat Message
+          Wait 2 ticks
+          Search: Message
+            GroupAction
+              Enter text: bonus
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /daily
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: t$0
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/coins 0%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: t$0
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: coins
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/t$0%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Random Action
+              Wait 2 ticks
+              Search: Actions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  GroupAction
+                    Click slot 50 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+                    Search: Change Variable
+                    Wait 2 ticks
+                    Search: Variable
+                      GroupAction
+                        Enter text: coins
+                        Wait 2 ticks
+                    Search: Operation
+                    Wait 2 ticks
+                    Search: Set
+                    Wait 2 ticks
+                    Search: Value
+                      GroupAction
+                        Enter text: 10
+                        Wait 2 ticks
+                    Click slot 31 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+                GroupAction
+                  GroupAction
+                    Click slot 50 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+                    Search: Change Variable
+                    Wait 2 ticks
+                    Search: Variable
+                      GroupAction
+                        Enter text: coins
+                        Wait 2 ticks
+                    Search: Operation
+                    Wait 2 ticks
+                    Search: Set
+                    Wait 2 ticks
+                    Search: Value
+                      GroupAction
+                        Enter text: 10
+                        Wait 2 ticks
+                    Click slot 31 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+                GroupAction
+                  GroupAction
+                    Click slot 50 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+                    Search: Change Variable
+                    Wait 2 ticks
+                    Search: Variable
+                      GroupAction
+                        Enter text: coins
+                        Wait 2 ticks
+                    Search: Operation
+                    Wait 2 ticks
+                    Search: Set
+                    Wait 2 ticks
+                    Search: Value
+                      GroupAction
+                        Enter text: 10
+                        Wait 2 ticks
+                    Click slot 31 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+                GroupAction
+                  GroupAction
+                    Click slot 50 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+                    Search: Change Variable
+                    Wait 2 ticks
+                    Search: Variable
+                      GroupAction
+                        Enter text: coins
+                        Wait 2 ticks
+                    Search: Operation
+                    Wait 2 ticks
+                    Search: Set
+                    Wait 2 ticks
+                    Search: Value
+                      GroupAction
+                        Enter text: 50
+                        Wait 2 ticks
+                    Click slot 31 (left)
+                    Wait for screen to open: ContainerScreen
+                    Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: bonus
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: bonus
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: bonus
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped command '/daily': it already has content.
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: maybeStop
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Conditional
+          Wait 2 ticks
+          Search: Conditions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Variable Requirement
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: coins
+                  Wait 2 ticks
+              Search: Comparator
+              Wait 2 ticks
+              Search: Greater Than
+              Wait 2 ticks
+              Search: Compare Value
+                GroupAction
+                  Enter text: 100
+                  Wait 2 ticks
+              Search: Fallback Value
+                GroupAction
+                  Enter text: 0
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: If Actions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Exit
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Send a Chat Message
+          Wait 2 ticks
+          Search: Message
+            GroupAction
+              Enter text: not rich yet
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: maybeStop
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Conditional
+              Wait 2 ticks
+              Search: Conditions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Variable Requirement
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: coins
+                      Wait 2 ticks
+                  Search: Comparator
+                  Wait 2 ticks
+                  Search: Greater Than
+                  Wait 2 ticks
+                  Search: Compare Value
+                    GroupAction
+                      Enter text: 100
+                      Wait 2 ticks
+                  Search: Fallback Value
+                    GroupAction
+                      Enter text: 0
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: If Actions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Exit
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: not rich yet
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped function 'maybeStop': it already has content.
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: Item Shop
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 13 (right)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Wait 2 ticks
+            Click slot 1 (left) from end
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Click slot 13 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: t$0
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/coins 0%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: t$0
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Decrement
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: 5
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: coins
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/t$0%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Trigger Function
+              Wait 2 ticks
+              Search: Function
+              Wait 2 ticks
+              Search: maybeStop
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Close Menu
+              Wait 2 ticks
+          GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          GroupAction
+            Click slot 0 (right)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Wait 2 ticks
+            Click slot 1 (left) from end
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Click slot 0 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Display Menu
+              Wait 2 ticks
+              Search: Menu
+              Wait 2 ticks
+              Search: Item Shop
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: Item Shop
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      Check if menu elements is empty
+        GroupAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Item Shop
+            Search: Change Menu Size
+            Wait 2 ticks
+            Search: 3 Rows
+            Wait 2 ticks
+            CloseScreenAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Item Shop
+            Search: Edit Menu Elements
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              GroupAction
+                Click slot 13 (right)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Wait 2 ticks
+                Click slot 1 (left) from end
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Click slot 13 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Change Variable
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: t$0
+                      Wait 2 ticks
+                  Search: Operation
+                  Wait 2 ticks
+                  Search: Set
+                  Wait 2 ticks
+                  Search: Value
+                    GroupAction
+                      Enter text: %var.player/coins 0%
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Change Variable
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: t$0
+                      Wait 2 ticks
+                  Search: Operation
+                  Wait 2 ticks
+                  Search: Decrement
+                  Wait 2 ticks
+                  Search: Value
+                    GroupAction
+                      Enter text: 5
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Change Variable
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: coins
+                      Wait 2 ticks
+                  Search: Operation
+                  Wait 2 ticks
+                  Search: Set
+                  Wait 2 ticks
+                  Search: Value
+                    GroupAction
+                      Enter text: %var.player/t$0%
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Trigger Function
+                  Wait 2 ticks
+                  Search: Function
+                  Wait 2 ticks
+                  Search: maybeStop
+                  Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Close Menu
+                  Wait 2 ticks
+              GroupAction
+                Click slot 49 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 0 (right)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Wait 2 ticks
+                Click slot 1 (left) from end
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Click slot 0 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Display Menu
+                  Wait 2 ticks
+                  Search: Menu
+                  Wait 2 ticks
+                  Search: Item Shop
+                  Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              GroupAction
+                Click slot 49 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            GroupAction
+              CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped menu 'Item Shop': it already has content.

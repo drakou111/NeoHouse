@@ -1,0 +1,46 @@
+== source
+function shop(icon: {id:"minecraft:emerald"}, description: "Opens the shop") { }
+== summary
+1 function
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: shop
+      Wait 2 ticks
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: shop
+        Wait 2 ticks
+        Search: Edit Description
+          GroupAction
+            Enter text: Opens the shop
+            Wait 2 ticks
+        Search: Edit Icon
+        Wait 2 ticks
+        CreativeGiveAction
+        Wait 2 ticks
+        Click slot 1 (left) from end
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        CreativeGiveAction
+        CloseScreenAction

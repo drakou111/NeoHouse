@@ -1,0 +1,79 @@
+== source
+function helpExample() {
+message("Hi " + ph.playerName() + ", you have " + p.coins + " coins");
+}
+== summary
+1 function
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: helpExample
+      Wait 2 ticks
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Send a Chat Message
+          Wait 2 ticks
+          Search: Message
+            GroupAction
+              Enter text: Hi %player.name%, you have %var.player/coins% coins
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: Hi %player.name%, you have %var.player/coins% coins
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped function 'helpExample': it already has content.

@@ -1,0 +1,7 @@
+== source
+event onQuit {
+}
+== summary
+1 event
+== actions
+GroupAction

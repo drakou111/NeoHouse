@@ -1,0 +1,12 @@
+// mode: ALWAYS
+// Always Override: everything is recreated, and a function called twice is a multi-call error.
+long p.step;
+
+function tick() {
+    p.step += 1;
+}
+
+event onJoin {
+    tick();
+    tick();
+}

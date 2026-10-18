@@ -67,6 +67,8 @@ tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 
 tasks.named("test", Test).configure {
     useJUnitPlatform()
+    // ./gradlew :fabric:test -PupdateSnapshots rewrites the compiler snapshots instead of comparing them.
+    if (project.hasProperty("updateSnapshots")) systemProperty "neohouse.updateSnapshots", "true"
     testLogging { events "failed"; exceptionFormat "full" }
 }
 

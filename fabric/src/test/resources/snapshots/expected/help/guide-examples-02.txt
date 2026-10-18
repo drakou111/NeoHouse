@@ -1,0 +1,515 @@
+== source
+long p.score;
+long g.highScore = 0;
+
+function addScore(long n) {
+    p.score += n;
+    if (p.score > g.highScore) {
+        g.highScore = p.score;
+    }
+    if (p.score >= 1000) {
+        message("You won with " + p.score + " points!");
+        p.score = 0;
+    }
+}
+
+command score(listed: true) {
+    message("Score: " + p.score + " | Best: " + g.highScore);
+}
+
+event onKill { addScore(10); }
+== summary
+1 function, 1 command, 1 event
+== actions
+GroupAction
+  Send chat: /variable global set highScore 0
+  WaitForChatAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /command
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read commands list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: addScore
+      Wait 2 ticks
+      MarkCreatedAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /command
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: score
+        Wait 2 ticks
+        CloseScreenAction
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: addScore
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: score
+              Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/addScore_p$0%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Conditional
+          Wait 2 ticks
+          Search: Conditions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Variable Requirement
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: score
+                  Wait 2 ticks
+              Search: Comparator
+              Wait 2 ticks
+              Search: Greater Than
+              Wait 2 ticks
+              Search: Compare Value
+                GroupAction
+                  Enter text: %var.global/highScore%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: If Actions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Holder
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: highScore
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/score%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Conditional
+          Wait 2 ticks
+          Search: Conditions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Variable Requirement
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: score
+                  Wait 2 ticks
+              Search: Comparator
+              Wait 2 ticks
+              Search: Greater Than or Equal
+              Wait 2 ticks
+              Search: Compare Value
+                GroupAction
+                  Enter text: 1000
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: If Actions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: You won with %var.player/score% points!
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: score
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: 0
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: addScore
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: score
+                  Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/addScore_p$0%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Conditional
+              Wait 2 ticks
+              Search: Conditions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Variable Requirement
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: score
+                      Wait 2 ticks
+                  Search: Comparator
+                  Wait 2 ticks
+                  Search: Greater Than
+                  Wait 2 ticks
+                  Search: Compare Value
+                    GroupAction
+                      Enter text: %var.global/highScore%
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: If Actions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Change Variable
+                  Wait 2 ticks
+                  Search: Holder
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: highScore
+                      Wait 2 ticks
+                  Search: Operation
+                  Wait 2 ticks
+                  Search: Set
+                  Wait 2 ticks
+                  Search: Value
+                    GroupAction
+                      Enter text: %var.player/score%
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Conditional
+              Wait 2 ticks
+              Search: Conditions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Variable Requirement
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: score
+                      Wait 2 ticks
+                  Search: Comparator
+                  Wait 2 ticks
+                  Search: Greater Than or Equal
+                  Wait 2 ticks
+                  Search: Compare Value
+                    GroupAction
+                      Enter text: 1000
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: If Actions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Send a Chat Message
+                  Wait 2 ticks
+                  Search: Message
+                    GroupAction
+                      Enter text: You won with %var.player/score% points!
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Change Variable
+                  Wait 2 ticks
+                  Search: Variable
+                    GroupAction
+                      Enter text: score
+                      Wait 2 ticks
+                  Search: Operation
+                  Wait 2 ticks
+                  Search: Set
+                  Wait 2 ticks
+                  Search: Value
+                    GroupAction
+                      Enter text: 0
+                      Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped function 'addScore': it already has content.
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /score
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Send a Chat Message
+          Wait 2 ticks
+          Search: Message
+            GroupAction
+              Enter text: Score: %var.player/score% | Best: %var.global/highScore%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /score
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Send a Chat Message
+              Wait 2 ticks
+              Search: Message
+                GroupAction
+                  Enter text: Score: %var.player/score% | Best: %var.global/highScore%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped command '/score': it already has content.
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 13 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check if action list is empty
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Change Variable
+            Wait 2 ticks
+            Search: Variable
+              GroupAction
+                Enter text: addScore_p$0
+                Wait 2 ticks
+            Search: Operation
+            Wait 2 ticks
+            Search: Set
+            Wait 2 ticks
+            Search: Value
+              GroupAction
+                Enter text: 10
+                Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Trigger Function
+            Wait 2 ticks
+            Search: Function
+            Wait 2 ticks
+            Search: addScore
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        GroupAction
+          CloseScreenAction
+        Message: Skipped event 'KILL': it already has content.

@@ -1,0 +1,26 @@
+// Conditions: comparisons, != inside && and ||, fallbacks, and conditions decided at compile time.
+const bool DEBUG = false;
+long p.level;
+string p.rank;
+
+event onJoin {
+    p.level = 1;
+    p.rank = "member";
+    if (p.level >= 5 && p.rank != "guest") {
+        message("veteran");
+    } else {
+        message("newcomer");
+    }
+    if (p.level != 1 || p.rank == "admin") {
+        message("special");
+    }
+    if (p.lives?3 > 0) {
+        message("alive");
+    }
+    if (DEBUG) {
+        message("debug only");
+    }
+    if (2 > 1) {
+        message("always");
+    }
+}

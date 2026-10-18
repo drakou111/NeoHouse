@@ -1,0 +1,113 @@
+== source
+function helpExample() {
+if (isSneaking(false)) { }
+}
+== summary
+1 function
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: helpExample
+      Wait 2 ticks
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Conditional
+          Wait 2 ticks
+          Search: Conditions
+          Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Player Sneaking
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: If Actions
+          Wait 2 ticks
+          GroupAction
+          Click slot 49 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Conditional
+              Wait 2 ticks
+              Search: Conditions
+              Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Player Sneaking
+                  Wait 2 ticks
+                  Click slot 31 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: If Actions
+              Wait 2 ticks
+              GroupAction
+              Click slot 49 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped function 'helpExample': it already has content.

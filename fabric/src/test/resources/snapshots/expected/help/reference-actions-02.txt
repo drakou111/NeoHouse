@@ -1,0 +1,92 @@
+== source
+function helpExample() {
+setGroup("text", false);
+}
+== summary
+1 function
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /menu
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+    Search: Permissions and Groups
+    Wait 2 ticks
+    Read groups list
+    Check groups exist: text
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: helpExample
+      Wait 2 ticks
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Player's Group
+          Wait 2 ticks
+          Search: Group
+          Wait 2 ticks
+          Search: text
+          Wait 2 ticks
+          Search: Demotion Protection
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Player's Group
+              Wait 2 ticks
+              Search: Group
+              Wait 2 ticks
+              Search: text
+              Wait 2 ticks
+              Search: Demotion Protection
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped function 'helpExample': it already has content.

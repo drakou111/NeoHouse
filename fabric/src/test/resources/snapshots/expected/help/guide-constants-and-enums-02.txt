@@ -1,0 +1,98 @@
+== source
+enum Color { RED, GREEN, BLUE }
+Color p.favorite;
+
+event onJoin {
+    p.favorite = Color.GREEN;
+    if (p.favorite == Color.RED) { message("Red!"); }
+}
+== summary
+1 event
+== actions
+GroupAction
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 10 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check if action list is empty
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Change Variable
+            Wait 2 ticks
+            Search: Variable
+              GroupAction
+                Enter text: favorite
+                Wait 2 ticks
+            Search: Operation
+            Wait 2 ticks
+            Search: Set
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Conditional
+            Wait 2 ticks
+            Search: Conditions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Variable Requirement
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: favorite
+                    Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: 0
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: If Actions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Send a Chat Message
+                Wait 2 ticks
+                Search: Message
+                  GroupAction
+                    Enter text: Red!
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        GroupAction
+          CloseScreenAction
+        Message: Skipped event 'JOIN': it already has content.

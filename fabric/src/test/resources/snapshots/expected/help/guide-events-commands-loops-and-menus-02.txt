@@ -1,0 +1,97 @@
+== source
+command tospawn(listed: true, priority: 5) {
+    teleport(HOUSE_SPAWN, false);
+}
+== summary
+1 command
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /command
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read commands list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /command
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: tospawn
+        Wait 2 ticks
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /tospawn
+        Wait 2 ticks
+        Search: Required Group Priority
+          GroupAction
+            Wait 2 ticks
+            SignAction
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        CloseScreenAction
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /tospawn
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Teleport Player
+          Wait 2 ticks
+          Search: Location
+          Wait 2 ticks
+          Search: House Spawn Location
+          Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /command
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: /tospawn
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Teleport Player
+              Wait 2 ticks
+              Search: Location
+              Wait 2 ticks
+              Search: House Spawn Location
+              Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped command '/tospawn': it already has content.

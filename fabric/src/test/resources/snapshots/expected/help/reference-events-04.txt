@@ -1,0 +1,7 @@
+== source
+event onKill {
+}
+== summary
+1 event
+== actions
+GroupAction

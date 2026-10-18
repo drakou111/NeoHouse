@@ -1,0 +1,33 @@
+// Functions: parameters, returned values, tuples, global calls, recursion and calls to functions outside the script.
+long p.total;
+long p.lo;
+long p.hi;
+
+function long add(long a, long b) {
+    return a + b;
+}
+
+function (long, long) bounds(long value) {
+    return (value - 1, value + 1);
+}
+
+function reward(long amount) {
+    p.total += amount;
+}
+
+function countdown() {
+    countdown();
+}
+
+event onJoin {
+    p.total = add(2, 3);
+    (p.lo, p.hi) = bounds(p.total);
+    reward(10);
+    global announce();
+    existingInHouse();
+    displayMenu("Shop Outside");
+}
+
+function announce() {
+    message("someone joined");
+}

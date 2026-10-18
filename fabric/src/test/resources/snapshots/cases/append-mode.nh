@@ -1,0 +1,22 @@
+// mode: APPEND
+// The same kinds of entry in Append mode: existing content is kept and added to.
+long p.visits;
+
+function greet() {
+    message("hello again");
+}
+
+event onJoin {
+    p.visits = 1;
+    greet();
+}
+
+command hellothere {
+    greet();
+}
+
+menu panel(2) {
+    slot4: ({id:"minecraft:clock"}) {
+        greet();
+    }
+}

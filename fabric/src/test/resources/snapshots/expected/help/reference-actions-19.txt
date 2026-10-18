@@ -1,0 +1,107 @@
+== source
+function helpExample() {
+playSound("DONKEY_HIT", 0.0, 0.0, INVOKER);
+}
+== summary
+1 function
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: helpExample
+      Wait 2 ticks
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Play Sound
+          Wait 2 ticks
+          Search: Sound
+          Wait 2 ticks
+          Click slot 50 (left)
+          Wait for screen to open: AnvilScreen
+          Wait 2 ticks
+          Anvil input: Donkey Hit
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Donkey Hit
+          Wait 2 ticks
+          Search: Volume
+            GroupAction
+              Enter text: 0.0
+              Wait 2 ticks
+          Search: Pitch
+            GroupAction
+              Enter text: 0.0
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: helpExample
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Play Sound
+              Wait 2 ticks
+              Search: Sound
+              Wait 2 ticks
+              Click slot 50 (left)
+              Wait for screen to open: AnvilScreen
+              Wait 2 ticks
+              Anvil input: Donkey Hit
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Donkey Hit
+              Wait 2 ticks
+              Search: Volume
+                GroupAction
+                  Enter text: 0.0
+                  Wait 2 ticks
+              Search: Pitch
+                GroupAction
+                  Enter text: 0.0
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped function 'helpExample': it already has content.

@@ -1,0 +1,7 @@
+== source
+event onDamage {
+}
+== summary
+1 event
+== actions
+GroupAction

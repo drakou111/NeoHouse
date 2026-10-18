@@ -1,0 +1,31 @@
+// Every kind of entry: loop, command, menu with a quoted title, random, repeat and an early return.
+long g.round = 1;
+long p.coins;
+
+loop clock(20) {
+    g.round += 1;
+}
+
+command daily {
+    p.coins = p.coins?0 + 1;
+    random [ 3*{ p.coins = 10; } { p.coins = 50; } ]
+    repeat(3) { message("bonus"); }
+}
+
+function maybeStop() {
+    if (p.coins?0 > 100) {
+        return;
+    }
+    message("not rich yet");
+}
+
+menu "Item Shop"(3) {
+    slot13: ({id:"minecraft:diamond",count:1}) {
+        p.coins = p.coins?0 - 5;
+        maybeStop();
+        closeMenu();
+    }
+    slot0: ({id:"minecraft:stone"}) {
+        displayMenu("Item Shop");
+    }
+}

@@ -1,0 +1,145 @@
+== source
+menu "Item Shop"(3) {
+    slot13: ({id:"minecraft:diamond",count:1}) {
+        closeMenu();
+    }
+}
+== summary
+1 menu
+== actions
+GroupAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /custommenu
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read menus list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /custommenu
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      GroupAction
+        Click slot 50 (left)
+        Enter text: Item Shop
+        Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+          Wait 2 ticks
+          Send chat: /custommenu
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Item Shop
+          Search: Change Menu Size
+          Wait 2 ticks
+          Search: 3 Rows
+          Wait 2 ticks
+          CloseScreenAction
+        CloseScreenAction
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: Item Shop
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 13 (right)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Wait 2 ticks
+            Click slot 1 (left) from end
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            CreativeGiveAction
+            Click slot 13 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Close Menu
+              Wait 2 ticks
+          GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /custommenu
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: Item Shop
+        Search: Edit Menu Elements
+        Wait 2 ticks
+      Check if menu elements is empty
+        GroupAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Item Shop
+            Search: Change Menu Size
+            Wait 2 ticks
+            Search: 3 Rows
+            Wait 2 ticks
+            CloseScreenAction
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /custommenu
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Item Shop
+            Search: Edit Menu Elements
+            Wait 2 ticks
+          GroupAction
+            GroupAction
+              GroupAction
+                Click slot 13 (right)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Wait 2 ticks
+                Click slot 1 (left) from end
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Click slot 13 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+              GroupAction
+                GroupAction
+                  Click slot 50 (left)
+                  Wait for screen to open: ContainerScreen
+                  Wait 2 ticks
+                  Search: Close Menu
+                  Wait 2 ticks
+              GroupAction
+                Click slot 49 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            GroupAction
+              CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped menu 'Item Shop': it already has content.

@@ -1,0 +1,7 @@
+== source
+event onEnterPortal {
+}
+== summary
+1 event
+== actions
+GroupAction

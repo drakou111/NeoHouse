@@ -1,0 +1,109 @@
+== source
+long g.seconds = 0;
+
+loop clock(20) {
+    g.seconds += 1;
+}
+== summary
+1 loop
+== actions
+GroupAction
+  Send chat: /variable global set seconds 0
+  WaitForChatAction
+  GroupAction
+    CloseScreenAction
+    Send chat: /function
+    Wait for screen to open: ContainerScreen
+    Wait 2 ticks
+  Read functions list
+  CheckListLimitAction
+  IfExistsAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /function
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 50 (left)
+      Enter text: clock
+      Wait 2 ticks
+      MarkCreatedAction
+  RunIfCreatedAction
+    GroupAction
+      GroupAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: clock
+        Wait 2 ticks
+      GroupAction
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Holder
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: seconds
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+      GroupAction
+        CloseScreenAction
+        Wait 2 ticks
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: clock
+        Wait 2 ticks
+        Search: Automatic Execution
+          GroupAction
+            Enter text: 20
+            Wait 2 ticks
+        CloseScreenAction
+    GroupAction
+      GroupAction
+        CloseScreenAction
+        Send chat: /function
+        Wait for screen to open: ContainerScreen
+        Wait 2 ticks
+        Search: clock
+        Wait 2 ticks
+      Check if action list is empty
+        GroupAction
+          GroupAction
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Holder
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: seconds
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+          GroupAction
+            CloseScreenAction
+            Wait 2 ticks
+            Send chat: /function
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: clock
+            Wait 2 ticks
+            Search: Automatic Execution
+              GroupAction
+                Enter text: 20
+                Wait 2 ticks
+            CloseScreenAction
+        GroupAction
+          GroupAction
+            CloseScreenAction
+          Message: Skipped loop 'clock': it already has content.

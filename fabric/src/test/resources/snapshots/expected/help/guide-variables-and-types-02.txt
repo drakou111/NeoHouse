@@ -1,0 +1,11 @@
+== source
+long p.coins;
+double p.speed;
+string g.motd = "Have fun";
+bool p.vip;
+== summary
+nothing
+== actions
+GroupAction
+  Send chat: /variable global set motd Have fun
+  WaitForChatAction

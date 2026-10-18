@@ -1,0 +1,7 @@
+== source
+event onPickUpItem {
+}
+== summary
+1 event
+== actions
+GroupAction

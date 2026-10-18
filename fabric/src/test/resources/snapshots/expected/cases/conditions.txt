@@ -1,0 +1,327 @@
+== source
+// Conditions: comparisons, != inside && and ||, fallbacks, and conditions decided at compile time.
+const bool DEBUG = false;
+long p.level;
+string p.rank;
+
+event onJoin {
+    p.level = 1;
+    p.rank = "member";
+    if (p.level >= 5 && p.rank != "guest") {
+        message("veteran");
+    } else {
+        message("newcomer");
+    }
+    if (p.level != 1 || p.rank == "admin") {
+        message("special");
+    }
+    if (p.lives?3 > 0) {
+        message("alive");
+    }
+    if (DEBUG) {
+        message("debug only");
+    }
+    if (2 > 1) {
+        message("always");
+    }
+}
+== summary
+1 event
+== warnings
+line 20: This condition is always false, so its actions never run.
+line 23: This condition is always true, so its actions always run.
+== actions
+GroupAction
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 10 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check if action list is empty
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Change Variable
+            Wait 2 ticks
+            Search: Variable
+              GroupAction
+                Enter text: level
+                Wait 2 ticks
+            Search: Operation
+            Wait 2 ticks
+            Search: Set
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Change Variable
+            Wait 2 ticks
+            Search: Variable
+              GroupAction
+                Enter text: rank
+                Wait 2 ticks
+            Search: Operation
+            Wait 2 ticks
+            Search: Set
+            Wait 2 ticks
+            Search: Value
+              GroupAction
+                Enter text: member
+                Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Conditional
+            Wait 2 ticks
+            Search: Conditions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Variable Requirement
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: level
+                    Wait 2 ticks
+                Search: Comparator
+                Wait 2 ticks
+                Search: Greater Than or Equal
+                Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: 5
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Variable Requirement
+                Wait 2 ticks
+                Search: Invert
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: rank
+                    Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: guest
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: If Actions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Send a Chat Message
+                Wait 2 ticks
+                Search: Message
+                  GroupAction
+                    Enter text: veteran
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Else Actions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Send a Chat Message
+                Wait 2 ticks
+                Search: Message
+                  GroupAction
+                    Enter text: newcomer
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Conditional
+            Wait 2 ticks
+            Search: Match Any Condition
+            Wait 2 ticks
+            Search: Conditions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Variable Requirement
+                Wait 2 ticks
+                Search: Invert
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: level
+                    Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: 1
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Variable Requirement
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: rank
+                    Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: admin
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: If Actions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Send a Chat Message
+                Wait 2 ticks
+                Search: Message
+                  GroupAction
+                    Enter text: special
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Conditional
+            Wait 2 ticks
+            Search: Conditions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Variable Requirement
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: lives
+                    Wait 2 ticks
+                Search: Comparator
+                Wait 2 ticks
+                Search: Greater Than
+                Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: 0
+                    Wait 2 ticks
+                Search: Fallback Value
+                  GroupAction
+                    Enter text: 3
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: If Actions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Send a Chat Message
+                Wait 2 ticks
+                Search: Message
+                  GroupAction
+                    Enter text: alive
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Send a Chat Message
+            Wait 2 ticks
+            Search: Message
+              GroupAction
+                Enter text: always
+                Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        GroupAction
+          CloseScreenAction
+        Message: Skipped event 'JOIN': it already has content.

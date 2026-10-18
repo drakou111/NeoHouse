@@ -1,0 +1,17 @@
+== source
+// mode: ALWAYS
+// Always Override: everything is recreated, and a function called twice is a multi-call error.
+long p.step;
+
+function tick() {
+    p.step += 1;
+}
+
+event onJoin {
+    tick();
+    tick();
+}
+== error
+always-mode.nh, line 11, col 5: Function 'tick' would run more than once in one run of event JOIN, which Housing doesn't allow. Set Multi-call mode to Fix to create copies automatically.
+    tick();
+    ^^^^

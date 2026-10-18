@@ -1,0 +1,87 @@
+== source
+const long MAX_SCORE = 100;
+
+event onJoin {
+    if (p.score?0 >= MAX_SCORE) { message("Max!"); }
+}
+== summary
+1 event
+== actions
+GroupAction
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 10 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check if action list is empty
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Conditional
+            Wait 2 ticks
+            Search: Conditions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Variable Requirement
+                Wait 2 ticks
+                Search: Variable
+                  GroupAction
+                    Enter text: score
+                    Wait 2 ticks
+                Search: Comparator
+                Wait 2 ticks
+                Search: Greater Than or Equal
+                Wait 2 ticks
+                Search: Compare Value
+                  GroupAction
+                    Enter text: 100
+                    Wait 2 ticks
+                Search: Fallback Value
+                  GroupAction
+                    Enter text: 0
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: If Actions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Send a Chat Message
+                Wait 2 ticks
+                Search: Message
+                  GroupAction
+                    Enter text: Max!
+                    Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        GroupAction
+          CloseScreenAction
+        Message: Skipped event 'JOIN': it already has content.

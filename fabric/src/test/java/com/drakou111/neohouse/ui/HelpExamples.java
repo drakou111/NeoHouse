@@ -41,7 +41,8 @@ public final class HelpExamples {
     public static List<Example> all() {
         List<Example> examples = new ArrayList<>();
         for (Topic topic : HelpContent.topics()) {
-            String prefix = topic.title().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-");
+            // The guide and the reference both have a "Conditions" topic, so the section is part of the name.
+            String prefix = (topic.section() + "-" + topic.title()).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-");
             int number = 0;
             for (Block block : topic.blocks()) {
                 String code = switch (block) {

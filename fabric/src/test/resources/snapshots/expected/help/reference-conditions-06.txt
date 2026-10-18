@@ -1,0 +1,70 @@
+== source
+event onDropItem {
+    if (isItem(false, {id:"minecraft:diamond",count:1}, "TYPE", "HAND", "ANY")) { }
+}
+== summary
+1 event
+== actions
+GroupAction
+  GroupAction
+    GroupAction
+      CloseScreenAction
+      Send chat: /eventaction
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+      Click slot 25 (left)
+      Wait for screen to open: ContainerScreen
+      Wait 2 ticks
+    Check if action list is empty
+      GroupAction
+        GroupAction
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Conditional
+            Wait 2 ticks
+            Search: Conditions
+            Wait 2 ticks
+            GroupAction
+              GroupAction
+                Click slot 50 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                Search: Is Item
+                Wait 2 ticks
+                Search: Item
+                Wait 2 ticks
+                CreativeGiveAction
+                Wait 2 ticks
+                Click slot 1 (left) from end
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+                CreativeGiveAction
+                Search: What To Check
+                Wait 2 ticks
+                Search: Where To Check
+                Wait 2 ticks
+                Search: Hand
+                Wait 2 ticks
+                Click slot 31 (left)
+                Wait for screen to open: ContainerScreen
+                Wait 2 ticks
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: If Actions
+            Wait 2 ticks
+            GroupAction
+            Click slot 49 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+        GroupAction
+          CloseScreenAction
+      GroupAction
+        GroupAction
+          CloseScreenAction
+        Message: Skipped event 'DROP_ITEM': it already has content.

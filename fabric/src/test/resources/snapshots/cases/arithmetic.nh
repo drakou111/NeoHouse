@@ -1,0 +1,29 @@
+// Arithmetic: compound operators, remainder, shifts, bitwise, casts and folding.
+long p.a;
+long p.b;
+double p.d;
+
+function compute() {
+    p.a = 17;
+    p.b = p.a % 5;
+    p.b += 2;
+    p.b *= p.a;
+    p.b -= 1;
+    p.b /= 3;
+    p.b++;
+    p.a = p.a << 2;
+    p.a = p.a >> 1;
+    p.a = p.a >>> 1;
+    p.a = p.a & 12;
+    p.a = p.a | 3;
+    p.a = p.a ^ 5;
+    p.d = 1.5 * 4.0 + 0.25;
+    p.d = (double) p.a / 2.0;
+    p.a = (long) p.d;
+    p.a = (long) -2.7;
+    p.a = -7 / 2 + -7 % 3;
+}
+
+event onJoin {
+    compute();
+}
