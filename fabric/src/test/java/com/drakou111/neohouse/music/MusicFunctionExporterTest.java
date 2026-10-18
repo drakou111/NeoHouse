@@ -8,6 +8,7 @@ import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.ConditionalNode;
+import com.drakou111.neohouse.compiler.ast.statement.VoidFunctionCallNode;
 import com.drakou111.neohouse.config.GlobalCallMode;
 import com.drakou111.neohouse.config.MultiCallMode;
 import com.drakou111.neohouse.config.OverrideMode;
@@ -43,6 +44,16 @@ class MusicFunctionExporterTest {
         return project;
     }
 
+    /** Compiles without warnings; the compiler may add helper functions. */
+    private static MainNode compile(String script) {
+        NHCompiler compiler = new NHCompiler();
+        MainNode main = compiler.analyze(script, null, STRICT);
+        assertThat(compiler.getLastWarnings()).isEmpty();
+        new CodeGenerator(OverrideMode.IF_EMPTY).generate(main);
+        return main;
+    }
+
+    /** Compiles without warnings into exactly the functions written. */
     private static MainNode compileCleanly(String script) {
         NHCompiler compiler = new NHCompiler();
         MainNode main = compiler.analyze(script, null, STRICT);
@@ -91,15 +102,32 @@ class MusicFunctionExporterTest {
     }
 
     @Test
-    void aLongSongIsSplitIntoChainedPartsTheCompilerLeavesAlone() {
+    void aLongSongContinuesInCompilerHelpersWithEveryBlockStillGuarded() {
         String script = MusicFunctionExporter.toScript(songWithStop(LONG_SONG_NOTES, "p.stop", false), "tune");
 
-        MainNode main = compileCleanly(script);
+        MainNode main = compile(script);
         List<VoidFunctionNode> parts = functions(main);
         assertThat(parts.size()).isGreaterThan(1);
         assertThat(parts.getFirst().name).isEqualTo("tune");
-        assertThat(script).contains("    tune_part2();\n}", "function tune_part2() {");
+        assertThat(script).containsOnlyOnce("function ");
         assertThat(script.lines().filter(line -> line.contains("playSound(")).count()).isEqualTo(LONG_SONG_NOTES);
+        for (VoidFunctionNode part : parts) {
+            List<StatementNode> statements = part.statements.statements;
+            for (int i = 0; i < statements.size(); i++) {
+                // The last statement of a full part hands over to the next helper.
+                if (i == statements.size() - 1 && statements.get(i) instanceof VoidFunctionCallNode) continue;
+                assertThat(statements.get(i)).isInstanceOfSatisfying(ConditionalNode.class,
+                        conditional -> assertThat(conditional.condition).isNotNull());
+            }
+        }
+    }
+
+    @Test
+    void aVeryLongSongNameStillCompiles() {
+        String name = MusicFunctionExporter.sanitizeFunctionName("x".repeat(70));
+
+        assertThat(name).hasSize(50);
+        compile(MusicFunctionExporter.toScript(songWithStop(LONG_SONG_NOTES, "p.stop", false), name));
     }
 
     @Test

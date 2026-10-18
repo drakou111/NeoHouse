@@ -1,5 +1,6 @@
 package com.drakou111.neohouse.music;
 
+import com.drakou111.neohouse.compiler.ast.main_statements.FunctionNode;
 import com.drakou111.neohouse.compiler.visitors.CompilerNames;
 import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.Sound;
@@ -29,9 +30,10 @@ public final class MusicFunctionExporter {
 
     /**
      * The song as a script. Without a stop variable the actions are listed flat and the compiler splits
-     * them to fit Housing's limits. With one, the song is laid out here: every chunk of actions sits in
-     * {@code if (<check>) { ... } else { return; }}, and when a function runs out of conditionals it
-     * hands over to the next part, so the song can be cut off between any two chunks.
+     * them to fit Housing's limits. With one, every chunk of actions is put in
+     * {@code if (<check>) { ... } else { return; }}, each as full as Housing allows, so the song can be
+     * cut off between any two chunks. A song needing more than one function's 25 conditionals is
+     * continued by the compiler in its own helper functions (name_s$0, ...), guards included.
      *
      * @throws IllegalArgumentException when the project's stop variable isn't a valid variable
      */
@@ -58,7 +60,11 @@ public final class MusicFunctionExporter {
         sb.append("// Stops when ").append(stopVariable).append(project.stopVariableInverted ? " isn't 1" : " is 1")
           .append(" (checked before each block of notes).\n");
         sb.append("long ").append(stopVariable).append(";\n\n");
-        appendGuardedParts(sb, actions, functionName, guardCondition(stopVariable, project.stopVariableInverted));
+        String condition = guardCondition(stopVariable, project.stopVariableInverted);
+        sb.append("function ").append(functionName).append("() {\n");
+        int next = 0;
+        while (next < actions.size()) next = appendGuardedBlock(sb, actions, next, condition);
+        sb.append("}\n");
         return sb.toString();
     }
 
@@ -118,27 +124,6 @@ public final class MusicFunctionExporter {
         }
     }
 
-    /**
-     * Packs the actions into guarded conditionals, as many per conditional as Housing allows, and up to
-     * the conditional limit per function. A full function ends by triggering the next part.
-     */
-    private static void appendGuardedParts(StringBuilder sb, List<Action> actions, String functionName, String condition) {
-        int next = 0;
-        int part = 1;
-        do {
-            sb.append("function ").append(partName(functionName, part)).append("() {\n");
-            int conditionals = 0;
-            while (next < actions.size() && conditionals < AddAction.CONDITIONAL.maxCount) {
-                next = appendGuardedBlock(sb, actions, next, condition);
-                conditionals++;
-            }
-            if (next < actions.size()) sb.append(INDENT).append(partName(functionName, part + 1)).append("();\n");
-            sb.append("}\n");
-            if (next < actions.size()) sb.append('\n');
-            part++;
-        } while (next < actions.size());
-    }
-
     /** Writes one guarded conditional starting at {@code from} and returns the index of the first action left out. */
     private static int appendGuardedBlock(StringBuilder sb, List<Action> actions, int from, String condition) {
         Map<AddAction, Integer> counts = new EnumMap<>(AddAction.class);
@@ -156,10 +141,6 @@ public final class MusicFunctionExporter {
         sb.append(INDENT).append(INDENT).append("return;\n");
         sb.append(INDENT).append("}\n");
         return i;
-    }
-
-    private static String partName(String functionName, int part) {
-        return part == 1 ? functionName : functionName + "_part" + part;
     }
 
     private static double clamp01to2(double v) {
@@ -187,6 +168,6 @@ public final class MusicFunctionExporter {
         String s = sb.toString();
         if (s.isEmpty()) s = "music";
         if (Character.isDigit(s.charAt(0))) s = "_" + s;
-        return s;
+        return s.length() > FunctionNode.MAX_NAME_LENGTH ? s.substring(0, FunctionNode.MAX_NAME_LENGTH) : s;
     }
 }

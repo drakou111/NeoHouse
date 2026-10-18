@@ -18,6 +18,8 @@
 - Recursion now follows the Recursion setting. With the default Multi-call mode, every recursive call used to fail as "would run more than once", so the Recursion setting never applied.
 - The never-set warning suggests a fallback of the right type (`?""`, `?0.0`, `?false`) instead of always `?0`.
 - Constants and enums can be used anywhere in the file, also above their declaration (and a constant can use one declared further down).
+- Numbers with decimals are written out in full (`0.0001`, not `1.0E-4`), in Housing's number fields and in chat text.
+- A function of 47 or more characters that needed splitting failed with "The function named '..._s$0' is too long"; the helper names now fit.
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor
@@ -33,7 +35,7 @@
 
 ### Music
 - New stop variable field in the music editor (for example `p.stop`). When it is set, the exported song puts every block of notes in `if (p.stop?0 != 1) { ... } else { return; }`, so setting the variable to 1 cuts the song off. The "1 = stop" / "1 = play" button flips the check, so the song plays only while the variable is 1. Leave the field empty to export as before.
-- With a stop variable, the export lays the song out itself (blocks within Housing's limits, and extra functions `<name>_part2`, `<name>_part3`, ... when one function is full) instead of leaving the splitting to the compiler.
+- With a stop variable, the export builds the guarded blocks itself, each as full as Housing allows. A song longer than one function is continued by the compiler's usual helper functions, every block still guarded. Song function names are cut to Housing's 50 characters.
 
 ## 1.1.2
 
