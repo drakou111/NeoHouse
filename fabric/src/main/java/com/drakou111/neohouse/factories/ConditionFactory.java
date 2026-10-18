@@ -133,7 +133,7 @@ public class ConditionFactory {
         return buildCondition(state, AddCondition.MAX_HEALTH,
                 InputParam.toggle(MaxHealthInputs.INVERT, invert),
                 InputParam.listSearch(MaxHealthInputs.COMPARATOR, comparator != null && comparator != Comparator.EQUAL ? comparator.displayName : null),
-                InputParam.text(HealthInputs.COMPARE_VALUE, value, null),
+                InputParam.text(MaxHealthInputs.COMPARE_VALUE, value, null),
                 InputParam.note(note));
     }
 
@@ -199,7 +199,7 @@ public class ConditionFactory {
     }
 
     public static Action addConditionFishingEnvironment(RestrictionCondition state, boolean invert, FishingEnvironment fishingEnvironment, String note) {
-        return buildCondition(state, AddCondition.BLOCK_TYPE,
+        return buildCondition(state, AddCondition.FISHING_ENVIRONMENT,
                 InputParam.toggle(FishingEnvironmentInputs.INVERT, invert),
                 InputParam.toggle(FishingEnvironmentInputs.ENVIRONMENT, fishingEnvironment != FishingEnvironment.WATER),
                 InputParam.note(note));
