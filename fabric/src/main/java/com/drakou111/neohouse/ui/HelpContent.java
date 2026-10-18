@@ -167,7 +167,8 @@ final class HelpContent {
                         var       anything, unchecked"""),
                 new Heading("Declaring"),
                 new Text("Declare variables at the top of a file, with their type. Only g. and t[] variables can have "
-                        + "a starting value."),
+                        + "a starting value. It is set again every time the script runs, so running it twice resets "
+                        + "the variable to that value."),
                 new Code("""
                         long p.coins;
                         double p.speed;
