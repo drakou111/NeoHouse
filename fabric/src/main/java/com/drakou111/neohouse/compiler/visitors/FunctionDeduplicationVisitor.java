@@ -55,6 +55,10 @@ import java.util.Set;
  * that execution has already run. Copies are built from the original body with the same rule, so a
  * copy calls its own copies of whatever it needs. Branches of an if/else or random are exclusive,
  * and a branch that ends in a return doesn't carry its calls into the code after it.</p>
+ *
+ * <p>A call that closes a recursion loop (f calling f, or f calling g calling f) is left to the
+ * Recursion setting instead of being reported or copied here; what it runs still counts for the
+ * calls around it.</p>
  */
 public class FunctionDeduplicationVisitor {
     private static final int MAX_COPY_BASE_LENGTH = 47; // Housing names are at most 50 characters
@@ -71,24 +75,29 @@ public class FunctionDeduplicationVisitor {
     private final Map<String, Integer> nextCopyIndex = new HashMap<>();
     private final Set<String> inProgress = new HashSet<>();
     private final List<FunctionNode> copies = new ArrayList<>();
+    /** Direct callees of each callable function, for finding recursion loops. */
+    private final Map<String, Set<String>> calls = new HashMap<>();
 
     /** Call state while walking one body. {@code live} only holds calls on paths that can still continue. */
     private static final class Context {
         final Set<String> avoid;
         final Set<String> all;
         final String owner;
+        /** The function (base name) whose body is walked, or null for an event, command, loop or menu. */
+        final String function;
         Set<String> live;
         boolean returned = false;
 
-        Context(Set<String> avoid, Set<String> live, Set<String> all, String owner) {
+        Context(Set<String> avoid, Set<String> live, Set<String> all, String owner, String function) {
             this.avoid = avoid;
             this.live = live;
             this.all = all;
             this.owner = owner;
+            this.function = function;
         }
 
         Context branch() {
-            return new Context(this.avoid, new HashSet<>(this.live), this.all, this.owner);
+            return new Context(this.avoid, new HashSet<>(this.live), this.all, this.owner, this.function);
         }
 
         boolean allows(Set<String> closure) {
@@ -114,6 +123,7 @@ public class FunctionDeduplicationVisitor {
             if (statement instanceof FunctionNode function && !(statement instanceof LoopNode)) {
                 this.originals.put(function.name, function);
                 this.instances.put(function.name, new ArrayList<>(List.of(function.name)));
+                this.calls.put(function.name, RecursionCheckVisitor.calleesOf(function.statements));
             }
         }
 
@@ -146,7 +156,7 @@ public class FunctionDeduplicationVisitor {
     }
 
     private StatementListNode walkRoot(StatementListNode body, String owner) {
-        return walkStatements(body, new Context(Set.of(), new HashSet<>(), new HashSet<>(), owner));
+        return walkStatements(body, new Context(Set.of(), new HashSet<>(), new HashSet<>(), owner, null));
     }
 
     /** Rewrites an original function's body (as its own execution) once, recording its closure. */
@@ -155,7 +165,7 @@ public class FunctionDeduplicationVisitor {
 
         FunctionNode function = this.originals.get(name);
         Set<String> all = new HashSet<>(Set.of(name));
-        Context context = new Context(Set.of(), new HashSet<>(Set.of(name)), all, "function '" + name + "'");
+        Context context = new Context(Set.of(), new HashSet<>(Set.of(name)), all, "function '" + name + "'", name);
         this.rewritten.put(name, withBody(function, name, walkStatements(function.statements, context)));
         this.closures.put(name, all);
         this.inProgress.remove(name);
@@ -169,6 +179,11 @@ public class FunctionDeduplicationVisitor {
     private String resolveCall(String base, Token token, Context context) {
         if (!this.originals.containsKey(base)) return base;
         ensureRewritten(base);
+
+        if (context.function != null && reaches(base, context.function)) {
+            context.all.addAll(closureOf(base));
+            return base;
+        }
 
         for (String candidate : this.instances.get(base)) {
             if (context.allows(closureOf(candidate))) {
@@ -200,12 +215,25 @@ public class FunctionDeduplicationVisitor {
         Set<String> avoid = new HashSet<>(caller.avoid);
         avoid.addAll(caller.live);
         Set<String> all = new HashSet<>(Set.of(copyName));
-        Context context = new Context(avoid, new HashSet<>(Set.of(copyName)), all, "function '" + copyName + "'");
+        Context context = new Context(avoid, new HashSet<>(Set.of(copyName)), all, "function '" + copyName + "'", base);
 
         FunctionNode original = this.originals.get(base);
         this.copies.add(withBody(original, copyName, walkStatements(original.statements, context)));
         this.closures.put(copyName, all);
         return copyName;
+    }
+
+    /** Whether calling {@code from} can lead back to {@code target}, so a call to it from target is recursion. */
+    private boolean reaches(String from, String target) {
+        Set<String> seen = new HashSet<>();
+        List<String> pending = new ArrayList<>(List.of(from));
+        while (!pending.isEmpty()) {
+            String name = pending.removeLast();
+            if (name.equals(target)) return true;
+            if (!seen.add(name)) continue;
+            pending.addAll(this.calls.getOrDefault(name, Set.of()));
+        }
+        return false;
     }
 
     private void report(Token token, String base, Context context) {
