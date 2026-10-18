@@ -9,6 +9,7 @@ import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.CommandNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.EventNode;
+import com.drakou111.neohouse.compiler.ast.main_statements.FunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.LoopNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.MenuNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.SlotNode;
@@ -176,7 +177,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
             }
 
             List<StatementNode> tail = new ArrayList<>(list.subList(i, list.size()));
-            String helperName = currentScopeName + "_s$" + nextHelperId++;
+            String helperName = helperName(nextHelperId++);
             int slot = all.size();
             all.add(null);
             StatementListNode helperBody = splitIfNeeded(new StatementListNode(tail), false);
@@ -192,6 +193,14 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
         }
 
         return new StatementListNode(result);
+    }
+
+    /** {@code scope_s$N}, with the scope's name cut short when the whole would pass Housing's name limit. */
+    private String helperName(int id) {
+        String suffix = "_s$" + id;
+        int room = FunctionNode.MAX_NAME_LENGTH - suffix.length();
+        String base = currentScopeName.length() > room ? currentScopeName.substring(0, room) : currentScopeName;
+        return base + suffix;
     }
 
     /** The Housing action a statement becomes, or null for one that adds no action (a declaration). */
