@@ -15,6 +15,7 @@ import com.drakou111.neohouse.config.UITheme;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
 import com.drakou111.neohouse.config.UnknownCallMode;
 import com.drakou111.neohouse.config.UnsetVariableMode;
+import com.drakou111.neohouse.utils.OptionColors;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
@@ -501,7 +502,7 @@ public class ConfigScreen extends ScreenBase {
             String label = this.names.get(this.selected);
             int maxLabelW = DROP_W - 20;
             String shown = font.width(label) > maxLabelW ? font.plainSubstrByWidth(label, maxLabelW) + "..." : label;
-            g.drawString(font, shown, x + 4, y + (DROP_H - 8) / 2, 0xFFDDDDDD, false);
+            g.drawString(font, shown, x + 4, y + (DROP_H - 8) / 2, OptionColors.argbFor(label, 0xFFDDDDDD), false);
             g.drawString(font, open ? "▲" : "▼", x + DROP_W - 11, y + (DROP_H - 8) / 2, 0xFF888899, false);
         }
 
@@ -518,7 +519,9 @@ public class ConfigScreen extends ScreenBase {
                 boolean isSelected = index == this.selected;
                 if (isSelected) g.fill(x, iy, x + DROP_W, iy + DROP_ITEM_H, t.highlight(0xCC));
                 else if (hit(mouseX, mouseY, x, iy, DROP_W, DROP_ITEM_H)) g.fill(x, iy, x + DROP_W, iy + DROP_ITEM_H, t.surface(0xCC));
-                g.drawString(font, this.names.get(index), x + 4, iy + (DROP_ITEM_H - 8) / 2, isSelected ? t.accent() : 0xFFDDDDDD, false);
+                String name = this.names.get(index);
+                int color = OptionColors.argbFor(name, isSelected ? t.accent() : 0xFFDDDDDD);
+                g.drawString(font, name, x + 4, iy + (DROP_ITEM_H - 8) / 2, color, false);
             }
             if (this.listScroll > 0) g.drawString(font, "▲", x + DROP_W - 10, listY + 2, 0xFFAAAAAA, false);
             if (this.listScroll + visible < this.names.size()) g.drawString(font, "▼", x + DROP_W - 10, listY + listH - 10, 0xFFAAAAAA, false);

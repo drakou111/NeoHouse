@@ -17,6 +17,9 @@
 - Pasting inside a string escapes the pasted `"` and `\`, so `"some |"` plus `"text"` becomes `"some \"text\""`. Text that already has escapes gets one more level.
 - Fixed: typing, deleting or pressing Enter past the right edge didn't scroll the editor to the cursor.
 
+### Settings
+- Options are colored by how strict they are, in the dropdowns and in the tooltips: Off and Allow green, Warn yellow, Error red, Fix aqua. Override modes go from Never Override (green) through Override If Empty (yellow) and Append (aqua) to Always Override (red).
+
 ### Music
 - New stop variable field in the music editor (for example `p.stop`). When it is set, the exported song puts every block of notes in `if (p.stop?0 != 1) { ... } else { return; }`, so setting the variable to 1 cuts the song off. The "1 = stop" / "1 = play" button flips the check, so the song plays only while the variable is 1. Leave the field empty to export as before.
 - With a stop variable, the export lays the song out itself (blocks within Housing's limits, and extra functions `<name>_part2`, `<name>_part3`, ... when one function is full) instead of leaving the splitting to the compiler.
