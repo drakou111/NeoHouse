@@ -10,6 +10,13 @@
 - In strings, `\"` now means `"` and `\\` means `\`; before, the backslash was sent to Housing too. Other backslashes (like `\n`) are kept as written. Item data in `({...})` is unchanged.
 - A parameter can't be named like a constant or enum member any more (`const long x = 1;` with `function f(long x)`). Before, every `x` silently meant the constant, so the parameter was ignored. `p.x` is still fine.
 - Variables always need a holder now: declaring (`long test;`), assigning (`test = 5;`) or reading a bare `test` is an error; write `p.test`, `g.test` or `t[team].test`. A bare name used to quietly mean `p.test`. Only a function's own parameters are written without a holder, inside that function.
+- Two blocks for the same event (two `event onJoin`) are an error. Before, the second wiped out the first (Always Override) or was skipped (the modes that keep content).
+- Two parameters with the same name are an error.
+- `+=` on a string appends: `p.s += "x"` sets `p.s` to its text followed by `x`. Before, it sent an Increment, which doesn't work on text.
+- Dividing by a constant zero (`/ 0`, `% 0`, `/= 0`, `%= 0`) is an error, and `repeat(0)` warns that its body never runs.
+- A condition made only of constants (`if (1 == 1)`, `if (DEBUG)`) is decided when compiling, with a warning: the branch that runs takes the if's place, saving a conditional and the temporary variables.
+- Recursion now follows the Recursion setting. With the default Multi-call mode, every recursive call used to fail as "would run more than once", so the Recursion setting never applied.
+- The never-set warning suggests a fallback of the right type (`?""`, `?0.0`, `?false`) instead of always `?0`.
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor
