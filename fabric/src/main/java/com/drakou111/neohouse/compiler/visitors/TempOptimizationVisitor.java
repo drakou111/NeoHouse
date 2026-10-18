@@ -38,7 +38,8 @@ import java.util.Set;
  *   <li>a value built in a temp only to be copied into another temp is built there directly:
  *       {@code t = x; t *= x; o$ = t} is {@code o$ = x; o$ *= x}, and a temp that is only a copy
  *       goes straight to its destination, the script's variables included: {@code t = x; v = t} is
- *       {@code v = x}, the same single write;</li>
+ *       {@code v = x}, the same single write; steps that start from a script variable's own value are
+ *       done on it directly: {@code t = v; t <<= 2; v = t} is {@code v <<= 2};</li>
  *   <li>a temp copied from another temp (or a call's result) that isn't needed afterwards is used
  *       in place: {@code t1 = o$; t1 += 2; r = t1} is {@code o$ += 2; r = o$};</li>
  *   <li>a long temp that is a variable plus a constant and only compared with a constant is
@@ -251,22 +252,32 @@ public class TempOptimizationVisitor extends DefaultVisitor {
 
             int start = chainStart(list, j, t);
             if (start < 0 || isLiveAfter(t, list, j + 1, outer, liveAtExit)) continue;
-            // A script variable may only take a plain copy (t = x; v = t is v = x: still one write of
-            // the same value); building a value step by step stays in temps.
+            // A script variable may take a plain copy (t = x; v = t is v = x: still one write of the same
+            // value), or the steps when they start from its own value (t = v; t += 2; v = t is v += 2).
+            // Otherwise building a value step by step stays in temps.
             boolean plainCopy = start == j - 1;
-            if (!CompilerTemps.isTemp(destination) ? !plainCopy : destination.type != temp.type) continue;
+            boolean fromDestination = !plainCopy && startsFrom(list.get(start), d, temp.type);
+            if (!CompilerTemps.isTemp(destination) ? !plainCopy && !fromDestination : destination.type != temp.type) continue;
+            int firstStep = fromDestination ? start + 1 : start;
             boolean usesDestination = false;
-            for (int i = start; i < j; i++) usesDestination |= references(list.get(i), d);
+            for (int i = firstStep; i < j; i++) usesDestination |= references(list.get(i), d);
             if (usesDestination) continue;
 
-            for (int i = start; i < j; i++) {
+            for (int i = firstStep; i < j; i++) {
                 AssignationNode step = (AssignationNode) list.get(i);
                 list.set(i, new AssignationNode(destination, step.operator, renamed(step.value, t, destination), step.token));
             }
             list.remove(j);
+            if (fromDestination) list.remove(start);
             changed = true;
         }
         return changed;
+    }
+
+    /** Whether {@code statement} is {@code t = v}: a plain read of {@code v}, of the temp's type. */
+    private static boolean startsFrom(StatementNode statement, VarKey v, VariableType type) {
+        return statement instanceof AssignationNode first && first.value instanceof VariableNode source
+                && VarKey.of(source).equals(v) && source.castSuffix == null && source.fallback == null && source.type == type;
     }
 
     /** Index of the {@code t = ...} starting the run of steps on {@code t} that ends just before {@code end}, or -1. */

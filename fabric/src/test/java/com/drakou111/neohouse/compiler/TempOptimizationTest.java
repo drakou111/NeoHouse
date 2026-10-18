@@ -78,6 +78,29 @@ class TempOptimizationTest {
     }
 
     @Test
+    void stepsStartingFromTheVariableItselfAreDoneInPlace() {
+        assertThat(onJoin("long p.a;", "p.a = p.a << 2;")).containsExactly("a LEFT_SHIFT_ASSIGN 2");
+        assertThat(onJoin("long p.a; long p.b;", "p.a = (p.a + p.b) * 3;")).containsExactly(
+                "a ADD_ASSIGN b",
+                "a MUL_ASSIGN 3");
+    }
+
+    @Test
+    void aStepThatReadsTheVariableKeepsTheTemp() {
+        // Doing it in place would read the already-doubled p.a in the second step.
+        assertThat(onJoin("long p.a;", "p.a = p.a * 2 + p.a;")).containsExactly(
+                "t$0 ASSIGN a",
+                "t$0 MUL_ASSIGN 2",
+                "t$0 ADD_ASSIGN a",
+                "a ASSIGN t$0");
+    }
+
+    @Test
+    void aFallbackOnTheFirstReadKeepsTheTemp() {
+        assertThat(onJoin("long p.a;", "p.a = p.a?5 + 1;")).first().asString().startsWith("t$0 ASSIGN");
+    }
+
+    @Test
     void aPlainCopyGoesStraightToTheVariable() {
         assertThat(onJoin("long p.a; long p.r;", "p.r = -(-p.a);")).containsExactly("r ASSIGN a");
     }

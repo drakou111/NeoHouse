@@ -302,28 +302,7 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: compute$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/a%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: compute$t0
+              Enter text: a
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
@@ -353,48 +332,6 @@ GroupAction
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/compute$t0%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: compute$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/a%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: compute$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
           Search: Arithmetic Right Shift
             GroupAction
               Search: Toggle Advanced Operations
@@ -417,48 +354,6 @@ GroupAction
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/compute$t0%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: compute$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/a%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: compute$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
           Search: Logical Right Shift
             GroupAction
               Search: Toggle Advanced Operations
@@ -478,48 +373,6 @@ GroupAction
           Search: Variable
             GroupAction
               Enter text: a
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/compute$t0%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: compute$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/a%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: compute$t0
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
@@ -549,11 +402,63 @@ GroupAction
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
+          Search: Bitwise OR
+            GroupAction
+              Search: Toggle Advanced Operations
+              Wait 2 ticks
+              Search: Bitwise OR
+              Wait 2 ticks
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: 3
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: a
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Bitwise XOR
+            GroupAction
+              Search: Toggle Advanced Operations
+              Wait 2 ticks
+              Search: Bitwise XOR
+              Wait 2 ticks
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: 5
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: d
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
           Search: Set
           Wait 2 ticks
           Search: Value
             GroupAction
-              Enter text: %var.player/compute$t0%
+              Enter text: 6.25
               Wait 2 ticks
           Click slot 31 (left)
           Wait for screen to open: ContainerScreen
@@ -583,276 +488,104 @@ GroupAction
           Click slot 50 (left)
           Wait for screen to open: ContainerScreen
           Wait 2 ticks
-          Search: Conditional
+          Search: Change Variable
           Wait 2 ticks
-          Search: If Actions
+          Search: Variable
+            GroupAction
+              Enter text: compute$t0
+              Wait 2 ticks
+          Search: Operation
           Wait 2 ticks
-          GroupAction
+          Search: Divide
+          Wait 2 ticks
+          Search: Value
             GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
+              Enter text: 2.0
               Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Bitwise OR
-                GroupAction
-                  Search: Toggle Advanced Operations
-                  Wait 2 ticks
-                  Search: Bitwise OR
-                  Wait 2 ticks
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: 3
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: a
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/compute$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/a%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Bitwise XOR
-                GroupAction
-                  Search: Toggle Advanced Operations
-                  Wait 2 ticks
-                  Search: Bitwise XOR
-                  Wait 2 ticks
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: 5
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: a
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/compute$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: d
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: 6.25
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/a%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Divide
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: 2.0
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: d
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/compute$t0%D
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: a
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/d%L
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: a
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: -2
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: a
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: -4
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-          Click slot 49 (left)
+          Click slot 31 (left)
           Wait for screen to open: ContainerScreen
           Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: d
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/compute$t0%D
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: a
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/d%L
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: a
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: -2
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: a
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: -4
+              Wait 2 ticks
           Click slot 31 (left)
           Wait for screen to open: ContainerScreen
           Wait 2 ticks
@@ -1113,28 +846,7 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/a%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
+                  Enter text: a
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
@@ -1164,48 +876,6 @@ GroupAction
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/compute$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/a%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
               Search: Arithmetic Right Shift
                 GroupAction
                   Search: Toggle Advanced Operations
@@ -1228,48 +898,6 @@ GroupAction
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/compute$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/a%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
               Search: Logical Right Shift
                 GroupAction
                   Search: Toggle Advanced Operations
@@ -1289,48 +917,6 @@ GroupAction
               Search: Variable
                 GroupAction
                   Enter text: a
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/compute$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/a%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: compute$t0
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
@@ -1360,11 +946,63 @@ GroupAction
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
+              Search: Bitwise OR
+                GroupAction
+                  Search: Toggle Advanced Operations
+                  Wait 2 ticks
+                  Search: Bitwise OR
+                  Wait 2 ticks
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: 3
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: a
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Bitwise XOR
+                GroupAction
+                  Search: Toggle Advanced Operations
+                  Wait 2 ticks
+                  Search: Bitwise XOR
+                  Wait 2 ticks
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: 5
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: d
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
               Search: Set
               Wait 2 ticks
               Search: Value
                 GroupAction
-                  Enter text: %var.player/compute$t0%
+                  Enter text: 6.25
                   Wait 2 ticks
               Click slot 31 (left)
               Wait for screen to open: ContainerScreen
@@ -1394,276 +1032,104 @@ GroupAction
               Click slot 50 (left)
               Wait for screen to open: ContainerScreen
               Wait 2 ticks
-              Search: Conditional
+              Search: Change Variable
               Wait 2 ticks
-              Search: If Actions
+              Search: Variable
+                GroupAction
+                  Enter text: compute$t0
+                  Wait 2 ticks
+              Search: Operation
               Wait 2 ticks
-              GroupAction
+              Search: Divide
+              Wait 2 ticks
+              Search: Value
                 GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
+                  Enter text: 2.0
                   Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: compute$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Bitwise OR
-                    GroupAction
-                      Search: Toggle Advanced Operations
-                      Wait 2 ticks
-                      Search: Bitwise OR
-                      Wait 2 ticks
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: 3
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: a
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/compute$t0%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: compute$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/a%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: compute$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Bitwise XOR
-                    GroupAction
-                      Search: Toggle Advanced Operations
-                      Wait 2 ticks
-                      Search: Bitwise XOR
-                      Wait 2 ticks
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: 5
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: a
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/compute$t0%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: d
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: 6.25
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: compute$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/a%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: compute$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Divide
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: 2.0
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: d
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/compute$t0%D
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: a
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/d%L
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: a
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: -2
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: a
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: -4
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-              Click slot 49 (left)
+              Click slot 31 (left)
               Wait for screen to open: ContainerScreen
               Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: d
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/compute$t0%D
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: a
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/d%L
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: a
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: -2
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: a
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: -4
+                  Wait 2 ticks
               Click slot 31 (left)
               Wait for screen to open: ContainerScreen
               Wait 2 ticks

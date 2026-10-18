@@ -5311,28 +5311,7 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: asin$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/trigTemp%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: asin$t0
+              Enter text: trigTemp
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
@@ -5353,7 +5332,7 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: asin$t0
+              Enter text: trigTemp
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
@@ -5378,48 +5357,6 @@ GroupAction
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/asin$t0%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: asin$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/trigTemp%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: asin$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
           Search: Multiply
           Wait 2 ticks
           Search: Value
@@ -5437,7 +5374,7 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: asin$t0
+              Enter text: trigTemp
               Wait 2 ticks
           Search: Value
             GroupAction
@@ -5458,48 +5395,6 @@ GroupAction
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/asin$t0%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: asin$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
-          Search: Value
-            GroupAction
-              Enter text: %var.player/trigTemp%
-              Wait 2 ticks
-          Click slot 31 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-        GroupAction
-          Click slot 50 (left)
-          Wait for screen to open: ContainerScreen
-          Wait 2 ticks
-          Search: Change Variable
-          Wait 2 ticks
-          Search: Variable
-            GroupAction
-              Enter text: asin$t0
-              Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
           Search: Multiply
           Wait 2 ticks
           Search: Value
@@ -5517,7 +5412,7 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: asin$t0
+              Enter text: trigTemp
               Wait 2 ticks
           Search: Value
             GroupAction
@@ -5538,11 +5433,11 @@ GroupAction
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
-          Search: Set
+          Search: Multiply
           Wait 2 ticks
           Search: Value
             GroupAction
-              Enter text: %var.player/asin$t0%
+              Enter text: %var.player/trigTemp3%
               Wait 2 ticks
           Click slot 31 (left)
           Wait for screen to open: ContainerScreen
@@ -5555,15 +5450,11 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: asin$t0
+              Enter text: trigTemp
               Wait 2 ticks
-          Search: Operation
-          Wait 2 ticks
-          Search: Set
-          Wait 2 ticks
           Search: Value
             GroupAction
-              Enter text: %var.player/trigTemp%
+              Enter text: 0.1667511541
               Wait 2 ticks
           Click slot 31 (left)
           Wait for screen to open: ContainerScreen
@@ -5576,7 +5467,7 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: asin$t0
+              Enter text: trigTemp
               Wait 2 ticks
           Search: Operation
           Wait 2 ticks
@@ -5597,11 +5488,116 @@ GroupAction
           Wait 2 ticks
           Search: Variable
             GroupAction
-              Enter text: asin$t0
+              Enter text: trigTemp
               Wait 2 ticks
           Search: Value
             GroupAction
-              Enter text: 0.1667511541
+              Enter text: 0.9999994098
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: asin$t0
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: 2.0
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: asin$t0
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Multiply
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/trigTemp2%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: asin$t0
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Multiply
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/trigTemp%
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: asin$t1
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Set
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: 1.57079632679
+              Wait 2 ticks
+          Click slot 31 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+        GroupAction
+          Click slot 50 (left)
+          Wait for screen to open: ContainerScreen
+          Wait 2 ticks
+          Search: Change Variable
+          Wait 2 ticks
+          Search: Variable
+            GroupAction
+              Enter text: asin$t1
+              Wait 2 ticks
+          Search: Operation
+          Wait 2 ticks
+          Search: Decrement
+          Wait 2 ticks
+          Search: Value
+            GroupAction
+              Enter text: %var.player/asin$t0%
               Wait 2 ticks
           Click slot 31 (left)
           Wait for screen to open: ContainerScreen
@@ -5615,212 +5611,6 @@ GroupAction
           Search: If Actions
           Wait 2 ticks
           GroupAction
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: trigTemp
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/asin$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/trigTemp%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Multiply
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/trigTemp3%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: 0.9999994098
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: trigTemp
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/asin$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: 2.0
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Multiply
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/trigTemp2%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Multiply
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/trigTemp%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t1
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: 1.57079632679
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t1
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Decrement
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/asin$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
             GroupAction
               Click slot 50 (left)
               Wait for screen to open: ContainerScreen
@@ -6643,28 +6433,7 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/trigTemp%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
+                  Enter text: trigTemp
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
@@ -6685,7 +6454,7 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: asin$t0
+                  Enter text: trigTemp
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
@@ -6710,48 +6479,6 @@ GroupAction
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/asin$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/trigTemp%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
               Search: Multiply
               Wait 2 ticks
               Search: Value
@@ -6769,7 +6496,7 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: asin$t0
+                  Enter text: trigTemp
                   Wait 2 ticks
               Search: Value
                 GroupAction
@@ -6790,48 +6517,6 @@ GroupAction
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/asin$t0%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/trigTemp%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: asin$t0
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
               Search: Multiply
               Wait 2 ticks
               Search: Value
@@ -6849,7 +6534,7 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: asin$t0
+                  Enter text: trigTemp
                   Wait 2 ticks
               Search: Value
                 GroupAction
@@ -6870,11 +6555,11 @@ GroupAction
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
-              Search: Set
+              Search: Multiply
               Wait 2 ticks
               Search: Value
                 GroupAction
-                  Enter text: %var.player/asin$t0%
+                  Enter text: %var.player/trigTemp3%
                   Wait 2 ticks
               Click slot 31 (left)
               Wait for screen to open: ContainerScreen
@@ -6887,15 +6572,11 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: asin$t0
+                  Enter text: trigTemp
                   Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
               Search: Value
                 GroupAction
-                  Enter text: %var.player/trigTemp%
+                  Enter text: 0.1667511541
                   Wait 2 ticks
               Click slot 31 (left)
               Wait for screen to open: ContainerScreen
@@ -6908,7 +6589,7 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: asin$t0
+                  Enter text: trigTemp
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
@@ -6929,11 +6610,116 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: asin$t0
+                  Enter text: trigTemp
                   Wait 2 ticks
               Search: Value
                 GroupAction
-                  Enter text: 0.1667511541
+                  Enter text: 0.9999994098
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: asin$t0
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: 2.0
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: asin$t0
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Multiply
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/trigTemp2%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: asin$t0
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Multiply
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/trigTemp%
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: asin$t1
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Set
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: 1.57079632679
+                  Wait 2 ticks
+              Click slot 31 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+            GroupAction
+              Click slot 50 (left)
+              Wait for screen to open: ContainerScreen
+              Wait 2 ticks
+              Search: Change Variable
+              Wait 2 ticks
+              Search: Variable
+                GroupAction
+                  Enter text: asin$t1
+                  Wait 2 ticks
+              Search: Operation
+              Wait 2 ticks
+              Search: Decrement
+              Wait 2 ticks
+              Search: Value
+                GroupAction
+                  Enter text: %var.player/asin$t0%
                   Wait 2 ticks
               Click slot 31 (left)
               Wait for screen to open: ContainerScreen
@@ -6947,212 +6733,6 @@ GroupAction
               Search: If Actions
               Wait 2 ticks
               GroupAction
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: trigTemp
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/asin$t0%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/trigTemp%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Multiply
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/trigTemp3%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t0
-                      Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: 0.9999994098
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: trigTemp
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/asin$t0%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: 2.0
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Multiply
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/trigTemp2%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t0
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Multiply
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/trigTemp%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t1
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: 1.57079632679
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: asin$t1
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Decrement
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/asin$t0%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
                 GroupAction
                   Click slot 50 (left)
                   Wait for screen to open: ContainerScreen
@@ -8902,53 +8482,11 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: atan2$t1
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/o$%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: atan2$t1
+                  Enter text: o$
                   Wait 2 ticks
               Search: Value
                 GroupAction
                   Enter text: 3.14159265359
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: o$
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/atan2$t1%
                   Wait 2 ticks
               Click slot 31 (left)
               Wait for screen to open: ContainerScreen
@@ -9085,28 +8623,7 @@ GroupAction
               Wait 2 ticks
               Search: Variable
                 GroupAction
-                  Enter text: atan2$t1
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/o$%
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: atan2$t1
+                  Enter text: o$
                   Wait 2 ticks
               Search: Operation
               Wait 2 ticks
@@ -9115,27 +8632,6 @@ GroupAction
               Search: Value
                 GroupAction
                   Enter text: 3.14159265359
-                  Wait 2 ticks
-              Click slot 31 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-            GroupAction
-              Click slot 50 (left)
-              Wait for screen to open: ContainerScreen
-              Wait 2 ticks
-              Search: Change Variable
-              Wait 2 ticks
-              Search: Variable
-                GroupAction
-                  Enter text: o$
-                  Wait 2 ticks
-              Search: Operation
-              Wait 2 ticks
-              Search: Set
-              Wait 2 ticks
-              Search: Value
-                GroupAction
-                  Enter text: %var.player/atan2$t1%
                   Wait 2 ticks
               Click slot 31 (left)
               Wait for screen to open: ContainerScreen
@@ -9548,53 +9044,11 @@ GroupAction
                   Wait 2 ticks
                   Search: Variable
                     GroupAction
-                      Enter text: atan2$t1
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/o$%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: atan2$t1
+                      Enter text: o$
                       Wait 2 ticks
                   Search: Value
                     GroupAction
                       Enter text: 3.14159265359
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: o$
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/atan2$t1%
                       Wait 2 ticks
                   Click slot 31 (left)
                   Wait for screen to open: ContainerScreen
@@ -9731,28 +9185,7 @@ GroupAction
                   Wait 2 ticks
                   Search: Variable
                     GroupAction
-                      Enter text: atan2$t1
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/o$%
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: atan2$t1
+                      Enter text: o$
                       Wait 2 ticks
                   Search: Operation
                   Wait 2 ticks
@@ -9761,27 +9194,6 @@ GroupAction
                   Search: Value
                     GroupAction
                       Enter text: 3.14159265359
-                      Wait 2 ticks
-                  Click slot 31 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                GroupAction
-                  Click slot 50 (left)
-                  Wait for screen to open: ContainerScreen
-                  Wait 2 ticks
-                  Search: Change Variable
-                  Wait 2 ticks
-                  Search: Variable
-                    GroupAction
-                      Enter text: o$
-                      Wait 2 ticks
-                  Search: Operation
-                  Wait 2 ticks
-                  Search: Set
-                  Wait 2 ticks
-                  Search: Value
-                    GroupAction
-                      Enter text: %var.player/atan2$t1%
                       Wait 2 ticks
                   Click slot 31 (left)
                   Wait for screen to open: ContainerScreen
