@@ -343,7 +343,7 @@ public class Parser {
             } else {
                 if (!description.isEmpty()) throw new ParsingException(nToken, "Duplicate 'description' parameter");
                 Token descToken = consume(TokenType.STRING_VALUE, "Expected string literal for 'description'");
-                description = descToken.text.substring(1, descToken.text.length() - 1);
+                description = StringLiterals.contentOf(descToken);
             }
             if (!check(TokenType.RPAREN)) consume(TokenType.COMMA, "Expected ',' after named parameter");
         }
@@ -376,7 +376,7 @@ public class Parser {
             case STRING_LITERAL -> {
                 if (param.hasEnumConstraint()) {
                     Token t = consume(TokenType.STRING_VALUE, ctx + " param #" + paramNumber + " must be a STRING literal");
-                    String stripped = t.text.substring(1, t.text.length() - 1);
+                    String stripped = StringLiterals.contentOf(t);
                     if (!param.isValidEnum(stripped)) throw new ParsingException(t,
                             "'" + stripped + "' is not a valid value for " + ctx + " param #" + paramNumber + ".");
                     yield new ConstantPrimitiveNode(new StringValue(stripped), VariableType.STRING, t);
@@ -654,7 +654,7 @@ public class Parser {
         if (check(TokenType.STRING_VALUE)) {
             // A quoted title can hold spaces and other characters a plain name can't.
             Token titleToken = consume(TokenType.STRING_VALUE, "Expected menu title");
-            name = titleToken.text.substring(1, titleToken.text.length() - 1);
+            name = StringLiterals.contentOf(titleToken);
             if (name.isBlank()) throw new ParsingException(titleToken, "Menu title can't be empty");
         } else {
             name = consume(TokenType.IDENT, "Expected menu name or a quoted title").text;
@@ -854,7 +854,7 @@ public class Parser {
                 return new ConstantPrimitiveNode(new DoubleValue(constVal), VariableType.DOUBLE, token);
             }
             case STRING_VALUE:
-                return new ConstantPrimitiveNode(new StringValue(token.text.substring(1, token.text.length() - 1)), VariableType.STRING, token);
+                return new ConstantPrimitiveNode(new StringValue(StringLiterals.contentOf(token)), VariableType.STRING, token);
             case LONG_VALUE:
                 return new ConstantPrimitiveNode(new LongValue(NumberLiterals.parseLong(token)), VariableType.LONG, token);
             case DOUBLE_VALUE:
@@ -1125,7 +1125,7 @@ public class Parser {
             advance();
             if (check(TokenType.STRING_VALUE)) {
                 Token strTok = advance();
-                teamName = strTok.text.substring(1, strTok.text.length() - 1);
+                teamName = StringLiterals.contentOf(strTok);
             } else {
                 Token nameTok = consume(TokenType.IDENT, "Expected team name inside '[ ]'");
                 teamName = nameTok.text;
@@ -1266,7 +1266,7 @@ public class Parser {
     private ConstantPrimitive parseConstantPrimitive() {
         Token token = advance();
         return switch (token.type) {
-            case STRING_VALUE -> new StringValue(token.text.substring(1, token.text.length() - 1));
+            case STRING_VALUE -> new StringValue(StringLiterals.contentOf(token));
             case LONG_VALUE -> new LongValue(NumberLiterals.parseLong(token));
             case DOUBLE_VALUE -> new DoubleValue(NumberLiterals.parseDouble(token));
             case TRUE -> new BoolValue(true);
