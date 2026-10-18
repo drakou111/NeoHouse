@@ -11,15 +11,20 @@ import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.GlobalDeclarationNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
+import com.drakou111.neohouse.compiler.ast.statement.ActionCallNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
 import com.drakou111.neohouse.compiler.ast.statement.TypedReturnNode;
+import com.drakou111.neohouse.compiler.enums.ActionParamKind;
 import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.enums.BinaryOperator;
 import com.drakou111.neohouse.compiler.enums.UnaryOperator;
 import com.drakou111.neohouse.compiler.enums.VariableType;
+import com.drakou111.neohouse.constants.AddAction;
 import com.drakou111.neohouse.constants.Placeholder;
 import com.drakou111.neohouse.constants.StringLimits;
 import com.drakou111.neohouse.exceptions.SemanticException;
+
+import java.util.List;
 
 public class StringLengthCheckVisitor extends EmptyVisitor<Void> {
 
@@ -75,6 +80,23 @@ public class StringLengthCheckVisitor extends EmptyVisitor<Void> {
                         "String initializer is too long: it would expand to " + len
                         + " characters in Hypixel Housing, but the limit is " + StringLimits.STRING_TEXT + ".");
             }
+        }
+        return null;
+    }
+
+    /** Text typed into an action's input (a message, a title, ...) has to fit in a chat line. */
+    @Override
+    public Void visitActionCall(ActionCallNode call) {
+        AddAction action = AddAction.searchByName(call.name);
+        if (action == null) return null;
+        List<NormalExpressionNode> args = call.arguments.expressions;
+        for (int i = 0; i < args.size() && i < action.params.size(); i++) {
+            NormalExpressionNode arg = args.get(i);
+            if (action.params.get(i).kind() != ActionParamKind.STRING_LITERAL || arg.type != VariableType.STRING) continue;
+            int len = housingLength(arg);
+            if (len > StringLimits.CHAT_TEXT)
+                throw new SemanticException(call.token, "Text is too long: it would be " + len
+                        + " characters in Hypixel Housing, but the limit is " + StringLimits.CHAT_TEXT + ".");
         }
         return null;
     }
