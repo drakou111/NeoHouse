@@ -238,7 +238,7 @@ final class HelpContent {
                         + "which type to use, which %, -x, x++ and x-- need."),
                 new Heading("Computed while compiling"),
                 new Text("Arithmetic on constants is done by the compiler: p.x = 1.0 / 2.0 becomes p.x = 0.5, and "
-                        + "(long) 2.7 becomes 2. Division by a constant zero is left for Housing.")));
+                        + "(long) 2.7 becomes 2. Dividing by a constant zero is an error.")));
     }
 
     private static Topic text() {
@@ -387,7 +387,8 @@ final class HelpContent {
         return new Topic(GUIDE, "Constants and enums", List.of(
                 new Heading("Constants"),
                 new Text("Named values replaced by their value while compiling, at no cost in Housing. Types: long, "
-                        + "double, string and bool. The value is a literal or another constant."),
+                        + "double, string and bool. The value is a literal or another constant. Constants and enums "
+                        + "can be used anywhere in the file, also above the line that declares them."),
                 new Code("""
                         const long MAX_SCORE = 100;
 
