@@ -1,40 +1,48 @@
 # Changelog
 
-## Unreleased
+## 1.1.3
 
-### Compiler
-- Menus can have a quoted title with spaces and symbols: `menu "Item Shop"(3) { ... }`. Menu titles can't be colored, so the editor shows `&` codes in them as plain text.
-- New setting Unknown calls (Warn by default, or Error or Off): a script can call a function, or `displayMenu` a menu, that it doesn't define but the house already has. Before this it was always an error. A run checks that those functions and menus exist before changing anything, whatever the setting. Calls to such functions can't pass arguments.
-
-- Two functions, commands or menus with the same name are now an error (the second used to replace the first in Housing). A loop can't share a function's name either, since loops are functions in Housing.
-- In strings, `\"` now means `"` and `\\` means `\`; before, the backslash was sent to Housing too. Other backslashes (like `\n`) are kept as written. Item data in `({...})` is unchanged.
-- A parameter can't be named like a constant or enum member any more (`const long x = 1;` with `function f(long x)`). Before, every `x` silently meant the constant, so the parameter was ignored. `p.x` is still fine.
-- Variables always need a holder now: declaring (`long test;`), assigning (`test = 5;`) or reading a bare `test` is an error; write `p.test`, `g.test` or `t[team].test`. A bare name used to quietly mean `p.test`. Only a function's own parameters are written without a holder, inside that function.
+### Changes that can affect existing scripts
+- Variables always need a holder: declaring (`long test;`), assigning (`test = 5;`) or reading a bare `test` is an error; write `p.test`, `g.test` or `t[team].test`. A bare name used to quietly mean `p.test`. Only a function's own parameters are written without a holder.
+- A parameter can't share its name with a constant or enum member (`const long x = 1;` with `function f(long x)`). Before, every `x` silently meant the constant and the parameter was ignored.
+- Two functions, commands or menus with the same name are an error (the second used to replace the first in Housing). A loop can't share a function's name either, since loops are functions in Housing.
 - Two blocks for the same event (two `event onJoin`) are an error. Before, the second wiped out the first (Always Override) or was skipped (the modes that keep content).
 - Two parameters with the same name are an error.
-- `+=` on a string appends: `p.s += "x"` sets `p.s` to its text followed by `x`. Before, it sent an Increment, which doesn't work on text.
-- Dividing by a constant zero (`/ 0`, `% 0`, `/= 0`, `%= 0`) is an error, and `repeat(0)` warns that its body never runs.
-- A condition made only of constants (`if (1 == 1)`, `if (DEBUG)`) is decided when compiling, with a warning: the branch that runs takes the if's place, saving a conditional and the temporary variables.
-- Recursion now follows the Recursion setting. With the default Multi-call mode, every recursive call used to fail as "would run more than once", so the Recursion setting never applied.
-- The never-set warning suggests a fallback of the right type (`?""`, `?0.0`, `?false`) instead of always `?0`.
-- Constants and enums can be used anywhere in the file, also above their declaration (and a constant can use one declared further down).
-- Numbers with decimals are written out in full (`0.0001`, not `1.0E-4`), in Housing's number fields and in chat text.
-- A function of 47 or more characters that needed splitting failed with "The function named '..._s$0' is too long"; the helper names now fit.
-- In text, a team name or fallback with a space is quoted inside the placeholder (`%var.team/x "red team"%`, `%var.player/s "a b"%`), so Housing keeps it whole.
-- `else if` and an if inside an if explain that Housing can't nest conditionals and what to do instead, instead of "Expected '{'" or "'Conditional' cannot be used in this context".
-- Fixed: `isFishingEnvironment` couldn't be used; it failed with "Cannot add condition 'Block Type' here" (and would have picked Block Type in Housing).
-- Fixed: a value computed only to be shown in text (`p.s = p.c + 1 + "!"`, `"big " + 1e8 * 1e8`) was optimized away, so the text showed an unset variable.
-- Setting a variable to empty text (`p.s = "";`) types `""` into Housing instead of leaving the field empty.
-- Fewer actions: `p.a = p.a << 2` (and other steps that start from the variable's own value) runs on `p.a` directly instead of through a temporary variable, and math on constants inside text is written as its value.
-- Fixed: a parameter used in text inside its function (`message("hi " + who)`) read a different variable (`%var.player/who%` instead of the parameter's slot); temps in text inside functions had the same problem.
-- Fixed: with two calls in one expression or argument list (`add(sq(2), neg(3))`), the first call's result was replaced by the second's before it was used.
-- An action's text over 256 characters (`message(...)`, titles, ...) is an error when compiling instead of failing during the run.
+- Dividing by a constant zero (`/ 0`, `% 0`, `/= 0`, `%= 0`) is an error.
+- An action's text over 256 characters (`message(...)`, titles, ...) is an error when compiling, instead of failing during the run.
+- In strings, `\"` now means `"` and `\\` means `\`; before, the backslash was sent to Housing too. Other backslashes (like `\n`) are kept as written, and item data in `({...})` is unchanged.
+
+### Language
+- Menus can have a quoted title with spaces and symbols: `menu "Item Shop"(3) { ... }`.
+- Calling a function, or opening a menu with `displayMenu`, that the script doesn't define is allowed when the house already has it. New setting Unknown calls (Warn by default, or Error or Off). Whatever the setting, a run checks those functions and menus exist before changing anything. Calls to such functions can't pass arguments.
+- Constants and enums can be used anywhere in the file, also above their declaration, and a constant can use one declared further down.
+- `+=` on a string appends: `p.s += "x"` adds `x` to the end. Before, it sent an Increment, which doesn't work on text.
 - `++` and `--` work on doubles (step by 1.0). `p.d += 1` still needs `1.0`.
-- `!(...)` around a comparison and brackets around conditions explain what Housing supports instead of "Expected ')' after expression".
-- Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
+- A condition made only of constants (`if (1 == 1)`, `if (DEBUG)`) is decided when compiling, with a warning: the branch that runs takes the if's place, saving a conditional and its temporary variables.
+- `repeat(0)` warns that its body never runs.
+- Recursion follows the Recursion setting. With the default Multi-call mode, every recursive call used to fail as "would run more than once", so the Recursion setting never applied.
+
+### Clearer errors and warnings
+- `else if` and an if inside an if explain that Housing can't nest conditionals and what to do instead.
+- `!(...)` around a comparison and brackets around conditions explain what Housing supports, instead of "Expected ')' after expression".
+- The never-set warning suggests a fallback of the right type (`?""`, `?0.0`, `?false`) instead of always `?0`.
+
+### Running scripts
+- A run says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
+- Numbers with decimals are written out in full (`0.0001`, not `1.0E-4`), in Housing's number fields and in chat text.
+- Setting a variable to empty text (`p.s = "";`) types `""` into Housing instead of leaving the field empty.
+- In text, a team name or fallback with a space is quoted inside the placeholder (`%var.team/x "red team"%`, `%var.player/s "a b"%`), so Housing keeps it whole.
+- Fewer actions: `p.a = p.a << 2` (and other steps that start from the variable's own value) runs on `p.a` directly instead of through a temporary variable, and math on constants inside text is written as its value.
+
+### Fixed
+- A parameter used in text inside its function (`message("hi " + who)`) read a different variable; temps used in text inside functions had the same problem.
+- A value computed only to be shown in text (`p.s = p.c + 1 + "!"`) was optimized away, so the text showed an unset variable.
+- With two calls in one expression or argument list (`add(sq(2), neg(3))`), the first call's result was replaced by the second's before it was used.
+- `isFishingEnvironment` couldn't be used; it failed with "Cannot add condition 'Block Type' here" (and would have picked Block Type in Housing).
+- A function of 47 or more characters that needed splitting failed with "The function named '..._s$0' is too long".
 
 ### Editor
-- `&l`, `&m`, `&n` and `&o` in strings show as bold, strikethrough, underline and italic, adding up until a color code or `&r`, as in Minecraft.
+- `&l`, `&m`, `&n` and `&o` in strings show as bold, strikethrough, underline and italic, adding up until a color code or `&r`, as in Minecraft. Menu titles, which Housing doesn't format, show their `&` codes as plain text.
 - The script's contents (functions, how many functions they compile into, loops, commands, menus, events) are shown under the file name.
 - Autocomplete ignores capitalisation: `i` suggests `INVOKER`.
 - Pasting inside a string escapes the pasted `"` and `\`, so `"some |"` plus `"text"` becomes `"some \"text\""`. Text that already has escapes gets one more level.
@@ -45,8 +53,8 @@
 - Options are colored by how strict they are, in the dropdowns and in the tooltips: Off and Allow green, Warn yellow, Error red, Fix aqua. Override modes go from Never Override (green) through Override If Empty (yellow) and Append (aqua) to Always Override (red).
 
 ### Music
-- New stop variable field in the music editor (for example `p.stop`). When it is set, the exported song puts every block of notes in `if (p.stop?0 != 1) { ... } else { return; }`, so setting the variable to 1 cuts the song off. The "1 = stop" / "1 = play" button flips the check, so the song plays only while the variable is 1. Leave the field empty to export as before.
-- With a stop variable, the export builds the guarded blocks itself, each as full as Housing allows. A song longer than one function is continued by the compiler's usual helper functions, every block still guarded. Song function names are cut to Housing's 50 characters.
+- New stop variable field in the music editor (for example `p.stop`). When it is set, every block of notes in the exported song is put in `if (p.stop?0 != 1) { ... } else { return; }`, so setting the variable to 1 cuts the song off. The "1 = stop" / "1 = play" button flips the check, so the song plays only while the variable is 1. Leave the field empty to export as before.
+- With a stop variable, the export builds the guarded blocks itself, each as full as Housing allows; a song longer than one function is continued by the compiler's helper functions, every block still guarded. Song function names are cut to Housing's 50 characters.
 
 ## 1.1.2
 
