@@ -18,6 +18,11 @@ public class MenuNode extends MainStatementNode {
         this.token = token;
     }
 
+    /** The name made safe for helper function names: anything but letters, digits and '_' becomes '_'. */
+    public String identifierName() {
+        return this.name.replaceAll("[^a-zA-Z0-9_]", "_");
+    }
+
     @Override
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visitMenu(this);

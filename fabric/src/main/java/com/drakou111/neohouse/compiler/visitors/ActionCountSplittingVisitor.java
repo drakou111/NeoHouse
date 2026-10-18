@@ -97,7 +97,7 @@ public class ActionCountSplittingVisitor extends DefaultVisitor {
     public ASTNode visitMenu(MenuNode menu) {
         List<SlotNode> slots = new ArrayList<>();
         for (SlotNode slot : menu.slots) {
-            currentScopeName = menu.name + "_slot" + slot.slotId;
+            currentScopeName = menu.identifierName() + "_slot" + slot.slotId;
             slots.add((SlotNode) slot.accept(this));
         }
         return new MenuNode(menu.name, menu.rows, slots, menu.token);

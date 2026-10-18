@@ -650,8 +650,15 @@ public class Parser {
 
     public MenuNode parseMenu() {
         Token menuToken = consume(TokenType.MENU, "Expected 'menu' keyword");
-        Token nameToken = consume(TokenType.IDENT, "Expected menu name");
-        String name = nameToken.text;
+        String name;
+        if (check(TokenType.STRING_VALUE)) {
+            // A quoted title can hold spaces and other characters a plain name can't.
+            Token titleToken = consume(TokenType.STRING_VALUE, "Expected menu title");
+            name = titleToken.text.substring(1, titleToken.text.length() - 1);
+            if (name.isBlank()) throw new ParsingException(titleToken, "Menu title can't be empty");
+        } else {
+            name = consume(TokenType.IDENT, "Expected menu name or a quoted title").text;
+        }
 
         consume(TokenType.LPAREN, "Expected '(' after menu name");
         Token rowsToken = consume(TokenType.LONG_VALUE, "Expected number of rows (1-6)");

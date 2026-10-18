@@ -86,7 +86,10 @@ public class SyntaxHighlighter {
 
         for (int i = 0; i < toks.size(); i++) {
             Tok tok = toks.get(i);
-            if (tok.type() == TokenType.STRING_VALUE) {
+            if (tok.type() == TokenType.STRING_VALUE && isMenuTitle(toks, i)) {
+                // Housing shows menu titles as typed, so & codes there are plain text.
+                spans.add(new Span(tok.pos(), tok.pos() + tok.text().length(), activeTheme.string));
+            } else if (tok.type() == TokenType.STRING_VALUE) {
                 addStringSpans(spans, tok.text(), tok.pos());
             } else {
                 int color = contextualColor(toks, i);
@@ -95,6 +98,11 @@ public class SyntaxHighlighter {
         }
 
         return spans;
+    }
+
+    private static boolean isMenuTitle(List<Tok> toks, int index) {
+        int previous = prevNonWsIdx(toks, index - 1);
+        return previous >= 0 && toks.get(previous).type() == TokenType.MENU;
     }
 
     private void addStringSpans(List<Span> spans, String raw, int basePos) {

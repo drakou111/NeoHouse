@@ -348,6 +348,14 @@ final class HelpContent {
                                 closeMenu();
                             }
                         }"""),
+                new Text("For a title with spaces or other symbols, write it in quotes. Menu titles can't be colored, "
+                        + "so & codes in it stay as typed."),
+                new Code("""
+                        menu "Item Shop"(3) {
+                            slot13: ({id:"minecraft:diamond",count:1}) {
+                                closeMenu();
+                            }
+                        }"""),
                 new Text("Housing allows 300 functions, 50 commands and 200 menus per house. A script that needs more "
                         + "doesn't compile, and a run stops before starting when the house would go over.")));
     }
