@@ -3,6 +3,7 @@ package com.drakou111.neohouse.compiler.visitors;
 import com.drakou111.neohouse.compiler.ast.expr.call.FunctionCallNode;
 import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.MainStatementNode;
+import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TupleFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.TypedFunctionNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
@@ -127,6 +128,13 @@ public class RecursionCheckVisitor {
 
     /** Visits a statement list (and nested control flow) to collect called function names.
      *  Does NOT recurse into nested function definitions. */
+    /** The names of the functions a body calls directly. */
+    static Set<String> calleesOf(StatementListNode body) {
+        Set<String> callees = new HashSet<>();
+        new CallCollector(callees).visitStatements(body);
+        return callees;
+    }
+
     private static class CallCollector extends EmptyVisitor<Void> {
         private final Set<String> callees;
 
