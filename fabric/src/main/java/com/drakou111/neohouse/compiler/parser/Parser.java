@@ -292,6 +292,10 @@ public class Parser {
         }
 
         consume(TokenType.RPAREN, "Expected ')' after parameters");
+        Set<String> seenParameters = new HashSet<>();
+        for (VariableNode param : parameters)
+            if (!seenParameters.add(param.name))
+                throw new ParsingException(param.token, "Parameter '" + param.name + "' is already declared in this function.");
 
         // Record the enum signature so call sites can be checked later (functions may be forward-referenced).
         List<String> paramEnumNames = new ArrayList<>();

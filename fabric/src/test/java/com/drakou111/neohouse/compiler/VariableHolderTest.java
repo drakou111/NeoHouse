@@ -60,6 +60,13 @@ class VariableHolderTest {
     }
 
     @Test
+    void twoParametersWithTheSameNameAreAnError() {
+        assertThatThrownBy(() -> TestCompiler.analyze("function f(long a, long a) { p.y = a; }"))
+                .isInstanceOf(CompilingException.class)
+                .hasMessageContaining("Parameter 'a' is already declared in this function.");
+    }
+
+    @Test
     void declarationsWithAHolderAndBareParametersAreFine() {
         assertThatCode(() -> TestCompiler.analyze("""
                 long p.test;
