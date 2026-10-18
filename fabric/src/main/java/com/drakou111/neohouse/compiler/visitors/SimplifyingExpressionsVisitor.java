@@ -417,6 +417,10 @@ public class SimplifyingExpressionsVisitor extends DefaultVisitor {
 
         // Complex sub-expression: lower it, store in a temp var, use var in template
         LowerResult lr = lowerExpr(expr);
+        // Arithmetic on constants ("big " + 1e8 * 1e8) is already computed: it goes in as text.
+        if (lr.simple() instanceof ConstantPrimitiveNode constant) return new FoldResult(tryFoldToTemplate(constant), lr.stmts());
+        // A value computed into a variable is read from it directly, without a copy into a text temp.
+        if (lr.simple() instanceof VariableNode computed) return new FoldResult(computed.placeholder(), lr.stmts());
         VariableNode tmp = makeTemp(expr.token, VariableType.STRING);
         List<StatementNode> stmts = new ArrayList<>(lr.stmts());
         stmts.add(new AssignationNode(tmp, AssignmentOperator.ASSIGN, (NormalExpressionNode) lr.simple(), expr.token));

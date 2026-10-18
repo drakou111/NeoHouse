@@ -8,6 +8,7 @@ import com.drakou111.neohouse.compiler.ast.expr.NormalExpressionNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.ConstantPrimitiveNode;
 import com.drakou111.neohouse.compiler.ast.expr.constants.DoubleValue;
 import com.drakou111.neohouse.compiler.ast.expr.constants.LongValue;
+import com.drakou111.neohouse.compiler.ast.expr.constants.StringValue;
 import com.drakou111.neohouse.compiler.ast.expr.var.PlaceholderNode;
 import com.drakou111.neohouse.compiler.ast.expr.var.VariableNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementListNode;
@@ -28,6 +29,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Saves actions spent on compiler-made variables ({@link CompilerTemps}); every write to a variable
@@ -261,7 +264,7 @@ public class TempOptimizationVisitor extends DefaultVisitor {
             int firstStep = fromDestination ? start + 1 : start;
             boolean usesDestination = false;
             for (int i = firstStep; i < j; i++) usesDestination |= references(list.get(i), d);
-            if (usesDestination) continue;
+            if (usesDestination || readInText(list, start, j, t)) continue;
 
             for (int i = firstStep; i < j; i++) {
                 AssignationNode step = (AssignationNode) list.get(i);
@@ -304,7 +307,7 @@ public class TempOptimizationVisitor extends DefaultVisitor {
             if (s.equals(t)) continue;
 
             int end = lifetimeEnd(list, i, t, outer, liveAtExit);
-            if (end < 0) continue;
+            if (end < 0 || readInText(list, i + 1, end, t)) continue;
             boolean touchesSource = false;
             for (int k = i + 1; k < end; k++) touchesSource |= references(list.get(k), s);
             if (touchesSource || isLiveAfter(s, list, end, outer, liveAtExit)) continue;
@@ -399,6 +402,12 @@ public class TempOptimizationVisitor extends DefaultVisitor {
 
     // ---- helpers ----
 
+    /** Whether {@code v} is read inside text in any of {@code list}'s statements {@code from} to {@code to} (exclusive). */
+    private static boolean readInText(List<StatementNode> list, int from, int to, VarKey v) {
+        for (int i = from; i < to; i++) if (References.of(list.get(i)).inText.contains(v)) return true;
+        return false;
+    }
+
     private static boolean references(ASTNode node, VarKey v) {
         return countReferences(node, v) > 0;
     }
@@ -456,7 +465,13 @@ public class TempOptimizationVisitor extends DefaultVisitor {
 
     /** Every variable a node mentions (with repeats), the ones it assigns, and whether it holds a call or a return. */
     private static final class References extends DefaultVisitor {
+        // A variable read inside text, like "%var.player/t$0%" or "%var.team/x \"red team\" 0%".
+        private static final Pattern TEXT_READ = Pattern.compile(
+                "%var\\.(player|global|team)/([^\\s%\"]+)(?: (\"[^\"]*\"|[^\\s%\"]+))?");
+
         private final List<VarKey> all = new ArrayList<>();
+        /** Variables read inside text: counted in {@link #all}, but renaming a read can't reach them. */
+        private final List<VarKey> inText = new ArrayList<>();
         private final List<VarKey> written = new ArrayList<>();
         private boolean hasCall = false;
         private boolean hasReturn = false;
@@ -471,6 +486,24 @@ public class TempOptimizationVisitor extends DefaultVisitor {
         public ASTNode visitVariable(VariableNode variable) {
             this.all.add(VarKey.of(variable));
             return variable;
+        }
+
+        @Override
+        public ASTNode visitConstantPrimitive(ConstantPrimitiveNode constant) {
+            if (!(constant.value instanceof StringValue text)) return constant;
+            Matcher read = TEXT_READ.matcher(text.value);
+            while (read.find()) {
+                Holder holder = switch (read.group(1)) {
+                    case "player" -> Holder.PLAYER;
+                    case "global" -> Holder.GLOBAL;
+                    default -> Holder.TEAM;
+                };
+                String team = holder == Holder.TEAM && read.group(3) != null ? read.group(3).replace("\"", "") : null;
+                VarKey key = new VarKey(holder, read.group(2), team);
+                this.all.add(key);
+                this.inText.add(key);
+            }
+            return constant;
         }
 
         @Override

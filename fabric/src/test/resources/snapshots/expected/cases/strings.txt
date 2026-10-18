@@ -195,7 +195,7 @@ GroupAction
             Wait 2 ticks
             Search: Message
               GroupAction
-                Enter text: ratio 0.0001 big %var.player/t$0%
+                Enter text: ratio 0.0001 big 10000000000000000.0
                 Wait 2 ticks
             Click slot 31 (left)
             Wait for screen to open: ContainerScreen
@@ -234,6 +234,40 @@ GroupAction
             Wait 2 ticks
             Search: Variable
               GroupAction
+                Enter text: t$0
+                Wait 2 ticks
+            Search: Operation
+            Wait 2 ticks
+            Search: Set
+            Wait 2 ticks
+            Search: Value
+              GroupAction
+                Enter text: %var.player/c%
+                Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Change Variable
+            Wait 2 ticks
+            Search: Variable
+              GroupAction
+                Enter text: t$0
+                Wait 2 ticks
+            Click slot 31 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+          GroupAction
+            Click slot 50 (left)
+            Wait for screen to open: ContainerScreen
+            Wait 2 ticks
+            Search: Change Variable
+            Wait 2 ticks
+            Search: Variable
+              GroupAction
                 Enter text: s
                 Wait 2 ticks
             Search: Operation
@@ -242,7 +276,7 @@ GroupAction
             Wait 2 ticks
             Search: Value
               GroupAction
-                Enter text: %var.player/t$1%!
+                Enter text: %var.player/t$0%!
                 Wait 2 ticks
             Click slot 31 (left)
             Wait for screen to open: ContainerScreen
