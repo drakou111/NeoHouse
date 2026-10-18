@@ -71,6 +71,9 @@ public class SyntaxEditorWidget extends WidgetBase {
     private int hsbDragStartScroll;
     /** Pixel width of the widest line (with its inline hints), or -1 when it must be measured again. */
     private int contentWidthCache = -1;
+    // How far right the content reaches at the cursor, hints included; the widest line is picked by
+    // characters, so the cursor's line can reach further and must still be scrollable to.
+    private int cursorContentWidth = 0;
 
     /** The open completion list, or null when closed. */
     private EditorSuggestions.Suggestions suggestions = null;
@@ -731,6 +734,8 @@ public class SyntaxEditorWidget extends WidgetBase {
         rebuildSpans();
         this.findBar.onTextChanged();
         updateSuggestions();
+        // Every edit shows where it happened, also when typing past the right edge.
+        ensureCursorVisible();
         if (this.onChange != null) this.onChange.run();
     }
 
@@ -832,6 +837,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         String line = lines.get(lc[0]);
         int cursorPx = lineColToPixelX(font, line, Math.min(lc[1], line.length()), lineHints(lines, lc[0], CallAt.NONE));
         int viewW = codeViewWidth();
+        this.cursorContentWidth = cursorPx + PAD_X;
         if (cursorPx < this.scrollX) this.scrollX = cursorPx;
         if (cursorPx > this.scrollX + viewW - 4) this.scrollX = cursorPx - viewW + 4;
         this.scrollX = Math.max(0, Math.min(this.scrollX, maxScrollX()));
@@ -909,8 +915,12 @@ public class SyntaxEditorWidget extends WidgetBase {
         return this.contentWidthCache;
     }
 
+    private int scrollableWidth() {
+        return Math.max(contentWidth(), this.cursorContentWidth);
+    }
+
     private int maxScrollX() {
-        return Math.max(0, contentWidth() - codeViewWidth());
+        return Math.max(0, scrollableWidth() - codeViewWidth());
     }
 
     /** {x, y, width} of the horizontal scrollbar track along the bottom of the code area. */
@@ -922,7 +932,7 @@ public class SyntaxEditorWidget extends WidgetBase {
 
     private int hsbThumbWidth(int trackW) {
         int viewW = codeViewWidth();
-        return Math.max(HSB_MIN_THUMB_W, trackW * viewW / Math.max(viewW, contentWidth()));
+        return Math.max(HSB_MIN_THUMB_W, trackW * viewW / Math.max(viewW, scrollableWidth()));
     }
 
     private static int clampScrollLine(int s, int lineCount, int vis) {
