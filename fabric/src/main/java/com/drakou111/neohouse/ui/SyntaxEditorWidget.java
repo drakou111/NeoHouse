@@ -710,7 +710,8 @@ public class SyntaxEditorWidget extends WidgetBase {
     }
 
     private void pasteClipboard() {
-        this.document.insert(normalizeInput(Minecraft.getInstance().keyboardHandler.getClipboard()));
+        String pasted = normalizeInput(Minecraft.getInstance().keyboardHandler.getClipboard());
+        this.document.insert(StringPaste.forOffset(this.document.chars(), this.document.selectionStart(), pasted));
     }
 
     private void undo() {
