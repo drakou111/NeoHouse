@@ -51,7 +51,7 @@ final class EditorSuggestions {
         if (event.find()) {
             String partial = event.group(1);
             List<String> events = new ArrayList<>();
-            for (Event e : Event.values()) if (e.name.startsWith(partial)) events.add(e.name);
+            for (Event e : Event.values()) if (startsWithIgnoringCase(e.name, partial)) events.add(e.name);
             return events.isEmpty() ? Optional.empty() : Optional.of(new Suggestions(events, partial.length(), false));
         }
 
@@ -59,7 +59,7 @@ final class EditorSuggestions {
         if (placeholder.find()) {
             String partial = placeholder.group(1);
             List<String> names = new ArrayList<>();
-            for (Placeholder p : Placeholder.values()) if (p.name.startsWith(partial)) names.add(p.name);
+            for (Placeholder p : Placeholder.values()) if (startsWithIgnoringCase(p.name, partial)) names.add(p.name);
             if (!names.isEmpty()) return Optional.of(new Suggestions(names, partial.length(), false));
         }
 
@@ -80,7 +80,7 @@ final class EditorSuggestions {
 
         List<String> presets = new ArrayList<>();
         for (Teleport t : Teleport.values())
-            if (t != Teleport.CUSTOM && t.name().startsWith(partial)) presets.add(t.name());
+            if (t != Teleport.CUSTOM && startsWithIgnoringCase(t.name(), partial)) presets.add(t.name());
         return presets.isEmpty() ? Optional.empty() : Optional.of(new Suggestions(presets, partial.length(), false));
     }
 
@@ -93,8 +93,12 @@ final class EditorSuggestions {
         if (allowed == null) return Optional.empty();
 
         List<String> values = new ArrayList<>();
-        for (String value : allowed) if (value.startsWith(typed)) values.add(value);
+        for (String value : allowed) if (startsWithIgnoringCase(value, typed)) values.add(value);
         return values.isEmpty() ? Optional.empty() : Optional.of(new Suggestions(values, typed.length(), true));
+    }
+
+    private static boolean startsWithIgnoringCase(String value, String typed) {
+        return value.regionMatches(true, 0, typed, 0, typed.length());
     }
 
     /** The built-in action or condition parameter an argument starting after {@code before} fills. */

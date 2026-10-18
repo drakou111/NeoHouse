@@ -37,6 +37,23 @@ class EditorSuggestionsTest {
     }
 
     @Test
+    void matchingIgnoresCase() {
+        Optional<Suggestions> preset = EditorSuggestions.at("teleport(i");
+        Optional<Suggestions> event = EditorSuggestions.at("event onj");
+
+        assertThat(preset).isPresent();
+        assertThat(preset.get().items()).contains(Teleport.INVOKER.name());
+        assertThat(preset.get().typedLength()).isEqualTo(1);
+        assertThat(event).isPresent();
+        assertThat(event.get().items()).contains("onJoin");
+    }
+
+    @Test
+    void aWordTypedInTheWrongCaseIsCorrected() {
+        assertThat(EditorSuggestions.at("teleport(invoker")).isPresent();
+    }
+
+    @Test
     void placeholderNamesAfterPh() {
         Optional<Suggestions> s = EditorSuggestions.at("x = ph.date");
 
