@@ -33,11 +33,6 @@ class ConstantShadowingTest {
     }
 
     @Test
-    void aLocalVariableNamedLikeAConstantIsRejected() {
-        assertRejected("const long x = 1;\nfunction f() { long x; p.y = 2; }", "'x' is already a constant");
-    }
-
-    @Test
     void aParameterNamedLikeAnEnumMemberIsRejected() {
         assertRejected("enum Color { RED, BLUE }\nfunction f(long RED) { p.y = 1; }", "member of enum 'Color'");
     }

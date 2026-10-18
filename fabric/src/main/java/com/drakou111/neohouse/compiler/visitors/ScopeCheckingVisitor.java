@@ -181,7 +181,7 @@ public class ScopeCheckingVisitor extends DefaultVisitor {
         if (var.wasBare && !isDeclaredAnywhere(fullname)) {
             throw new SemanticException(var.token,
                     "Unknown identifier '" + var.name + "' - not a constant, function parameter, or declared variable. " +
-                    "If you meant a player variable, use 'p." + var.name + "' or declare it at the top of the file.");
+                    "If you meant a player variable, write 'p." + var.name + "'.");
         }
         resolveOrDeclareGlobal(fullname, var.token, var);
         if (var.fallback != null && var.type != VariableType.VAR && var.fallback.type != var.type) {

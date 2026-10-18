@@ -78,7 +78,7 @@ public class Parser {
     private final ImportGraph imports;
     private int pos = 0;
     private final HashMap<String, ConstantPrimitiveNode> constTable = new HashMap<>();
-    // Bare-named variables and parameters, checked against the constants once all are known.
+    // Parameters (the only bare-named variables), checked against the constants once all are known.
     private final List<Token> bareDeclarations = new ArrayList<>();
     /** enum name -> its members in declaration order (member index = ordinal value). */
     private final Map<String, List<String>> enumDefs = new HashMap<>();
@@ -1071,6 +1071,7 @@ public class Parser {
 
     public DeclarationNode parseDeclaration() {
         VariableNode var = parseTypedVariable();
+        requireHolder(var);
         if (var.enumName != null) varEnumType.put(var.holder + "." + var.name, var.enumName);
         consume(TokenType.SEMI, "Expected ';' after declaration");
         return new DeclarationNode(var, var.token);
@@ -1162,9 +1163,17 @@ public class Parser {
         return variableNode;
     }
 
+    /** Only parameters go without a holder; a declared variable has to say whose it is. */
+    private static void requireHolder(VariableNode variable) {
+        if (!variable.wasBare) return;
+        throw new ParsingException(variable.token, ("Variable '%s' needs a holder: write p.%s (the player's), g.%s "
+                + "(the house's) or t[team].%s (a team's). Only function parameters have no holder.")
+                .formatted(variable.name, variable.name, variable.name, variable.name));
+    }
+
     /**
-     * A bare name that is a constant always means the constant, so a variable or parameter with that
-     * name could never be read: every use would silently become the constant's value.
+     * A bare name that is a constant always means the constant, so a parameter with that name could
+     * never be read: every use would silently become the constant's value.
      */
     private void requireNoConstantNames() {
         for (Token declaration : this.bareDeclarations) {
@@ -1174,7 +1183,7 @@ public class Parser {
             String where = constant.token.file.equals(declaration.file)
                     ? "line " + constant.token.line
                     : constant.token.file + ", line " + constant.token.line;
-            throw new ParsingException(declaration, ("'%s' is already a %s (%s), so a variable or parameter can't use "
+            throw new ParsingException(declaration, ("'%s' is already a %s (%s), so a parameter can't use "
                     + "that name: every '%s' would mean the %s. Rename one of them.")
                     .formatted(declaration.text, kind, where, declaration.text,
                             constant.enumName == null ? "constant" : "enum member"));
@@ -1274,6 +1283,7 @@ public class Parser {
 
     GlobalDeclarationNode parseGlobalDeclaration() {
         VariableNode var = parseTypedVariable();
+        requireHolder(var);
         if (var.enumName != null) varEnumType.put(var.holder + "." + var.name, var.enumName);
         NormalExpressionNode initializer = null;
         if (match(TokenType.EQ)) {
