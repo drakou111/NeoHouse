@@ -23,7 +23,6 @@ import com.drakou111.neohouse.constants.StringLimits;
 import com.drakou111.neohouse.constants.others.CommandInputs;
 import com.drakou111.neohouse.constants.others.CustomMenuInputs;
 import com.drakou111.neohouse.constants.others.FunctionInputs;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
@@ -48,9 +47,8 @@ public class ActionBuilder {
         return this;
     }
 
+    /** Puts an item into the open slot editor; the item data is only read when the action runs. */
     public ActionBuilder customItem(String itemId) {
-        if (Minecraft.getInstance().player == null)
-            throw new IllegalStateException("Cannot build a custom-item action with no player in the world.");
         actions.add(new CreativeGiveAction(itemId));
         actions.add(clickDelay());
         actions.add(new SlotAction(1, true, true));
