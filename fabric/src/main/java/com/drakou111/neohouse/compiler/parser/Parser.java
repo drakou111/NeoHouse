@@ -973,6 +973,16 @@ public class Parser {
     }
 
     private ExpressionNode parseConditionClause() {
+        // Housing checks a flat list of conditions, all joined by && or all by ||, each of which can be
+        // inverted on its own; anything grouped in brackets can't be expressed.
+        if (check(TokenType.NOT) && checkTwo(TokenType.LPAREN) && bracketsHoldCondition(pos + 1))
+            throw new ParsingException(peek(), "'!(...)' isn't supported around a condition: write the opposite "
+                    + "comparison instead, like p.a != 1 for !(p.a == 1), or p.a >= 5 for !(p.a < 5).");
+        if (check(TokenType.LPAREN) && bracketsHoldCondition(pos))
+            throw new ParsingException(peek(), "Brackets around conditions aren't supported: Housing checks a "
+                    + "condition list joined all by && or all by ||. Split it into separate ifs, or move part of it "
+                    + "into a function.");
+
         // or a condition-built-in
         if (check(TokenType.IDENT) && AddCondition.searchByName(peek().text) != null && checkTwo(TokenType.LPAREN)) {
             return parseConditionCall();
@@ -989,6 +999,22 @@ public class Parser {
 
         // Otherwise just keep the expression as-is. will be handled in a visitor
         return left;
+    }
+
+    /** Whether the brackets opening at token {@code open} hold a comparison or && / || at their own level. */
+    private boolean bracketsHoldCondition(int open) {
+        int depth = 0;
+        for (int i = open; i < tokens.size(); i++) {
+            TokenType type = tokens.get(i).type;
+            if (type == TokenType.LPAREN) depth++;
+            else if (type == TokenType.RPAREN && --depth == 0) return false;
+            else if (depth == 1 && switch (type) {
+                case EQ_EQ, BANG_EQ, LT, GT, LE, GE, AND, OR -> true;
+                default -> false;
+            }) return true;
+            else if (type == TokenType.EOF || type == TokenType.LBRACE) return false;
+        }
+        return false;
     }
 
     private boolean isNextBooleanOperator() {
