@@ -144,11 +144,11 @@ public class MusicEditorScreen extends ScreenBase {
 
         // Row 1, right: the variable that can stop the exported song.
         int toggleX = this.width - PAD - STOP_TOGGLE_W;
-        addTop(this.project.stopVariableInverted ? "Play if 1" : "Stop if 1", STOP_TOGGLE_W, toggleX, TOOLBAR_ROW_1_Y,
+        addTop(this.project.stopVariableInverted ? "1 = play" : "1 = stop", STOP_TOGGLE_W, toggleX, TOOLBAR_ROW_1_Y,
                 b -> { this.project.stopVariableInverted = !this.project.stopVariableInverted; markDirty(); rebuildAll(); },
                 this.project.stopVariableInverted
-                        ? "The exported song plays only while the stop variable is 1. Click to stop it when it is 1 instead"
-                        : "The exported song stops once the stop variable is 1. Click to play only while it is 1 instead");
+                        ? "Song plays only while the variable is 1. Click to stop it at 1 instead."
+                        : "Song stops when the variable is 1. Click to play only while it is 1 instead.");
         addStopVariableBox(toggleX - 4 - STOP_BOX_W);
         this.titleRight = toggleX - 4 - STOP_BOX_W - 4;
 
@@ -179,7 +179,7 @@ public class MusicEditorScreen extends ScreenBase {
         boolean wasFocused = this.stopVariableBox != null && this.stopVariableBox.isFocused();
         this.stopVariableBox = new EditBox(this.font, x, TOOLBAR_ROW_1_Y, STOP_BOX_W, 16, Component.literal("Stop variable"));
         this.stopVariableBox.setMaxLength(STOP_VARIABLE_MAX_LENGTH);
-        this.stopVariableBox.setHint(Component.literal("Stop variable"));
+        this.stopVariableBox.setHint(Component.literal(this.project.stopVariableInverted ? "Play variable" : "Stop variable"));
         this.stopVariableBox.setValue(this.project.stopVariable);
         this.stopVariableBox.setTooltip(Tooltip.create(Component.literal(stopVariableTooltip())));
         this.stopVariableBox.setResponder(text -> {
@@ -198,8 +198,8 @@ public class MusicEditorScreen extends ScreenBase {
     private String stopVariableTooltip() {
         Optional<String> problem = MusicFunctionExporter.stopVariableProblem(this.project.stopVariable);
         if (problem.isPresent()) return problem.get();
-        return "A variable such as p.stop that can end the exported song early. It is checked before each "
-                + "block of notes. Leave it empty to always play the whole song.";
+        return "Optional. A variable like p.stop that controls the exported song, checked every few notes. "
+                + "Empty: the song always plays to the end.";
     }
 
     private int addTop(String label, int w, int x, int y, Button.OnPress onPress, String tooltip) {
