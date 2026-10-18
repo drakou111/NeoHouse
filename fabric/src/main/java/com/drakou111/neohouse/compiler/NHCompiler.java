@@ -11,6 +11,7 @@ import com.drakou111.neohouse.compiler.visitors.ActionRestrictionVisitor;
 import com.drakou111.neohouse.compiler.visitors.ConditionLimitVisitor;
 import com.drakou111.neohouse.compiler.visitors.DeadCodeCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.DeclarationCollectorVisitor;
+import com.drakou111.neohouse.compiler.visitors.DuplicateNameCheck;
 import com.drakou111.neohouse.compiler.visitors.EnumCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.ExtraVariableCollectorVisitor;
 import com.drakou111.neohouse.compiler.visitors.FunctionCallLoweringVisitor;
@@ -90,6 +91,7 @@ public class NHCompiler implements Compiler {
         PlaceholderValidationVisitor pv = new PlaceholderValidationVisitor();
         node = pv.analyze(node);
 
+        DuplicateNameCheck.check(node);
         new UnknownCallCheckVisitor(options.unknownCallMode(), warnings).analyze(node);
 
         LinkFunctionVisitor linkFunctionVisitor = new LinkFunctionVisitor(node);
