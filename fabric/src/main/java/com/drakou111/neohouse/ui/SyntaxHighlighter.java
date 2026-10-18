@@ -13,7 +13,12 @@ import java.util.regex.Matcher;
 
 public class SyntaxHighlighter {
 
-    record Span(int start, int end, int color) {}
+    /** A highlighted range; {@code style} holds {@link StyledText} flags from & formatting codes. */
+    record Span(int start, int end, int color, int style) {
+        Span(int start, int end, int color) {
+            this(start, end, color, 0);
+        }
+    }
 
     private record Tok(TokenType type, String text, int pos) {}
 
@@ -115,6 +120,7 @@ public class SyntaxHighlighter {
         String content = raw.substring(1, contentEnd);
 
         int currentColor = activeTheme.string;
+        int currentStyle = 0;
         int segStart     = 0;
 
         for (int i = 0; i < content.length(); ) {
@@ -122,14 +128,19 @@ public class SyntaxHighlighter {
                 char code = content.charAt(i + 1);
                 if (isMcCode(code)) {
                     if (i > segStart)
-                        spans.add(new Span(basePos + 1 + segStart, basePos + 1 + i, currentColor));
+                        spans.add(new Span(basePos + 1 + segStart, basePos + 1 + i, currentColor, currentStyle));
 
+                    // As in Minecraft: &r and a color code clear the formatting, other codes add to it.
                     char lower = Character.toLowerCase(code);
+                    int col = mcColorFor(lower);
                     if (lower == 'r') {
                         currentColor = activeTheme.string;
+                        currentStyle = 0;
+                    } else if (col != -1) {
+                        currentColor = col;
+                        currentStyle = 0;
                     } else {
-                        int col = mcColorFor(lower);
-                        if (col != -1) currentColor = col;
+                        currentStyle |= StyledText.flagFor(lower);
                     }
 
                     spans.add(new Span(basePos + 1 + i, basePos + 1 + i + 2, dimColor(currentColor)));
@@ -142,7 +153,7 @@ public class SyntaxHighlighter {
         }
 
         if (segStart < content.length())
-            spans.add(new Span(basePos + 1 + segStart, basePos + 1 + content.length(), currentColor));
+            spans.add(new Span(basePos + 1 + segStart, basePos + 1 + content.length(), currentColor, currentStyle));
 
         if (contentEnd < len)
             spans.add(new Span(basePos + contentEnd, basePos + len, activeTheme.string));

@@ -331,21 +331,21 @@ public class SyntaxEditorWidget extends WidgetBase {
             lo = Math.max(lo, charDrawn);
 
             if (lo > charDrawn) {
-                int[] r = drawSegment(g, font, line, charDrawn, lo, TEXT_COLOR, lineHints, hintPtr, curX, y);
+                int[] r = drawSegment(g, font, line, charDrawn, lo, TEXT_COLOR, 0, lineHints, hintPtr, curX, y);
                 curX = r[0]; charDrawn = r[1]; hintPtr = r[2];
             }
             if (hi > charDrawn) {
                 int spanColor = sp.color() == 0 ? TEXT_COLOR : sp.color();
-                int[] r = drawSegment(g, font, line, charDrawn, hi, spanColor, lineHints, hintPtr, curX, y);
+                int[] r = drawSegment(g, font, line, charDrawn, hi, spanColor, sp.style(), lineHints, hintPtr, curX, y);
                 curX = r[0]; charDrawn = r[1]; hintPtr = r[2];
             }
         }
         // to = length + 1 so a hint at the very end of the line (an empty argument being typed) is drawn too.
-        drawSegment(g, font, line, charDrawn, line.length() + 1, TEXT_COLOR, lineHints, hintPtr, curX, y);
+        drawSegment(g, font, line, charDrawn, line.length() + 1, TEXT_COLOR, 0, lineHints, hintPtr, curX, y);
     }
 
     /** Draws columns {@code [from, to)} with the hints inside them; returns {x after, to, next hint index}. */
-    private int[] drawSegment(Gfx g, Font font, String line, int from, int to, int color,
+    private int[] drawSegment(Gfx g, Font font, String line, int from, int to, int color, int style,
                               List<InlineHint> lineHints, int hintPtr, int curX, int y) {
         int pos = from;
         UITheme theme = NeoHouseConfig.get().uiTheme;
@@ -357,8 +357,7 @@ public class SyntaxEditorWidget extends WidgetBase {
 
             if (hOff > pos) {
                 String seg = line.substring(pos, Math.min(hOff, line.length()));
-                g.drawString(font, seg, curX, y, color, false);
-                curX += font.width(seg);
+                curX += StyledText.draw(g, font, seg, curX, y, color, style);
                 pos = hOff;
             }
             String ht = hint.displayText();
@@ -370,8 +369,7 @@ public class SyntaxEditorWidget extends WidgetBase {
         int drawEnd = Math.min(to, line.length());
         if (drawEnd > pos) {
             String seg = line.substring(pos, drawEnd);
-            g.drawString(font, seg, curX, y, color, false);
-            curX += font.width(seg);
+            curX += StyledText.draw(g, font, seg, curX, y, color, style);
         }
         return new int[]{curX, to, hintPtr};
     }

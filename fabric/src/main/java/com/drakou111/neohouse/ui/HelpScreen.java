@@ -394,8 +394,7 @@ public class HelpScreen extends ScreenBase {
                 curX += this.font.width(gap);
             }
             String segment = text.substring(lo, hi);
-            g.drawString(this.font, segment, curX, y, sp.color() == 0 ? st.plain : sp.color(), false);
-            curX += this.font.width(segment);
+            curX += StyledText.draw(g, this.font, segment, curX, y, sp.color() == 0 ? st.plain : sp.color(), sp.style());
             drawn = hi;
         }
         if (drawn < text.length()) g.drawString(this.font, text.substring(drawn), curX, y, st.plain, false);
