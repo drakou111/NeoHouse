@@ -7,12 +7,14 @@ import com.drakou111.neohouse.compiler.ast.main.MainNode;
 import com.drakou111.neohouse.compiler.ast.main.StatementNode;
 import com.drakou111.neohouse.compiler.ast.main_statements.VoidFunctionNode;
 import com.drakou111.neohouse.compiler.ast.statement.AssignationNode;
+import com.drakou111.neohouse.exceptions.CompilingException;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ConstantFoldingTest {
 
@@ -69,11 +71,10 @@ class ConstantFoldingTest {
     }
 
     @Test
-    void divisionByAConstantZeroIsLeftToHousing() {
-        assertThat(loweredBody("long p.x;", "p.x = 1 / 0;")).containsExactly(
-                "f$t0 ASSIGN 1",
-                "f$t0 DIV_ASSIGN 0",
-                "x ASSIGN f$t0");
+    void divisionByAConstantZeroIsRejectedInsteadOfFolded() {
+        assertThatThrownBy(() -> loweredBody("long p.x;", "p.x = 1 / 0;"))
+                .isInstanceOf(CompilingException.class)
+                .hasMessageContaining("Dividing by zero");
     }
 
     @Test
