@@ -23,6 +23,9 @@
 - In text, a team name or fallback with a space is quoted inside the placeholder (`%var.team/x "red team"%`, `%var.player/s "a b"%`), so Housing keeps it whole.
 - `else if` and an if inside an if explain that Housing can't nest conditionals and what to do instead, instead of "Expected '{'" or "'Conditional' cannot be used in this context".
 - Fixed: `isFishingEnvironment` couldn't be used; it failed with "Cannot add condition 'Block Type' here" (and would have picked Block Type in Housing).
+- Fixed: a value computed only to be shown in text (`p.s = p.c + 1 + "!"`, `"big " + 1e8 * 1e8`) was optimized away, so the text showed an unset variable.
+- Setting a variable to empty text (`p.s = "";`) types `""` into Housing instead of leaving the field empty.
+- Fewer actions: `p.a = p.a << 2` (and other steps that start from the variable's own value) runs on `p.a` directly instead of through a temporary variable, and math on constants inside text is written as its value.
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor

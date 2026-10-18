@@ -72,7 +72,7 @@ GroupAction
             Wait 2 ticks
             Search: Value
               GroupAction
-                Enter text: 
+                Enter text: ""
                 Wait 2 ticks
             Click slot 31 (left)
             Wait for screen to open: ContainerScreen

@@ -682,7 +682,9 @@ public class CodeGenerator {
         String variable = assign.variable.name;
         String teamName = assign.variable.teamName;
         Operator operator = toOperator(assign.operator);
-        String value = exprToValue(assign.value);
+        // An empty text is typed as "", since an empty input field means no value to Housing.
+        boolean emptyText = assign.value instanceof ConstantPrimitiveNode c && c.value instanceof StringValue s && s.value.isEmpty();
+        String value = emptyText ? "\"\"" : exprToValue(assign.value);
         return ActionFactory.addActionVariable(ra, new VariableParams()
                 .holder(holder)
                 .variable(variable)

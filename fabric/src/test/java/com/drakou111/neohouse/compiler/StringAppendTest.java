@@ -36,6 +36,11 @@ class StringAppendTest {
     }
 
     @Test
+    void settingEmptyTextTypesTwoQuotes() {
+        assertThat(steps("string p.s;\nevent onJoin { p.s = \"\"; }")).contains("Enter text: \"\"");
+    }
+
+    @Test
     void numbersStillIncrement() {
         List<String> steps = steps("long p.n;\nevent onJoin { p.n = 1; p.n += 2; }");
 
