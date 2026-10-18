@@ -9,6 +9,7 @@ import com.drakou111.neohouse.compiler.ast.statement.DeclarationNode;
 import com.drakou111.neohouse.compiler.diagnostics.CompileWarning;
 import com.drakou111.neohouse.compiler.enums.AssignmentOperator;
 import com.drakou111.neohouse.compiler.enums.Holder;
+import com.drakou111.neohouse.compiler.enums.VariableType;
 import com.drakou111.neohouse.config.UnsetVariableMode;
 import com.drakou111.neohouse.exceptions.SemanticException;
 
@@ -53,12 +54,23 @@ public class UnsetVariableCheckVisitor extends DefaultVisitor {
 
             String name = read.sourceName();
             String message = ("'%s' is used here but never given a value with = in this script. While it's unset, any "
-                    + "condition that uses it is false. Set it first, or add a fallback such as %s?0.")
-                    .formatted(name, name);
+                    + "condition that uses it is false. Set it first, or add a fallback such as %s?%s.")
+                    .formatted(name, name, exampleFallback(read.type));
             if (this.mode == UnsetVariableMode.ERROR) throw new SemanticException(read.token, message);
             this.warnings.add(new CompileWarning(read.token, message));
         }
         return main;
+    }
+
+    /** A fallback the variable's type accepts; an untyped var takes any, so it gets the common 0. */
+    private static String exampleFallback(VariableType type) {
+        if (type == null) return "0";
+        return switch (type) {
+            case STRING -> "\"\"";
+            case DOUBLE -> "0.0";
+            case BOOL -> "false";
+            default -> "0";
+        };
     }
 
     @Override

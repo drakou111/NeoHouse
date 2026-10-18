@@ -42,6 +42,16 @@ class UnsetVariableCheckTest {
     }
 
     @Test
+    void theSuggestedFallbackMatchesTheVariablesType() {
+        assertThat(warningsOf("string p.s; long p.y;\nfunction f() { if (p.s == \"a\") { p.y = 1; } }"))
+                .singleElement().asString().contains("p.s?\"\"");
+        assertThat(warningsOf("double p.d; long p.y;\nfunction f() { if (p.d > 1.0) { p.y = 1; } }"))
+                .singleElement().asString().contains("p.d?0.0");
+        assertThat(warningsOf("bool p.b; long p.y;\nfunction f() { if (p.b == true) { p.y = 1; } }"))
+                .singleElement().asString().contains("p.b?false");
+    }
+
+    @Test
     void theVariableIsFoundOnEitherSideOfTheComparison() {
         assertThat(warningsOf("long p.x; long p.y;\nfunction f() { if (3 < p.x) { p.y = 1; } }"))
                 .singleElement()
