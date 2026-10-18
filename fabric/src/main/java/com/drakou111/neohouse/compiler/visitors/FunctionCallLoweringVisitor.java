@@ -133,6 +133,8 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             if (typedDef != null) return lowerTypedCallAsVoid(call, typedDef);
             TupleFunctionNode tupleDef = tupleFunctions.get(call.functionName);
             if (tupleDef != null) return lowerTupleCallAsVoid(call, tupleDef);
+            // A function outside the script (allowed by UnknownCallCheckVisitor) is just triggered.
+            if (call.arguments.expressions.isEmpty()) return call;
             throw new SemanticException(call.token, "Undefined function '" + call.functionName + "'");
         }
 
@@ -240,6 +242,7 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     @Override
     public ASTNode visitGlobalFunctionCall(GlobalFunctionCallNode call) {
         VoidFunctionNode def = voidFunctions.get(call.functionName);
+        if (def == null && call.arguments.expressions.isEmpty()) return call;
         if (def == null) {
             throw new SemanticException(call.token, "Undefined void function '" + call.functionName + "'");
         }

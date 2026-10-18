@@ -70,8 +70,9 @@ public class LinkFunctionVisitor extends DefaultVisitor {
     public ASTNode visitVoidFunctionCall(VoidFunctionCallNode call) {
         String fname = call.functionName;
         ArgumentListNode newArgs = (ArgumentListNode) call.arguments.accept(this);
-        if (voidDefs.containsKey(fname) || typedDefs.containsKey(fname) || tupleDefs.containsKey(fname))
-            return new VoidFunctionCallNode(fname, newArgs, call.token);
+        boolean defined = voidDefs.containsKey(fname) || typedDefs.containsKey(fname) || tupleDefs.containsKey(fname);
+        // UnknownCallCheckVisitor already allowed a call to a function outside the script, if it has no arguments.
+        if (defined || newArgs.expressions.isEmpty()) return new VoidFunctionCallNode(fname, newArgs, call.token);
         throw new SemanticException(call.token, "Undefined function '" + fname + "'");
     }
 
@@ -100,7 +101,7 @@ public class LinkFunctionVisitor extends DefaultVisitor {
     public ASTNode visitGlobalFunctionCall(GlobalFunctionCallNode call) {
         String fname = call.functionName;
         VoidFunctionNode def = voidDefs.get(fname);
-        if (def == null) {
+        if (def == null && !call.arguments.expressions.isEmpty()) {
             throw new SemanticException(call.token, "Undefined global function '" + fname + "'");
         }
         ArgumentListNode newArgs = (ArgumentListNode) call.arguments.accept(this);

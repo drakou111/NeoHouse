@@ -7,6 +7,7 @@ import com.drakou111.neohouse.config.MultiCallMode;
 import com.drakou111.neohouse.config.OverrideMode;
 import com.drakou111.neohouse.config.RecursionMode;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
+import com.drakou111.neohouse.config.UnknownCallMode;
 import com.drakou111.neohouse.config.UnsetVariableMode;
 import com.drakou111.neohouse.ui.HelpContent.Block;
 import com.drakou111.neohouse.ui.HelpContent.Code;
@@ -26,7 +27,8 @@ class HelpContentTest {
 
     // The settings a new install starts with.
     private static final CompileOptions DEFAULTS = new CompileOptions(MultiCallMode.ERROR, RecursionMode.WARN,
-            GlobalCallMode.ERROR, OverrideMode.IF_EMPTY, UndeclaredVariableMode.ALLOW, false, UnsetVariableMode.WARN);
+            GlobalCallMode.ERROR, OverrideMode.IF_EMPTY, UndeclaredVariableMode.ALLOW, false, UnsetVariableMode.WARN,
+            UnknownCallMode.WARN);
     private static final Pattern WHOLE_SCRIPT = Pattern.compile(
             "(?m)^(event|function|command|loop|menu|const|enum|long|double|string|bool|var) ");
 

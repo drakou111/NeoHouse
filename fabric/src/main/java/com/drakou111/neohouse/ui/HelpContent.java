@@ -298,6 +298,10 @@ final class HelpContent {
                 new Text("Optional named settings go before the parameters and set the function's icon and description "
                         + "in Housing."),
                 new Code("function shop(icon: {id:\"minecraft:emerald\"}, description: \"Opens the shop\") { }"),
+                new Heading("Functions outside the script"),
+                new Text("You can call a function, or displayMenu a menu, that this script doesn't define but the house "
+                        + "already has. The compiler warns (see the Unknown calls setting), and a run checks that it "
+                        + "exists before changing anything. Such a call can't pass arguments."),
                 new Heading("Calling for everyone"),
                 new Text("global f(); runs a void function for every player in the house. A function called that way "
                         + "(and a loop) can't itself contain global calls."),
@@ -470,6 +474,8 @@ final class HelpContent {
                         Undeclared variables    a variable used without a declaration
                                                 Allow, Warn, Error
                         Never-set variables     using a variable the script never sets
+                                                Warn, Error, Off
+                        Unknown calls           a function or menu not in the script
                                                 Warn, Error, Off
                         Ban the var type        reject var everywhere, including
                                                 undeclared variables"""),

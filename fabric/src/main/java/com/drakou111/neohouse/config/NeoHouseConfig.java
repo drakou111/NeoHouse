@@ -33,6 +33,7 @@ public class NeoHouseConfig {
     public GlobalCallMode globalCallMode      = GlobalCallMode.ERROR;
     public UndeclaredVariableMode undeclaredVariableMode = UndeclaredVariableMode.ALLOW;
     public UnsetVariableMode unsetVariableMode       = UnsetVariableMode.WARN;
+    public UnknownCallMode unknownCallMode           = UnknownCallMode.WARN;
     public boolean forbidVarType              = false;
     public SyntaxTheme   syntaxTheme          = SyntaxTheme.VSCODE_DARK;
     public UITheme       uiTheme              = UITheme.DARK_BLUE;
@@ -62,6 +63,7 @@ public class NeoHouseConfig {
             Setting.ofEnum("globalCallMode",              () -> globalCallMode,              v -> globalCallMode = v, GlobalCallMode::byId),
             Setting.ofEnum("undeclaredVariableMode",      () -> undeclaredVariableMode,      v -> undeclaredVariableMode = v, UndeclaredVariableMode::byId),
             Setting.ofEnum("unsetVariableMode",           () -> unsetVariableMode,           v -> unsetVariableMode = v, UnsetVariableMode::byId),
+            Setting.ofEnum("unknownCallMode",             () -> unknownCallMode,             v -> unknownCallMode = v, UnknownCallMode::byId),
             Setting.ofBool("forbidVarType",               () -> forbidVarType,               v -> forbidVarType = v),
             Setting.ofEnum("syntaxTheme",                 () -> syntaxTheme,                 v -> syntaxTheme = v,   SyntaxTheme::byId),
             Setting.ofEnum("uiTheme",                     () -> uiTheme,                     v -> uiTheme = v,       UITheme::byId),

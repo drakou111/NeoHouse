@@ -13,6 +13,7 @@ import com.drakou111.neohouse.config.SyntaxTheme;
 import com.drakou111.neohouse.config.UIOpacity;
 import com.drakou111.neohouse.config.UITheme;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
+import com.drakou111.neohouse.config.UnknownCallMode;
 import com.drakou111.neohouse.config.UnsetVariableMode;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
@@ -138,6 +139,14 @@ public class ConfigScreen extends ScreenBase {
                         + "Warn: reported.\n"
                         + "Error: compilation fails.",
                 UnsetVariableMode.values(), m -> m.displayName, cfg.unsetVariableMode, m -> cfg.unsetVariableMode = m));
+        list.add(enumRow(Tab.COMPILER, "Unknown calls:",
+                "Calling a function, or opening a menu with displayMenu, that isn't in the script. It may already "
+                        + "exist in the house, so a run checks that it does before changing anything. A function that "
+                        + "isn't in the script can't be given arguments.\n\n"
+                        + "Warn: reported, and the run checks.\n"
+                        + "Error: compilation fails.\n"
+                        + "Off: no report, and the run still checks.",
+                UnknownCallMode.values(), m -> m.displayName, cfg.unknownCallMode, m -> cfg.unknownCallMode = m));
         list.add(new BoolRow(Tab.COMPILER, "Ban the var type:",
                 "Reject the var type everywhere: in declarations, parameters and return types.\n\n"
                         + "Undeclared variables are vars, so they become errors too.",

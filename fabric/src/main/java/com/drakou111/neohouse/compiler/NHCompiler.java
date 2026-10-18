@@ -34,6 +34,7 @@ import com.drakou111.neohouse.compiler.visitors.SimplifyingExpressionsVisitor;
 import com.drakou111.neohouse.compiler.visitors.StringLengthCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.TempOptimizationVisitor;
 import com.drakou111.neohouse.compiler.visitors.TypeInferringVisitor;
+import com.drakou111.neohouse.compiler.visitors.UnknownCallCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.UnsetVariableCheckVisitor;
 import com.drakou111.neohouse.config.UndeclaredVariableMode;
 import com.drakou111.neohouse.exceptions.CompilingException;
@@ -88,6 +89,8 @@ public class NHCompiler implements Compiler {
 
         PlaceholderValidationVisitor pv = new PlaceholderValidationVisitor();
         node = pv.analyze(node);
+
+        new UnknownCallCheckVisitor(options.unknownCallMode(), warnings).analyze(node);
 
         LinkFunctionVisitor linkFunctionVisitor = new LinkFunctionVisitor(node);
         node = linkFunctionVisitor.analyze(node);

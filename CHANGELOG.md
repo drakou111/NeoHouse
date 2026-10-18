@@ -4,6 +4,7 @@
 
 ### Compiler
 - Menus can have a quoted title with spaces and symbols: `menu "Item Shop"(3) { ... }`. Menu titles can't be colored, so the editor shows `&` codes in them as plain text.
+- New setting Unknown calls (Warn by default, or Error or Off): a script can call a function, or `displayMenu` a menu, that it doesn't define but the house already has. Before this it was always an error. A run checks that those functions and menus exist before changing anything, whatever the setting. Calls to such functions can't pass arguments.
 
 ### Music
 - New stop variable field in the music editor (for example `p.stop`). When it is set, the exported song puts every block of notes in `if (p.stop?0 != 1) { ... } else { return; }`, so setting the variable to 1 cuts the song off. The Stop if 1 / Play if 1 button flips the check, so the song plays only while the variable is 1. Leave the field empty to export as before.

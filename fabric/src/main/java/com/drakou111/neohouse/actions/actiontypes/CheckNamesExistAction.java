@@ -11,7 +11,8 @@ import java.util.List;
 
 /**
  * Stops the run before anything is changed when the script uses teams, layouts or groups that don't
- * exist in the house (Housing can't create them for us). Must run after {@link ReadListNamesAction}.
+ * exist in the house (Housing can't create them for us), or calls functions or displays menus that
+ * neither it nor the house defines. Must run after {@link ReadListNamesAction}.
  */
 public class CheckNamesExistAction extends Action {
     private final HousingList list;
