@@ -17,6 +17,7 @@
 - A condition made only of constants (`if (1 == 1)`, `if (DEBUG)`) is decided when compiling, with a warning: the branch that runs takes the if's place, saving a conditional and the temporary variables.
 - Recursion now follows the Recursion setting. With the default Multi-call mode, every recursive call used to fail as "would run more than once", so the Recursion setting never applied.
 - The never-set warning suggests a fallback of the right type (`?""`, `?0.0`, `?false`) instead of always `?0`.
+- Constants and enums can be used anywhere in the file, also above their declaration (and a constant can use one declared further down).
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor

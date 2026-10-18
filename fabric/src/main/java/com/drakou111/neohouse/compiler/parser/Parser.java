@@ -184,9 +184,13 @@ public class Parser {
 
     public MainNode parseMain() {
         List<MainStatementNode> nodes = new ArrayList<>();
+        Map<Integer, Integer> predeclared = predeclareConstantsAndEnums();
 
         while (!isAtEnd()) {
-            if (check(TokenType.FUNCTION)) {
+            Integer declarationEnd = predeclared.get(pos);
+            if (declarationEnd != null) {
+                pos = declarationEnd;
+            } else if (check(TokenType.FUNCTION)) {
                 nodes.add(parseFunction());
             } else if (check(TokenType.LOOP)) {
                 nodes.add(parseLoop());
@@ -1275,6 +1279,54 @@ public class Parser {
         if (t.type != TokenType.IDENT || !enumDefs.containsKey(t.text)) return false;
         requireVisible(t, enumDeclTokens.get(t.text), "Enum '" + t.text + "'");
         return true;
+    }
+
+    /**
+     * Registers every top-level enum and constant before the rest is parsed, so they can be used
+     * anywhere in the file, also above their declaration. Returns where each declaration starts and
+     * ends, so the main parse skips over them.
+     */
+    private Map<Integer, Integer> predeclareConstantsAndEnums() {
+        List<Integer> enumStarts = new ArrayList<>();
+        List<Integer> constStarts = new ArrayList<>();
+        int depth = 0;
+        for (int i = 0; i < tokens.size(); i++) {
+            TokenType type = tokens.get(i).type;
+            if (type == TokenType.LBRACE) depth++;
+            else if (type == TokenType.RBRACE) depth = Math.max(0, depth - 1);
+            else if (depth == 0 && type == TokenType.ENUM) enumStarts.add(i);
+            else if (depth == 0 && type == TokenType.CONST) constStarts.add(i);
+        }
+
+        Map<Integer, Integer> ends = new HashMap<>();
+        for (int start : enumStarts) {
+            pos = start;
+            parseEnumDeclaration();
+            ends.put(start, pos);
+        }
+
+        // A constant may use one declared further down, so the ones that fail are retried until a
+        // round resolves none; then the first failure is the real error.
+        List<Integer> pending = constStarts;
+        while (!pending.isEmpty()) {
+            List<Integer> failed = new ArrayList<>();
+            ParsingException firstFailure = null;
+            for (int start : pending) {
+                pos = start;
+                try {
+                    parseConstDeclaration();
+                    ends.put(start, pos);
+                } catch (ParsingException e) {
+                    failed.add(start);
+                    if (firstFailure == null) firstFailure = e;
+                }
+            }
+            if (failed.size() == pending.size()) throw firstFailure;
+            pending = failed;
+        }
+
+        pos = 0;
+        return ends;
     }
 
     private UnaryExpressionNode makeUnary(UnaryOperator op, NormalExpressionNode operand, Token token) {
