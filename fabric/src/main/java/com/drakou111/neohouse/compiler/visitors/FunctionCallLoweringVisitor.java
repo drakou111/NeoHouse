@@ -31,6 +31,10 @@ import java.util.List;
 import java.util.Map;
 
 public class FunctionCallLoweringVisitor extends DefaultVisitor {
+    // Temps saving a call's result start here, above the ones expression lowering numbered from 0.
+    private static final int SAVED_RESULT_TEMP_BASE = 100;
+
+    private int savedResults = 0;
 
     private final Map<String, VoidFunctionNode> voidFunctions = new HashMap<>();
     private final Map<String, TypedFunctionNode> typedFunctions = new HashMap<>();
@@ -70,11 +74,12 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
             List<StatementNode> stmts = new ArrayList<>();
 
             List<NormalExpressionNode> realArgs = new ArrayList<>();
-            for (int i = 0; i < tfc.arguments.expressions.size(); i++) {
+            int argumentCount = tfc.arguments.expressions.size();
+            for (int i = 0; i < argumentCount; i++) {
                 ExpressionNode rawArg = tfc.arguments.expressions.get(i);
                 ArgLowerResult sub = lowerArgument(rawArg);
                 stmts.addAll(sub.stmts());
-                realArgs.add(sub.simple);
+                realArgs.add(i < argumentCount - 1 ? saved(sub.simple, stmts) : sub.simple);
             }
 
             for (int i = 0; i < realArgs.size(); i++) {
@@ -92,11 +97,11 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
         if (expr instanceof BinaryExpressionNode bin) {
             ArgLowerResult leftR  = lowerArgument(bin.left);
             ArgLowerResult rightR = lowerArgument(bin.right);
-            List<StatementNode> stmts = new ArrayList<>();
-            stmts.addAll(leftR.stmts());
+            List<StatementNode> stmts = new ArrayList<>(leftR.stmts());
+            NormalExpressionNode left = saved(leftR.simple, stmts);
             stmts.addAll(rightR.stmts());
             return new ArgLowerResult(
-                new BinaryExpressionNode(leftR.simple, rightR.simple, bin.operator, bin.type, bin.token),
+                new BinaryExpressionNode(left, rightR.simple, bin.operator, bin.type, bin.token),
                 stmts);
         }
 
@@ -111,13 +116,36 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
     }
 
     @Override
+    public ASTNode visitStatements(StatementListNode statements) {
+        List<StatementNode> result = new ArrayList<>();
+        for (StatementNode statement : statements.statements) {
+            this.savedResults = 0;
+            result.add((StatementNode) statement.accept(this));
+        }
+        return new StatementListNode(result);
+    }
+
+    /**
+     * A call's result ({@code o$}) copied into a temp, since a later call in the same expression or
+     * argument list replaces it; anything else as it is. The temp optimizer drops copies nothing needs.
+     */
+    private NormalExpressionNode saved(NormalExpressionNode value, List<StatementNode> stmts) {
+        if (!(value instanceof VariableNode result) || !CompilerTemps.isReturnSlot(result.name)) return value;
+        VariableNode temp = new VariableNode(result.type, Holder.PLAYER, "t$" + (SAVED_RESULT_TEMP_BASE + this.savedResults++),
+                null, result.token);
+        stmts.add(new AssignationNode(temp, AssignmentOperator.ASSIGN, result, result.token));
+        return temp;
+    }
+
+    @Override
     public ASTNode visitActionCall(ActionCallNode call) {
         List<StatementNode> stmts = new ArrayList<>();
         List<NormalExpressionNode> newArgs = new ArrayList<>();
-        for (NormalExpressionNode arg : call.arguments.expressions) {
-            ArgLowerResult lowered = lowerArgument(arg);
+        List<NormalExpressionNode> args = call.arguments.expressions;
+        for (int i = 0; i < args.size(); i++) {
+            ArgLowerResult lowered = lowerArgument(args.get(i));
             stmts.addAll(lowered.stmts());
-            newArgs.add(lowered.simple);
+            newArgs.add(i < args.size() - 1 ? saved(lowered.simple, stmts) : lowered.simple);
         }
         stmts.add(new ActionCallNode(call.name, new ArgumentListNode(newArgs), call.token));
         return new StatementListNode(stmts);
@@ -210,10 +238,11 @@ public class FunctionCallLoweringVisitor extends DefaultVisitor {
 
         // Lower each argument (may contain nested typed function calls)
         List<NormalExpressionNode> realArgs = new ArrayList<>();
-        for (ExpressionNode rawArg : node.arguments.expressions) {
-            ArgLowerResult sub = lowerArgument(rawArg);
+        List<NormalExpressionNode> rawArgs = node.arguments.expressions;
+        for (int i = 0; i < rawArgs.size(); i++) {
+            ArgLowerResult sub = lowerArgument(rawArgs.get(i));
             stmts.addAll(sub.stmts());
-            realArgs.add(sub.simple);
+            realArgs.add(i < rawArgs.size() - 1 ? saved(sub.simple, stmts) : sub.simple);
         }
         if (realArgs.size() != params.size())
             throw new SemanticException(node.token, "Function '" + node.functionName + "' expects " +
