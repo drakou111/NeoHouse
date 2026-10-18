@@ -9,6 +9,7 @@ import com.drakou111.neohouse.compiler.parser.Parser;
 import com.drakou111.neohouse.compiler.visitors.ActionCountSplittingVisitor;
 import com.drakou111.neohouse.compiler.visitors.ActionRestrictionVisitor;
 import com.drakou111.neohouse.compiler.visitors.ConditionLimitVisitor;
+import com.drakou111.neohouse.compiler.visitors.ConstantConditionFoldingVisitor;
 import com.drakou111.neohouse.compiler.visitors.ConstantMistakeCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.DeadCodeCheckVisitor;
 import com.drakou111.neohouse.compiler.visitors.DeclarationCollectorVisitor;
@@ -132,6 +133,7 @@ public class NHCompiler implements Compiler {
 
         TypeInferringVisitor typeInferring = new TypeInferringVisitor();
         node = typeInferring.analyze(node);
+        node = new ConstantConditionFoldingVisitor(warnings).analyze(node);
 
         StringLengthCheckVisitor stringLengthCheck = new StringLengthCheckVisitor();
         stringLengthCheck.analyze(node);
