@@ -20,6 +20,8 @@
 - Constants and enums can be used anywhere in the file, also above their declaration (and a constant can use one declared further down).
 - Numbers with decimals are written out in full (`0.0001`, not `1.0E-4`), in Housing's number fields and in chat text.
 - A function of 47 or more characters that needed splitting failed with "The function named '..._s$0' is too long"; the helper names now fit.
+- In text, a team name or fallback with a space is quoted inside the placeholder (`%var.team/x "red team"%`, `%var.player/s "a b"%`), so Housing keeps it whole.
+- `else if` and an if inside an if explain that Housing can't nest conditionals and what to do instead, instead of "Expected '{'" or "'Conditional' cannot be used in this context".
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor

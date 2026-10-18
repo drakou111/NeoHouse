@@ -38,14 +38,14 @@ public class VariableNode extends NormalExpressionNode {
         return switch (holder) {
             case PLAYER -> "%var.player/" + name + fallbackToken() + "%";
             case GLOBAL -> "%var.global/" + name + fallbackToken() + "%";
-            case TEAM -> "%var.team/" + name + " " + teamName + fallbackToken() + "%";
+            case TEAM -> "%var.team/" + name + " " + placeholderArgument(teamName) + fallbackToken() + "%";
         };
     }
 
     /** The space-prefixed fallback token embedded inside a {@code %var...%} placeholder,
-     *  e.g. {@code " 0"}. Empty when there is no fallback. */
+     *  e.g. {@code " 0"} or {@code " \"a b\""}. Empty when there is no fallback. */
     public String fallbackToken() {
-        return fallback == null ? "" : " " + fallbackText();
+        return fallback == null ? "" : " " + placeholderArgument(fallbackText());
     }
 
     /** The fallback as Housing reads it (a bool as 1 or 0). Only call when there is one. */
@@ -84,5 +84,10 @@ public class VariableNode extends NormalExpressionNode {
     @Override
     public String toShortString() {
         return "Var[type=" + type + ", hold=" + holder + ", name=" + name + ", tname=" + teamName + "]";
+    }
+
+    /** A team name or fallback as one placeholder argument: quoted when it has spaces, so it isn't split. */
+    private static String placeholderArgument(String text) {
+        return text.chars().anyMatch(Character::isWhitespace) ? "\"" + text + "\"" : text;
     }
 }
