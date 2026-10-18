@@ -52,6 +52,8 @@ public class CodeEditorScreen extends ScreenBase {
     private static final long CHECK_DELAY_MS = 200;
 
     private SyntaxEditorWidget editor;
+    // What the script holds, from the last clean compile; shown under the file name.
+    private String summary = "";
     private Button             saveBtn;
 
     public CodeEditorScreen(Path filePath, Screen parent) {
@@ -162,6 +164,7 @@ public class CodeEditorScreen extends ScreenBase {
 
     /** After a clean compile, show any compiler warnings (yellow) or clear the bar entirely. */
     private void showWarningsOrClear() {
+        this.summary = this.checker.getLastSummary().describe();
         List<CompileWarning> warnings = this.checker.getLastWarnings();
         if (warnings.isEmpty()) {
             editor.clearError();
@@ -307,7 +310,8 @@ public class CodeEditorScreen extends ScreenBase {
 
         boolean dirty = isDirty();
         int textX = logoX + LOGO_SIZE + HEADER_GAP;
-        int textY = (HEADER_H - 8) / 2;
+        // The name, with the script's summary under it once a compile has succeeded.
+        int textY = this.summary.isEmpty() ? (HEADER_H - 8) / 2 : 4;
         if (dirty) {
             g.drawString(this.font, DIRTY_MARK, textX, textY, 0xFFFF9944, false);
             textX += font.width(DIRTY_MARK);
@@ -317,6 +321,14 @@ public class CodeEditorScreen extends ScreenBase {
         if (font.width(name) > maxNameWidth)
             name = font.plainSubstrByWidth(name, Math.max(0, maxNameWidth - font.width("..."))) + "...";
         g.drawString(this.font, name, textX, textY, dirty ? 0xFFDDCCBB : 0xFFCCCCCC, false);
+        if (!this.summary.isEmpty()) {
+            int summaryX = logoX + LOGO_SIZE + HEADER_GAP;
+            int maxSummaryWidth = Math.max(0, this.width - 6 - RIGHT_BUTTONS_W - HEADER_GAP - summaryX);
+            String shown = this.summary;
+            if (font.width(shown) > maxSummaryWidth)
+                shown = font.plainSubstrByWidth(shown, Math.max(0, maxSummaryWidth - font.width("..."))) + "...";
+            g.drawString(this.font, shown, summaryX, textY + 11, t.muted(), false);
+        }
 
         renderWidgets(g, mouseX, mouseY, partialTick);
     }

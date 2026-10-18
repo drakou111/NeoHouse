@@ -48,12 +48,15 @@ import java.util.List;
 public class NHCompiler implements Compiler {
     private int lastHelperCount = 0;
     private List<String> lastHelperNames = List.of();
+    private ScriptSummary lastSummary = ScriptSummary.EMPTY;
     private List<String> lastExtraVariables = List.of();
     private List<CompileWarning> lastWarnings = List.of();
     private ImportGraph lastImportGraph = ImportGraph.singleFile();
 
     public int getLastHelperCount() { return lastHelperCount; }
     public List<String> getLastHelperNames() { return lastHelperNames; }
+    /** What the last script that compiled cleanly holds; {@link ScriptSummary#EMPTY} before any. */
+    public ScriptSummary getLastSummary() { return lastSummary; }
     public List<String> getLastExtraVariables() { return lastExtraVariables; }
     public List<CompileWarning> getLastWarnings() { return lastWarnings; }
     /** Import graph of the last compile, also set when that compile failed (as far as it got). */
@@ -81,6 +84,7 @@ public class NHCompiler implements Compiler {
 
         Parser parser = new Parser(tokens, lastImportGraph);
         MainNode node = parser.parseMain();
+        MainNode parsed = node;
         if (options.forbidVarType() && !parser.getVarTypeTokens().isEmpty())
             throw new SemanticException(parser.getVarTypeTokens().getFirst(),
                     "The var type is turned off in the settings; use long, double, string or bool.");
@@ -169,6 +173,7 @@ public class NHCompiler implements Compiler {
         new UnsetVariableCheckVisitor(options.unsetVariableMode(), warnings).analyze(node);
 
         lastExtraVariables = new ExtraVariableCollectorVisitor().collect(node);
+        lastSummary = ScriptSummary.of(parsed, node);
         return node;
     }
 

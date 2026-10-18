@@ -64,6 +64,7 @@ public class ScriptRunner {
         for (var warning : compiler.getLastWarnings()) {
             MessageUtils.warningToChat(warning);
         }
+        MessageUtils.debugToChat("Importing " + compiler.getLastSummary().describe() + ".");
 
         int helpers = compiler.getLastHelperCount();
         lastHelperNames = compiler.getLastHelperNames();
