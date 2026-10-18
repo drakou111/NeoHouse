@@ -26,6 +26,9 @@
 - Fixed: a value computed only to be shown in text (`p.s = p.c + 1 + "!"`, `"big " + 1e8 * 1e8`) was optimized away, so the text showed an unset variable.
 - Setting a variable to empty text (`p.s = "";`) types `""` into Housing instead of leaving the field empty.
 - Fewer actions: `p.a = p.a << 2` (and other steps that start from the variable's own value) runs on `p.a` directly instead of through a temporary variable, and math on constants inside text is written as its value.
+- Fixed: a parameter used in text inside its function (`message("hi " + who)`) read a different variable (`%var.player/who%` instead of the parameter's slot); temps in text inside functions had the same problem.
+- Fixed: with two calls in one expression or argument list (`add(sq(2), neg(3))`), the first call's result was replaced by the second's before it was used.
+- An action's text over 256 characters (`message(...)`, titles, ...) is an error when compiling instead of failing during the run.
 - Running a script says in chat what it imports, for example "Importing 3 functions (5 once compiled), 1 loop, 2 menus".
 
 ### Editor
